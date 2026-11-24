@@ -56,7 +56,8 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     - Don't create duplicate instruction files: this file is the single source of agent rules.
 10. **Done means tested**: `npm test -w apps/api` (unit + e2e), `./scripts/smoke-api.sh`, `npm run typecheck && npm run lint -w apps/web`,
     Playwright `npm run test:e2e -w apps/web` (wait ~60 s after the API smoke run: register is rate-limited per IP), all green on a
-    fresh stack (`docker compose down -v`), then reseed for a clean demo.
+    fresh stack (`docker compose down -v`), then a clean demo: fresh stack, `npm run seed`, `./scripts/import-del.sh`,
+    `./scripts/demo-catalogue.sh` (only "AI for DevOps" listed, per the owner).
 
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).

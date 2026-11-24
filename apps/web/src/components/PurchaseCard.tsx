@@ -21,7 +21,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
   const [busy, setBusy] = useState<"cart" | "buy" | null>(null);
 
   useEffect(() => {
-    if (!me || course.enrolled) return;
+    // The course payload already carries the viewer block when the server saw the session: no extra probes.
+    if (!me || course.enrolled || course.viewerSignedIn) return;
     let alive = true;
     api(`/me/courses/${course.slug}`).then(() => alive && setEnrolled(true)).catch(() => {});
     api("/cart").then((c) => alive && setInCart(list(c, "items").some((i) => {
@@ -29,7 +30,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
       return o.courseId === course.id || obj(o.course).id === course.id || obj(o.course).slug === course.slug;
     }))).catch(() => {});
     return () => { alive = false; };
-  }, [me, course.enrolled, course.id, course.slug]);
+  }, [me, course.enrolled, course.viewerSignedIn, course.id, course.slug]);
 
   async function add(): Promise<boolean> {
     if (!me) {
@@ -55,9 +56,9 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
       <div className="relative">
         <CourseCover slug={course.slug} title={course.title} category={course.category?.name} thumbnailUrl={course.thumbnailUrl} className="!rounded-none" />
         {firstPreviewId ? (
-          <PreviewButton lectureId={firstPreviewId} className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/35 font-bold text-white transition-colors hover:bg-black/45">
+          <PreviewButton lectureId={firstPreviewId} className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/45 font-bold text-white transition-colors hover:bg-black/55">
             <span className="grid size-16 place-items-center rounded-full bg-white text-[#141833] shadow-float"><PlayCircle className="size-8" /></span>
-            Preview this course
+            <span className="rounded-full bg-black/75 px-3 py-1 text-sm">Preview this course</span>
           </PreviewButton>
         ) : null}
       </div>
@@ -90,7 +91,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>
         <ul className="mt-2.5 space-y-2 text-sm text-ink-2">
           <li className="flex items-center gap-2.5"><MonitorPlay className="size-4 text-muted" />{hours(course.totalDurationSec)} of on-demand video</li>
-          <li className="flex items-center gap-2.5"><Download className="size-4 text-muted" />Downloadable lab files</li>
+          {course.resourceCount > 0 ? <li className="flex items-center gap-2.5"><Download className="size-4 text-muted" />Downloadable lab files</li> : null}
           <li className="flex items-center gap-2.5"><Smartphone className="size-4 text-muted" />Watch on desktop or mobile</li>
           <li className="flex items-center gap-2.5"><InfinityIcon className="size-4 text-muted" />Full lifetime access</li>
           <li className="flex items-center gap-2.5"><Award className="size-4 text-muted" />Certificate of completion</li>

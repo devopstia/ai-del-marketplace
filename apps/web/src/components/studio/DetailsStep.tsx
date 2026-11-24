@@ -14,8 +14,9 @@ export function DetailsStep({ course, categories, patch, goto, locked }: EditorC
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const save = async () => {
     setSaving(true);
-    await patch({ ...f, categoryId: f.categoryId || undefined, objectives: f.objectives.map((s) => s.trim()).filter(Boolean), requirements: f.requirements.map((s) => s.trim()).filter(Boolean) }, "Details saved.");
+    const ok = await patch({ ...f, categoryId: f.categoryId || undefined, objectives: f.objectives.map((s) => s.trim()).filter(Boolean), requirements: f.requirements.map((s) => s.trim()).filter(Boolean) }, "Details saved.");
     setSaving(false);
+    return ok;
   };
   return (
     <fieldset disabled={locked} className="grid max-w-5xl gap-10 lg:grid-cols-[1fr_280px]">

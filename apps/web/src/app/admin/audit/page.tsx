@@ -1,24 +1,30 @@
 "use client";
 import { useState } from "react";
 import { useApi } from "@/lib/useApi";
-import { list, toAudit } from "@/lib/normalize";
+import { paged, toAudit } from "@/lib/normalize";
+import { qs } from "@/lib/qs";
+import { Pager, useDebounced } from "@/components/Pager";
 import { dateTime } from "@/lib/format";
 import { PageHead, DataTable } from "@/components/shell/AppShell";
 import { Skeleton } from "@/components/Empty";
 
-const map = (r: unknown) => list(r, "entries", "logs").map(toAudit);
+const map = (r: unknown) => paged(r, toAudit, "entries", "logs");
 
 export default function AuditLog() {
-  const { data, error } = useApi("/admin/audit", map);
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  const dq = useDebounced(q.trim());
+  // Searched on the server, so older entries are found too.
+  const { data, error } = useApi(`/admin/audit${qs({ q: dq.length > 1 ? dq : undefined, page, pageSize: 50 })}`, map);
   const [open, setOpen] = useState<string | null>(null);
-  const shown = (data ?? []).filter((a) => !q || `${a.action} ${a.actor?.name ?? ""} ${a.targetType} ${a.targetId}`.toLowerCase().includes(q.toLowerCase()));
+  const shown = data?.items ?? [];
   return (
     <>
       <PageHead title="Audit log" sub="Every privileged or financial action: who did it, to what, from where." />
-      <input type="search" aria-label="Filter audit log" className="field mb-4 !w-80 max-w-full" placeholder="Filter by action, person or target" value={q} onChange={(e) => setQ(e.target.value)} />
+      <input type="search" aria-label="Filter audit log" className="field mb-4 !w-80 max-w-full" placeholder="Filter by action, person or target" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
       {error ? <p className="text-rose">{error}</p> : null}
       {data ? (
+        <>
         <DataTable head={["When", "Action", "By", "Target", "IP", ""]} min={880} empty={!shown.length ? <p className="px-4 py-10 text-center text-ink-2">No entries.</p> : null}>
           {shown.map((a) => (
             <tr key={a.id} className="align-top">
@@ -33,6 +39,8 @@ export default function AuditLog() {
             </tr>
           ))}
         </DataTable>
+        <Pager page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} noun="entries" />
+        </>
       ) : !error ? <Skeleton className="h-96" /> : null}
     </>
   );

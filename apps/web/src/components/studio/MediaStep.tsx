@@ -35,7 +35,12 @@ export function MediaStep({ course, patch, reload, goto, locked }: EditorCtx) {
               await patch({ promoVideoAssetId: assetId }, "Promo video uploaded. It will be ready after processing.");
             }} />
         </div>
-        {course.promoVideoAssetId ? <p className="mt-2 text-xs text-muted">Asset <StatusBadge status="processing" /> is checked by a background job.</p> : null}
+        {course.promoVideoAssetId ? (
+          <p className="mt-2 flex items-center gap-2 text-xs text-muted">
+            <StatusBadge status={course.promoVideo?.status ?? "processing"} />
+            {course.promoVideo?.status === "ready" ? "Ready to play." : course.promoVideo?.status === "failed" ? "Processing failed. Upload the video again." : "Being processed. This page updates when it is ready."}
+          </p>
+        ) : null}
       </section>
       <div className="lg:col-span-2"><StepFooter next="curriculum" goto={goto} /></div>
     </div>

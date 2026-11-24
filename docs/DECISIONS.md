@@ -46,3 +46,18 @@
 - **Refunds**: start from a 14-day policy for eligible purchases; research and recommend; define eligibility, instructor responsibilities, commission reversals, disputes; do not assume refunds only before payouts.
 - **No AI integration at this stage** (Phase 7 deferred).
 - The Stripe Connect flow, commission calculation and refund handling must be presented for approval **before** any payment code changes.
+
+## 2026-11-24: Step 0 (make it true) implemented, awaiting the owner's review
+- Branch `feat/step0-truth` (rollback tag `checkpoint-2026-11-24-step0`). No visual redesign; fixes only.
+- Removed invented quotes (/teach "Nadia", /login "Priya"); home instructor stats from `/instructors/featured`; bios no longer shown
+  as quotations; "Downloadable lab files" only when the course has files; readable "Preview this course" label.
+- Studio: changes to a live course can be reviewed, submitted or discarded (the API already kept them as a draft revision);
+  "Save and continue" stays on the step when saving fails; price validated against `/platform/terms`; real promo video status;
+  calm "Payouts open soon" when Stripe isn't configured.
+- Admin: review queue shows changes to live courses (what changes + proposed curriculum; reviewers can watch new videos via
+  `POST /admin/videos/:assetId/playback`, audited); role and suspend changes need confirmation; server-side search and pagination
+  for users, courses, instructors, orders and audit; order detail with per-course split and partial refunds.
+- Search now matches every word across course text and curriculum; the home "Popular" chips are topics the catalogue really
+  covers (Playwright checks each returns a course).
+- Tests: smoke script updated to the one-course catalogue (it still expected the old 8 courses); new Playwright tests for the
+  revision flow, role confirmation and popular searches; `scripts/demo-catalogue.sh` reproduces the owner's demo catalogue.

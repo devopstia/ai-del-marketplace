@@ -1,7 +1,7 @@
 // Tolerant converters from raw API JSON to the app's types.
 // The API contract lives in docs/BUILD_SPEC.md and docs/API.md; these keep the UI stable if a field is
 // nested slightly differently (e.g. `instructor.name` vs `instructorName`).
-import type {
+import type { StudioRevision,
   AdminInstructor, AdminStats, AdminUser, AuditEntry, Cart, Category, Certificate, CourseCard, CourseDetail,
   InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, Review, ReviewSummary, Role,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
@@ -172,6 +172,8 @@ export function toCourseDetail(x: unknown): CourseDetail {
     inCart: Boolean(raw.inCart ?? o.inCart ?? obj(raw.viewer).inCart),
     isOwner: Boolean(raw.isOwner ?? o.isOwner ?? obj(raw.viewer).isOwner),
     hasPromo: Boolean(o.hasPromo ?? o.promoVideoAssetId),
+    resourceCount: num(raw.resourceCount ?? o.resourceCount ?? obj(raw.totals).resources),
+    viewerSignedIn: Boolean(obj(raw.viewer).signedIn),
   };
 }
 
@@ -228,7 +230,8 @@ export function toOrder(x: unknown): Order {
     currency: str(o.currency, "usd"),
     createdAt: str(o.createdAt),
     paidAt: (o.paidAt as string) ?? null,
-    lines: arr(o.lines ?? o.orderLines ?? o.items).map((l) => {
+    // Admin order lists send `courses: [{ id, title, slug, refunded }]` and `lines` as a count.
+    lines: (Array.isArray(o.lines) || !Array.isArray(o.courses) ? arr(o.lines ?? o.orderLines ?? o.items) : arr(o.courses).map((c) => ({ course: c, refundedAt: obj(c).refunded ? "refunded" : null }))).map((l) => {
       const lo = obj(l);
       const c = obj(lo.course);
       const ins = obj(lo.instructor ?? c.instructor);
@@ -340,6 +343,22 @@ export function toStudioCourse(x: unknown): StudioCourse {
     lectureCount: o.lectureCount != null ? num(o.lectureCount) : sections.reduce((a, s) => a + s.lectures.length, 0),
     updatedAt: str(o.submittedAt ?? o.updatedAt) || undefined,
     instructor: obj(o.instructor).name ? instructorRef(o) : null,
+    version: o.version === "draft" ? "draft" : o.version === "live" ? "live" : undefined,
+    revision: toStudioRevision(o.revision),
+    promoVideo: o.promoVideo ? { id: str(obj(o.promoVideo).id), status: str(obj(o.promoVideo).status, "processing") as "processing" } : null,
+  };
+}
+
+export function toStudioRevision(x: unknown): StudioRevision | null {
+  if (!x) return null;
+  const r = obj(x);
+  if (!r.id) return null;
+  return {
+    id: str(r.id),
+    status: str(r.status, "draft") as StudioRevision["status"],
+    reviewNote: (str(r.reviewNote) || null),
+    submittedAt: (str(r.submittedAt) || null),
+    changes: arr(r.changes).map((c) => { const co = obj(c); return { area: str(co.area), kind: str(co.kind), message: str(co.message) }; }).filter((c) => c.message),
   };
 }
 

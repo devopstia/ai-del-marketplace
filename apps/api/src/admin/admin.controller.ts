@@ -43,6 +43,10 @@ export class AdminController {
   @Get('courses') courses(@ZQuery(coursesQuery) q: z.infer<typeof coursesQuery>) { return this.svc.courses(q); }
   @Get('courses/:id') course(@Param('id') id: string) { return this.svc.course(id); }
 
+  /** Reviewers watch any video asset (e.g. a new video in a revision that is not live yet). Audited. */
+  @HttpCode(200) @Post('videos/:assetId/playback')
+  videoPlayback(@Param('assetId') assetId: string, @ActorCtx() a: Actor) { return this.svc.videoPlayback(a, assetId); }
+
   @HttpCode(200) @Post('courses/:id/approve')
   approve(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decide(a, id, 'approve', b.note); }
   @HttpCode(200) @Post('courses/:id/request-changes')

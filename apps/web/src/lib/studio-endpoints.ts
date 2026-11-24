@@ -3,6 +3,7 @@ const c = (id: string) => `/instructor/courses/${id}`;
 export const E = {
   course: c,
   submit: (id: string) => `${c(id)}/submit`,
+  revision: (id: string) => `${c(id)}/revision`,
   sections: (id: string) => `${c(id)}/sections`,
   section: (id: string, sid: string) => `${c(id)}/sections/${sid}`,
   lectures: (id: string, sid: string) => `${c(id)}/sections/${sid}/lectures`,

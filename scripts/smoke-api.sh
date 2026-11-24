@@ -26,30 +26,31 @@ j() { jq -r "$1" "$TMP/body"; }
 login() { req "$1" GET /auth/csrf; req "$1" POST /auth/login "{\"email\":\"$2\",\"password\":\"$SEED_PASSWORD\"}"; check "login $2" "$code" 200; }
 fetch() { curl -s -o "${2:-/dev/null}" -w '%{http_code}' "$1"; }
 
-FREE_SLUG=ai-foundations-the-vocabulary-of-ai; PAID_SLUG=hands-on-cloud-ai-labs; NADIA_SLUG=n8n-automation-for-devops-teams
+# Catalogue (owner, 2026-11-24): ONE DEL course "AI for DevOps" (import) + the seeded demo instructor's courses (multi-instructor checks).
+PAID_SLUG=ai-for-devops; NADIA_SLUG=n8n-automation-for-devops-teams
 
 echo "== public catalogue (real DEL catalogue imported)"
 req anon GET /health; check "health" "$code" 200
 req anon GET /categories; check "categories" "$(j '.items|length')" 6
-req anon GET '/courses?sort=newest&pageSize=48'; check "published courses: 8 DEL + 2 demo" "$(j '.total >= 10')" true
+req anon GET '/courses?sort=newest&pageSize=48'; check "published courses: AI for DevOps + demo instructor" "$(j "[.items[].slug]|index(\"$PAID_SLUG\") != null and index(\"$NADIA_SLUG\") != null")" true
 cp "$TMP/body" "$TMP/list.json"
+req anon GET '/courses?q=RAG%20Terraform'; check "search: every word, across course and curriculum (RAG Terraform)" "$(j "[.items[].slug]|index(\"$PAID_SLUG\") != null")" true
+req anon GET '/courses?q=zzzz-no-such-topic'; check "search with no match is empty" "$(j .total)" 0
 FAKE=0; for S in $(jq -r '.items[].slug' "$TMP/list.json"); do
   req anon GET "/courses/$S/reviews?pageSize=50"; FAKE=$((FAKE + $(j '[.items[]|select(.author.name|test("Priya Natarajan|Marco Rossi|Lena Fischer"))]|length')))
 done; check "no invented reviews on any course" "$FAKE" 0
 req anon GET /platform/terms; check "terms: instructors keep 80%" "$(j .instructorSharePercent)" 80
 check "terms: price range" "$(j '"\(.pricing.minCents)-\(.pricing.maxCents)"')" 499-99999
-req anon GET "/courses/$FREE_SLUG"; check "free course: 12 real lectures" "$(j .totals.lectures)" 12
-check "free course is free" "$(j .priceCents)" 0
-FREE_ID="$(j .id)"
 req anon GET "/courses/$PAID_SLUG"; check "course detail" "$code" 200
 if grep -qE 'storageKey|videos/|resources/|X-Amz' "$TMP/body"; then bad "detail leaks storage keys/URLs"; else ok "detail has no asset URLs"; fi
-check "imported course: 9 lectures" "$(j .totals.lectures)" 9
+check "imported course: lectures from the source videos" "$(j '.totals.lectures >= 40 and .totals.lectures == .totals.videoLectures')" true
+TOTAL_LECTURES="$(j .totals.lectures)"
 check "detail: resourceCount from lab ZIPs" "$(j '.resourceCount > 0 and (.labFiles|length) == .resourceCount')" true
 check "detail: captions available" "$(j .hasCaptions)" true
 check "detail: lastVerifiedAt set" "$(j '.lastVerifiedAt != null')" true
 check "detail: viewer block (signed out)" "$(j '.viewer.signedIn')" false
 check "detail: lecture summaries" "$(j '[.curriculum[].lectures[]|select(.summary!="")]|length > 0')" true
-check "first two lectures are free previews" "$(j '[.curriculum[].lectures[]|.isPreview][0:3]|tostring')" '[true,true,false]'
+check "free previews from several sections" "$(j '[.curriculum[]|select(any(.lectures[]; .isPreview))]|length >= 2')" true
 PAID_ID="$(j .id)"; DEL_ID="$(j .instructor.id)"; PREVIEW_LECTURE="$(j '[.curriculum[].lectures[]|select(.isPreview)][0].id')"; LOCKED_LECTURE="$(j '[.curriculum[].lectures[]|select(.isPreview|not)][0].id')"
 check "real course thumbnail served" "$(fetch "$(j .thumbnailUrl)")" 200
 check "POST without CSRF header is refused" "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/anon.jar" -X POST "$API/lectures/$PREVIEW_LECTURE/preview-playback")" 403
@@ -107,20 +108,19 @@ check "lab ZIP is a ZIP" "$(head -c 2 "$TMP/lab.zip")" PK
 req stu POST "/courses/$PAID_SLUG/reviews" '{"rating":5,"body":"Smoke test review"}'; check "verified review" "$code" 201
 req stu GET /admin/stats; check "student cannot open admin → 403" "$code" 403
 
-echo "== demo student: real quiz + certificate on the free course"
+echo "== buyer: real quiz + certificate on the purchased DEL course"
 login del courses@del.example
-req del GET "/instructor/courses/$FREE_ID"; cp "$TMP/body" "$TMP/free-owner.json"
-check "DEL instructor sees the imported course" "$(jq '[.sections[].lectures[]]|length' "$TMP/free-owner.json")" 12
-login demo student@del.example
-req demo GET "/me/courses/$FREE_SLUG"; check "demo student owns the free course" "$code" 200
-cp "$TMP/body" "$TMP/free.json"
-for L in $(jq -r '.sections[].lectures[].id' "$TMP/free.json"); do req demo PUT "/lectures/$L/progress" '{"positionSec":1,"completed":true}'; done
-QUIZ="$(jq -r '[.sections[].lectures[]|select(.hasQuiz)][0].id' "$TMP/free.json")"
-req demo GET "/lectures/$QUIZ/quiz"; if grep -q '"correct"' "$TMP/body"; then bad "quiz leaks answers"; else ok "quiz hides answers"; fi
+req del GET "/instructor/courses/$PAID_ID"; cp "$TMP/body" "$TMP/paid-owner.json"
+check "DEL instructor sees the imported course" "$(jq '[.sections[].lectures[]]|length' "$TMP/paid-owner.json")" "$TOTAL_LECTURES"
+req stu GET "/me/courses/$PAID_SLUG"; check "buyer opens the course" "$code" 200
+cp "$TMP/body" "$TMP/paid.json"
+for L in $(jq -r '.sections[].lectures[].id' "$TMP/paid.json"); do req stu PUT "/lectures/$L/progress" '{"positionSec":1,"completed":true}'; done
+QUIZ="$(jq -r '[.sections[].lectures[]|select(.hasQuiz)][0].id' "$TMP/paid.json")"
+req stu GET "/lectures/$QUIZ/quiz"; if grep -q '"correct"' "$TMP/body"; then bad "quiz leaks answers"; else ok "quiz hides answers"; fi
 check "real quiz has 3–5 questions" "$(j '(.questions|length) >= 3 and (.questions|length) <= 5')" true
-ANSWERS="$(jq -c --arg q "$QUIZ" '[.sections[].lectures[]|select(.id==$q)][0].quiz.questions|map(.correct)' "$TMP/free-owner.json")"
-req demo POST "/lectures/$QUIZ/quiz" "{\"answers\":$ANSWERS}"; check "quiz scored" "$(j .score)" 100
-req demo POST "/courses/$FREE_SLUG/certificate"; check "certificate at 100%" "$code" 200
+ANSWERS="$(jq -c --arg q "$QUIZ" '[.sections[].lectures[]|select(.id==$q)][0].quiz.questions|map(.correct)' "$TMP/paid-owner.json")"
+req stu POST "/lectures/$QUIZ/quiz" "{\"answers\":$ANSWERS}"; check "quiz scored" "$(j .score)" 100
+req stu POST "/courses/$PAID_SLUG/certificate"; check "certificate at 100%" "$code" 200
 CODE="$(j .code)"; req anon GET "/certificates/$CODE"; check "certificate verifies publicly" "$(j .valid)" true
 
 echo "== instructor: ownership, pricing rules, Stripe calm state, upload, admin approval"
@@ -187,7 +187,7 @@ req admin GET "/admin/audit?action=course.revision_&targetId=$NEW_ID"; check "re
 echo "== admin lists: pagination, search, order detail, partial refund"
 req admin GET '/admin/users?page=1&pageSize=2'; check "users paginated" "$(j '"\(.items|length) \(.page) \(.pageSize) \(.totalPages == ((.total + 1) / 2 | floor))"')" "2 1 2 true"
 req admin GET '/admin/users?page=2&pageSize=2'; check "users page 2" "$(j '.page')" 2
-req admin GET '/admin/courses?pageSize=3'; check "courses paginated" "$(j '"\(.items|length) \(.total >= 10)"')" "3 true"
+req admin GET '/admin/courses?pageSize=2'; check "courses paginated" "$(j '"\(.items|length) \(.total > 2) \(.pageSize)"')" "2 true 2"
 req admin GET '/admin/instructors?pageSize=1'; check "instructors paginated" "$(j '"\(.items|length) \(.total >= 2)"')" "1 true"
 req admin GET "/admin/audit?q=$(printf %s "$EMAIL" | jq -sRr @uri)&pageSize=5"; check "audit search by actor email (server-side)" "$(j '.total >= 1')" true
 req admin GET "/admin/orders?q=$(printf %s "$EMAIL" | jq -sRr @uri)"; check "orders search + course titles" "$(j '.items[0].courses|length')" 2

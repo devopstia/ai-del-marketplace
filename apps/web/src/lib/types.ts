@@ -97,6 +97,10 @@ export interface CourseDetail extends CourseCard {
   inCart?: boolean;
   isOwner?: boolean;
   hasPromo?: boolean;
+  /** Downloadable files across the course; "Downloadable lab files" is shown only when > 0. */
+  resourceCount: number;
+  /** True when the server already answered for a signed-in visitor (enrolled/inCart are then authoritative). */
+  viewerSignedIn: boolean;
 }
 
 export interface Review {
@@ -253,6 +257,19 @@ export interface StudioCourse {
   lectureCount?: number;
   updatedAt?: string;
   instructor?: { id: string; name: string } | null;
+  /** Which content the editor shows: the live course, or the draft changes of a published course. */
+  version?: "live" | "draft";
+  /** Open draft changes of a published course (null when there are none). */
+  revision?: StudioRevision | null;
+  promoVideo?: { id: string; status: "uploading" | "processing" | "ready" | "failed" } | null;
+}
+
+export interface StudioRevision {
+  id: string;
+  status: "draft" | "in_review" | "changes_requested";
+  reviewNote: string | null;
+  submittedAt: string | null;
+  changes: { area: string; kind: string; message: string }[];
 }
 
 export interface SaleRow {
@@ -283,6 +300,9 @@ export interface StudentRow {
 }
 
 export interface StripeStatus {
+  /** False until the platform's Stripe keys are configured: onboarding is not possible yet. */
+  stripeConfigured: boolean;
+  pendingPayoutCents: number;
   connected: boolean;
   payoutsEnabled: boolean;
   detailsSubmitted?: boolean;

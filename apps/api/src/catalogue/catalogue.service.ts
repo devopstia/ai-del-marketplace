@@ -56,13 +56,7 @@ export class CatalogueService {
 
   async listCourses(q: CourseQuery) {
     const where: Prisma.CourseWhereInput = { status: 'published' };
-    if (q.q) {
-      where.OR = [
-        { title: { contains: q.q, mode: 'insensitive' } },
-        { subtitle: { contains: q.q, mode: 'insensitive' } },
-        { instructor: { name: { contains: q.q, mode: 'insensitive' } } },
-      ];
-    }
+    if (q.q) Object.assign(where, searchWhere(q.q));
     if (q.category) where.category = { slug: q.category };
     if (q.level) where.level = q.level;
     if (q.price === 'free') where.priceCents = 0;
@@ -334,4 +328,35 @@ export class CatalogueService {
       valid: true,
     };
   }
+}
+
+/**
+ * Catalogue search: every word must appear somewhere in the course (title, subtitle, description, instructor,
+ * section or lecture titles of the live course). Simple plural stemming ("servers" also finds "server"). Only published
+ * content is searched; draft revisions are separate and never match.
+ */
+export function searchWhere(raw: string): Prisma.CourseWhereInput {
+  const words = raw
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
+    .filter(Boolean)
+    .slice(0, 6)
+    .map((w) => (w.length > 4 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w));
+  if (!words.length) return {};
+  return {
+    AND: words.map((w): Prisma.CourseWhereInput => {
+      const c = { contains: w, mode: 'insensitive' as const };
+      return {
+        OR: [
+          { title: c },
+          { subtitle: c },
+          { description: c },
+          { instructor: { name: c } },
+          { sections: { some: { title: c } } },
+          { sections: { some: { lectures: { some: { title: c } } } } },
+        ],
+      };
+    }),
+  };
 }

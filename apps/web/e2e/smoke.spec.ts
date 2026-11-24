@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import { expect, login, logout, PASSWORD, tinyVideo, USERS, visible } from "./helpers";
 
-const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-powered-cicd-with-github-actions";
+const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-for-devops";
 
 test.describe("public catalogue", () => {
   test("home shows the hero, categories and courses", async ({ page }) => {
@@ -20,6 +20,16 @@ test.describe("public catalogue", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByTestId("video-player")).toBeVisible();
     await expect.poll(() => dialog.locator("video").getAttribute("src")).toContain("http");
+  });
+
+  test("every popular search on the home page finds a course", async ({ page }) => {
+    await page.goto("/");
+    const chips = await page.locator('a[href^="/courses?q="]').evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
+    expect(chips.length).toBeGreaterThan(0);
+    for (const href of chips) {
+      await page.goto(href);
+      await expect(page.getByTestId("course-row").first(), href).toBeVisible();
+    }
   });
 
   test("search filters the catalogue", async ({ page }) => {
@@ -115,5 +125,53 @@ test.describe.serial("instructor publishes, admin approves", () => {
     await expect(page.getByText("Course approved and published.")).toBeVisible();
     await page.goto(`/courses?q=${encodeURIComponent(title)}`);
     await expect(page.getByTestId("course-row").first()).toContainText(title);
+  });
+
+  const subtitle = `Updated by Playwright ${Date.now()}`;
+
+  test("instructor edits the live course and submits the changes", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.instructor, PASSWORD, "/studio/courses");
+    await page.getByRole("link", { name: title }).first().click();
+    await expect(page.getByText("This course is live.")).toBeVisible();
+    await page.getByLabel("Subtitle").fill(subtitle);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Details saved.").first()).toBeVisible();
+    await expect(page.getByText(/You have unsubmitted changes/)).toBeVisible();
+    // Learners still see the live version.
+    const slug = await page.getByRole("link", { name: "View live page" }).getAttribute("href");
+    await page.getByRole("link", { name: /Review and submit/ }).first().click();
+    await expect(page.getByTestId("revision-changes")).toContainText("Subtitle");
+    await page.getByTestId("submit-review").click();
+    await expect(page.getByText(/Editing is paused while an admin reviews your changes/)).toBeVisible();
+    await page.goto(slug!);
+    await expect(page.getByText(subtitle)).toHaveCount(0);
+  });
+
+  test("admin reviews the changes and approves them", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/review");
+    await page.getByRole("button", { name: new RegExp(title) }).click();
+    await expect(page.getByText("Changes to a live course")).toBeVisible();
+    await expect(page.getByTestId("review-changes")).toContainText("Subtitle");
+    await page.getByTestId("admin-approve").click();
+    await expect(page.getByText("Changes approved. They are live now.")).toBeVisible();
+    await page.goto(`/courses?q=${encodeURIComponent(title)}`);
+    await page.getByTestId("course-row").first().click();
+    await expect(page.getByText(subtitle).first()).toBeVisible();
+  });
+
+  test("admin role changes ask for confirmation", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/users");
+    await page.getByLabel("Search users").fill("nadia");
+    const roles = page.getByRole("group", { name: /Roles of Nadia/ });
+    const adminChip = roles.getByRole("button", { name: "admin", exact: true });
+    await expect(adminChip).toHaveAttribute("aria-pressed", "false");
+    await adminChip.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Give the admin role");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(adminChip).toHaveAttribute("aria-pressed", "false");
   });
 });

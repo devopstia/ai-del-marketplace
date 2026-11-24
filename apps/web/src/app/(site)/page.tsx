@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { ArrowUpRight, Search } from "lucide-react";
-import { getCategories, getCourses, getInstructor } from "@/lib/catalog";
+import { getCategories, getCourses, getFeaturedInstructors } from "@/lib/catalog";
 import { HeroLoop } from "@/components/HeroLoop";
 import { CourseTile, Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { RatingInline } from "@/components/Stars";
 import { Avatar } from "@/components/Avatar";
 import { categoryIcon } from "@/components/CategoryIcon";
-import { compact, hours, levelLabel } from "@/lib/format";
+import { compact, hours, levelLabel, plural } from "@/lib/format";
 import type { CourseCard, InstructorSummary } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const searches = ["Kubernetes", "MCP servers", "Amazon Bedrock", "GitHub Actions", "Ollama", "n8n"];
+// Topics the catalogue really covers; e2e checks that each one returns at least one course.
+const searches = ["Kubernetes", "MCP", "Amazon Bedrock", "RAG", "Terraform", "n8n"];
 
 function SectionHead({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {
   return (
@@ -66,17 +67,13 @@ function RankedRow({ c, rank }: { c: CourseCard; rank: number }) {
   );
 }
 
-const voices: Record<string, string> = {
-  default: "I teach the way I wish I had been taught: one real system, built end to end, then broken on purpose so you learn to fix it.",
-};
-
-function InstructorFeature({ i, courses }: { i: InstructorSummary; courses: CourseCard[] }) {
-  const mine = courses.filter((c) => c.instructor.id === i.id);
-  const students = i.studentCount ?? mine.reduce((a, c) => a + c.studentCount, 0);
-  const quote = i.bio ? (i.bio.match(/^.*?[.!?](\s|$)/)?.[0] ?? i.bio).trim() : voices.default;
+function InstructorFeature({ i }: { i: InstructorSummary }) {
+  // Counts come from /instructors/featured; the bio is the instructor's own text, so it is not shown as a quotation.
+  const courses = i.courseCount ?? 0;
+  const students = i.studentCount ?? 0;
   return (
     <figure className="flex h-full flex-col border-t-2 border-ink pt-6">
-      <blockquote className="font-display text-xl font-semibold leading-snug text-ink md:text-[1.4rem]">“{quote}”</blockquote>
+      {i.bio ? <p className="font-display text-xl font-semibold leading-snug text-ink md:text-[1.4rem]">{i.bio}</p> : null}
       <figcaption className="mt-6 flex items-center gap-3">
         <Avatar name={i.name} src={i.avatarUrl} size={48} />
         <span className="min-w-0">
@@ -84,23 +81,22 @@ function InstructorFeature({ i, courses }: { i: InstructorSummary; courses: Cour
           <span className="block truncate text-sm text-muted">{i.headline ?? "Instructor"}</span>
         </span>
       </figcaption>
-      <p className="mt-4 text-sm text-muted">{mine.length || i.courseCount || 0} courses{students ? `, ${compact(students)} learners` : ""}</p>
+      <p className="mt-4 text-sm text-muted">{plural(courses, "course")}{students ? `, ${plural(students, "learner")}` : ""}</p>
     </figure>
   );
 }
 
 export default async function Home() {
-  const [cats, popular, newest, rated] = await Promise.all([
+  const [cats, popular, newest, rated, instructors] = await Promise.all([
     getCategories(),
     getCourses({ sort: "popular", pageSize: 5 }),
     getCourses({ sort: "newest", pageSize: 8 }),
     getCourses({ sort: "rating", pageSize: 3 }),
+    getFeaturedInstructors(3),
   ]);
   const all = [...popular.items, ...newest.items, ...rated.items];
   const featured = rated.items[0] ?? popular.items[0];
   const runnersUp = (rated.items.length > 1 ? rated.items.slice(1, 3) : newest.items.filter((c) => c.slug !== featured?.slug).slice(0, 2));
-  const instructorIds = [...new Set(all.map((c) => c.instructor.id).filter(Boolean))].slice(0, 3);
-  const instructors = (await Promise.all(instructorIds.map((id) => getInstructor(id)))).filter(Boolean).map((x) => x!.instructor);
   const offline = !popular.ok && !newest.ok;
   const countFor = (slug: string) => all.filter((c) => c.category?.slug === slug).length;
 
@@ -203,7 +199,7 @@ export default async function Home() {
         <section className="container-x pt-20">
           <SectionHead title="Taught by practitioners" sub="Every instructor is reviewed before they publish, and every course is checked before it goes live." />
           <div className={`grid gap-10 ${instructors.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:max-w-[66%]"}`}>
-            {instructors.map((i) => <InstructorFeature key={i.id} i={i} courses={all} />)}
+            {instructors.map((i) => <InstructorFeature key={i.id} i={i} />)}
           </div>
         </section>
       ) : null}

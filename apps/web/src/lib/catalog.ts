@@ -32,3 +32,9 @@ export async function getInstructor(id: string): Promise<{ instructor: Instructo
   const base = obj(o.instructor ?? o);
   return { instructor: toInstructor(base), courses: list(o.courses ?? base.courses).map(toCourseCard) };
 }
+
+/** Approved instructors with published courses and correct per-instructor counts (never derive these from course lists). */
+export async function getFeaturedInstructors(limit = 3): Promise<InstructorSummary[]> {
+  const r = await serverGet(`/instructors/featured${qs({ limit })}`);
+  return r.ok ? list(r.data).map(toInstructor) : [];
+}

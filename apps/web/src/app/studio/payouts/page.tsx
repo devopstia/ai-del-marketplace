@@ -4,6 +4,7 @@ import { BadgeCheck, CircleAlert, ExternalLink, Loader2, Building2 } from "lucid
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
+import { money } from "@/lib/format";
 import type { StripeStatus } from "@/lib/types";
 import { PageHead } from "@/components/shell/AppShell";
 import { Skeleton } from "@/components/Empty";
@@ -17,6 +18,8 @@ const map = (r: unknown): StripeStatus => {
     detailsSubmitted: Boolean(o.detailsSubmitted),
     accountId: (o.accountId ?? o.stripeAccountId) as string | null,
     isPlatform: Boolean(o.isPlatform ?? o.platform),
+    stripeConfigured: o.stripeConfigured !== false,
+    pendingPayoutCents: Number(o.pendingPayoutCents ?? 0) || 0,
   };
 };
 
@@ -31,7 +34,7 @@ export default function PayoutsPage() {
       window.location.assign(String(r.url));
     } catch (e) { toast("error", errMsg(e)); setBusy(false); }
   }
-  const state = !data ? null : data.isPlatform ? "platform" : data.payoutsEnabled ? "ready" : data.connected ? "incomplete" : "none";
+  const state = !data ? null : data.isPlatform ? "platform" : !data.stripeConfigured ? "unavailable" : data.payoutsEnabled ? "ready" : data.connected ? "incomplete" : "none";
   return (
     <>
       <PageHead title="Payouts" sub="Your share of each sale is transferred to your own Stripe account. Stripe handles identity checks and bank payouts." />
@@ -43,10 +46,11 @@ export default function PayoutsPage() {
             {state === "ready" || state === "platform" ? <BadgeCheck className="size-9 shrink-0 text-mint" /> : state === "incomplete" ? <CircleAlert className="size-9 shrink-0 text-amber" /> : <Building2 className="size-9 shrink-0 text-violet" />}
             <div>
               <h2 className="font-display text-xl font-bold">
-                {state === "platform" ? "Platform-owned courses" : state === "ready" ? "Payouts are on" : state === "incomplete" ? "Finish your Stripe setup" : "Connect Stripe to get paid"}
+                {state === "platform" ? "Platform-owned courses" : state === "unavailable" ? "Payouts open soon" : state === "ready" ? "Payouts are on" : state === "incomplete" ? "Finish your Stripe setup" : "Connect Stripe to get paid"}
               </h2>
               <p className="mt-1 max-w-xl text-ink-2">
                 {state === "platform" ? "Your courses are sold by the platform account itself, so no transfers are needed."
+                  : state === "unavailable" ? `Stripe payouts are not switched on for the marketplace yet. Your sales are recorded with your share${data?.pendingPayoutCents ? ` (${money(data.pendingPayoutCents)} so far)` : ""}, and you can connect your Stripe account here as soon as payouts open.`
                   : state === "ready" ? "Stripe has verified your account. Your share of each sale is transferred automatically after payment."
                   : state === "incomplete" ? "Stripe needs a few more details before it can pay you. Sales are recorded meanwhile and transferred once you’re verified."
                   : "Setup takes about five minutes on Stripe’s site. You’ll need your ID and bank details. We never see them."}
@@ -54,7 +58,7 @@ export default function PayoutsPage() {
               {data?.accountId ? <p className="mt-2 text-xs text-muted">Stripe account {data.accountId}</p> : null}
             </div>
           </div>
-          {state !== "platform" ? (
+          {state !== "platform" && state !== "unavailable" ? (
             <button type="button" className={state === "ready" ? "btn btn-outline" : "btn btn-primary"} onClick={onboard} disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <ExternalLink className="size-4" />}
               {state === "ready" ? "Update details on Stripe" : state === "incomplete" ? "Continue on Stripe" : "Set up payouts with Stripe"}

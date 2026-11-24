@@ -72,7 +72,8 @@ export function CourseEditor({ id }: { id: string }) {
   }, [id, reload, toast]);
 
   // Poll while uploaded videos are still being processed by the worker.
-  const processing = !!course?.sections.some((s) => s.lectures.some((l) => l.videoStatus === "processing" || l.videoStatus === "uploading"));
+  const busy = (st?: string | null) => st === "processing" || st === "uploading";
+  const processing = !!course && (busy(course.promoVideo?.status) || course.sections.some((s) => s.lectures.some((l) => busy(l.videoStatus))));
   useEffect(() => {
     if (!processing) return;
     const t = setInterval(() => void reload(), 4000);
@@ -83,7 +84,9 @@ export function CourseEditor({ id }: { id: string }) {
 
   if (err) return <p className="text-rose">{err}</p>;
   if (!course) return <Skeleton className="h-[60vh]" />;
-  const locked = course.status === "in_review";
+  const revision = course.revision ?? null;
+  // A new course is locked while in review; a published course is locked while its draft changes are in review.
+  const locked = course.status === "in_review" || revision?.status === "in_review";
   const ctx: EditorCtx = { course, categories, reload, patch, goto, locked };
   const checks = checklist(course);
   const stepDone: Record<Step, boolean> = {
@@ -91,7 +94,7 @@ export function CourseEditor({ id }: { id: string }) {
     media: checks.filter((c) => c.step === "media").every((c) => c.ok),
     curriculum: checks.filter((c) => c.step === "curriculum" && c.required).every((c) => c.ok),
     pricing: true,
-    submit: course.status === "published" || course.status === "in_review",
+    submit: course.status === "in_review" || (course.status === "published" && (!revision || revision.status === "in_review")),
   };
 
   return (
@@ -105,7 +108,16 @@ export function CourseEditor({ id }: { id: string }) {
         {course.status === "published" && course.slug ? <Link href={`/courses/${course.slug}`} className="btn btn-outline btn-sm" target="_blank"><ExternalLink className="size-4" />View live page</Link> : null}
       </div>
 
-      {locked ? <p className="mt-5 rounded-tile bg-amber-soft px-4 py-3 text-sm text-ink-2"><b>In review.</b> Editing is paused while an admin reviews this course. You’ll be able to edit again if changes are requested.</p> : null}
+      {locked ? <p className="mt-5 rounded-tile bg-amber-soft px-4 py-3 text-sm text-ink-2"><b>In review.</b> Editing is paused while an admin reviews {revision ? "your changes. Learners still see the live course" : "this course"}. You’ll be able to edit again if changes are requested.</p> : null}
+      {course.status === "published" && !locked ? (
+        <p className="mt-5 rounded-tile border border-line bg-surface px-4 py-3 text-sm text-ink-2">
+          <b className="text-ink">This course is live.</b>{" "}
+          {revision ? <>You have unsubmitted changes. Learners see the live version until a reviewer approves them. <Link href={`/studio/courses/${id}?step=submit`} className="link">Review and submit changes</Link></> : "Edits you make are saved as draft changes and go live after review. Learners keep seeing the current version until then."}
+        </p>
+      ) : null}
+      {revision?.status === "changes_requested" && revision.reviewNote ? (
+        <div className="mt-5 rounded-tile border-l-4 border-cyan bg-cyan-soft px-4 py-3 text-sm"><p className="font-bold">Changes requested by the reviewer</p><p className="mt-1 whitespace-pre-line text-ink-2">{revision.reviewNote}</p></div>
+      ) : null}
       {course.status === "changes_requested" && course.reviewNote ? (
         <div className="mt-5 rounded-tile border-l-4 border-cyan bg-cyan-soft px-4 py-3 text-sm"><p className="font-bold">Changes requested by the reviewer</p><p className="mt-1 whitespace-pre-line text-ink-2">{course.reviewNote}</p></div>
       ) : null}
@@ -140,14 +152,16 @@ export function CourseEditor({ id }: { id: string }) {
   );
 }
 
-export function StepFooter({ onSave, saving, next, goto, disabled }: { onSave?: () => unknown; saving?: boolean; next?: Step; goto: (s: Step) => void; disabled?: boolean }) {
+/** `onSave` returns false when the save failed (the error is already shown); the editor then stays on this step. */
+/** `blocked`: the form has an error the learner must fix first (both buttons disabled, no spinner). */
+export function StepFooter({ onSave, saving, next, goto, disabled, nextLabel, blocked }: { onSave?: () => Promise<boolean> | boolean; saving?: boolean; next?: Step; goto: (s: Step) => void; disabled?: boolean; nextLabel?: string; blocked?: boolean }) {
   return (
     <div className="sticky bottom-0 z-10 -mx-4 mt-10 flex items-center justify-end gap-2 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
-      {onSave ? <button type="button" className="btn btn-outline" onClick={onSave} disabled={saving || disabled}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Save</button> : null}
+      {onSave ? <button type="button" className="btn btn-outline" onClick={onSave} disabled={saving || disabled || blocked}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Save</button> : null}
       {next ? (
-        <button type="button" className="btn btn-primary" disabled={saving}
-          onClick={async () => { if (onSave && !disabled) await onSave(); goto(next); }}>
-          Save and continue
+        <button type="button" className="btn btn-primary" disabled={saving || (blocked && !disabled)}
+          onClick={async () => { if (onSave && !disabled && (await onSave()) === false) return; goto(next); }}>
+          {nextLabel ?? (onSave ? "Save and continue" : "Continue")}
         </button>
       ) : null}
     </div>

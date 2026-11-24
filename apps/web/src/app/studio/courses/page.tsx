@@ -78,7 +78,7 @@ function CoursesInner() {
               <Link href={`/studio/courses/${c.id}`} className="grid gap-4 rounded-panel border border-line bg-surface p-3 hover:border-line-strong sm:grid-cols-[180px_1fr_auto] sm:items-center sm:p-4">
                 <CourseCover slug={c.slug || c.id} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} size="sm" />
                 <div className="min-w-0 px-1">
-                  <div className="flex flex-wrap items-center gap-2"><StatusBadge status={c.status} />{c.category ? <span className="text-xs text-muted">{c.category.name}</span> : null}</div>
+                  <div className="flex flex-wrap items-center gap-2"><StatusBadge status={c.status} />{c.revision ? <span className="chip !py-0 text-xs">{c.revision.status === "in_review" ? "Changes in review" : c.revision.status === "changes_requested" ? "Changes requested" : "Draft changes"}</span> : null}{c.category ? <span className="text-xs text-muted">{c.category.name}</span> : null}</div>
                   <p className="mt-1.5 font-display text-lg font-bold leading-snug">{c.title || "Untitled course"}</p>
                   <p className="mt-1 text-sm text-muted">{c.lectureCount ? `${c.lectureCount} lectures, ` : ""}updated {date(c.updatedAt)}</p>
                   {c.status === "changes_requested" && c.reviewNote ? <p className="mt-2 line-clamp-2 rounded-lg bg-cyan-soft px-3 py-2 text-sm text-ink-2"><b>Reviewer:</b> {c.reviewNote}</p> : null}

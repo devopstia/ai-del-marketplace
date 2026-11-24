@@ -224,6 +224,11 @@ describe('e2e: buy and learn', () => {
     const item = queue.body.items.find((i: any) => i.id === course.id);
     expect(item.kind).toBe('revision');
     expect(item.changes.map((c: any) => c.message)).toEqual(expect.arrayContaining(['Title: “rev-course” → “Revised title”', 'Price: $19.99 → $29.99']));
+    // Reviewers can watch the new (not yet live) video; instructors and students cannot use the admin route.
+    const pb = await admin.send('post', `/api/admin/videos/${newVideo.id}/playback`).expect(200);
+    expect(pb.body.url).toEqual(expect.any(String));
+    await teacher.send('post', `/api/admin/videos/${newVideo.id}/playback`).expect(403);
+    await admin.send('post', `/api/admin/videos/00000000-0000-0000-0000-000000000000/playback`).expect(404);
 
     // Atomic: a video that stops being ready makes approval fail and nothing changes.
     await prisma.videoAsset.update({ where: { id: newVideo.id }, data: { status: 'processing' } });

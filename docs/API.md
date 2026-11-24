@@ -64,7 +64,7 @@ super_admin · `super` = super_admin. "Own" means the service only ever returns/
 |---|---|---|
 | GET | `/health` | `{ status: "ok", time }` |
 | GET | `/categories` | `{ items: [{ id, slug, name, icon, courseCount }] }` |
-| GET | `/courses?q&category&level&price&sort&page&pageSize` | Published only. `category` = slug, `level` = beginner\|intermediate\|advanced, `price` = free\|paid, `sort` = popular (default)\|newest\|rating\|price_asc\|price_desc, `pageSize` ≤ 48 (default 12). Returns `{ items: CourseCard[], page, pageSize, total, totalPages }` |
+| GET | `/courses?q&category&level&price&sort&page&pageSize` | Published only. `category` = slug, `level` = beginner\|intermediate\|advanced, `price` = free\|paid, `sort` = popular (default)\|newest\|rating\|price_asc\|price_desc, `pageSize` ≤ 48 (default 12). `q`: every word (max 6, case-insensitive, simple plural stemming) must appear in the title, subtitle, description, instructor name, or a section/lecture title of the live course. Returns `{ items: CourseCard[], page, pageSize, total, totalPages }` |
 | GET | `/courses/:slug` | CourseDetail (below). Owner/admin can also see unpublished. **No asset URLs.** |
 | GET | `/courses/:slug/reviews?page&pageSize` | `{ items: [{ id, rating, body, instructorReply, createdAt, author: { name, avatarUrl }, verifiedPurchase }], ratingAvg, ratingCount, distribution: { "1".."5": n }, page, pageSize, total }` |
 | GET | `/instructors/featured?limit` | `{ items: FeaturedInstructor[] }`, approved instructors with ≥ 1 published course, most learners first (`limit` 1–24, default 6). Use this for home-page stats. |
@@ -256,6 +256,7 @@ type InstructorCourse = {
 | GET | `/admin/review-queue` | `{ items: [{ kind: 'course'\|'revision', id (course id), slug, title, priceCents, instructor: { id, name, email }, category, submittedAt, sections, revisionId, changes: Change[] }] }` (oldest first; `changes` lists what a revision changes) |
 | GET | `/admin/courses?status&q&page&pageSize` | paginated; items have `revision: { id, status, submittedAt } \| null` |
 | GET | `/admin/courses/:id` | full live course incl. curriculum + `history` (audit entries) + `revision: { id, status, reviewNote, submittedAt, changes, draft: CourseTree } \| null`. Admins can play any live lecture via `POST /lectures/:id/playback`. |
+| POST | `/admin/videos/:assetId/playback` | → `{ url, expiresAt, format, captionsUrl? }` for any video asset (reviewers watch new videos in a revision before they are live). Audited `video.admin_playback`. `404` unknown asset, `400 video_not_ready` |
 | POST | `/admin/courses/:id/approve` | `{ note? }` new course in_review → published; **published course with changes in review → applies them atomically** (`revision.status: 'approved'`; `409 video_not_ready` if a new video is not processed: nothing changes) |
 | POST | `/admin/courses/:id/request-changes` | `{ note }` (required) in_review → changes_requested (for a revision: live untouched, draft editable again) |
 | POST | `/admin/courses/:id/reject` | `{ note }` (required) in_review → rejected (for a revision: live untouched) |

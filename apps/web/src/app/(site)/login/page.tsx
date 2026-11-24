@@ -12,8 +12,8 @@ export default function LoginPage() {
       sub="Log in to pick up where you left off."
       aside={
         <>
-          <p className="font-display text-2xl font-bold leading-snug">“The labs are the course. I deployed the RAG stack to my own AWS account on day two.”</p>
-          <p className="mt-5 text-sm text-white/70">Priya Raman, platform engineer</p>
+          <p className="font-display text-2xl font-bold leading-snug">Every lesson ends with a lab you run on your own computer or cloud account.</p>
+          <p className="mt-5 text-sm text-white/70">Your progress, quiz results and certificates are saved to your account.</p>
         </>
       }
     >

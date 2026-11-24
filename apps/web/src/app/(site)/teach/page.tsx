@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { BadgeDollarSign, ShieldCheck, Upload } from "lucide-react";
+import { BadgeDollarSign, CheckCircle2, ShieldCheck, Upload } from "lucide-react";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
-import { LOOP_FULL } from "@/components/Logo";
 
 export const metadata: Metadata = { title: "Teach on DevOps Easy Learning" };
 
@@ -39,11 +38,15 @@ export default function TeachPage() {
           </div>
           <div id="apply" className="space-y-6">
             <ApplyToTeach />
-            <figure className="relative overflow-hidden rounded-panel bg-stage p-7 text-white">
-              <svg viewBox="0 0 120 60" className="absolute -right-10 -top-6 w-72 opacity-25" fill="none" aria-hidden="true"><path d={LOOP_FULL} stroke="#58c3f2" strokeWidth="2" /></svg>
-              <blockquote className="relative font-display text-xl font-semibold leading-snug">“I recorded my incident-response course in three weekends. The review notes made it better, and payouts land in my Stripe account without me chasing anyone.”</blockquote>
-              <figcaption className="relative mt-5 text-sm text-white/70">Nadia Rahman, SRE and automation engineer</figcaption>
-            </figure>
+            <section aria-labelledby="quality" className="rounded-panel border border-line bg-surface p-7">
+              <h2 id="quality" className="font-display text-lg font-bold">What a reviewer checks before your course goes live</h2>
+              <ul className="mt-4 space-y-2.5 text-sm text-ink-2">
+                {["Clear audio and readable screens in every video", "Accurate, current content for the tools you teach", "Labs and downloads that run as described", "A description and curriculum that match what the videos teach"].map((t) => (
+                  <li key={t} className="flex gap-2.5"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden="true" />{t}</li>
+                ))}
+              </ul>
+              <p className="mt-4 text-sm text-muted">If something needs work, you get a note explaining what to change. Changes to a live course are reviewed the same way.</p>
+            </section>
           </div>
         </div>
       </section>

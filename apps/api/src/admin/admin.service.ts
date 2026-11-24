@@ -136,6 +136,14 @@ export class AdminService {
     return { ...c, thumbnailUrl: this.media.imageUrl(c.thumbnailKey), history: audit, revision };
   }
 
+  async videoPlayback(a: Actor, assetId: string) {
+    const asset = /^[0-9a-f-]{36}$/i.test(assetId) ? await this.prisma.videoAsset.findUnique({ where: { id: assetId } }) : null;
+    if (!asset) throw notFound('Video');
+    const out = await this.media.playback(asset, a.user.id);
+    await this.audit.log({ actorId: a.user.id, action: 'video.admin_playback', targetType: 'video_asset', targetId: asset.id, ip: a.ip });
+    return out;
+  }
+
   async decide(a: Actor, courseId: string, decision: Decision, note?: string) {
     const t = TRANSITIONS[decision];
     if (t.noteRequired && !note?.trim()) throw badRequest('A note for the instructor is required', 'note_required');
