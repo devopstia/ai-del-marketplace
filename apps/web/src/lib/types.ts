@@ -354,6 +354,10 @@ export interface AdminInstructor {
   payoutsEnabled?: boolean;
   courseCount?: number;
   createdAt?: string;
+  isPlatform?: boolean;
+  /** platform share override in basis points (null = default) */
+  commissionBps?: number | null;
+  payToPlatform?: boolean;
 }
 
 export interface AuditEntry {

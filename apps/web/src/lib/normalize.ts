@@ -453,6 +453,9 @@ export function toAdminInstructor(x: unknown): AdminInstructor {
     payoutsEnabled: Boolean(o.payoutsEnabled),
     courseCount: (o.courseCount ?? o.courses) != null ? num(o.courseCount ?? o.courses) : undefined,
     createdAt: str(o.appliedAt ?? o.createdAt ?? u.createdAt) || undefined,
+    isPlatform: Boolean(o.isPlatform),
+    commissionBps: o.commissionBps == null ? null : num(o.commissionBps),
+    payToPlatform: Boolean(o.payToPlatform),
   };
 }
 

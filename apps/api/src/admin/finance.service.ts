@@ -6,6 +6,7 @@ import { PrismaService } from '../common/prisma.service';
 import { SettingsService } from '../common/settings.service';
 import { RefundsService } from '../commerce/refunds.service';
 import { PayoutsService } from '../commerce/payouts.service';
+import { StripeService } from '../commerce/stripe.service';
 import { PAYOUT_HOLD_DAYS, REFUND_WINDOW_DAYS } from '../commerce/money';
 
 const requireSuper = (a: Actor) => {
@@ -21,6 +22,7 @@ export class FinanceService {
     private readonly settings: SettingsService,
     private readonly refunds: RefundsService,
     private readonly payouts: PayoutsService,
+    private readonly stripe: StripeService,
   ) {}
 
   // ---------- instructor terms (super admin) ----------
@@ -154,7 +156,7 @@ export class FinanceService {
         if (l.payee !== 'instructor' && l.transferStatus === 'paid') problems.push({ orderId: o.id, check: `line ${l.id.slice(0, 8)}: no transfer for DEL lines` });
       }
     }
-    return { totals: { ...totals, owedByInstructorsCents: owedCents }, checks: { orders: orders.length, problems } };
+    return { stripeConfigured: this.stripe.configured, totals: { ...totals, owedByInstructorsCents: owedCents }, checks: { orders: orders.length, problems } };
   }
 
   /** Lines whose payout is due but cannot be sent yet (instructor not onboarded), for the admin "attention" list. */

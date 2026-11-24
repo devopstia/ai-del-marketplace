@@ -238,6 +238,8 @@ export class AdminService {
         status: p.status,
         reviewNote: p.reviewNote,
         isPlatform: p.isPlatform,
+        commissionBps: p.commissionBps,
+        payToPlatform: p.payToPlatform,
         stripeConnected: !!p.stripeAccountId,
         payoutsEnabled: p.payoutsEnabled,
         courses: p.user._count.courses,

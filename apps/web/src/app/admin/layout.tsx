@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Receipt, ScrollText, Settings, Users } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users } from "lucide-react";
+import { useApi } from "@/lib/useApi";
+import { obj } from "@/lib/normalize";
 import { AppShell } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { Skeleton } from "@/components/Empty";
@@ -13,6 +15,7 @@ const nav = [
   { href: "/admin/instructors", label: "Instructors", icon: GraduationCap },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/orders", label: "Orders", icon: Receipt },
+  { href: "/admin/finance", label: "Money", icon: Landmark },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/audit", label: "Audit log", icon: ScrollText },
@@ -20,6 +23,12 @@ const nav = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { loading, has } = useAuth();
+  const isAdmin = has("admin");
+  // Badge on Money: refund requests and open disputes that need a person.
+  const count = (r: unknown) => (Array.isArray(obj(r).items) ? (obj(r).items as unknown[]) : []);
+  const requests = useApi(isAdmin ? "/admin/refund-requests?status=pending" : null, (r) => count(r).length);
+  const disputes = useApi(isAdmin ? "/admin/disputes" : null, (r) => count(r).filter((d) => obj(d).status === "open").length);
+  const attention = (requests.data ?? 0) + (disputes.data ?? 0);
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
   if (!has("admin")) {
     return (
@@ -32,5 +41,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  return <AppShell area="Admin console" nav={nav} footer={<ConsoleSwitch to="del" />}>{children}</AppShell>;
+  const items = nav.map((n) => (n.href === "/admin/finance" && attention ? { ...n, badge: attention } : n));
+  return <AppShell area="Admin console" nav={items} footer={<ConsoleSwitch to="del" />}>{children}</AppShell>;
 }

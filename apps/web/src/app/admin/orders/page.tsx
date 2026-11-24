@@ -5,7 +5,7 @@ import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { obj, paged, toOrder } from "@/lib/normalize";
 import { qs } from "@/lib/qs";
-import { dateTime, moneyExact } from "@/lib/format";
+import { date, dateTime, moneyExact } from "@/lib/format";
 import { PageHead, DataTable } from "@/components/shell/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Skeleton } from "@/components/Empty";
@@ -19,6 +19,7 @@ const STATUSES = ["", "paid", "partially_refunded", "refunded", "pending", "fail
 type DetailLine = {
   id: string; title: string; instructor: string; isPlatform: boolean; priceCents: number; commissionBps: number;
   commissionCents: number; instructorShareCents: number; transferStatus: string; refundedAt: string | null; refundable: boolean;
+  feeCents: number; payee: string; transferDueAt: string | null; disputeStatus: string | null;
 };
 type Detail = {
   id: string; status: string; provider: string; currency: string; totalCents: number; refundedCents: number; paidAt: string | null;
@@ -38,6 +39,7 @@ const toDetail = (x: unknown): Detail => {
         isPlatform: !!obj(lo.instructor).isPlatform, priceCents: n(lo.priceCents), commissionBps: n(lo.commissionBps),
         commissionCents: n(lo.commissionCents), instructorShareCents: n(lo.instructorShareCents), transferStatus: String(lo.transferStatus ?? "none"),
         refundedAt: (lo.refundedAt as string) ?? null, refundable: !!lo.refundable,
+        feeCents: n(lo.feeCents), payee: String(lo.payee ?? "instructor"), transferDueAt: (lo.transferDueAt as string) ?? null, disputeStatus: (lo.disputeStatus as string) ?? null,
       };
     }),
     history: (Array.isArray(o.history) ? o.history : []).map((h) => {
@@ -46,7 +48,14 @@ const toDetail = (x: unknown): Detail => {
     }),
   };
 };
-const transferLabel: Record<string, string> = { none: "No transfer (platform course or free)", pending: "Waiting for payout", paid: "Transferred", reversed: "Reversed" };
+const payoutText = (l: DetailLine) =>
+  l.disputeStatus === "open" ? "Frozen: dispute"
+  : l.payee === "platform" ? "DEL course, no transfer"
+  : l.payee === "del_agreement" ? "Paid to DEL (agreement)"
+  : l.transferStatus === "paid" ? "Transferred"
+  : l.transferStatus === "reversed" ? "Taken back"
+  : l.transferStatus === "pending" ? (l.transferDueAt && new Date(l.transferDueAt) > new Date() ? `Held until ${date(l.transferDueAt)}` : "Due")
+  : "No transfer";
 
 function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
   const toast = useToast();
@@ -77,17 +86,18 @@ function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
         <span className="text-muted">Paid {dateTime(data.paidAt)} · {data.provider === "test" ? "development test payment" : data.provider}</span>
       </div>
       <div className="overflow-x-auto rounded-tile border border-line">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-line bg-surface-2/60 text-muted"><tr><th className="px-3 py-2"><span className="sr-only">Select</span></th><th className="px-3 py-2">Course</th><th className="px-3 py-2 text-right">Price</th><th className="px-3 py-2 text-right">Platform</th><th className="px-3 py-2 text-right">Instructor</th><th className="px-3 py-2">Payout</th></tr></thead>
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="border-b border-line bg-surface-2/60 text-muted"><tr><th className="px-3 py-2"><span className="sr-only">Select</span></th><th className="px-3 py-2">Course</th><th className="px-3 py-2 text-right">Price</th><th className="px-3 py-2 text-right">Stripe fee</th><th className="px-3 py-2 text-right">Platform</th><th className="px-3 py-2 text-right">Instructor</th><th className="px-3 py-2">Payout</th></tr></thead>
           <tbody className="divide-y divide-line">
             {data.lines.map((l) => (
               <tr key={l.id} className={l.refundedAt ? "text-muted" : ""}>
                 <td className="px-3 py-2">{l.refundable ? <input type="checkbox" aria-label={`Refund ${l.title}`} checked={sel.includes(l.id)} onChange={(e) => setSel((s) => e.target.checked ? [...s, l.id] : s.filter((x) => x !== l.id))} /> : null}</td>
                 <td className="px-3 py-2"><span className="block font-bold text-ink">{l.title}</span><span className="text-xs text-muted">{l.instructor}{l.isPlatform ? " (platform)" : ""}</span></td>
                 <td className="px-3 py-2 text-right tabular-nums">{moneyExact(l.priceCents, data.currency)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{moneyExact(l.commissionCents, data.currency)} <span className="text-xs text-muted">({l.commissionBps / 100}%)</span></td>
+                <td className="px-3 py-2 text-right tabular-nums text-ink-2">{moneyExact(l.feeCents, data.currency)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{moneyExact(l.commissionCents, data.currency)} <span className="text-xs text-muted">({l.commissionBps / 100}% of net)</span></td>
                 <td className="px-3 py-2 text-right tabular-nums">{moneyExact(l.instructorShareCents, data.currency)}</td>
-                <td className="px-3 py-2 text-xs">{l.refundedAt ? <StatusBadge status="refunded" /> : transferLabel[l.transferStatus] ?? l.transferStatus}</td>
+                <td className="px-3 py-2 text-xs">{l.refundedAt ? <StatusBadge status="refunded" /> : payoutText(l)}</td>
               </tr>
             ))}
           </tbody>
