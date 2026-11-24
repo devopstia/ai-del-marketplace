@@ -38,3 +38,12 @@ export async function getFeaturedInstructors(limit = 3): Promise<InstructorSumma
   const r = await serverGet(`/instructors/featured${qs({ limit })}`);
   return r.ok ? list(r.data).map(toInstructor) : [];
 }
+
+/** Public marketplace terms (revenue share, price range). Null when the API is unreachable. */
+export async function getTerms(): Promise<{ instructorSharePercent: number; minCents: number; maxCents: number } | null> {
+  const r = await serverGet("/platform/terms");
+  if (!r.ok) return null;
+  const o = obj(r.data);
+  const p = obj(o.pricing);
+  return { instructorSharePercent: Number(o.instructorSharePercent ?? 80), minCents: Number(p.minCents ?? 499), maxCents: Number(p.maxCents ?? 99999) };
+}
