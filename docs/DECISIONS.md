@@ -24,3 +24,9 @@
 - Stripe test keys (and later the live platform account) → `.env`.
 - Mux account (token id/secret, signing key) → `.env`.
 - Tax/accounting advice before taking live payments (merchant of record).
+
+## 2026-11-24: landing redesign not adopted
+- Owner: "please keep the original design and move on with the video generation".
+- The approved design (tag `design-approved-2026-11-24`, branch `feat/phase1`) stays as is.
+- The proposed redesign is archived on branch `feat/landing-redesign` (screenshots and notes in `docs/design/landing-redesign-2026-11/` on that branch). It is not merged and not deployed.
+- Marketplace front-end work is paused; video generation has priority.
