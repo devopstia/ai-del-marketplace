@@ -129,8 +129,8 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
 
   const tabs: [Tab, string][] = [
     ["overview", "Overview"],
-    ["content", "Course content"],
-    ["resources", "Resources"],
+    ["content", "Contents"],
+    ...(lecture?.hasResources ? ([["resources", "Lab files"]] as [Tab, string][]) : []),
     ...(lecture?.hasQuiz || lecture?.type === "quiz" ? ([["quiz", "Quiz"]] as [Tab, string][]) : []),
     ["notes", "Notes"],
   ];
@@ -265,7 +265,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
             <div role="tablist" aria-label="Lecture" className="flex gap-1 overflow-x-auto border-b border-line">
               {tabs.map(([k, l]) => (
                 <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => setTab(k)}
-                  className={`-mb-px shrink-0 border-b-2 px-4 py-3 text-sm font-bold ${k === "content" ? "lg:hidden" : ""} ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
+                  className={`-mb-px shrink-0 border-b-2 px-3 py-3 text-sm font-bold sm:px-4 ${k === "content" ? "lg:hidden" : ""} ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
                   {l}
                 </button>
               ))}
@@ -280,6 +280,13 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
                     <div><dt className="text-muted">Instructor</dt><dd className="font-bold">{course.instructor.name}</dd></div>
                     <div><dt className="text-muted">Your progress</dt><dd className="mt-0.5"><LoopMeter value={pct} size="sm" /></dd></div>
                   </dl>
+                  {next ? (
+                    <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+                      <p className="min-w-0 text-sm text-ink-2">Up next: <span className="font-bold text-ink">{next.title}</span></p>
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => go(next)}>Play next lesson<ChevronRight className="size-4" /></button>
+                    </div>
+                  ) : null}
+                  {lecture?.hasResources ? <p className="mt-4 text-sm text-ink-2">This lesson has lab files: open <button type="button" className="link" onClick={() => setTab("resources")}>Lab files</button> to download them.</p> : null}
                   <p className="mt-6 hidden text-sm text-muted sm:block">Keyboard: Space or K to play and pause, J and L to skip 10 seconds, F for full screen, C for captions.</p>
                   {pct >= 100 ? <Link href="/my-learning" className="btn btn-primary mt-6">Get your certificate</Link> : null}
                 </div>
