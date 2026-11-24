@@ -99,8 +99,12 @@ test.describe.serial("learner buys and studies a course", () => {
   });
   test("refund from the receipt (within 14 days, little watched)", async ({ page }) => {
     await login(page, email, password, "/orders");
-    const href = await page.getByRole("link", { name: "Receipt" }).first().getAttribute("href");
-    await page.goto(href!);
+    // sign-in finishes with a full page load of /orders: wait for it before moving on
+    await page.waitForURL(/\/orders$/);
+    const receipt = page.getByRole("link", { name: "Receipt" }).first();
+    await expect(receipt).toBeVisible();
+    await page.goto((await receipt.getAttribute("href"))!);
+    await expect(page.getByRole("heading", { name: "Receipt" })).toBeVisible();
     const panel = page.getByTestId("refund-panel");
     await expect(panel).toContainText("within 14 days");
     await panel.getByRole("checkbox").first().check();
