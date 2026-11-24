@@ -55,8 +55,8 @@ export class ConnectService {
         type: 'account_onboarding',
         account_onboarding: {
           collection_options: { fields: 'currently_due' },
-          refresh_url: `${web}/instructor/payouts?refresh=1`,
-          return_url: `${web}/instructor/payouts?return=1`,
+          refresh_url: `${web}/studio/payouts?refresh=1`,
+          return_url: `${web}/studio/payouts?return=1`,
         },
       },
     });

@@ -13,6 +13,11 @@ export function configureApp(app: INestApplication) {
   express.disable('x-powered-by');
   app.setGlobalPrefix('api');
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
+  // Course images are shown on the web app (another origin): allow embedding for this route only.
+  app.use('/api/media/images', (_req: unknown, res: { setHeader: (k: string, v: string) => void }, next: () => void) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  });
   app.use(cookieParser());
   express.useBodyParser('json', { limit: '1mb' });
   app.enableCors({

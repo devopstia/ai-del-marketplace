@@ -32,7 +32,9 @@ FREE_SLUG=ai-foundations-for-devops-engineers; PAID_SLUG=ai-powered-cicd-with-gi
 req anon GET "/courses/$PAID_SLUG"; check "course detail" "$code" 200
 if grep -qE 'storageKey|videos/|resources/|X-Amz' "$TMP/body"; then bad "detail leaks storage keys/URLs"; else ok "detail has no asset URLs"; fi
 PAID_ID="$(j .id)"; PREVIEW_LECTURE="$(j '[.curriculum[].lectures[]|select(.isPreview)][0].id')"; LOCKED_LECTURE="$(j '[.curriculum[].lectures[]|select(.isPreview|not)][0].id')"
-THUMB="$(j .thumbnailUrl)"; check "thumbnail served" "$(curl -s -o /dev/null -w '%{http_code}' "$THUMB")" 200
+THUMB="$(j .thumbnailUrl)"
+if [ -n "$THUMB" ] && [ "$THUMB" != "null" ]; then check "thumbnail served" "$(curl -s -o /dev/null -w '%{http_code}' "$THUMB")" 200
+else check "no thumbnail set (web draws the cover)" "none" none; fi
 check "POST without CSRF header is refused" "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/anon.jar" -X POST "$API/lectures/$PREVIEW_LECTURE/preview-playback")" 403
 check "POST with wrong CSRF header is refused" "$(curl -s -o /dev/null -w '%{http_code}' -b "$TMP/anon.jar" -H 'X-CSRF-Token: wrong-token-wrong-token-123' -X POST "$API/lectures/$PREVIEW_LECTURE/preview-playback")" 403
 req anon GET /auth/csrf; req anon POST "/lectures/$PREVIEW_LECTURE/preview-playback"; check "preview playback (public)" "$code" 200

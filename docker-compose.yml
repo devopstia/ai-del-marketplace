@@ -121,7 +121,21 @@ services:
     depends_on:
       api: { condition: service_healthy }
 
-  # web: added by the web app build
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:4000/api
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:4000/api
+      WEB_URL: http://127.0.0.1:3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:

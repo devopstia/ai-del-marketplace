@@ -95,7 +95,8 @@ async function seedCourse(c: SeedCourse, idx: number, ownerId: string, categoryI
   });
   const thumbKey = `images/${ownerId}/${course.id}.png`;
   await storage.put(thumbKey, thumbnail(c.colors), 'image/png');
-  await prisma.course.update({ where: { id: course.id }, data: { thumbnailKey: thumbKey } });
+  // Generated gradient thumbnails look generic; the web app draws a titled cover when none is set. Opt in with SEED_THUMBNAILS=true.
+  if (process.env.SEED_THUMBNAILS === 'true') await prisma.course.update({ where: { id: course.id }, data: { thumbnailKey: thumbKey } });
 
   let n = 0;
   for (const [si, s] of c.sections.entries()) {

@@ -1,0 +1,75 @@
+"use client";
+import { useState } from "react";
+import { BadgeCheck, CircleAlert, ExternalLink, Loader2, Building2 } from "lucide-react";
+import { api, errMsg } from "@/lib/api";
+import { useApi } from "@/lib/useApi";
+import { obj } from "@/lib/normalize";
+import type { StripeStatus } from "@/lib/types";
+import { PageHead } from "@/components/shell/AppShell";
+import { Skeleton } from "@/components/Empty";
+import { useToast } from "@/components/Toast";
+
+const map = (r: unknown): StripeStatus => {
+  const o = obj(r);
+  return {
+    connected: Boolean(o.connected ?? o.stripeAccountId ?? o.accountId),
+    payoutsEnabled: Boolean(o.payoutsEnabled),
+    detailsSubmitted: Boolean(o.detailsSubmitted),
+    accountId: (o.accountId ?? o.stripeAccountId) as string | null,
+    isPlatform: Boolean(o.isPlatform ?? o.platform),
+  };
+};
+
+export default function PayoutsPage() {
+  const toast = useToast();
+  const { data, error } = useApi("/instructor/stripe/status", map);
+  const [busy, setBusy] = useState(false);
+  async function onboard() {
+    setBusy(true);
+    try {
+      const r = obj(await api("/instructor/stripe/onboarding-link", { method: "POST" }));
+      window.location.assign(String(r.url));
+    } catch (e) { toast("error", errMsg(e)); setBusy(false); }
+  }
+  const state = !data ? null : data.isPlatform ? "platform" : data.payoutsEnabled ? "ready" : data.connected ? "incomplete" : "none";
+  return (
+    <>
+      <PageHead title="Payouts" sub="Your share of each sale is transferred to your own Stripe account. Stripe handles identity checks and bank payouts." />
+      {error ? <p className="text-rose">{error}</p> : null}
+      {!data && !error ? <Skeleton className="h-56" /> : null}
+      {state ? (
+        <section className="grid max-w-4xl gap-8 rounded-panel border border-line bg-surface p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="flex gap-4">
+            {state === "ready" || state === "platform" ? <BadgeCheck className="size-9 shrink-0 text-mint" /> : state === "incomplete" ? <CircleAlert className="size-9 shrink-0 text-amber" /> : <Building2 className="size-9 shrink-0 text-violet" />}
+            <div>
+              <h2 className="font-display text-xl font-bold">
+                {state === "platform" ? "Platform-owned courses" : state === "ready" ? "Payouts are on" : state === "incomplete" ? "Finish your Stripe setup" : "Connect Stripe to get paid"}
+              </h2>
+              <p className="mt-1 max-w-xl text-ink-2">
+                {state === "platform" ? "Your courses are sold by the platform account itself, so no transfers are needed."
+                  : state === "ready" ? "Stripe has verified your account. Your share of each sale is transferred automatically after payment."
+                  : state === "incomplete" ? "Stripe needs a few more details before it can pay you. Sales are recorded meanwhile and transferred once you’re verified."
+                  : "Setup takes about five minutes on Stripe’s site. You’ll need your ID and bank details. We never see them."}
+              </p>
+              {data?.accountId ? <p className="mt-2 text-xs text-muted">Stripe account {data.accountId}</p> : null}
+            </div>
+          </div>
+          {state !== "platform" ? (
+            <button type="button" className={state === "ready" ? "btn btn-outline" : "btn btn-primary"} onClick={onboard} disabled={busy}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <ExternalLink className="size-4" />}
+              {state === "ready" ? "Update details on Stripe" : state === "incomplete" ? "Continue on Stripe" : "Set up payouts with Stripe"}
+            </button>
+          ) : null}
+        </section>
+      ) : null}
+      <section className="mt-10 max-w-4xl">
+        <h2 className="font-display text-lg font-bold">How transfers work</h2>
+        <ol className="mt-4 grid gap-6 sm:grid-cols-3">
+          {[["Learner pays", "Stripe Checkout charges the learner on the platform account."], ["We split the sale", "The platform commission is kept; your share is calculated per course."], ["Stripe pays you", "Your share is transferred to your Stripe account, then paid to your bank on Stripe’s schedule."]].map(([t, d], i) => (
+            <li key={t} className="border-t-2 border-ink pt-4"><span className="font-display text-2xl font-extrabold text-violet">{i + 1}</span><p className="mt-1 font-bold">{t}</p><p className="mt-1 text-sm text-ink-2">{d}</p></li>
+          ))}
+        </ol>
+      </section>
+    </>
+  );
+}
