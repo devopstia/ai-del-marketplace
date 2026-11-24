@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Search } from "lucide-react";
-import { getCategories, getCourses, getFeaturedInstructors } from "@/lib/catalog";
+import { getCategories, getCourse, getCourses, getFeaturedInstructors } from "@/lib/catalog";
+import { CoursePath } from "@/components/home/CoursePath";
 import { HeroLoop } from "@/components/HeroLoop";
 import { CourseTile, Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
@@ -48,11 +49,11 @@ function Spread({ c }: { c: CourseCard }) {
   );
 }
 
-function RankedRow({ c, rank }: { c: CourseCard; rank: number }) {
+function RankedRow({ c, rank }: { c: CourseCard; rank?: number }) {
   return (
     <li>
-      <Link href={`/courses/${c.slug}`} className="group grid grid-cols-[2.2rem_88px_1fr_auto] items-center gap-4 py-4">
-        <span className="font-display text-3xl font-extrabold tabular-nums text-line-strong group-hover:text-violet">{rank}</span>
+      <Link href={`/courses/${c.slug}`} className={`group grid items-center gap-4 py-4 ${rank ? "grid-cols-[2.2rem_88px_1fr_auto]" : "grid-cols-[88px_1fr_auto]"}`}>
+        {rank ? <span className="font-display text-3xl font-extrabold tabular-nums text-line-strong group-hover:text-violet">{rank}</span> : null}
         <CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" className="!rounded-lg" />
         <span className="min-w-0">
           <span className="line-clamp-2 font-display font-bold leading-snug text-ink group-hover:text-violet">{c.title}</span>
@@ -99,6 +100,14 @@ export default async function Home() {
   const runnersUp = (rated.items.length > 1 ? rated.items.slice(1, 3) : newest.items.filter((c) => c.slug !== featured?.slug).slice(0, 2));
   const offline = !popular.ok && !newest.ok;
   const countFor = (slug: string) => all.filter((c) => c.category?.slug === slug).length;
+  // A small catalogue is shown in depth (one course as a route) instead of the same course in three rails.
+  // The rails come back on their own once there are enough courses to fill them.
+  const SMALL = 4;
+  const small = popular.ok && popular.total < SMALL;
+  const flagship = small && popular.items[0] ? await getCourse(popular.items[0].slug) : null;
+  const others = flagship ? popular.items.filter((c) => c.slug !== flagship.slug) : [];
+  // Only categories that have courses; the strip is hidden until it can show a real choice.
+  const liveCats = cats.filter((c) => (c.courseCount ?? countFor(c.slug)) > 0);
 
   return (
     <>
@@ -129,10 +138,10 @@ export default async function Home() {
       </section>
 
       {/* Category index */}
-      {cats.length ? (
+      {liveCats.length >= 3 ? (
         <nav aria-label="Categories" className="border-b border-line bg-surface">
           <div className="container-x scroll-rail flex gap-1 overflow-x-auto py-3 lg:justify-between">
-            {cats.map((c) => {
+            {liveCats.map((c) => {
               const I = categoryIcon(c.slug, c.icon);
               const n = c.courseCount ?? countFor(c.slug);
               return (
@@ -156,7 +165,18 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {featured ? (
+      {flagship ? <CoursePath c={flagship} /> : null}
+
+      {others.length ? (
+        <section className="container-x pt-16">
+          <SectionHead title="More courses on DEL" sub="From independent instructors, reviewed before they go live." href="/courses" cta="Browse all courses" />
+          <ol className="divide-y divide-line border-y border-line lg:max-w-4xl">
+            {others.map((c) => <RankedRow key={c.slug} c={c} />)}
+          </ol>
+        </section>
+      ) : null}
+
+      {!flagship && featured ? (
         <section className="container-x pt-16 md:pt-20">
           <SectionHead title="Start here" sub="Hand-picked courses with the strongest reviews from people who finished them." href="/courses?sort=rating" cta="All top-rated courses" />
           <div className="grid gap-8 lg:grid-cols-[1.9fr_1fr]">
@@ -168,7 +188,7 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {popular.items.length ? (
+      {!flagship && popular.items.length ? (
         <section className="container-x pt-20">
           <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr]">
             <div>
@@ -182,7 +202,7 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {newest.items.length ? (
+      {!flagship && newest.items.length ? (
         <section className="pt-20">
           <div className="container-x"><SectionHead title="New on DEL" sub="Fresh courses, recorded against current tool versions." href="/courses?sort=newest" cta="See all new courses" /></div>
           <div className="container-x">
@@ -195,7 +215,7 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {instructors.length ? (
+      {instructors.length >= 2 ? (
         <section className="container-x pt-20">
           <SectionHead title="Taught by practitioners" sub="Every instructor is reviewed before they publish, and every course is checked before it goes live." />
           <div className={`grid gap-10 ${instructors.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:max-w-[66%]"}`}>

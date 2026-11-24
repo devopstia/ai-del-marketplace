@@ -4,11 +4,27 @@ import { expect, login, logout, PASSWORD, tinyVideo, USERS, visible } from "./he
 const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-for-devops";
 
 test.describe("public catalogue", () => {
-  test("home shows the hero, categories and courses", async ({ page }) => {
+  test("home shows the hero and the catalogue", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Learn AI and DevOps");
-    await expect(page.getByRole("navigation", { name: "Categories" })).toBeVisible();
-    await expect(page.getByTestId("course-tile").first()).toBeVisible();
+    // Small catalogue: one course shown as a route; larger catalogue: categories and course rails.
+    const route = page.getByTestId("course-path");
+    if (await route.count()) {
+      await expect(route.getByRole("list", { name: "Course route" })).toBeVisible();
+      await route.getByTestId("path-view-course").click();
+      await expect(page).toHaveURL(/\/courses\//);
+    } else {
+      await expect(page.getByRole("navigation", { name: "Categories" })).toBeVisible();
+      await expect(page.getByTestId("course-tile").first()).toBeVisible();
+    }
+  });
+
+  test("home: a free lesson plays without signing in", async ({ page }) => {
+    await page.goto("/");
+    const route = page.getByTestId("course-path");
+    test.skip(!(await route.count()), "only when the home page shows a single course route");
+    await route.getByRole("button", { name: "Watch a free lesson" }).click();
+    await expect(page.getByRole("dialog").getByTestId("video-player")).toBeVisible();
   });
 
   test("course page shows the purchase card, curriculum and a free preview", async ({ page }) => {

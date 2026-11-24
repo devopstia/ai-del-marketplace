@@ -61,3 +61,12 @@
   covers (Playwright checks each returns a course).
 - Tests: smoke script updated to the one-course catalogue (it still expected the old 8 courses); new Playwright tests for the
   revision flow, role confirmation and popular searches; `scripts/demo-catalogue.sh` reproduces the owner's demo catalogue.
+
+## 2026-11-24: Step 1 (homepage) proposed, awaiting the owner's review
+- Branch `feat/step1-home` (rollback tag `checkpoint-2026-11-24-step1-home`, backup branch `backup/step0-2026-11-24`).
+- Hero and "Teach it here" band unchanged (owner kept them). Below the hero: with fewer than 4 courses, the single course is
+  shown in depth as a route (Understand → Build in labs → Automate, derived from the real curriculum), with real facts, price,
+  "View the course" and a working free-lesson player; the three rails that repeated the same course return automatically at
+  4+ courses. Category strip only lists categories with courses (hidden below 3); "Taught by practitioners" shown from 2
+  instructors. Screenshots: `docs/design/step1-home-2026-11-24/` (390/1440/1920 light, 390/1440 dark).
+- Not yet run on a fresh stack (the owner paused the machine): full rule-10 test cycle pending.
