@@ -9,10 +9,14 @@ import { MuxVideoProvider } from '../media/mux-video.provider';
 import { PrismaService } from '../common/prisma.service';
 import { CommerceService } from './commerce.service';
 import { ConnectService } from './connect.service';
+import { FinanceService } from '../admin/finance.service';
+import { RefundsService } from './refunds.service';
 import { StripeService } from './stripe.service';
 import { WebhooksService } from './webhooks.service';
 
 const addSchema = z.object({ courseId: z.string().uuid() });
+const checkoutSchema = z.object({ immediateAccessConsent: z.boolean().optional() }).default({});
+const refundRequestSchema = z.object({ lineIds: z.array(z.string().uuid()).max(50).optional(), reason: z.string().trim().max(500).optional() });
 export const courseIdsSchema = z.object({ courseIds: z.array(z.string().uuid()).max(50) });
 
 @Controller()
@@ -20,6 +24,8 @@ export class CommerceController {
   constructor(
     private readonly svc: CommerceService,
     private readonly connect: ConnectService,
+    private readonly refunds: RefundsService,
+    private readonly finance: FinanceService,
   ) {}
 
   @Get('cart')
@@ -61,8 +67,8 @@ export class CommerceController {
 
   @HttpCode(200)
   @Post('checkout')
-  checkout(@ActorCtx() a: Actor) {
-    return this.svc.checkout(a);
+  checkout(@ZBody(checkoutSchema) b: z.infer<typeof checkoutSchema>, @ActorCtx() a: Actor) {
+    return this.svc.checkout(a, b);
   }
 
   @Get('orders')
@@ -73,6 +79,19 @@ export class CommerceController {
   @Get('orders/:id')
   order(@Param('id') id: string, @ActorCtx() a: Actor) {
     return this.svc.order(a.user.id, id);
+  }
+
+  /** Refund policy check for each course in the learner's order (eligibility, reason, % watched, deadline). */
+  @Get('orders/:id/refund')
+  refundEligibility(@Param('id') id: string, @ActorCtx() a: Actor) {
+    return this.refunds.eligibility(a.user.id, id);
+  }
+
+  /** Learner refund: eligible courses are refunded at once; over the yearly limit the request goes to an admin. */
+  @HttpCode(200)
+  @Post('orders/:id/refund')
+  requestRefund(@Param('id') id: string, @ZBody(refundRequestSchema) b: z.infer<typeof refundRequestSchema>, @ActorCtx() a: Actor) {
+    return this.refunds.request({ id: a.user.id, ip: a.ip }, id, b.lineIds, b.reason);
   }
 
   /** Only when DEV_TEST_PAYMENTS=true and NODE_ENV!=production (otherwise 404). */
@@ -93,6 +112,13 @@ export class CommerceController {
   @Get('instructor/stripe/status')
   status(@ActorCtx() a: Actor) {
     return this.connect.status(a.user.id);
+  }
+
+  /** The instructor's revenue share, how it is calculated, and the payout hold. */
+  @Roles('instructor')
+  @Get('instructor/terms')
+  terms(@ActorCtx() a: Actor) {
+    return this.finance.terms(a.user.id);
   }
 }
 

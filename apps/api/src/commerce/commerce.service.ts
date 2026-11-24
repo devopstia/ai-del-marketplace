@@ -4,11 +4,11 @@ import { Actor } from '../common/auth-context';
 import { badRequest, conflict, forbidden, notFound, unavailable } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { SettingsService } from '../common/settings.service';
-import { splitAmount } from '../common/util';
 import { devPaymentsEnabled, env } from '../config/env';
 import { cardInclude, toCard } from '../catalogue/course-card';
 import { MediaService } from '../media/media.service';
 import { FulfilmentService } from './fulfilment.service';
+import { splitLine } from './money';
 import { StripeService } from './stripe.service';
 
 @Injectable()
@@ -99,7 +99,7 @@ export class CommerceService {
    * Creates Order(pending) + OrderLines from the cart (commission from settings), then:
    *  - total 0 → fulfils right away;  - Stripe configured → Checkout Session;  - else dev test payment URL (non-prod only).
    */
-  async checkout(a: Actor) {
+  async checkout(a: Actor, opts: { immediateAccessConsent?: boolean } = {}) {
     const userId = a.user.id;
     const items = await this.prisma.cartItem.findMany({
       where: { userId },
@@ -117,9 +117,16 @@ export class CommerceService {
     const mode: 'free' | 'stripe' | 'test' = totalCents === 0 ? 'free' : this.stripe.configured ? 'stripe' : devPaymentsEnabled() ? 'test' : (null as never);
     if (!mode) throw unavailable('Payments are not configured', 'payments_unavailable');
 
-    const commissionBps = await this.settings.commissionBps();
-    const platform = new Set(
-      (await this.prisma.instructorProfile.findMany({ where: { userId: { in: buy.map((b) => b.course.instructorId) }, isPlatform: true }, select: { userId: true } })).map((p) => p.userId),
+    // Digital content: the buyer asks for immediate access and acknowledges the withdrawal-right rule (EU/UK law).
+    if (totalCents > 0 && !opts.immediateAccessConsent) {
+      throw badRequest('Confirm that you want immediate access to the course before paying', 'consent_required');
+    }
+    const defaultBps = await this.settings.commissionBps();
+    const profiles = new Map(
+      (await this.prisma.instructorProfile.findMany({
+        where: { userId: { in: buy.map((b) => b.course.instructorId) } },
+        select: { userId: true, isPlatform: true, commissionBps: true, payToPlatform: true },
+      })).map((p) => [p.userId, p]),
     );
     const order = await this.prisma.order.create({
       data: {
@@ -127,18 +134,25 @@ export class CommerceService {
         totalCents,
         currency: 'usd',
         provider: mode,
+        immediateAccessConsentAt: opts.immediateAccessConsent ? new Date() : null,
         lines: {
           create: buy.map((i) => {
-            const isPlatform = platform.has(i.course.instructorId);
-            const bps = isPlatform ? 10000 : commissionBps; // the platform keeps 100% of its own courses
-            const { instructorShareCents } = splitAmount(i.course.priceCents, bps);
+            const p = profiles.get(i.course.instructorId);
+            // DEL's own courses: everything to the platform. Others: the instructor's agreed rate, else the default.
+            const bps = p?.isPlatform ? 10000 : (p?.commissionBps ?? defaultBps);
+            const payee = p?.isPlatform ? ('platform' as const) : p?.payToPlatform ? ('del_agreement' as const) : ('instructor' as const);
+            // Provisional split before the Stripe fee is known (fee 0); settled on the real fee right after payment.
+            const s = splitLine(i.course.priceCents, 0, bps);
+            const share = payee === 'platform' ? 0 : s.instructorShareCents;
             return {
               courseId: i.courseId,
               instructorId: i.course.instructorId,
               priceCents: i.course.priceCents,
               commissionBps: bps,
-              instructorShareCents,
-              transferStatus: isPlatform || instructorShareCents === 0 ? 'none' : 'pending',
+              netCents: s.netCents,
+              instructorShareCents: share,
+              payee,
+              transferStatus: payee === 'instructor' && share > 0 ? ('pending' as const) : ('none' as const),
             };
           }),
         },

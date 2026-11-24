@@ -79,6 +79,7 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page).toHaveURL(new RegExp(`/courses/${PAID_COURSE}`));
     await visible(page, "buy-now").click();
     await expect(page).toHaveURL(/\/checkout$/);
+    await page.getByTestId("consent").check();
     await page.getByTestId("pay").click();
     // Without Stripe keys the API returns the dev test-payment page
     await expect(page).toHaveURL(/\/checkout\/test|checkout\.stripe\.com/);

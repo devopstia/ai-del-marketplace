@@ -32,7 +32,7 @@ function fakeDb() {
         rows.forEach((l) => Object.assign(l, data));
         return { count: rows.length };
       }),
-      findUniqueOrThrow: jest.fn(async ({ where }: any) => state.lines.find((l) => l.id === where.id)),
+      findUniqueOrThrow: jest.fn(async ({ where }: any) => ({ ...state.lines.find((l) => l.id === where.id), order: { userId: state.order.userId } })),
       findMany: jest.fn(async ({ where }: any) => state.lines.filter((l) => (where.orderId ? l.orderId === where.orderId : true) && (where.id?.in ? where.id.in.includes(l.id) : true) && (where.transferStatus ? l.transferStatus === where.transferStatus : true))),
     },
     enrollment: {
@@ -43,6 +43,7 @@ function fakeDb() {
       }),
     },
     course: { update: jest.fn(async ({ where }: any) => (state.studentCount[where.id] -= 1)) },
+    certificate: { deleteMany: jest.fn(async () => ({ count: 0 })) },
   };
   db.$transaction = jest.fn(async (fn: any) => fn(db));
   return { db, state };
@@ -52,8 +53,9 @@ describe('partial refunds', () => {
   function build() {
     const { db, state } = fakeDb();
     const audit = { log: jest.fn() };
-    const refunds = new RefundsService(db, audit as any, { client: {} } as any);
-    return { refunds, db, state, audit };
+    const payouts = { clawback: jest.fn() };
+    const refunds = new RefundsService(db, audit as any, { client: {} } as any, payouts as any);
+    return { refunds, db, state, audit, payouts };
   }
 
   it('refunds only the chosen line: its enrolment is revoked, the other stays, order is partially refunded', async () => {
@@ -65,6 +67,13 @@ describe('partial refunds', () => {
     expect(state.enrollments.map((e) => !!e.revokedAt)).toEqual([true, false]);
     expect(state.studentCount).toEqual({ 'c-nadia': 4, 'c-del': 9 });
     expect(state.order.status).toBe('partially_refunded');
+  });
+
+  it('removes the certificate of a refunded course and asks payouts to recover any transferred share', async () => {
+    const { refunds, db, payouts } = build();
+    await refunds.refund('o1', ['a'], undefined, { id: 'admin', ip: null });
+    expect(db.certificate.deleteMany).toHaveBeenCalledWith({ where: { userId: 'buyer', courseId: 'c-nadia' } });
+    expect(payouts.clawback).toHaveBeenCalledWith('a', 'refund_clawback');
   });
 
   it('refunding the rest later completes the refund; a third attempt has nothing left', async () => {

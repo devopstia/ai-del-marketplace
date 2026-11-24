@@ -1,8 +1,8 @@
 // AI Learning Marketplace data model. See docs/BUILD_SPEC.md.
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  moduleFormat = "cjs"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
   importFileExtension = "js"
 }
 
@@ -76,6 +76,26 @@ enum TransferStatus {
   reversed
 }
 
+/// Who receives the instructor share of a line: the instructor (Stripe transfer), or DEL (its own course, or an
+/// instructor with a written "pay to DEL" agreement). DEL lines never create a transfer.
+enum Payee {
+  instructor
+  platform
+  del_agreement
+}
+
+enum DisputeStatus {
+  open
+  won
+  lost
+}
+
+enum RefundRequestStatus {
+  pending
+  approved
+  declined
+}
+
 enum EnrollmentSource {
   purchase
   free
@@ -106,19 +126,21 @@ model User {
   status       UserStatus @default(active)
   createdAt    DateTime   @default(now())
 
-  sessions          Session[]
-  instructorProfile InstructorProfile?
-  courses           Course[]           @relation("CourseInstructor")
-  videoAssets       VideoAsset[]
-  cartItems         CartItem[]
-  orders            Order[]
-  orderLinesAsSeller OrderLine[]       @relation("LineInstructor")
-  enrollments       Enrollment[]
-  progress          LectureProgress[]
-  reviews           Review[]
-  certificates      Certificate[]
-  quizAttempts      QuizAttempt[]
-  auditLogs         AuditLog[]
+  sessions           Session[]
+  instructorProfile  InstructorProfile?
+  courses            Course[]           @relation("CourseInstructor")
+  videoAssets        VideoAsset[]
+  cartItems          CartItem[]
+  orders             Order[]
+  orderLinesAsSeller OrderLine[]        @relation("LineInstructor")
+  ledgerEntries      LedgerEntry[]
+  refundRequests     RefundRequest[]
+  enrollments        Enrollment[]
+  progress           LectureProgress[]
+  reviews            Review[]
+  certificates       Certificate[]
+  quizAttempts       QuizAttempt[]
+  auditLogs          AuditLog[]
 
   @@map("users")
 }
@@ -148,6 +170,11 @@ model InstructorProfile {
   isPlatform      Boolean          @default(false) // the platform's own brand (DEL): no transfers
   stripeAccountId String?          @unique
   payoutsEnabled  Boolean          @default(false)
+  /// Super-admin override of the platform's share (basis points of the net). null = the platform default.
+  commissionBps   Int?
+  /// Written agreement: this instructor's share is kept by DEL (no Stripe transfer). Set by a super admin, audited.
+  payToPlatform   Boolean          @default(false)
+  termsNote       String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -332,20 +359,30 @@ model CartItem {
 }
 
 model Order {
-  id                      String      @id @default(uuid())
-  userId                  String
-  user                    User        @relation(fields: [userId], references: [id])
-  status                  OrderStatus @default(pending)
-  totalCents              Int
-  currency                String      @default("usd")
-  provider                String      @default("stripe") // stripe | test | free
-  stripeCheckoutSessionId String?     @unique
-  stripePaymentIntentId   String?     @unique
-  stripeChargeId          String?
-  paidAt                  DateTime?
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
-  lines                   OrderLine[]
+  id                       String          @id @default(uuid())
+  userId                   String
+  user                     User            @relation(fields: [userId], references: [id])
+  status                   OrderStatus     @default(pending)
+  totalCents               Int
+  currency                 String          @default("usd")
+  provider                 String          @default("stripe") // stripe | test | free
+  stripeCheckoutSessionId  String?         @unique
+  stripePaymentIntentId    String?         @unique
+  stripeChargeId           String?
+  paidAt                   DateTime?
+  /// Stripe processing fee for the whole order (null until Stripe reports it; simulated for dev test payments).
+  stripeFeeCents           Int?
+  feeSource                String? // stripe | simulated | none
+  balanceTxnId             String?
+  taxCents                 Int             @default(0)
+  refundEligibleUntil      DateTime?
+  /// Buyer asked for immediate access and acknowledged the withdrawal-right rule (EU/UK digital content).
+  immediateAccessConsentAt DateTime?
+  disputes                 Dispute[]
+  refundRequests           RefundRequest[]
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  lines                    OrderLine[]
 
   @@index([userId, createdAt])
   @@map("orders")
@@ -360,12 +397,20 @@ model OrderLine {
   instructorId         String
   instructor           User           @relation("LineInstructor", fields: [instructorId], references: [id])
   priceCents           Int
+  /// Platform share of the net in basis points, snapshotted at purchase (10000 = DEL's own course).
   commissionBps        Int
+  feeCents             Int            @default(0)
+  netCents             Int            @default(0)
   instructorShareCents Int
+  payee                Payee          @default(instructor)
   transferId           String?
   transferStatus       TransferStatus @default(none)
+  transferDueAt        DateTime?
+  /// open while a chargeback is in progress: the line's payout is frozen.
+  disputeStatus        DisputeStatus?
   refundedAt           DateTime?
   enrollment           Enrollment?
+  ledgerEntries        LedgerEntry[]
 
   @@index([orderId])
   @@index([instructorId])
@@ -462,4 +507,55 @@ model AuditLog {
   @@index([actorId])
   @@index([targetType, targetId])
   @@map("audit_logs")
+}
+
+/// Money an instructor owes back (refund or lost dispute after their share was transferred) and how it was recovered.
+/// amountCents < 0: owed by the instructor; > 0: recovered (netted from a later transfer, or reversed in Stripe).
+model LedgerEntry {
+  id           String     @id @default(uuid())
+  instructorId String
+  instructor   User       @relation(fields: [instructorId], references: [id])
+  orderLineId  String?
+  orderLine    OrderLine? @relation(fields: [orderLineId], references: [id])
+  amountCents  Int
+  kind         String // refund_clawback | dispute_clawback | netted | reversal
+  note         String?
+  createdAt    DateTime   @default(now())
+
+  @@index([instructorId, createdAt])
+  @@map("ledger_entries")
+}
+
+model Dispute {
+  id          String        @id // Stripe dispute id (dp_...)
+  orderId     String?
+  order       Order?        @relation(fields: [orderId], references: [id])
+  amountCents Int
+  currency    String        @default("usd")
+  reason      String?
+  status      DisputeStatus @default(open)
+  createdAt   DateTime      @default(now())
+  closedAt    DateTime?
+
+  @@index([status])
+  @@map("disputes")
+}
+
+/// A learner's refund request that needs an admin (over the yearly self-service limit, or outside the policy).
+model RefundRequest {
+  id           String              @id @default(uuid())
+  orderId      String
+  order        Order               @relation(fields: [orderId], references: [id])
+  userId       String
+  user         User                @relation(fields: [userId], references: [id])
+  lineIds      String[]
+  reason       String?
+  status       RefundRequestStatus @default(pending)
+  decisionNote String?
+  decidedById  String?
+  createdAt    DateTime            @default(now())
+  decidedAt    DateTime?
+
+  @@index([status, createdAt])
+  @@map("refund_requests")
 }

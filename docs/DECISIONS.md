@@ -70,3 +70,10 @@
   4+ courses. Category strip only lists categories with courses (hidden below 3); "Taught by practitioners" shown from 2
   instructors. Screenshots: `docs/design/step1-home-2026-11-24/` (390/1440/1920 light, 390/1440 dark).
 - Not yet run on a fresh stack (the owner paused the machine): full rule-10 test cycle pending.
+
+## 2026-11-24: payments proposal approved by the owner ("please do … the payment work"); implemented on `feat/payments`
+- Rollback tag `checkpoint-2026-11-24-payments`. After-fee 80/20 split, 16-day hold + hourly transfer release, ledger netting,
+  learner self-service refunds (14 days, < 25 % watched, no certificate, 3 a year, then admin review), disputes (freeze /
+  recover), per-instructor terms and "pay to DEL" (super admin only, audited), commission setting super-admin only, finance
+  overview with reconciliation checks, immediate-access consent at checkout. Stripe calls are tested with a fake client;
+  real Stripe test-mode runs need the owner's test keys.

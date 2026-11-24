@@ -4,7 +4,7 @@ import { Actor } from '../common/auth-context';
 import { badRequest, notFound, unavailable } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { env } from '../config/env';
-import { FulfilmentService } from './fulfilment.service';
+import { PayoutsService } from './payouts.service';
 import { StripeService } from './stripe.service';
 
 /**
@@ -18,7 +18,7 @@ export class ConnectService {
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
     private readonly audit: AuditService,
-    private readonly fulfilment: FulfilmentService,
+    private readonly payouts: PayoutsService,
   ) {}
 
   private async profile(userId: string) {
@@ -99,6 +99,6 @@ export class ConnectService {
     if (!p || p.payoutsEnabled === enabled) return;
     await this.prisma.instructorProfile.update({ where: { userId: p.userId }, data: { payoutsEnabled: enabled } });
     await this.audit.log({ action: 'connect.payouts_changed', targetType: 'instructor', targetId: p.userId, meta: { accountId, enabled } });
-    if (enabled) await this.fulfilment.settlePendingForInstructor(p.userId);
+    if (enabled) await this.payouts.releaseDue(new Date(), p.userId);
   }
 }

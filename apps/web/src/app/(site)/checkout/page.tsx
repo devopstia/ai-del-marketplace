@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
 
   useEffect(() => {
     api("/cart").then((c) => setCart(toCart(c))).catch((e) => setErr(errMsg(e)));
@@ -22,7 +23,7 @@ export default function CheckoutPage() {
     setBusy(true);
     setErr(null);
     try {
-      const r = obj(await api("/checkout", { method: "POST" }));
+      const r = obj(await api("/checkout", { method: "POST", body: { immediateAccessConsent: consent } }));
       const url = String(r.url ?? "");
       if (!url) throw new Error("Checkout didn’t return a payment page. Try again.");
       window.location.assign(url);
@@ -61,10 +62,19 @@ export default function CheckoutPage() {
               <div className="flex justify-between border-t border-line pt-3 text-base font-bold"><dt>Total</dt><dd className="font-display text-xl tabular-nums">{moneyExact(cart.totalCents, cart.currency)}</dd></div>
             </dl>
             {err ? <p role="alert" className="mt-4 rounded-lg bg-rose-soft px-3 py-2 text-sm font-bold text-rose">{err}</p> : null}
-            <button type="button" className="btn btn-primary mt-5 w-full" onClick={pay} disabled={busy} data-testid="pay">
+            {cart.totalCents > 0 ? (
+              <label className="mt-5 flex items-start gap-2.5 text-sm text-ink-2">
+                <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[var(--violet)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="consent" />
+                <span>I want access to the course right away. I understand that once I start watching, refunds follow the policy below instead of the 14-day withdrawal right.</span>
+              </label>
+            ) : null}
+            <button type="button" className="btn btn-primary mt-5 w-full" onClick={pay} disabled={busy || (cart.totalCents > 0 && !consent)} data-testid="pay">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}Continue to secure payment
             </button>
-            <p className="mt-3 text-xs text-muted">You’ll pay on a Stripe-hosted page. By completing your purchase you agree to the terms of service.</p>
+            <p className="mt-3 text-xs text-muted">
+              You’ll pay on a Stripe-hosted page. Refunds: within 14 days of purchase, while you’ve watched less than 25% of the course
+              and before you get its certificate. Request one from your order page.
+            </p>
             <Link href="/cart" className="link mt-4 inline-block text-sm">Back to cart</Link>
           </aside>
         </div>

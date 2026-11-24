@@ -4,6 +4,7 @@ import { AuditService } from '../common/audit.service';
 import { PrismaService } from '../common/prisma.service';
 import { ConnectService } from './connect.service';
 import { FulfilmentService } from './fulfilment.service';
+import { PayoutsService } from './payouts.service';
 import { RefundsService } from './refunds.service';
 import { StripeService } from './stripe.service';
 
@@ -19,6 +20,7 @@ export class WebhooksService {
     private readonly refunds: RefundsService,
     private readonly connect: ConnectService,
     private readonly audit: AuditService,
+    private readonly payouts: PayoutsService,
   ) {}
 
   /** Process a verified event once. Handlers are idempotent too, so a race between two deliveries is harmless. */
@@ -81,11 +83,42 @@ export class WebhooksService {
         }
         return;
       }
+      case 'charge.updated': {
+        // The charge's balance transaction (with the exact Stripe fee) appears here once Stripe has created it.
+        const charge = obj as Stripe.Charge;
+        if (charge.balance_transaction && this.stripe.configured) {
+          const full = typeof charge.balance_transaction === 'string' ? await this.stripe.client.charges.retrieve(charge.id, { expand: ['balance_transaction'] }) : charge;
+          await this.payouts.settleFromCharge(full);
+        }
+        return;
+      }
       case 'charge.dispute.created': {
+        // Chargeback: freeze the order's payouts until it is decided. Stripe debits the amount + fee from DEL.
         const d = obj as Stripe.Dispute;
         const piId = typeof d.payment_intent === 'string' ? d.payment_intent : d.payment_intent?.id;
         const order = piId ? await this.prisma.order.findUnique({ where: { stripePaymentIntentId: piId } }) : null;
+        await this.prisma.dispute.upsert({
+          where: { id: d.id },
+          create: { id: d.id, orderId: order?.id ?? null, amountCents: d.amount, currency: d.currency, reason: d.reason, status: 'open' },
+          update: {},
+        });
+        if (order) await this.prisma.orderLine.updateMany({ where: { orderId: order.id, refundedAt: null }, data: { disputeStatus: 'open' } });
         await this.audit.log({ action: 'order.disputed', targetType: 'order', targetId: order?.id ?? null, meta: { disputeId: d.id, amount: d.amount, reason: d.reason } });
+        return;
+      }
+      case 'charge.dispute.closed': {
+        const d = obj as Stripe.Dispute;
+        const won = d.status === 'won' || d.status === 'warning_closed';
+        const row = await this.prisma.dispute.findUnique({ where: { id: d.id } });
+        if (!row || row.status !== 'open') return;
+        await this.prisma.dispute.update({ where: { id: d.id }, data: { status: won ? 'won' : 'lost', closedAt: new Date() } });
+        if (row.orderId) {
+          const lines = await this.prisma.orderLine.findMany({ where: { orderId: row.orderId, disputeStatus: 'open' } });
+          await this.prisma.orderLine.updateMany({ where: { id: { in: lines.map((l) => l.id) } }, data: { disputeStatus: won ? 'won' : 'lost' } });
+          // Lost: the money went back to the cardholder, so access ends and the instructor's share is recovered.
+          if (!won && lines.length) await this.refunds.applyRefund(row.orderId, lines.map((l) => l.id), {}, 'dispute_clawback');
+        }
+        await this.audit.log({ action: won ? 'order.dispute_won' : 'order.dispute_lost', targetType: 'order', targetId: row.orderId, meta: { disputeId: d.id, status: d.status } });
         return;
       }
       case 'account.updated': {

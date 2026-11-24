@@ -529,7 +529,9 @@ export class InstructorService {
       include: { order: { select: { id: true, paidAt: true, currency: true } }, course: { select: { id: true, title: true, slug: true } } },
       take: 1000,
     });
-    const totals = { grossCents: 0, commissionCents: 0, earningsCents: 0, refundedCents: 0, paidOutCents: 0, pendingPayoutCents: 0, sales: 0 };
+    const now = new Date();
+    // grossCents: what learners paid; feesCents: Stripe's processing fee; commissionCents: the platform's share of the net.
+    const totals = { grossCents: 0, feesCents: 0, commissionCents: 0, earningsCents: 0, refundedCents: 0, paidOutCents: 0, pendingPayoutCents: 0, heldCents: 0, sales: 0 };
     const byCourse = new Map<string, { courseId: string; title: string; sales: number; grossCents: number; earningsCents: number }>();
     for (const l of lines) {
       if (l.refundedAt) {
@@ -538,10 +540,12 @@ export class InstructorService {
       }
       totals.sales++;
       totals.grossCents += l.priceCents;
-      totals.commissionCents += l.priceCents - l.instructorShareCents;
+      totals.feesCents += l.feeCents;
+      totals.commissionCents += l.netCents - l.instructorShareCents;
       totals.earningsCents += l.instructorShareCents;
       if (l.transferStatus === 'paid') totals.paidOutCents += l.instructorShareCents;
       if (l.transferStatus === 'pending') totals.pendingPayoutCents += l.instructorShareCents;
+      if (l.transferStatus === 'pending' && (!l.transferDueAt || l.transferDueAt > now)) totals.heldCents += l.instructorShareCents;
       const c = byCourse.get(l.courseId) ?? { courseId: l.courseId, title: l.course.title, sales: 0, grossCents: 0, earningsCents: 0 };
       c.sales++;
       c.grossCents += l.priceCents;
@@ -557,9 +561,14 @@ export class InstructorService {
         paidAt: l.order.paidAt,
         course: l.course,
         priceCents: l.priceCents,
+        feeCents: l.feeCents,
+        netCents: l.netCents,
         commissionBps: l.commissionBps,
         instructorShareCents: l.instructorShareCents,
+        payee: l.payee,
         transferStatus: l.transferStatus,
+        transferDueAt: l.transferDueAt,
+        disputeStatus: l.disputeStatus,
         refundedAt: l.refundedAt,
       })),
     };

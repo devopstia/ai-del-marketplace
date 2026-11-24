@@ -18,6 +18,10 @@ import { configureApp } from '../src/bootstrap';
 import { JobsService } from '../src/common/jobs';
 import { PrismaService } from '../src/common/prisma.service';
 import { resetEnvCache } from '../src/config/env';
+import { PayoutsService } from '../src/commerce/payouts.service';
+import { RefundsService } from '../src/commerce/refunds.service';
+import { simulatedStripeFee, splitLine, splitOrder } from '../src/commerce/money';
+import { AuditService } from '../src/common/audit.service';
 
 const API_DIR = join(__dirname, '..');
 const ROOT_ENV = join(API_DIR, '..', '..', '.env');
@@ -138,7 +142,9 @@ describe('e2e: buy and learn', () => {
     const cart = await agent.post('/api/cart').set('X-CSRF-Token', csrf).send({ courseId: ids.course }).expect(201);
     expect(cart.body).toMatchObject({ count: 1, totalCents: 2500 });
 
-    const checkout = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).expect(200);
+    const noConsent = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).expect(400);
+    expect(noConsent.body.error.code).toBe('consent_required');
+    const checkout = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).send({ immediateAccessConsent: true }).expect(200);
     expect(checkout.body.mode).toBe('test');
     expect(checkout.body.url).toBe(`http://127.0.0.1:3000/checkout/test-payment?order=${checkout.body.orderId}`);
     const orderId = checkout.body.orderId;
@@ -150,7 +156,10 @@ describe('e2e: buy and learn', () => {
     expect(again.body.alreadyFulfilled).toBe(true);
 
     const line = await prisma.orderLine.findFirstOrThrow({ where: { orderId } });
-    expect(line).toMatchObject({ priceCents: 2500, commissionBps: 2000, instructorShareCents: 2000, transferStatus: 'pending' }); // default 20%: instructor keeps 80%
+    // default 20%: the instructor keeps 80% of the amount left after the (simulated) Stripe fee; paid after a 16-day hold
+    const fee = simulatedStripeFee(2500);
+    expect(line).toMatchObject({ priceCents: 2500, commissionBps: 2000, feeCents: fee, netCents: 2500 - fee, instructorShareCents: splitLine(2500, fee, 2000).instructorShareCents, transferStatus: 'pending', payee: 'instructor' });
+    expect(line.transferDueAt!.getTime() - (await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).paidAt!.getTime()).toBe(16 * 86400000);
     expect(await prisma.enrollment.count({ where: { courseId: ids.course } })).toBe(1);
     expect((await prisma.course.findUniqueOrThrow({ where: { id: ids.course } })).studentCount).toBe(1);
 
@@ -273,7 +282,7 @@ describe('e2e: buy and learn', () => {
     expect(preview.body).toMatchObject({ count: 2, totalCents: 6998, unavailableIds: [] });
     const merged = await buyer.send('post', '/api/cart/merge', { courseIds: [a.course.id, d.course.id, b.course.id] }).expect(200);
     expect(merged.body.merge.added).toHaveLength(3);
-    const checkout = await buyer.send('post', '/api/checkout').expect(200);
+    const checkout = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
     await buyer.send('post', `/api/dev/test-payments/${checkout.body.orderId}/complete`).expect(200);
     // A second learner in two of the teacher's courses: featured counts distinct learners.
     const other = await userAgent('p-other@e2e.example', ['student']);
@@ -289,7 +298,11 @@ describe('e2e: buy and learn', () => {
     expect(detail.body.lines).toHaveLength(3);
     const delLine = detail.body.lines.find((l: any) => l.course.id === d.course.id);
     expect(delLine).toMatchObject({ instructor: { isPlatform: true }, commissionBps: 10000, instructorShareCents: 0, transferStatus: 'none', refundable: true });
-    expect(detail.body.lines.find((l: any) => l.course.id === a.course.id)).toMatchObject({ commissionBps: 2000, commissionCents: 800, instructorShareCents: 3199 });
+    const aLine = detail.body.lines.find((l: any) => l.course.id === a.course.id);
+    expect(aLine).toMatchObject({ commissionBps: 2000, payee: 'instructor' });
+    expect(aLine.commissionCents).toBe(aLine.netCents - aLine.instructorShareCents);
+    expect(detail.body.lines.reduce((n: number, l: any) => n + l.feeCents, 0)).toBe(simulatedStripeFee(6998));
+    expect(detail.body).toMatchObject({ feeSource: 'simulated', stripeFeeCents: simulatedStripeFee(6998) });
     const refunded = await admin.send('post', `/api/admin/orders/${checkout.body.orderId}/refund`, { lineIds: [delLine.id] }).expect(200);
     expect(refunded.body).toMatchObject({ status: 'partially_refunded', refundedCents: 2999 });
     expect(await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: buyer.user.id, courseId: d.course.id } } })).toMatchObject({ revokedAt: expect.any(Date) });
@@ -305,5 +318,97 @@ describe('e2e: buy and learn', () => {
     const audit = await admin.agent.get('/api/admin/audit?q=p-buyer@e2e.example&pageSize=100').expect(200);
     expect(audit.body.total).toBeGreaterThan(0);
     expect(audit.body.items.every((i: any) => i.actor?.email === 'p-buyer@e2e.example' || JSON.stringify(i).includes('p-buyer'))).toBe(true);
+  });
+
+  it('payments: after-fee split, refund policy, hold + release, netting, super-admin terms', async () => {
+    if (!available) return;
+    const teacher = await userAgent('m-teacher@e2e.example', ['student', 'instructor'], {});
+    const admin = await userAgent('m-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('m-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const buyer = await userAgent('m-buyer@e2e.example', ['student']);
+    const c100 = await publishedCourse(teacher.user.id, 'm-hundred', 10000);
+    const c50 = await publishedCourse(teacher.user.id, 'm-fifty', 5000);
+
+    // Terms: only a super admin may change them; the instructor sees the result.
+    await admin.send('put', `/api/admin/instructors/${teacher.user.id}/terms`, { commissionBps: 1000, note: 'Launch partner' }).expect(403);
+    const t = await boss.send('put', `/api/admin/instructors/${teacher.user.id}/terms`, { commissionBps: 1000, note: 'Launch partner 90/10' }).expect(200);
+    expect(t.body).toMatchObject({ instructorSharePercent: 90, source: 'agreement', defaultInstructorSharePercent: 80 });
+    await admin.send('put', '/api/admin/settings', { commission_bps: 3000 }).expect(403);
+    const seen = await teacher.agent.get('/api/instructor/terms').expect(200);
+    expect(seen.body).toMatchObject({ instructorSharePercent: 90, holdDays: 16, refundWindowDays: 14 });
+    expect(await prisma.auditLog.count({ where: { action: 'commission.terms_changed', targetId: teacher.user.id } })).toBe(1);
+    // back to the default for the rest of the test
+    await boss.send('put', `/api/admin/instructors/${teacher.user.id}/terms`, { commissionBps: null, note: 'Back to the standard terms' }).expect(200);
+
+    // Buy both courses in one checkout: one fee, split by price, 80% of each line's net.
+    await buyer.send('post', '/api/cart', { courseId: c100.course.id }).expect(201);
+    await buyer.send('post', '/api/cart', { courseId: c50.course.id }).expect(201);
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: co.body.orderId }, include: { lines: { orderBy: { priceCents: 'desc' } } } });
+    const expected = splitOrder(simulatedStripeFee(15000), [{ baseCents: 10000, platformBps: 2000 }, { baseCents: 5000, platformBps: 2000 }]);
+    expect(order).toMatchObject({ stripeFeeCents: simulatedStripeFee(15000), feeSource: 'simulated', immediateAccessConsentAt: expect.any(Date) });
+    expect(order.lines.map((l) => [l.feeCents, l.netCents, l.instructorShareCents])).toEqual(expected.map((e) => [e.feeCents, e.netCents, e.instructorShareCents]));
+
+    // Refund policy: eligible now; watching 25% or more of a course makes it ineligible.
+    const lc50 = order.lines.find((l) => l.courseId === c50.course.id)!;
+    await prisma.lectureProgress.create({ data: { userId: buyer.user.id, lectureId: c50.lecture.id, positionSec: 20, completed: true } });
+    const el = await buyer.agent.get(`/api/orders/${order.id}/refund`).expect(200);
+    expect(el.body.lines.find((l: any) => l.lineId === lc50.id)).toMatchObject({ eligible: false, reason: 'watched_too_much', watchedPercent: 100 });
+    const l100 = el.body.lines.find((l: any) => l.courseId === c100.course.id);
+    expect(l100).toMatchObject({ eligible: true, reason: null });
+    expect(el.body).toMatchObject({ policy: { windowDays: 14, maxWatchedPercent: 25, selfServicePerYear: 3 }, selfServiceLeft: 3 });
+    const denied = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [lc50.id] }).expect(400);
+    expect(denied.body.error.code).toBe('watched_too_much');
+    await request(app.getHttpServer()).get(`/api/orders/${order.id}/refund`).expect(401);
+    const other = await userAgent('m-other@e2e.example', ['student']);
+    await other.agent.get(`/api/orders/${order.id}/refund`).expect(404);
+    const done = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [l100.lineId], reason: 'Not what I needed' }).expect(200);
+    expect(done.body).toEqual({ status: 'refunded' });
+    expect(await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: buyer.user.id, courseId: c100.course.id } } })).toMatchObject({ revokedAt: expect.any(Date) });
+    expect(await prisma.orderLine.findUniqueOrThrow({ where: { id: l100.lineId } })).toMatchObject({ transferStatus: 'none', refundedAt: expect.any(Date) });
+
+    // Hold + release with a fake Stripe: nothing before the due date; the transfer after it, idempotent.
+    await prisma.instructorProfile.update({ where: { userId: teacher.user.id }, data: { stripeAccountId: 'acct_m', payoutsEnabled: true } });
+    await prisma.order.update({ where: { id: order.id }, data: { stripeChargeId: 'ch_m' } });
+    const calls: any[] = [];
+    let reverseFails = false;
+    const fakeStripe: any = {
+      configured: true,
+      client: {
+        transfers: {
+          create: async (p: any, o: any) => (calls.push({ p, o }), { id: `tr_${p.metadata.orderLineId}` }),
+          createReversal: async () => { if (reverseFails) throw new Error('insufficient funds'); return { id: 'trr_1' }; },
+        },
+      },
+    };
+    const payouts = new PayoutsService(prisma, app.get(AuditService), fakeStripe);
+    expect(await payouts.releaseDue(new Date())).toEqual({ transferred: 0, netted: 0 });
+    const later = new Date(Date.now() + 17 * 86400000);
+    expect(await payouts.releaseDue(later)).toEqual({ transferred: 1, netted: 0 });
+    expect(await payouts.releaseDue(later)).toEqual({ transferred: 0, netted: 0 });
+    expect(calls[0].p).toMatchObject({ amount: lc50.instructorShareCents, destination: 'acct_m', source_transaction: 'ch_m', transfer_group: order.id });
+    expect(calls[0].o).toEqual({ idempotencyKey: `transfer:${lc50.id}` });
+
+    // Admin exception refund after the transfer; Stripe cannot reverse → the instructor owes it, netted from the next sale.
+    reverseFails = true;
+    const refundsSvc = app.get(RefundsService);
+    (refundsSvc as any).payouts = payouts;
+    await refundsSvc.refund(order.id, [lc50.id], 'exception: duplicate purchase', { id: admin.user.id, ip: null });
+    expect(await payouts.owedBy(teacher.user.id)).toBe(lc50.instructorShareCents);
+    await buyer.send('post', '/api/cart', { courseId: c100.course.id }).expect(201);
+    const co2 = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    await buyer.send('post', `/api/dev/test-payments/${co2.body.orderId}/complete`).expect(200);
+    await prisma.order.update({ where: { id: co2.body.orderId }, data: { stripeChargeId: 'ch_m2' } });
+    const line2 = await prisma.orderLine.findFirstOrThrow({ where: { orderId: co2.body.orderId } });
+    expect(await payouts.releaseDue(later)).toEqual({ transferred: 1, netted: 1 });
+    expect(calls[1].p.amount).toBe(line2.instructorShareCents - lc50.instructorShareCents);
+    expect(await payouts.owedBy(teacher.user.id)).toBe(0);
+
+    // Finance overview: every reconciliation check holds.
+    const fin = await admin.agent.get('/api/admin/finance').expect(200);
+    expect(fin.body.checks.problems).toEqual([]);
+    const sales = await teacher.agent.get('/api/instructor/sales').expect(200);
+    expect(sales.body.totals.feesCents).toBeGreaterThan(0);
   });
 });

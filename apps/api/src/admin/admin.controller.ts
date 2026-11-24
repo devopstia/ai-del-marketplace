@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ActorCtx, type Actor, Roles } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { AdminService } from './admin.service';
+import { FinanceService } from './finance.service';
 
 const paging = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 const noteSchema = z.object({ note: z.string().trim().max(4000).optional() });
@@ -31,12 +32,18 @@ const auditQuery = z.object({
   to: z.coerce.date().optional(),
   ...paging,
 });
+const refundReqQuery = z.object({ status: z.enum(['pending', 'approved', 'declined']).optional() });
+/** commissionBps = the platform's share of the net (2000 → instructor keeps 80%); null returns to the default. */
+const termsSchema = z.object({ commissionBps: z.number().int().min(0).max(10000).nullable().optional(), payToPlatform: z.boolean().optional(), note: z.string().trim().min(5).max(1000) });
 const reviewPatch = z.object({ status: z.enum(['visible', 'hidden']) });
 
 @Roles('admin')
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly svc: AdminService) {}
+  constructor(
+    private readonly svc: AdminService,
+    private readonly finance: FinanceService,
+  ) {}
 
   @Get('stats') stats() { return this.svc.stats(); }
   @Get('review-queue') queue() { return this.svc.reviewQueue(); }
@@ -73,6 +80,21 @@ export class AdminController {
   updateCategory(@Param('id') id: string, @ZBody(categorySchema.partial()) b: Partial<z.infer<typeof categorySchema>>, @ActorCtx() a: Actor) { return this.svc.updateCategory(a, id, b); }
   @Delete('categories/:id')
   deleteCategory(@Param('id') id: string, @ActorCtx() a: Actor) { return this.svc.deleteCategory(a, id); }
+
+  // ---------- money ----------
+  @Get('finance') finance_() { return this.finance.overview(); }
+  @Get('finance/waiting-for-onboarding') waiting() { return this.finance.waitingForOnboarding(); }
+  @HttpCode(200) @Post('finance/release-transfers') release(@ActorCtx() a: Actor) { return this.finance.releaseNow(a); }
+  @Get('disputes') disputes() { return this.finance.disputes(); }
+  @Get('refund-requests') refundRequests(@ZQuery(refundReqQuery) q: z.infer<typeof refundReqQuery>) { return this.finance.refundRequests(q.status); }
+  @HttpCode(200) @Post('refund-requests/:id/approve')
+  approveRefund(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.finance.decideRefundRequest(a, id, true, b.note); }
+  @HttpCode(200) @Post('refund-requests/:id/decline')
+  declineRefund(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.finance.decideRefundRequest(a, id, false, b.note); }
+  @Get('instructors/:id/terms') instructorTerms(@Param('id') id: string) { return this.finance.terms(id); }
+  /** Super admin only (checked in the service): per-instructor rate and the "pay to DEL" agreement. Audited. */
+  @Put('instructors/:id/terms')
+  setTerms(@Param('id') id: string, @ZBody(termsSchema) b: z.infer<typeof termsSchema>, @ActorCtx() a: Actor) { return this.finance.setInstructorTerms(a, id, b); }
 
   @Get('settings') settings() { return this.svc.getSettings(); }
   @Put('settings')

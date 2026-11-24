@@ -290,6 +290,36 @@ type AdminOrder = { id; status; provider; currency; totalCents; refundedCents; p
   history: { id; action; at; meta; actor: { id; name } | null }[] };
 ```
 
+## Money: split, payout hold, refunds, disputes (owner-approved, docs/PAYMENTS_PROPOSAL.md)
+
+Rules (`apps/api/src/commerce/money.ts`): per line `net = price − allocated Stripe fee` (fee split by price, largest
+remainder), `instructor = round_half_up(net × (10000 − commissionBps) / 10000)`, `platform = net − instructor`. Tax is never
+in the split. `commissionBps` is the platform's share (default `commission_bps` 2000; per-instructor override; 10000 for
+DEL's own courses). Lines are snapshotted at purchase. `payee`: `instructor` (Stripe transfer), `platform` (DEL course),
+`del_agreement` (written "pay to DEL" agreement: no transfer, share recorded). The fee is read from Stripe's balance
+transaction after payment (`charge.updated` or a retrying job); dev test payments use a simulated 2.9% + 30¢.
+Instructor shares wait **16 days** (`transferDueAt`) and are transferred by an hourly job; money owed from a refund or lost
+dispute after a transfer is reversed in Stripe, or recorded in `ledger_entries` and netted from the next transfer.
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/checkout` | body `{ immediateAccessConsent: true }` required for paid carts (`400 consent_required`) |
+| GET | `/orders/:id/refund` | own order: `{ eligibleUntil, policy: { windowDays: 14, maxWatchedPercent: 25, selfServicePerYear: 3 }, selfServiceLeft, pendingRequest, lines: [{ lineId, courseId, title, eligible, reason, watchedPercent }] }`; reasons `already_refunded`, `free_course`, `not_paid`, `window_closed`, `certificate_issued`, `watched_too_much`, `disputed` |
+| POST | `/orders/:id/refund` | `{ lineIds?, reason? }` → `{ status: 'refunded' }` or, over 3 self-service refunds in 12 months, `{ status: 'pending_review', requestId }`; `400 <reason>` when not eligible. A refund revokes access and the course certificate |
+| GET | `/instructor/terms` | `{ instructorSharePercent, platformBps, source: default\|agreement\|platform, defaultInstructorSharePercent, payToPlatform, note, formula, holdDays: 16, refundWindowDays: 14 }` |
+| GET | `/instructor/sales` | items add `feeCents, netCents, payee, transferDueAt, disputeStatus`; totals add `feesCents, heldCents` |
+| GET | `/admin/finance` | totals (gross, fees, net, instructor shares, DEL-agreement shares, platform revenue, refunded, held, due, transferred, frozen by disputes, owed by instructors) + `checks: { orders, problems: [{ orderId, check }] }` (empty = reconciled) |
+| GET | `/admin/finance/waiting-for-onboarding` | instructors with shares waiting because Stripe onboarding isn't finished |
+| POST | `/admin/finance/release-transfers` | super admin: run the payout release now (audited) |
+| GET | `/admin/disputes` | chargebacks with status `open\|won\|lost` |
+| GET | `/admin/refund-requests?status` | learner requests that need review |
+| POST | `/admin/refund-requests/:id/approve\|decline` | `{ note? }` (note required to decline) |
+| GET / PUT | `/admin/instructors/:id/terms` | PUT super admin only: `{ commissionBps?: 0..10000 \| null, payToPlatform?, note (≥ 5 chars) }`, applies to new sales, audited `commission.terms_changed` |
+| PUT | `/admin/settings` | now **super admin only** (`403 super_admin_required`) |
+
+Webhooks add `charge.updated` (fee), `charge.dispute.created` (freeze the order's payouts) and `charge.dispute.closed`
+(won: release; lost: revoke access and recover the instructor's share, like a refund).
+
 ## Webhooks (server to server; no cookies/CSRF)
 
 - `POST /webhooks/stripe`: raw body, `Stripe-Signature` verified with `STRIPE_WEBHOOK_SECRET`; event ids stored for idempotency.

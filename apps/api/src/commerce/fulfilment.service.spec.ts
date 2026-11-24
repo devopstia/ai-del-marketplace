@@ -41,7 +41,10 @@ function fakeDb() {
     },
     course: { update: jest.fn(async ({ where }: any) => (state.studentCount[where.id] = (state.studentCount[where.id] ?? 0) + 1)) },
     cartItem: { deleteMany: jest.fn(async () => (state.cartDeleted++, { count: 1 })) },
-    orderLine: { update: jest.fn(async ({ where, data }: any) => Object.assign(state.lines.find((l) => l.id === where.id)!, data)) },
+    orderLine: {
+      update: jest.fn(async ({ where, data }: any) => Object.assign(state.lines.find((l) => l.id === where.id)!, data)),
+      updateMany: jest.fn(async (args: any) => ((state as any).dueUpdate = args, { count: 1 })),
+    },
     user: { findUnique: jest.fn(async () => ({ email: 'u1@example.com' })) },
     auditLog: { create: jest.fn() },
   };
@@ -54,8 +57,9 @@ function build(stripeConfigured = true) {
   const audit = { log: jest.fn(async (e: any) => state.audits.push(e.action)) };
   const transfers = { create: jest.fn(async (p: any) => ({ id: `tr_${p.metadata.orderLineId}` })) };
   const stripe: any = { configured: stripeConfigured, client: { transfers } };
-  const jobs: any = { sendEmail: jest.fn() };
-  return { svc: new FulfilmentService(prisma, audit as any, stripe, jobs), state, transfers, jobs };
+  const jobs: any = { sendEmail: jest.fn(), settleFee: jest.fn() };
+  const payouts: any = { settleFee: jest.fn(async () => true), fetchStripeFee: jest.fn(async () => true) };
+  return { svc: new FulfilmentService(prisma, audit as any, stripe, jobs, payouts), state, transfers, jobs, payouts };
 }
 
 describe('FulfilmentService.fulfil', () => {
@@ -94,37 +98,35 @@ describe('FulfilmentService.fulfil', () => {
   });
 });
 
-describe('FulfilmentService.issueTransfers', () => {
-  it('pays only third-party instructors with payouts enabled, with source_transaction + idempotency key', async () => {
+describe('FulfilmentService: money after payment', () => {
+  it('never transfers at payment time: shares wait for the refund-window hold', async () => {
     const { svc, state, transfers } = build(true);
     await svc.fulfil('o1', { via: 'stripe_webhook', paymentIntentId: 'pi_1', chargeId: 'ch_1' });
-    expect(transfers.create).toHaveBeenCalledTimes(1);
-    const [params, opts] = transfers.create.mock.calls[0] as any[];
-    expect(params).toMatchObject({ amount: 4249, currency: 'usd', destination: 'acct_nadia', transfer_group: 'o1', source_transaction: 'ch_1' });
-    expect(opts).toEqual({ idempotencyKey: 'transfer:l1' });
-    expect(state.lines[0]).toMatchObject({ transferStatus: 'paid', transferId: 'tr_l1' });
-    expect(state.lines[1].transferStatus).toBe('none'); // the platform's own course: no transfer
-  });
-
-  it('retrying transfers never pays a line twice', async () => {
-    const { svc, transfers } = build(true);
-    await svc.fulfil('o1', { via: 'stripe_webhook', chargeId: 'ch_1' });
-    await svc.issueTransfers('o1');
-    await svc.fulfil('o1', { via: 'stripe_webhook', chargeId: 'ch_1' });
-    expect(transfers.create).toHaveBeenCalledTimes(1);
-  });
-
-  it('leaves lines pending when the instructor has not finished onboarding', async () => {
-    const { svc, state, transfers } = build(true);
-    state.profiles['i-nadia'].payoutsEnabled = false;
-    await svc.fulfil('o1', { via: 'stripe_webhook', chargeId: 'ch_1' });
     expect(transfers.create).not.toHaveBeenCalled();
     expect(state.lines[0].transferStatus).toBe('pending');
+    const held = (state as any).dueUpdate;
+    expect(held.data.transferDueAt.getTime() - state.order.paidAt!.getTime()).toBe(16 * 24 * 3600 * 1000);
+    expect((state.order as any).refundEligibleUntil.getTime() - state.order.paidAt!.getTime()).toBe(14 * 24 * 3600 * 1000);
   });
 
-  it('does nothing without Stripe (dev test payments)', async () => {
-    const { svc, transfers } = build(false);
+  it('dev test payments settle a simulated Stripe fee (2.9% + 30¢); Stripe orders read the real fee or retry', async () => {
+    const t = build(false);
+    (t.state.order as any).provider = 'test';
+    await t.svc.fulfil('o1', { via: 'dev_test_payment' });
+    expect(t.payouts.settleFee).toHaveBeenCalledWith('o1', Math.round(9998 * 0.029) + 30, 'simulated');
+
+    const s = build(true);
+    (s.state.order as any).provider = 'stripe';
+    s.payouts.fetchStripeFee.mockResolvedValueOnce(false);
+    await s.svc.fulfil('o1', { via: 'stripe_webhook', chargeId: 'ch_1' });
+    expect(s.jobs.settleFee).toHaveBeenCalledWith('o1');
+  });
+
+  it('a duplicate fulfilment does not settle the fee twice', async () => {
+    const { svc, payouts, state } = build(false);
+    (state.order as any).provider = 'test';
     await svc.fulfil('o1', { via: 'dev_test_payment' });
-    expect(transfers.create).not.toHaveBeenCalled();
+    await svc.fulfil('o1', { via: 'dev_test_payment' });
+    expect(payouts.settleFee).toHaveBeenCalledTimes(1);
   });
 });

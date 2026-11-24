@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
 import { env } from '../config/env';
 import { AuditService } from './audit.service';
-import { EMAIL_QUEUE, JobsService, MEDIA_QUEUE } from './jobs';
+import { EMAIL_QUEUE, JobsService, MEDIA_QUEUE, PAYMENTS_QUEUE } from './jobs';
 import { PrismaService } from './prisma.service';
 import { SettingsService } from './settings.service';
 import { StorageService } from './storage.service';
@@ -22,7 +22,7 @@ export function redisConnection() {
 @Module({
   imports: [
     BullModule.forRootAsync({ useFactory: () => ({ connection: redisConnection() }) }),
-    BullModule.registerQueue({ name: MEDIA_QUEUE }, { name: EMAIL_QUEUE }),
+    BullModule.registerQueue({ name: MEDIA_QUEUE }, { name: EMAIL_QUEUE }, { name: PAYMENTS_QUEUE }),
   ],
   providers: [PrismaService, AuditService, StorageService, SettingsService, JobsService],
   exports: [PrismaService, AuditService, StorageService, SettingsService, JobsService, BullModule],

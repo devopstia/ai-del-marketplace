@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../common/audit.service';
 import { JobsService } from '../common/jobs';
+import { refundDeadline, simulatedStripeFee, transferDueAt } from './money';
+import { PayoutsService } from './payouts.service';
 import { PrismaService } from '../common/prisma.service';
 import { StripeService } from './stripe.service';
 
@@ -34,15 +36,18 @@ export class FulfilmentService {
     private readonly audit: AuditService,
     private readonly stripe: StripeService,
     private readonly jobs: JobsService,
+    private readonly payouts: PayoutsService,
   ) {}
 
   async fulfil(orderId: string, payment: PaymentInfo): Promise<FulfilResult> {
     const result = await this.prisma.$transaction(async (tx) => {
+      const paidAt = new Date();
       const flipped = await tx.order.updateMany({
         where: { id: orderId, status: { in: ['pending', 'failed'] } },
         data: {
           status: 'paid',
-          paidAt: new Date(),
+          paidAt,
+          refundEligibleUntil: refundDeadline(paidAt),
           ...(payment.paymentIntentId ? { stripePaymentIntentId: payment.paymentIntentId } : {}),
           ...(payment.chargeId ? { stripeChargeId: payment.chargeId } : {}),
         },
@@ -51,6 +56,8 @@ export class FulfilmentService {
         return { orderId, alreadyFulfilled: true, enrolledCourseIds: [] as string[], userId: null as string | null };
       }
       const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: { lines: true } });
+      // Instructor shares wait for the refund window to close before they are transferred.
+      await tx.orderLine.updateMany({ where: { orderId, transferStatus: 'pending' }, data: { transferDueAt: transferDueAt(paidAt) } });
       const enrolled: string[] = [];
       for (const line of order.lines) {
         const key = { userId_courseId: { userId: order.userId, courseId: line.courseId } };
@@ -85,62 +92,23 @@ export class FulfilmentService {
       const user = await this.prisma.user.findUnique({ where: { id: result.userId }, select: { email: true } });
       if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', data: { orderId } });
     }
-    await this.issueTransfers(orderId);
+    if (!result.alreadyFulfilled) await this.settleFee(orderId, payment.via);
     const { userId: _u, ...out } = result;
     return out;
   }
 
   /**
-   * Pay instructors their share: one Stripe transfer per order line whose instructor has a connected account with
-   * payouts enabled and is not the platform itself. `source_transaction` ties the transfer to the charge (so it waits
-   * for the funds) and the idempotency key makes retries safe. Lines that can't be paid yet stay `pending`.
+   * The split needs the real fee: free orders have none, dev test payments use a simulated Stripe fee, and Stripe
+   * orders read it from the charge (it can lag a few seconds: a job retries, and `charge.updated` also settles it).
    */
-  async issueTransfers(orderId: string): Promise<number> {
-    if (!this.stripe.configured) return 0;
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: { lines: { where: { transferStatus: 'pending', refundedAt: null }, include: { instructor: { select: { instructorProfile: true } } } } },
+  private async settleFee(orderId: string, via: PaymentInfo['via']) {
+    const order = await this.prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+    if (order.provider === 'free' || order.totalCents === 0) return void (await this.payouts.settleFee(orderId, 0, 'none'));
+    if (order.provider === 'test') return void (await this.payouts.settleFee(orderId, simulatedStripeFee(order.totalCents), 'simulated'));
+    const done = await this.payouts.fetchStripeFee(orderId).catch((e) => {
+      this.logger.warn(`fee for ${orderId} not available yet (${via}): ${(e as Error).message}`);
+      return false;
     });
-    if (!order || order.status !== 'paid' || !order.stripeChargeId) return 0;
-    let sent = 0;
-    for (const line of order.lines) {
-      const p = line.instructor.instructorProfile;
-      if (!p || p.isPlatform || !p.stripeAccountId || !p.payoutsEnabled || line.instructorShareCents <= 0) continue;
-      try {
-        const transfer = await this.stripe.client.transfers.create(
-          {
-            amount: line.instructorShareCents,
-            currency: order.currency,
-            destination: p.stripeAccountId,
-            transfer_group: order.id,
-            source_transaction: order.stripeChargeId,
-            metadata: { orderId: order.id, orderLineId: line.id, courseId: line.courseId },
-          },
-          { idempotencyKey: `transfer:${line.id}` },
-        );
-        await this.prisma.orderLine.update({ where: { id: line.id }, data: { transferId: transfer.id, transferStatus: 'paid' } });
-        await this.audit.log({
-          action: 'payout.transfer_created',
-          targetType: 'order_line',
-          targetId: line.id,
-          meta: { orderId: order.id, transferId: transfer.id, amount: line.instructorShareCents, destination: p.stripeAccountId },
-        });
-        sent++;
-      } catch (e) {
-        this.logger.error(`transfer for line ${line.id} failed: ${(e as Error).message}`);
-        await this.audit.log({ action: 'payout.transfer_failed', targetType: 'order_line', targetId: line.id, meta: { error: (e as Error).message } });
-      }
-    }
-    return sent;
-  }
-
-  /** After an instructor finishes onboarding, pay out everything that was waiting for them. */
-  async settlePendingForInstructor(instructorId: string) {
-    const orders = await this.prisma.orderLine.findMany({
-      where: { instructorId, transferStatus: 'pending', refundedAt: null, order: { status: { in: ['paid', 'partially_refunded'] } } },
-      select: { orderId: true },
-      distinct: ['orderId'],
-    });
-    for (const o of orders) await this.issueTransfers(o.orderId);
+    if (!done) await this.jobs.settleFee(orderId);
   }
 }

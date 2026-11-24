@@ -302,6 +302,7 @@ export class AdminService {
   }
 
   async putSettings(a: Actor, input: { commission_bps: number }) {
+    if (!hasRole(a.user, 'super_admin')) throw forbidden('Only a super admin can change the commission', 'super_admin_required');
     const before = await this.settings.all();
     await this.settings.set('commission_bps', input.commission_bps);
     await this.audit.log({ actorId: a.user.id, action: 'settings.updated', targetType: 'settings', targetId: 'commission_bps', ip: a.ip, meta: { before: before.commission_bps, after: input.commission_bps } });
@@ -376,8 +377,14 @@ export class AdminService {
       instructor: { id: l.instructor.id, name: l.instructor.name, isPlatform: !!l.instructor.instructorProfile?.isPlatform },
       priceCents: l.priceCents,
       commissionBps: l.commissionBps,
-      commissionCents: l.priceCents - l.instructorShareCents,
+      feeCents: l.feeCents,
+      netCents: l.netCents,
+      // platform revenue for the line: the net minus whatever the instructor receives (DEL lines keep it all)
+      commissionCents: l.netCents - (l.payee === 'instructor' ? l.instructorShareCents : 0),
       instructorShareCents: l.instructorShareCents,
+      payee: l.payee,
+      transferDueAt: l.transferDueAt,
+      disputeStatus: l.disputeStatus,
       transferStatus: l.transferStatus,
       transferId: l.transferId,
       refundedAt: l.refundedAt,
@@ -394,6 +401,10 @@ export class AdminService {
       paidAt: o.paidAt,
       createdAt: o.createdAt,
       stripePaymentIntentId: o.stripePaymentIntentId,
+      stripeFeeCents: o.stripeFeeCents,
+      feeSource: o.feeSource,
+      refundEligibleUntil: o.refundEligibleUntil,
+      immediateAccessConsentAt: o.immediateAccessConsentAt,
       user: o.user,
       lines,
       history,

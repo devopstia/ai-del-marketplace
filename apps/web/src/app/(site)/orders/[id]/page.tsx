@@ -10,15 +10,17 @@ import { Skeleton } from "@/components/Empty";
 import { OrderStatus } from "@/components/StatusBadge";
 import { PrintButton } from "@/components/PrintButton";
 import { useAuth } from "@/components/AuthProvider";
+import { RefundPanel } from "@/components/RefundPanel";
 
 export default function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { me } = useAuth();
   const [o, setO] = useState<Order | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [n, setN] = useState(0);
   useEffect(() => {
     api(`/orders/${id}`).then((r) => setO(toOrder(r))).catch((e) => setErr(errMsg(e)));
-  }, [id]);
+  }, [id, n]);
   return (
     <div className="container-x max-w-3xl pt-10">
       <Link href="/orders" className="link text-sm print:hidden">All orders</Link>
@@ -48,6 +50,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
           <p className="mt-8 text-xs text-muted">Payment processed by Stripe. Keep this receipt for your records.</p>
         </article>
       ) : null}
+      {o && (o.status === "paid" || o.status === "partially_refunded") ? <RefundPanel orderId={o.id} onRefunded={() => setN((x) => x + 1)} /> : null}
       {o ? <div className="mt-5 print:hidden"><PrintButton /></div> : null}
     </div>
   );

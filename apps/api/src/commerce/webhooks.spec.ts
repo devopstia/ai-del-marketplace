@@ -74,7 +74,7 @@ describe('WebhooksService (event idempotency + routing)', () => {
     const refunds = { applyRefund: jest.fn() };
     const connect = { setPayoutsEnabled: jest.fn(), refreshAccount: jest.fn() };
     const stripe = { configured: true, client: { paymentIntents: { retrieve: jest.fn(async () => ({ latest_charge: 'ch_1' })) } } };
-    const svc = new WebhooksService(prisma, stripe as any, fulfilment as any, refunds as any, connect as any, { log: jest.fn() } as any);
+    const svc = new WebhooksService(prisma, stripe as any, fulfilment as any, refunds as any, connect as any, { log: jest.fn() } as any, { settleFromCharge: jest.fn() } as any);
     return { svc, prisma, fulfilment, refunds, connect };
   }
   const completed = {
