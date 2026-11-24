@@ -15,6 +15,7 @@
 | 2026-11-24 | **Labs**: students run labs on their own computer or a cheap cloud VM using our lab ZIPs; no hosted sandboxes for now | Owner |
 | 2026-11-24 | AI provider/budget (Phase 3): skipped for now | Owner |
 | 2026-11-24 | **Captions available but OFF by default**; the student can turn them on | Owner: "Turn off the transcript by default. a student can add it if they want" (refines "no transcript on the video") |
+| 2026-11-24 | Phase 1 front-end redesign **rejected and reverted**; front-end changes from now on one small step at a time, each reviewed by the owner. Back-end Phase 1 kept | Owner |
 
 ## Open (need the owner)
 - AI provider and monthly cap for Phase 3 (owner: skip for now).
