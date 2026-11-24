@@ -30,3 +30,9 @@
 - The approved design (tag `design-approved-2026-11-24`, branch `feat/phase1`) stays as is.
 - The proposed redesign is archived on branch `feat/landing-redesign` (screenshots and notes in `docs/design/landing-redesign-2026-11/` on that branch). It is not merged and not deployed.
 - Marketplace front-end work is paused; video generation has priority.
+
+## 2026-11-24: checkpoint before discovery and redesign plan (owner master brief)
+- Rollback point: tag `checkpoint-2026-11-24-discovery` = commit `be6818c` (branch `feat/phase1`), backup branch
+  `backup/phase1-2026-11-24`. Work continues on `feat/redesign-plan`. Restore any path with
+  `git checkout checkpoint-2026-11-24-discovery -- <path>`.
+- Approved design still `design-approved-2026-11-24` (`9b0170e`). No code changes until the owner approves `docs/ROADMAP.md` v2.

@@ -43,6 +43,17 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 14. **Natural, not AI-generated design** (owner, 2026-11-24): clean typography, consistent spacing, proper alignment, professional
     colour; avoid excessive gradients, glows, repetitive cards, oversized headings, needless animation and decoration. Improve the
     existing identity, don't replace it. Preserve the course listing and course detail pages (owner likes them).
+15. **Permanent rules for every agent** (owner master brief, 2026-11-24; they reinforce rules 1–14):
+    - Inspect the existing code, docs and running app before changing anything; never assume a feature is missing until checked.
+    - Before **any** modification phase (not only redesigns): commit the working state, add an annotated `checkpoint-<date>-<topic>`
+      tag and a `backup/…` branch, record the hash in `docs/DECISIONS.md`, then work on a dedicated `feat/…` branch. No
+      `reset --hard`, force push or branch deletion.
+    - Never rebuild what works. Preserve the course and video functionality (catalogue, course page, curriculum, player, studio uploads).
+    - Research professional references before major UI changes (`docs/research/`); decisions must be evidence-based.
+    - Simplicity, professionalism and usability over decoration; no generic AI-generated look.
+    - Functional features only, never decorative placeholders; test before presenting anything as complete; show screenshots.
+    - Never merge or deploy major changes without the owner's approval; keep docs and rollback points current.
+    - Don't create duplicate instruction files: this file is the single source of agent rules.
 10. **Done means tested**: `npm test -w apps/api` (unit + e2e), `./scripts/smoke-api.sh`, `npm run typecheck && npm run lint -w apps/web`,
     Playwright `npm run test:e2e -w apps/web` (wait ~60 s after the API smoke run: register is rate-limited per IP), all green on a
     fresh stack (`docker compose down -v`), then reseed for a clean demo.
