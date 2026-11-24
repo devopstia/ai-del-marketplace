@@ -26,18 +26,18 @@ npm workspaces at the root; `package-lock.json` committed.
 ## Data model (Prisma)
 User(id, email unique, passwordHash, name, avatarUrl, roles[], status active|suspended, createdAt)
 Session(id, userId, expiresAt, ip, userAgent, revokedAt)
-InstructorProfile(userId PK, headline, bio, website, status pending|approved|rejected, stripeAccountId?, payoutsEnabled bool)
+InstructorProfile(userId PK, headline, bio, website, status pending|approved|rejected, reviewNote?, isPlatform bool (DEL: never paid out), stripeAccountId?, payoutsEnabled bool)
 Category(id, slug unique, name, icon, sort)
 Course(id, slug unique, instructorId→User, categoryId, title, subtitle, description (markdown), language, level beginner|intermediate|advanced,
-  objectives text[], requirements text[], priceCents, currency 'usd', thumbnailKey?, promoVideoAssetId?, status draft|in_review|changes_requested|published|unpublished,
+  objectives text[], requirements text[], priceCents, currency 'usd', thumbnailKey?, promoVideoAssetId?, status draft|in_review|changes_requested|rejected|published|unpublished,
   reviewNote?, publishedAt?, ratingAvg, ratingCount, studentCount, createdAt, updatedAt)
 Section(id, courseId, title, position)
 Lecture(id, sectionId, title, position, type video|article|quiz, videoAssetId?, articleMd?, durationSec, isPreview bool)
-VideoAsset(id, ownerId, provider local|mux, status uploading|processing|ready|failed, storageKey?, muxAssetId?, muxPlaybackId?, durationSec, captionsKey?)
+VideoAsset(id, ownerId, provider local|mux, status uploading|processing|ready|failed, storageKey?, muxUploadId?, muxAssetId?, muxPlaybackId?, durationSec, captionsKey?, error?)
 Resource(id, lectureId, title, storageKey, sizeBytes, mime)        // lab ZIPs, scripts
 Quiz(id, lectureId unique, questions jsonb [{q, options[3..5], correct, why}]) ; QuizAttempt(id, userId, quizId, score, answers jsonb, at)
 CartItem(userId, courseId) PK(userId,courseId)
-Order(id, userId, status pending|paid|failed|refunded|partially_refunded, totalCents, currency, stripeCheckoutSessionId?, stripePaymentIntentId?, stripeChargeId?, paidAt?)
+Order(id, userId, provider stripe|test|free, status pending|paid|failed|refunded|partially_refunded, totalCents, currency, stripeCheckoutSessionId?, stripePaymentIntentId?, stripeChargeId?, paidAt?)
 OrderLine(id, orderId, courseId, instructorId, priceCents, commissionBps, instructorShareCents, transferId?, transferStatus none|pending|paid|reversed, refundedAt?)
 Enrollment(userId, courseId, orderLineId?, source purchase|free|admin, createdAt, revokedAt?) PK(userId,courseId)
 LectureProgress(userId, lectureId, positionSec, completed bool, updatedAt) PK(userId,lectureId)
@@ -100,3 +100,7 @@ ffmpeg (test pattern + tone, 10–20 s) uploaded to MinIO, one resource ZIP, one
 - Web: typecheck + lint green; Playwright smoke: home, course page, register, buy (test payment), My Learning, play lecture,
   instructor creates course + submits, admin approves.
 - Every screen reviewed in screenshots at 1440 px and 390 px; light and dark.
+
+## Notes from the build (2026-11-24)
+- MinIO: the `minio/minio` image is no longer published on Docker Hub/quay; local dev uses the community build `pgsty/minio` (pinned release tag). Production will use real S3.
+- Full endpoint list incl. additions: `docs/API.md`.

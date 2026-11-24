@@ -1,0 +1,129 @@
+import { Controller, Delete, Get, Headers, HttpCode, Param, Post, Req } from '@nestjs/common';
+import { z } from 'zod';
+import { ActorCtx, type Actor, type AppRequest, Public, Roles, SkipCsrf } from '../common/auth-context';
+import { AppError, badRequest, unavailable } from '../common/errors';
+import { ZBody } from '../common/zod';
+import { env } from '../config/env';
+import { MuxVideoProvider } from '../media/mux-video.provider';
+import { PrismaService } from '../common/prisma.service';
+import { CommerceService } from './commerce.service';
+import { ConnectService } from './connect.service';
+import { StripeService } from './stripe.service';
+import { WebhooksService } from './webhooks.service';
+
+const addSchema = z.object({ courseId: z.string().uuid() });
+
+@Controller()
+export class CommerceController {
+  constructor(
+    private readonly svc: CommerceService,
+    private readonly connect: ConnectService,
+  ) {}
+
+  @Get('cart')
+  cart(@ActorCtx() a: Actor) {
+    return this.svc.cart(a.user.id);
+  }
+
+  @Post('cart')
+  add(@ZBody(addSchema) body: z.infer<typeof addSchema>, @ActorCtx() a: Actor) {
+    return this.svc.addToCart(a.user.id, body.courseId);
+  }
+
+  @Delete('cart/:courseId')
+  remove(@Param('courseId') courseId: string, @ActorCtx() a: Actor) {
+    return this.svc.removeFromCart(a.user.id, courseId);
+  }
+
+  @Delete('cart')
+  clear(@ActorCtx() a: Actor) {
+    return this.svc.clearCart(a.user.id);
+  }
+
+  @HttpCode(200)
+  @Post('checkout')
+  checkout(@ActorCtx() a: Actor) {
+    return this.svc.checkout(a);
+  }
+
+  @Get('orders')
+  orders(@ActorCtx() a: Actor) {
+    return this.svc.orders(a.user.id);
+  }
+
+  @Get('orders/:id')
+  order(@Param('id') id: string, @ActorCtx() a: Actor) {
+    return this.svc.order(a.user.id, id);
+  }
+
+  /** Only when DEV_TEST_PAYMENTS=true and NODE_ENV!=production (otherwise 404). */
+  @HttpCode(200)
+  @Post('dev/test-payments/:orderId/complete')
+  testPayment(@Param('orderId') orderId: string, @ActorCtx() a: Actor) {
+    return this.svc.completeTestPayment(a, orderId);
+  }
+
+  @Roles('instructor')
+  @HttpCode(200)
+  @Post('instructor/stripe/onboarding-link')
+  onboarding(@ActorCtx() a: Actor) {
+    return this.connect.onboardingLink(a);
+  }
+
+  @Roles('instructor')
+  @Get('instructor/stripe/status')
+  status(@ActorCtx() a: Actor) {
+    return this.connect.status(a.user.id);
+  }
+}
+
+/** Server-to-server webhooks: public, no CSRF, verified by signature over the raw body. */
+@Public()
+@SkipCsrf()
+@Controller('webhooks')
+export class WebhooksController {
+  constructor(
+    private readonly stripe: StripeService,
+    private readonly hooks: WebhooksService,
+    private readonly mux: MuxVideoProvider,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  @HttpCode(200)
+  @Post('stripe')
+  async stripeHook(@Req() req: AppRequest, @Headers('stripe-signature') sig?: string) {
+    if (!env().STRIPE_WEBHOOK_SECRET) throw unavailable('Stripe webhooks are not configured', 'stripe_not_configured');
+    if (!req.rawBody || !sig) throw badRequest('Missing signature', 'invalid_signature');
+    let event;
+    try {
+      event = this.stripe.constructEvent(req.rawBody, sig);
+    } catch {
+      throw new AppError(400, 'invalid_signature', 'Webhook signature verification failed');
+    }
+    return this.hooks.handle(event as any);
+  }
+
+  @HttpCode(200)
+  @Post('mux')
+  async muxHook(@Req() req: AppRequest) {
+    if (!env().MUX_WEBHOOK_SECRET || !this.mux.configured) throw unavailable('Mux webhooks are not configured', 'mux_not_configured');
+    let event: any;
+    try {
+      event = await this.mux.mux().webhooks.unwrap(req.rawBody!.toString('utf8'), req.headers as Record<string, string>, env().MUX_WEBHOOK_SECRET);
+    } catch {
+      throw new AppError(400, 'invalid_signature', 'Webhook signature verification failed');
+    }
+    const id = `mux:${event.id}`;
+    if (await this.prisma.webhookEvent.findUnique({ where: { id } })) return { received: true, duplicate: true };
+    if (event.type === 'video.asset.ready') {
+      const d = event.data;
+      await this.mux.markReady(d.id, d.upload_id, d.playback_ids?.find((p: any) => p.policy === 'signed')?.id ?? d.playback_ids?.[0]?.id, d.duration ?? 0);
+    } else if (event.type === 'video.asset.errored') {
+      await this.mux.markFailed(event.data.id, JSON.stringify(event.data.errors ?? {}));
+    } else if (event.type === 'video.upload.asset_created') {
+      await this.prisma.videoAsset.updateMany({ where: { muxUploadId: event.data.id }, data: { muxAssetId: event.data.asset_id, status: 'processing' } });
+    }
+    await this.prisma.webhookEvent.create({ data: { id, type: event.type } }).catch(() => undefined);
+    return { received: true, duplicate: false };
+  }
+}

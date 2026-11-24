@@ -1,0 +1,129 @@
+# Local deployment. All ports bind to 127.0.0.1 only. Secrets come from .env (./scripts/make-env.sh).
+name: ai-del-marketplace
+
+x-api-env: &api-env
+  NODE_ENV: ${NODE_ENV:-development}
+  # env_file does not interpolate, so DATABASE_URL is built here from POSTGRES_PASSWORD.
+  DATABASE_URL: postgresql://del:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/marketplace
+  REDIS_URL: redis://redis:6379
+  SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+  WEB_URL: ${WEB_URL:-http://127.0.0.1:3000}
+  API_URL: ${API_URL:-http://127.0.0.1:4000}
+  S3_ENDPOINT: http://minio:9000
+  S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://127.0.0.1:9000}
+  S3_BUCKET: ${S3_BUCKET:-del-media}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+  VIDEO_PROVIDER: ${VIDEO_PROVIDER:-local}
+  MUX_TOKEN_ID: ${MUX_TOKEN_ID:-}
+  MUX_TOKEN_SECRET: ${MUX_TOKEN_SECRET:-}
+  MUX_SIGNING_KEY_ID: ${MUX_SIGNING_KEY_ID:-}
+  MUX_SIGNING_PRIVATE_KEY: ${MUX_SIGNING_PRIVATE_KEY:-}
+  MUX_WEBHOOK_SECRET: ${MUX_WEBHOOK_SECRET:-}
+  STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+  STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+  DEV_TEST_PAYMENTS: ${DEV_TEST_PAYMENTS:-false}
+  SEED_PASSWORD: ${SEED_PASSWORD:-}
+  AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-20}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: del
+      POSTGRES_DB: marketplace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U del -d marketplace"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["127.0.0.1:6380:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # MinIO community images are no longer published by MinIO Inc.; pgsty/minio is a maintained community build (includes mc).
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+    volumes: [miniodata:/data]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: create the private bucket and allow browser uploads (CORS is open per-bucket in MinIO by default).
+  minio-init:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    depends_on:
+      minio: { condition: service_healthy }
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET:-del-media}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        mc alias set local http://minio:9000 "$$S3_ACCESS_KEY" "$$S3_SECRET_KEY" >/dev/null
+        mc mb --ignore-existing "local/$$S3_BUCKET"
+        mc anonymous set none "local/$$S3_BUCKET"
+        echo "bucket $$S3_BUCKET ready (private)"
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: ai-del-marketplace-api:local
+    restart: unless-stopped
+    command: ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
+    environment:
+      <<: *api-env
+      PORT: "4000"
+    ports: ["127.0.0.1:4000:4000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+
+  worker:
+    image: ai-del-marketplace-api:local
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]
+    environment:
+      <<: *api-env
+    depends_on:
+      api: { condition: service_healthy }
+
+  # web: added by the web app build
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
