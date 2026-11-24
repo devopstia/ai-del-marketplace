@@ -5,7 +5,7 @@ import { Award, BookOpen, Loader2, PlayCircle } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { list, obj, paged, toCourseCard, toLearningItem } from "@/lib/normalize";
 import { useApi } from "@/lib/useApi";
-import { CourseTile } from "@/components/CourseViews";
+import { CourseResultRow, CourseTile } from "@/components/CourseViews";
 import { date, hours } from "@/lib/format";
 import type { LearningItem } from "@/lib/types";
 import { CourseCover } from "@/components/CourseCover";
@@ -81,7 +81,7 @@ export default function MyLearning() {
             <div>
               <h2 id="continue-h" className="text-sm font-bold text-[#9fd9f5]">Continue where you left off</h2>
               <p className="mt-2 font-display text-2xl font-extrabold leading-tight md:text-3xl">{current.course.title}</p>
-              {current.lastLectureTitle ? <p className="mt-2 text-white/75">Next up: {current.lastLectureTitle}</p> : null}
+              {current.lastLectureTitle ? <p className="mt-2 text-white/75">Continue where you left off: {current.lastLectureTitle}</p> : null}
               <div className="mt-5 flex flex-wrap items-center gap-6">
                 <span className="[&_span]:!text-white"><LoopMeter value={current.progressPct} size="lg" /></span>
                 {current.totalLectures ? <span className="text-sm text-white/70">{current.completedLectures ?? 0} of {current.totalLectures} lectures done</span> : null}
@@ -138,7 +138,10 @@ export default function MyLearning() {
         <section className="mt-16">
           <h2 className="font-display text-2xl font-extrabold">Popular courses to try next</h2>
           <p className="mt-1 text-ink-2">Most enrolled courses you haven’t started yet.</p>
-          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">{suggestions.map((c) => <CourseTile key={c.slug} c={c} />)}</div>
+          {/* A full row of tiles only when there are enough courses; fewer are listed, so no empty grid slots. */}
+          {suggestions.length >= 4
+            ? <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">{suggestions.map((c) => <CourseTile key={c.slug} c={c} />)}</div>
+            : <div className="mt-4 divide-y divide-line border-y border-line">{suggestions.map((c) => <CourseResultRow key={c.slug} c={c} />)}</div>}
         </section>
       ) : null}
     </div>
