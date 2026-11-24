@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Clock, Users, BarChart3 } from "lucide-react";
 import type { CourseCard } from "@/lib/types";
-import { compact, hours, levelLabel, money } from "@/lib/format";
+import { compact, hours, levelLabel, money, plural } from "@/lib/format";
 import { CourseCover } from "./CourseCover";
 import { RatingInline } from "./Stars";
 
@@ -38,7 +38,7 @@ export function CourseResultRow({ c }: { c: CourseCard }) {
         <div className="mt-1.5"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div>
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
           <span className="inline-flex items-center gap-1"><Clock className="size-3.5" />{hours(c.totalDurationSec)}</span>
-          {c.lectureCount ? <span>{c.lectureCount} lectures</span> : null}
+          {c.lectureCount ? <span>{plural(c.lectureCount, "lecture")}</span> : null}
           <span className="inline-flex items-center gap-1"><BarChart3 className="size-3.5" />{levelLabel[c.level]}</span>
           {c.studentCount ? <span className="inline-flex items-center gap-1"><Users className="size-3.5" />{compact(c.studentCount)} students</span> : null}
         </p>

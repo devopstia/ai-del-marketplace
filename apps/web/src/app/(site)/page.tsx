@@ -8,7 +8,7 @@ import { CourseCover } from "@/components/CourseCover";
 import { RatingInline } from "@/components/Stars";
 import { Avatar } from "@/components/Avatar";
 import { categoryIcon } from "@/components/CategoryIcon";
-import { compact, hours, levelLabel, plural } from "@/lib/format";
+import { hours, levelLabel, plural } from "@/lib/format";
 import type { CourseCard, InstructorSummary } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,7 @@ function RankedRow({ c, rank }: { c: CourseCard; rank?: number }) {
           <span className="line-clamp-2 font-display font-bold leading-snug text-ink group-hover:text-violet">{c.title}</span>
           <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-muted">
             <span className="truncate">{c.instructor.name}</span>
-            {c.studentCount ? <span className="tabular-nums">{compact(c.studentCount)} learners</span> : null}
+            {c.studentCount ? <span className="tabular-nums">{plural(c.studentCount, "learner")}</span> : null}
           </span>
         </span>
         <Price cents={c.priceCents} currency={c.currency} />

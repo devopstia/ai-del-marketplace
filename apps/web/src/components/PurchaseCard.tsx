@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Award, Download, Infinity as InfinityIcon, Loader2, MonitorPlay, PlayCircle, ShoppingCart, Smartphone } from "lucide-react";
+import { Award, Captions, Download, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
 import { api, ApiError, errMsg } from "@/lib/api";
 import { list, obj } from "@/lib/normalize";
 import { hours, money } from "@/lib/format";
@@ -51,6 +51,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
   }
 
   const free = course.priceCents === 0;
+  const quizzes = course.sections.reduce((a, s) => a + s.lectures.filter((l) => l.hasQuiz).length, 0);
   return (
     <div className="overflow-hidden rounded-panel border border-line bg-surface shadow-float" data-testid="purchase-card">
       <div className="relative">
@@ -86,11 +87,14 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
               </button>
             </div>
             <p className="mt-3 text-center text-xs text-muted">Secure checkout with Stripe. Lifetime access.</p>
+            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5" aria-hidden="true" />14-day refund while you’ve watched under 25%</p> : null}
           </>
         )}
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>
         <ul className="mt-2.5 space-y-2 text-sm text-ink-2">
           <li className="flex items-center gap-2.5"><MonitorPlay className="size-4 text-muted" />{hours(course.totalDurationSec)} of on-demand video</li>
+          {course.hasCaptions ? <li className="flex items-center gap-2.5"><Captions className="size-4 text-muted" />English captions (off until you turn them on)</li> : null}
+          {quizzes ? <li className="flex items-center gap-2.5"><ListChecks className="size-4 text-muted" />{quizzes} short {quizzes === 1 ? "quiz" : "quizzes"} with explanations</li> : null}
           {course.resourceCount > 0 ? <li className="flex items-center gap-2.5"><Download className="size-4 text-muted" />Downloadable lab files</li> : null}
           <li className="flex items-center gap-2.5"><Smartphone className="size-4 text-muted" />Watch on desktop or mobile</li>
           <li className="flex items-center gap-2.5"><InfinityIcon className="size-4 text-muted" />Full lifetime access</li>

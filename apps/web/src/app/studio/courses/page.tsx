@@ -6,7 +6,7 @@ import { BookOpen, Loader2, Plus } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { list, obj, toCategory, toStudioCourse } from "@/lib/normalize";
-import { compact, date, money } from "@/lib/format";
+import { compact, date, money, plural } from "@/lib/format";
 import { PageHead } from "@/components/shell/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CourseCover } from "@/components/CourseCover";
@@ -80,7 +80,7 @@ function CoursesInner() {
                 <div className="min-w-0 px-1">
                   <div className="flex flex-wrap items-center gap-2"><StatusBadge status={c.status} />{c.revision ? <span className="chip !py-0 text-xs">{c.revision.status === "in_review" ? "Changes in review" : c.revision.status === "changes_requested" ? "Changes requested" : "Draft changes"}</span> : null}{c.category ? <span className="text-xs text-muted">{c.category.name}</span> : null}</div>
                   <p className="mt-1.5 font-display text-lg font-bold leading-snug">{c.title || "Untitled course"}</p>
-                  <p className="mt-1 text-sm text-muted">{c.lectureCount ? `${c.lectureCount} lectures, ` : ""}updated {date(c.updatedAt)}</p>
+                  <p className="mt-1 text-sm text-muted">{c.lectureCount ? `${plural(c.lectureCount, "lecture")}, ` : ""}updated {date(c.updatedAt)}</p>
                   {c.status === "changes_requested" && c.reviewNote ? <p className="mt-2 line-clamp-2 rounded-lg bg-cyan-soft px-3 py-2 text-sm text-ink-2"><b>Reviewer:</b> {c.reviewNote}</p> : null}
                 </div>
                 <dl className="flex gap-6 px-1 text-sm sm:flex-col sm:gap-1 sm:text-right">

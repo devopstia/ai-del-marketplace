@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, Eye, FileText, ListChecks, Loader2, Plus, PlayCircle, Trash2, Paperclip } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { E } from "@/lib/studio-endpoints";
-import { bytes, clock } from "@/lib/format";
+import { bytes, clock, plural } from "@/lib/format";
 import type { StudioLecture, StudioSection, QuizQuestion } from "@/lib/types";
 import type { EditorCtx } from "./CourseEditor";
 import { StepFooter } from "./CourseEditor";
@@ -70,7 +70,7 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-bold">Curriculum</h2>
-          <p className="mt-1 text-ink-2">{sections.length} sections, {totalLectures} lectures, {clock(totalSec)} of video. Mark two or three lectures as free previews so learners can try before buying.</p>
+          <p className="mt-1 text-ink-2">{plural(sections.length, "section")}, {plural(totalLectures, "lecture")}, {clock(totalSec)} of video. Mark two or three lectures as free previews so learners can try before buying.</p>
         </div>
         {busy ? <Loader2 className="size-5 animate-spin text-violet" aria-label="Saving" /> : null}
       </div>

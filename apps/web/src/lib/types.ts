@@ -101,6 +101,7 @@ export interface CourseDetail extends CourseCard {
   resourceCount: number;
   /** True when the server already answered for a signed-in visitor (enrolled/inCart are then authoritative). */
   viewerSignedIn: boolean;
+  hasCaptions: boolean;
 }
 
 export interface Review {

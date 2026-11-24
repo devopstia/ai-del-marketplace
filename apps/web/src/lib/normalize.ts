@@ -174,6 +174,7 @@ export function toCourseDetail(x: unknown): CourseDetail {
     hasPromo: Boolean(o.hasPromo ?? o.promoVideoAssetId),
     resourceCount: num(raw.resourceCount ?? o.resourceCount ?? obj(raw.totals).resources),
     viewerSignedIn: Boolean(obj(raw.viewer).signedIn),
+    hasCaptions: Boolean(raw.hasCaptions ?? o.hasCaptions),
   };
 }
 

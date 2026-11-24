@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ChevronDown, FileText, ListChecks, PlayCircle, Lock } from "lucide-react";
 import type { SectionOutline } from "@/lib/types";
-import { clock, hours } from "@/lib/format";
+import { clock, hours, plural } from "@/lib/format";
 import { PreviewButton } from "./PreviewContext";
 
 export function Curriculum({ sections }: { sections: SectionOutline[] }) {
@@ -13,7 +13,7 @@ export function Curriculum({ sections }: { sections: SectionOutline[] }) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-2">
-        <span>{sections.length} sections, {lectures} lectures, {hours(total)} total</span>
+        <span>{plural(sections.length, "section")}, {plural(lectures, "lecture")}, {hours(total)} total</span>
         <button type="button" className="link" onClick={() => setOpen(allOpen ? new Set() : new Set(sections.map((s) => s.id)))}>
           {allOpen ? "Collapse all sections" : "Expand all sections"}
         </button>
@@ -33,7 +33,7 @@ export function Curriculum({ sections }: { sections: SectionOutline[] }) {
                 >
                   <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   <span className="flex-1 font-display font-bold text-ink">{s.title}</span>
-                  <span className="hidden text-sm text-muted sm:inline">{s.lectures.length} lectures, {hours(dur)}</span>
+                  <span className="hidden text-sm text-muted sm:inline">{plural(s.lectures.length, "lecture")}, {hours(dur)}</span>
                 </button>
               </h3>
               {isOpen ? (

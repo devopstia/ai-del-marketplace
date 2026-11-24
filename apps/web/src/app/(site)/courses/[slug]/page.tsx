@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Check, ChevronRight, Clock, Globe, BarChart3, RefreshCw, Users, MessageSquareReply } from "lucide-react";
 import { getCourse, getReviews } from "@/lib/catalog";
-import { compact, date, hours, languageLabel, levelLabel } from "@/lib/format";
+import { date, hours, languageLabel, levelLabel, plural } from "@/lib/format";
 import { Stars } from "@/components/Stars";
 import { Avatar } from "@/components/Avatar";
 import { Markdown } from "@/components/Markdown";
 import { Curriculum } from "@/components/Curriculum";
 import { PreviewProvider } from "@/components/PreviewContext";
+import { CourseFaq } from "@/components/CourseFaq";
 import { PurchaseCard } from "@/components/PurchaseCard";
 import { ReviewForm } from "@/components/ReviewForm";
 
@@ -54,7 +55,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                   <span className="text-white/70">({c.ratingCount.toLocaleString("en-US")} ratings)</span>
                 </a>
               ) : <span className="rounded-full bg-white/10 px-2.5 py-0.5 font-bold text-[#9fd9f5]">New course</span>}
-              {c.studentCount ? <span className="inline-flex items-center gap-1.5 text-white/80"><Users className="size-4" />{compact(c.studentCount)} learners</span> : null}
+              {c.studentCount ? <span className="inline-flex items-center gap-1.5 text-white/80"><Users className="size-4" />{plural(c.studentCount, "learner")}</span> : null}
             </div>
             <p className="mt-4 text-sm text-white/80">Created by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/70">
@@ -110,13 +111,15 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                 {c.instructor.headline ? <p className="text-ink-2">{c.instructor.headline}</p> : null}
                 <p className="mt-2 flex flex-wrap gap-x-5 text-sm text-muted">
                   {c.instructor.ratingAvg ? <span>{c.instructor.ratingAvg.toFixed(1)} instructor rating</span> : null}
-                  {c.instructor.studentCount ? <span>{compact(c.instructor.studentCount)} learners</span> : null}
+                  {c.instructor.studentCount ? <span>{plural(c.instructor.studentCount, "learner")}</span> : null}
                   {c.instructor.courseCount ? <span>{c.instructor.courseCount} courses</span> : null}
                 </p>
                 {c.instructor.bio ? <Markdown source={c.instructor.bio} className="prose-del mt-3 text-[0.95rem]" /> : null}
               </div>
             </div>
           </section>
+
+          <CourseFaq c={c} />
 
           <section id="reviews" className="mt-14 scroll-mt-24">
             <h2 className="font-display text-2xl font-extrabold">Learner reviews</h2>
