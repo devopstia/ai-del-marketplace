@@ -7,6 +7,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
+import { createReadStream, statSync } from 'node:fs';
 import type { Readable } from 'node:stream';
 import { env } from '../config/env';
 
@@ -71,6 +72,13 @@ export class StorageService {
 
   async put(key: string, body: Buffer | Uint8Array | string, contentType: string) {
     await this.internal.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
+  }
+
+  /** Streams a local file (large videos) into the bucket. */
+  async putFile(key: string, path: string, contentType: string) {
+    const size = statSync(path).size;
+    await this.internal.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: createReadStream(path), ContentLength: size, ContentType: contentType }));
+    return size;
   }
 
   async getStream(key: string): Promise<{ body: Readable; contentType: string; size: number } | null> {

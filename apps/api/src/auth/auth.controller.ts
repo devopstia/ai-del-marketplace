@@ -6,12 +6,15 @@ import { ActorCtx, type Actor, type AppRequest, Public } from '../common/auth-co
 import { CSRF_COOKIE, SESSION_COOKIE, sessionCookieOptions } from '../common/cookies';
 import { ZBody } from '../common/zod';
 import { env } from '../config/env';
+import { CommerceService } from '../commerce/commerce.service';
 import { AuthService } from './auth.service';
 
 const email = z.string().trim().toLowerCase().email().max(254);
 const password = z.string().min(10, 'Password must be at least 10 characters').max(200);
-const registerSchema = z.object({ email, password, name: z.string().trim().min(1).max(100) });
-const loginSchema = z.object({ email, password: z.string().min(1).max(200) });
+/** Optional guest cart to merge right after sign-in (same rules as POST /cart/merge). */
+const cartCourseIds = z.array(z.string().uuid()).max(50).optional();
+const registerSchema = z.object({ email, password, name: z.string().trim().min(1).max(100), cartCourseIds });
+const loginSchema = z.object({ email, password: z.string().min(1).max(200), cartCourseIds });
 const profileSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   avatarUrl: z.string().url().max(500).nullable().optional(),
@@ -22,7 +25,16 @@ const authLimit = { default: { limit: () => env().AUTH_RATE_LIMIT, ttl: 60_000 }
 
 @Controller()
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly commerce: CommerceService,
+  ) {}
+
+  private async mergeGuestCart(userId: string, ids?: string[]) {
+    if (!ids?.length) return undefined;
+    const cart = await this.commerce.mergeCart(userId, ids);
+    return { count: cart.count, added: cart.merge.added, skipped: cart.merge.skipped };
+  }
 
   private ctx(req: AppRequest) {
     return { ip: req.ip ?? null, userAgent: req.headers['user-agent'] ?? null };
@@ -33,9 +45,11 @@ export class AuthController {
   @Throttle(authLimit)
   @Post('auth/register')
   async register(@ZBody(registerSchema) body: z.infer<typeof registerSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
-    const { user, token } = await this.auth.register(body, this.ctx(req));
+    const { cartCourseIds, ...input } = body;
+    const { user, token } = await this.auth.register(input, this.ctx(req));
     res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
-    return { user: await this.auth.me(user.id), csrf: req.cookies[CSRF_COOKIE] };
+    const cart = await this.mergeGuestCart(user.id, cartCourseIds);
+    return { user: await this.auth.me(user.id), csrf: req.cookies[CSRF_COOKIE], ...(cart ? { cart } : {}) };
   }
 
   @Public()
@@ -45,9 +59,11 @@ export class AuthController {
   @Post('auth/login')
   async login(@ZBody(loginSchema) body: z.infer<typeof loginSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
     if (req.sessionId) await this.auth.revokeSession(req.sessionId); // no session fixation
-    const { user, token } = await this.auth.login(body, this.ctx(req));
+    const { cartCourseIds, ...input } = body;
+    const { user, token } = await this.auth.login(input, this.ctx(req));
     res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
-    return { user: await this.auth.me(user.id), csrf: req.cookies[CSRF_COOKIE] };
+    const cart = await this.mergeGuestCart(user.id, cartCourseIds);
+    return { user: await this.auth.me(user.id), csrf: req.cookies[CSRF_COOKIE], ...(cart ? { cart } : {}) };
   }
 
   @Public()

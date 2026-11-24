@@ -87,6 +87,15 @@ enum ReviewStatus {
   hidden
 }
 
+/// Pending edits to a PUBLISHED course (the live course is untouched until an admin approves).
+enum RevisionStatus {
+  draft
+  in_review
+  changes_requested
+  approved
+  rejected
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -180,10 +189,13 @@ model Course {
   ratingAvg         Float        @default(0)
   ratingCount       Int          @default(0)
   studentCount      Int          @default(0)
+  /// When the content was last checked against the current tools/services (imported catalogue: the video file date).
+  lastVerifiedAt    DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
   sections     Section[]
+  revisions    CourseRevision[]
   cartItems    CartItem[]
   orderLines   OrderLine[]
   enrollments  Enrollment[]
@@ -193,6 +205,26 @@ model Course {
   @@index([status, publishedAt])
   @@index([instructorId])
   @@map("courses")
+}
+
+/// Snapshot of the editable course tree (details, media, price, sections, lectures, resources, quizzes) for a
+/// published course. At most one open revision (draft | in_review | changes_requested) per course (service layer).
+model CourseRevision {
+  id          String         @id @default(uuid())
+  courseId    String
+  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status      RevisionStatus @default(draft)
+  snapshot    Json
+  reviewNote  String?
+  submittedAt DateTime?
+  decidedAt   DateTime?
+  decidedById String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([courseId, status])
+  @@index([status, submittedAt])
+  @@map("course_revisions")
 }
 
 model Section {
@@ -217,6 +249,8 @@ model Lecture {
   videoAssetId String?
   videoAsset   VideoAsset? @relation(fields: [videoAssetId], references: [id], onDelete: SetNull)
   articleMd    String?
+  /// One line shown in the curriculum ("what this lesson covers").
+  summary      String      @default("")
   durationSec  Int         @default(0)
   isPreview    Boolean     @default(false)
 

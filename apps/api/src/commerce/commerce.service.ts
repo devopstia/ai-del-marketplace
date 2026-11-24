@@ -44,6 +44,46 @@ export class CommerceService {
     return this.cart(userId);
   }
 
+  /**
+   * Guest cart (no session, no writes): card data for the given course ids, in the given order. Ids that are not
+   * published (or do not exist) are returned in `unavailableIds` so the browser can drop them.
+   */
+  async previewCart(courseIds: string[]) {
+    const ids = [...new Set(courseIds)];
+    const rows = await this.prisma.course.findMany({ where: { id: { in: ids }, status: 'published' }, include: cardInclude });
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const items = ids.filter((id) => byId.has(id)).map((id) => ({ ...toCard(byId.get(id)!, (k) => this.media.imageUrl(k)), available: true }));
+    return { items, count: items.length, totalCents: items.reduce((n, i) => n + i.priceCents, 0), currency: 'usd', unavailableIds: ids.filter((id) => !byId.has(id)) };
+  }
+
+  /**
+   * After sign-in: move a guest cart into the user's cart. Skips (with a reason) courses that are unavailable,
+   * the user's own, already owned, or already in the cart. Returns the cart plus `merge: { added, skipped }`.
+   */
+  async mergeCart(userId: string, courseIds: string[]) {
+    const ids = [...new Set(courseIds)];
+    const [courses, enrolled, inCart] = await Promise.all([
+      this.prisma.course.findMany({ where: { id: { in: ids }, status: 'published' }, select: { id: true, instructorId: true } }),
+      this.prisma.enrollment.findMany({ where: { userId, courseId: { in: ids }, revokedAt: null }, select: { courseId: true } }),
+      this.prisma.cartItem.findMany({ where: { userId, courseId: { in: ids } }, select: { courseId: true } }),
+    ]);
+    const pub = new Map(courses.map((c) => [c.id, c]));
+    const owned = new Set(enrolled.map((e) => e.courseId));
+    const already = new Set(inCart.map((c) => c.courseId));
+    const added: string[] = [];
+    const skipped: { courseId: string; reason: 'unavailable' | 'own_course' | 'already_enrolled' | 'already_in_cart' }[] = [];
+    for (const id of ids) {
+      const c = pub.get(id);
+      if (!c) skipped.push({ courseId: id, reason: 'unavailable' });
+      else if (c.instructorId === userId) skipped.push({ courseId: id, reason: 'own_course' });
+      else if (owned.has(id)) skipped.push({ courseId: id, reason: 'already_enrolled' });
+      else if (already.has(id)) skipped.push({ courseId: id, reason: 'already_in_cart' });
+      else added.push(id);
+    }
+    if (added.length) await this.prisma.cartItem.createMany({ data: added.map((courseId) => ({ userId, courseId })), skipDuplicates: true });
+    return { ...(await this.cart(userId)), merge: { added, skipped } };
+  }
+
   async removeFromCart(userId: string, courseId: string) {
     await this.prisma.cartItem.deleteMany({ where: { userId, courseId } });
     return this.cart(userId);

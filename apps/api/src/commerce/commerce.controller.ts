@@ -1,4 +1,5 @@
-import { Controller, Delete, Get, Headers, HttpCode, Param, Post, Req } from '@nestjs/common';
+import { Controller, Delete, Get, Headers, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { z } from 'zod';
 import { ActorCtx, type Actor, type AppRequest, Public, Roles, SkipCsrf } from '../common/auth-context';
 import { AppError, badRequest, unavailable } from '../common/errors';
@@ -12,6 +13,7 @@ import { StripeService } from './stripe.service';
 import { WebhooksService } from './webhooks.service';
 
 const addSchema = z.object({ courseId: z.string().uuid() });
+export const courseIdsSchema = z.object({ courseIds: z.array(z.string().uuid()).max(50) });
 
 @Controller()
 export class CommerceController {
@@ -28,6 +30,23 @@ export class CommerceController {
   @Post('cart')
   add(@ZBody(addSchema) body: z.infer<typeof addSchema>, @ActorCtx() a: Actor) {
     return this.svc.addToCart(a.user.id, body.courseId);
+  }
+
+  /** Guest cart: no session, no writes; rate limited (60/min per IP). */
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @HttpCode(200)
+  @Post('cart/preview')
+  preview(@ZBody(courseIdsSchema) body: z.infer<typeof courseIdsSchema>) {
+    return this.svc.previewCart(body.courseIds);
+  }
+
+  /** Merge a guest cart into the signed-in user's cart. */
+  @HttpCode(200)
+  @Post('cart/merge')
+  merge(@ZBody(courseIdsSchema) body: z.infer<typeof courseIdsSchema>, @ActorCtx() a: Actor) {
+    return this.svc.mergeCart(a.user.id, body.courseIds);
   }
 
   @Delete('cart/:courseId')

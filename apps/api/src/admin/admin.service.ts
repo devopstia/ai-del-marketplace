@@ -8,6 +8,7 @@ import { PrismaService } from '../common/prisma.service';
 import { SettingsService } from '../common/settings.service';
 import { slugify } from '../common/util';
 import { RefundsService } from '../commerce/refunds.service';
+import { RevisionsService } from '../instructor/revisions.service';
 import { recalcRating } from '../learning/learning.service';
 import { MediaService } from '../media/media.service';
 
@@ -20,6 +21,8 @@ const TRANSITIONS: Record<Decision, { from: CourseStatus[]; to: CourseStatus; no
 };
 
 const page = (p: number, size: number) => ({ skip: (p - 1) * size, take: size });
+/** Every paginated admin list returns the same envelope. */
+const paged = <T>(items: T[], total: number, q: { page: number; pageSize: number }) => ({ items, total, page: q.page, pageSize: q.pageSize, totalPages: Math.ceil(total / q.pageSize) });
 
 @Injectable()
 export class AdminService {
@@ -29,6 +32,7 @@ export class AdminService {
     private readonly settings: SettingsService,
     private readonly refunds: RefundsService,
     private readonly media: MediaService,
+    private readonly revisions: RevisionsService,
   ) {}
 
   async stats() {
@@ -61,13 +65,27 @@ export class AdminService {
   }
 
   // ---------- courses ----------
+  /**
+   * New courses waiting for approval (`kind: 'course'`) and changes to published courses (`kind: 'revision'`,
+   * with a plain-English `changes` list). Oldest first. `id` is always the course id (decisions use it).
+   */
   async reviewQueue() {
-    const rows = await this.prisma.course.findMany({
-      where: { status: 'in_review' },
-      orderBy: { updatedAt: 'asc' },
-      include: { instructor: { select: { id: true, name: true, email: true } }, category: { select: { name: true } }, _count: { select: { sections: true } } },
-    });
-    return { items: rows.map((c) => ({ id: c.id, slug: c.slug, title: c.title, priceCents: c.priceCents, instructor: c.instructor, category: c.category, submittedAt: c.updatedAt, sections: c._count.sections })) };
+    const include = { instructor: { select: { id: true, name: true, email: true } }, category: { select: { name: true } }, _count: { select: { sections: true } } } as const;
+    const [courses, revs] = await Promise.all([
+      this.prisma.course.findMany({ where: { status: 'in_review' }, orderBy: { updatedAt: 'asc' }, include }),
+      this.prisma.courseRevision.findMany({ where: { status: 'in_review' }, orderBy: { submittedAt: 'asc' }, include: { course: { include } } }),
+    ]);
+    const items = [
+      ...courses.map((c) => ({ kind: 'course' as const, id: c.id, slug: c.slug, title: c.title, priceCents: c.priceCents, instructor: c.instructor, category: c.category, submittedAt: c.updatedAt, sections: c._count.sections, revisionId: null, changes: [] as unknown[] })),
+      ...(await Promise.all(
+        revs.map(async (r) => {
+          const c = r.course;
+          const summary = await this.revisions.summary(r);
+          return { kind: 'revision' as const, id: c.id, slug: c.slug, title: c.title, priceCents: c.priceCents, instructor: c.instructor, category: c.category, submittedAt: r.submittedAt ?? r.updatedAt, sections: c._count.sections, revisionId: r.id, changes: summary.changes as unknown[] };
+        }),
+      )),
+    ].sort((a, b) => +new Date(a.submittedAt) - +new Date(b.submittedAt));
+    return { items };
   }
 
   async courses(q: { status?: CourseStatus; q?: string; page: number; pageSize: number }) {
@@ -78,15 +96,18 @@ export class AdminService {
         where,
         orderBy: { updatedAt: 'desc' },
         ...page(q.page, q.pageSize),
-        include: { instructor: { select: { id: true, name: true } }, _count: { select: { enrollments: { where: { revokedAt: null } } } } },
+        include: {
+          instructor: { select: { id: true, name: true } },
+          _count: { select: { enrollments: { where: { revokedAt: null } } } },
+          revisions: { where: { status: { in: ['draft', 'in_review', 'changes_requested'] } }, take: 1, orderBy: { createdAt: 'desc' }, select: { id: true, status: true, submittedAt: true } },
+        },
       }),
     ]);
-    return {
-      items: rows.map((c) => ({ id: c.id, slug: c.slug, title: c.title, status: c.status, priceCents: c.priceCents, instructor: c.instructor, students: c._count.enrollments, reviewNote: c.reviewNote, updatedAt: c.updatedAt, publishedAt: c.publishedAt })),
+    return paged(
+      rows.map((c) => ({ id: c.id, slug: c.slug, title: c.title, status: c.status, priceCents: c.priceCents, instructor: c.instructor, students: c._count.enrollments, reviewNote: c.reviewNote, updatedAt: c.updatedAt, publishedAt: c.publishedAt, revision: c.revisions[0] ?? null })),
       total,
-      page: q.page,
-      pageSize: q.pageSize,
-    };
+      q,
+    );
   }
 
   async course(id: string) {
@@ -108,7 +129,11 @@ export class AdminService {
     });
     if (!c) throw notFound('Course');
     const audit = await this.prisma.auditLog.findMany({ where: { targetType: 'course', targetId: id }, orderBy: { at: 'desc' }, take: 50 });
-    return { ...c, thumbnailUrl: this.media.imageUrl(c.thumbnailKey), history: audit };
+    // Changes to a published course: the summary plus the full proposed tree (videos are playable by admins via
+    // POST /lectures/:id/playback only once live; draft videos are listed with their asset status).
+    const rev = c.status === 'published' ? await this.revisions.open(id) : null;
+    const revision = rev ? { ...(await this.revisions.summary(rev)), draft: rev.snapshot } : null;
+    return { ...c, thumbnailUrl: this.media.imageUrl(c.thumbnailKey), history: audit, revision };
   }
 
   async decide(a: Actor, courseId: string, decision: Decision, note?: string) {
@@ -116,7 +141,20 @@ export class AdminService {
     if (t.noteRequired && !note?.trim()) throw badRequest('A note for the instructor is required', 'note_required');
     const c = await this.prisma.course.findUnique({ where: { id: courseId } });
     if (!c) throw notFound('Course');
+    // A published course with changes in review: the decision applies to the revision; the live course stays.
+    if (c.status === 'published' && decision !== 'unpublish') {
+      const rev = await this.revisions.open(courseId);
+      if (rev?.status === 'in_review') {
+        const r =
+          decision === 'approve'
+            ? await this.revisions.approve(a, courseId, note)
+            : await this.revisions.decide(a, courseId, decision === 'reject' ? 'rejected' : 'changes_requested', note!);
+        const fresh = await this.prisma.course.findUniqueOrThrow({ where: { id: courseId } });
+        return { id: fresh.id, status: fresh.status, reviewNote: note?.trim() || null, publishedAt: fresh.publishedAt, revision: { id: r.revisionId, status: decision === 'approve' ? 'approved' : r.status } };
+      }
+    }
     if (!t.from.includes(c.status)) throw conflict(`Cannot ${decision} a course that is ${c.status}`, 'invalid_status');
+    if (decision === 'unpublish') await this.revisions.closeOpen(courseId, 'The course was unpublished', a.user.id);
     const updated = await this.prisma.course.update({
       where: { id: courseId },
       data: { status: t.to, reviewNote: note?.trim() || null, ...(t.to === 'published' && !c.publishedAt ? { publishedAt: new Date() } : {}) },
@@ -141,7 +179,7 @@ export class AdminService {
         select: { id: true, email: true, name: true, roles: true, status: true, createdAt: true, instructorProfile: { select: { status: true } }, _count: { select: { enrollments: true, orders: true } } },
       }),
     ]);
-    return { items, total, page: q.page, pageSize: q.pageSize };
+    return paged(items, total, q);
   }
 
   async updateUser(a: Actor, userId: string, input: { status?: UserStatus; roles?: Role[] }) {
@@ -167,14 +205,22 @@ export class AdminService {
   }
 
   // ---------- instructors ----------
-  async instructors(status?: 'pending' | 'approved' | 'rejected') {
-    const rows = await this.prisma.instructorProfile.findMany({
-      where: { status },
-      orderBy: { createdAt: 'desc' },
-      include: { user: { select: { id: true, name: true, email: true, _count: { select: { courses: true } } } } },
-    });
-    return {
-      items: rows.map((p) => ({
+  async instructors(q: { status?: 'pending' | 'approved' | 'rejected'; q?: string; page: number; pageSize: number }) {
+    const where: Prisma.InstructorProfileWhereInput = {
+      status: q.status,
+      ...(q.q ? { OR: [{ user: { name: { contains: q.q, mode: 'insensitive' } } }, { user: { email: { contains: q.q, mode: 'insensitive' } } }, { headline: { contains: q.q, mode: 'insensitive' } }] } : {}),
+    };
+    const [total, rows] = await Promise.all([
+      this.prisma.instructorProfile.count({ where }),
+      this.prisma.instructorProfile.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...page(q.page, q.pageSize),
+        include: { user: { select: { id: true, name: true, email: true, _count: { select: { courses: true } } } } },
+      }),
+    ]);
+    return paged(
+      rows.map((p) => ({
         userId: p.userId,
         name: p.user.name,
         email: p.user.email,
@@ -189,7 +235,9 @@ export class AdminService {
         courses: p.user._count.courses,
         appliedAt: p.createdAt,
       })),
-    };
+      total,
+      q,
+    );
   }
 
   async decideInstructor(a: Actor, userId: string, approve: boolean, note?: string) {
@@ -253,36 +301,107 @@ export class AdminService {
   }
 
   // ---------- orders ----------
-  async orders(q: { status?: OrderStatus; page: number; pageSize: number }) {
-    const where: Prisma.OrderWhereInput = { status: q.status };
+  async orders(q: { status?: OrderStatus; q?: string; page: number; pageSize: number }) {
+    const term = q.q?.trim();
+    const isUuid = !!term && /^[0-9a-f-]{36}$/i.test(term);
+    const where: Prisma.OrderWhereInput = {
+      status: q.status,
+      ...(term
+        ? {
+            OR: [
+              ...(isUuid ? [{ id: term }] : []),
+              { user: { email: { contains: term, mode: 'insensitive' as const } } },
+              { user: { name: { contains: term, mode: 'insensitive' as const } } },
+              { lines: { some: { course: { title: { contains: term, mode: 'insensitive' as const } } } } },
+            ],
+          }
+        : {}),
+    };
     const [total, rows] = await Promise.all([
       this.prisma.order.count({ where }),
       this.prisma.order.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         ...page(q.page, q.pageSize),
-        include: { user: { select: { id: true, name: true, email: true } }, _count: { select: { lines: true } } },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          lines: { select: { id: true, refundedAt: true, course: { select: { id: true, title: true, slug: true } } } },
+        },
       }),
     ]);
-    return {
-      items: rows.map((o) => ({ id: o.id, status: o.status, totalCents: o.totalCents, currency: o.currency, provider: o.provider, user: o.user, lines: o._count.lines, paidAt: o.paidAt, createdAt: o.createdAt })),
+    return paged(
+      rows.map((o) => ({
+        id: o.id,
+        status: o.status,
+        totalCents: o.totalCents,
+        currency: o.currency,
+        provider: o.provider,
+        user: o.user,
+        lines: o.lines.length,
+        courses: o.lines.map((l) => ({ ...l.course, refunded: !!l.refundedAt })),
+        paidAt: o.paidAt,
+        createdAt: o.createdAt,
+      })),
       total,
-      page: q.page,
-      pageSize: q.pageSize,
-    };
+      q,
+    );
   }
 
+  /** Admin order detail: buyer, every line with its course, instructor, split and transfer state, and refund history. */
   async order(id: string) {
     const o = await this.prisma.order.findUnique({
       where: { id },
-      include: { user: { select: { id: true, name: true, email: true } }, lines: { include: { course: { select: { title: true, slug: true } }, instructor: { select: { id: true, name: true } } } } },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        lines: {
+          orderBy: { id: 'asc' },
+          include: { course: { select: { id: true, title: true, slug: true } }, instructor: { select: { id: true, name: true, instructorProfile: { select: { isPlatform: true } } } } },
+        },
+      },
     });
     if (!o) throw notFound('Order');
-    return o;
+    const history = await this.prisma.auditLog.findMany({ where: { targetType: 'order', targetId: id }, orderBy: { at: 'asc' }, select: { id: true, action: true, at: true, meta: true, actor: { select: { id: true, name: true } } } });
+    const refundable = ['paid', 'partially_refunded'].includes(o.status);
+    const lines = o.lines.map((l) => ({
+      id: l.id,
+      course: l.course,
+      instructor: { id: l.instructor.id, name: l.instructor.name, isPlatform: !!l.instructor.instructorProfile?.isPlatform },
+      priceCents: l.priceCents,
+      commissionBps: l.commissionBps,
+      commissionCents: l.priceCents - l.instructorShareCents,
+      instructorShareCents: l.instructorShareCents,
+      transferStatus: l.transferStatus,
+      transferId: l.transferId,
+      refundedAt: l.refundedAt,
+      refundable: refundable && !l.refundedAt,
+    }));
+    const refundedCents = lines.filter((l) => l.refundedAt).reduce((n, l) => n + l.priceCents, 0);
+    return {
+      id: o.id,
+      status: o.status,
+      provider: o.provider,
+      currency: o.currency,
+      totalCents: o.totalCents,
+      refundedCents,
+      paidAt: o.paidAt,
+      createdAt: o.createdAt,
+      stripePaymentIntentId: o.stripePaymentIntentId,
+      user: o.user,
+      lines,
+      history,
+    };
   }
 
-  refund(a: Actor, orderId: string, input: { lineIds?: string[]; reason?: string }) {
-    return this.refunds.refund(orderId, input.lineIds, input.reason, { id: a.user.id, ip: a.ip });
+  /** Full refund (no lineIds) or partial refund of the given lines of this order; returns the order detail. */
+  async refund(a: Actor, orderId: string, input: { lineIds?: string[]; reason?: string }) {
+    if (input.lineIds?.length) {
+      const own = await this.prisma.orderLine.findMany({ where: { orderId, id: { in: input.lineIds } }, select: { id: true } });
+      if (own.length !== new Set(input.lineIds).size) {
+        throw badRequest('Some order lines do not belong to this order', 'invalid_line', [{ field: 'lineIds', message: 'Choose lines of this order' }]);
+      }
+    }
+    await this.refunds.refund(orderId, input.lineIds, input.reason, { id: a.user.id, ip: a.ip });
+    return this.order(orderId);
   }
 
   // ---------- reviews moderation ----------
@@ -296,17 +415,30 @@ export class AdminService {
   }
 
   // ---------- audit ----------
-  async auditLog(q: { action?: string; actorId?: string; targetType?: string; targetId?: string; page: number; pageSize: number }) {
+  async auditLog(q: { action?: string; actorId?: string; targetType?: string; targetId?: string; q?: string; from?: Date; to?: Date; page: number; pageSize: number }) {
+    const term = q.q?.trim();
     const where: Prisma.AuditLogWhereInput = {
       action: q.action ? { startsWith: q.action } : undefined,
       actorId: q.actorId,
       targetType: q.targetType,
       targetId: q.targetId,
+      at: q.from || q.to ? { gte: q.from, lte: q.to } : undefined,
+      ...(term
+        ? {
+            OR: [
+              { action: { contains: term, mode: 'insensitive' } },
+              { targetId: { contains: term, mode: 'insensitive' } },
+              { targetType: { contains: term, mode: 'insensitive' } },
+              { actor: { email: { contains: term, mode: 'insensitive' } } },
+              { actor: { name: { contains: term, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
     };
     const [total, items] = await Promise.all([
       this.prisma.auditLog.count({ where }),
       this.prisma.auditLog.findMany({ where, orderBy: { at: 'desc' }, ...page(q.page, q.pageSize), include: { actor: { select: { id: true, name: true, email: true } } } }),
     ]);
-    return { items, total, page: q.page, pageSize: q.pageSize };
+    return paged(items, total, q);
   }
 }

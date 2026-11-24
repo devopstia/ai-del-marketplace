@@ -15,6 +15,7 @@
     "migrate:dev": "prisma migrate dev",
     "seed": "node dist/seed/seed.js",
     "seed:dev": "tsc -p tsconfig.build.json && node dist/seed/seed.js",
+    "import:del": "node dist/import/import-del.js",
     "pretest": "prisma generate",
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --runInBand",
     "test:unit": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --testPathPatterns=src",

@@ -164,15 +164,3 @@ export const COURSES: SeedCourse[] = [
     ],
   },
 ];
-
-export const REVIEWERS = [
-  { email: 'priya@student.example', name: 'Priya Natarajan' },
-  { email: 'marco@student.example', name: 'Marco Rossi' },
-  { email: 'lena@student.example', name: 'Lena Fischer' },
-];
-
-export const REVIEW_TEXT = [
-  { rating: 5, body: 'Clear explanations and the labs actually run. Exactly what I needed for work.' },
-  { rating: 4, body: 'Great pace and real examples. I would love one more advanced lab.' },
-  { rating: 5, body: 'The everyday scenarios made the concepts click. Highly recommended.' },
-];

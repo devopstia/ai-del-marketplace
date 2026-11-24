@@ -22,8 +22,14 @@ describe('InstructorService ownership (service layer)', () => {
       $transaction: jest.fn(),
       cartItem: { deleteMany: jest.fn() },
     };
-    const svc = new InstructorService(prisma, { log: jest.fn() } as any, { imageUrl: () => null, ownedAsset: jest.fn() } as any, {} as any);
-    return { svc, prisma };
+    const revisions: any = {
+      open: jest.fn(async () => null),
+      liveTree: jest.fn(async () => ({ version: 1, course: { ...course, thumbnailKey: null, promoVideoAssetId: null }, sections: [] })),
+      mutate: jest.fn(),
+      submit: jest.fn(),
+    };
+    const svc = new InstructorService(prisma, { log: jest.fn() } as any, { imageUrl: () => null, ownedAsset: jest.fn() } as any, {} as any, revisions);
+    return { svc, prisma, revisions };
   }
 
   it.each([
@@ -34,13 +40,14 @@ describe('InstructorService ownership (service layer)', () => {
     ['add section', (s: InstructorService) => s.addSection(actor('intruder'), 'c1', 'x')],
     ['list students of', (s: InstructorService) => s.students('intruder', 'c1')],
   ])("another instructor cannot %s someone else's course (404)", async (_label, call) => {
-    const { svc, prisma } = build();
+    const { svc, prisma, revisions } = build();
     const err = await call(svc).catch((e) => e);
     expect(err).toBeInstanceOf(AppError);
     expect(err.getStatus()).toBe(404);
     expect(prisma.course.update).not.toHaveBeenCalled();
     expect(prisma.course.delete).not.toHaveBeenCalled();
     expect(prisma.section.create).not.toHaveBeenCalled();
+    expect(revisions.mutate).not.toHaveBeenCalled();
   });
 
   it('every course lookup is scoped by instructorId', async () => {

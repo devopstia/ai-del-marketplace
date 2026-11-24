@@ -1,6 +1,7 @@
 import { Controller, Delete, Get, HttpCode, Param, Patch, Post, Put } from '@nestjs/common';
 import { z } from 'zod';
 import { ActorCtx, type Actor, Roles } from '../common/auth-context';
+import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
 import { InstructorService } from './instructor.service';
 
@@ -19,7 +20,7 @@ const courseFields = z.object({
   level: z.enum(['beginner', 'intermediate', 'advanced']),
   objectives: z.array(str(200).min(1)).max(20),
   requirements: z.array(str(200).min(1)).max(20),
-  priceCents: z.number().int().min(0).max(100000).refine((v) => v === 0 || v >= 99, 'Paid courses cost at least $0.99'),
+  priceCents: priceCentsSchema,
   categoryId: z.string().uuid().nullable(),
   thumbnailKey: z.string().max(300).nullable(),
   promoVideoAssetId: z.string().uuid().nullable(),
@@ -33,6 +34,7 @@ const lectureFields = z.object({
   type: z.enum(['video', 'article', 'quiz']),
   isPreview: z.boolean(),
   articleMd: z.string().max(100000).nullable(),
+  summary: str(300),
   videoAssetId: z.string().uuid().nullable(),
   sectionId: z.string().uuid(),
 });
@@ -48,6 +50,7 @@ const resourceSchema = z.object({ title: str(200).min(1), storageKey: z.string()
 const salesQuery = z.object({ from: z.coerce.date().optional(), to: z.coerce.date().optional() });
 const studentsQuery = z.object({ courseId: z.string().uuid().optional() });
 const replySchema = z.object({ reply: str(4000) });
+const versionQuery = z.object({ version: z.enum(['live', 'draft']).optional() });
 
 @Controller('instructor')
 export class InstructorController {
@@ -80,9 +83,16 @@ export class InstructorController {
     return this.svc.createCourse(a, body);
   }
 
+  /** `?version=live` shows the live course even when draft changes exist (default: what the studio edits). */
   @Roles('instructor') @Get('courses/:id')
-  course(@Param('id') id: string, @ActorCtx() a: Actor) {
-    return this.svc.courseDetail(a.user.id, id);
+  course(@Param('id') id: string, @ZQuery(versionQuery) q: z.infer<typeof versionQuery>, @ActorCtx() a: Actor) {
+    return this.svc.courseDetail(a.user.id, id, q.version);
+  }
+
+  /** Discard the draft changes of a published course (live course untouched). */
+  @Roles('instructor') @Delete('courses/:id/revision')
+  discardRevision(@Param('id') id: string, @ActorCtx() a: Actor) {
+    return this.svc.discardRevision(a, id);
   }
 
   @Roles('instructor') @Patch('courses/:id')

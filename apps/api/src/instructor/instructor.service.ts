@@ -8,6 +8,8 @@ import { PrismaService } from '../common/prisma.service';
 import { StorageService } from '../common/storage.service';
 import { slugify } from '../common/util';
 import { MediaService } from '../media/media.service';
+import * as T from './course-tree';
+import { OPEN_REVISION, RevisionsService } from './revisions.service';
 
 export interface CourseInput {
   title?: string;
@@ -28,6 +30,7 @@ export interface LectureInput {
   type?: LectureType;
   isPreview?: boolean;
   articleMd?: string | null;
+  summary?: string;
   videoAssetId?: string | null;
   sectionId?: string;
 }
@@ -41,9 +44,15 @@ export interface QuizQuestionInput {
 
 const EDITABLE_LOCKED = new Set(['in_review']);
 
+type Version = 'live' | 'draft';
+
 /**
  * Instructor studio. EVERY query is scoped by the caller's user id (ownership is enforced here, in the service
  * layer, not only in controllers): another instructor's course simply does not exist for you (404).
+ *
+ * Published courses are never edited in place: every edit goes to the course's draft revision (RevisionsService),
+ * which an admin reviews; the live course only changes when the revision is approved. Other statuses (draft,
+ * changes requested, rejected, unpublished) are edited directly, as before.
  */
 @Injectable()
 export class InstructorService {
@@ -52,6 +61,7 @@ export class InstructorService {
     private readonly audit: AuditService,
     private readonly media: MediaService,
     private readonly storage: StorageService,
+    private readonly revisions: RevisionsService,
   ) {}
 
   // ---------- profile ----------
@@ -99,10 +109,14 @@ export class InstructorService {
     const rows = await this.prisma.course.findMany({
       where: { instructorId: userId },
       orderBy: { updatedAt: 'desc' },
-      include: { _count: { select: { enrollments: { where: { revokedAt: null } }, sections: true } }, category: { select: { name: true, slug: true } } },
+      include: {
+        _count: { select: { enrollments: { where: { revokedAt: null } }, sections: true } },
+        category: { select: { name: true, slug: true } },
+        revisions: { where: { status: { in: OPEN_REVISION } }, orderBy: { createdAt: 'desc' }, take: 1, select: { id: true, status: true, reviewNote: true, submittedAt: true, updatedAt: true } },
+      },
     });
     return {
-      items: rows.map(({ _count, ...c }) => ({
+      items: rows.map(({ _count, revisions, ...c }) => ({
         id: c.id,
         slug: c.slug,
         title: c.title,
@@ -116,6 +130,7 @@ export class InstructorService {
         ratingCount: c.ratingCount,
         updatedAt: c.updatedAt,
         publishedAt: c.publishedAt,
+        revision: c.status === 'published' ? (revisions[0] ?? null) : null,
       })),
     };
   }
@@ -131,9 +146,11 @@ export class InstructorService {
 
   private async validateCourseInput(userId: string, input: CourseInput) {
     if (input.categoryId && !(await this.prisma.category.findUnique({ where: { id: input.categoryId } }))) {
-      throw badRequest('Unknown category', 'invalid_category');
+      throw badRequest('Choose a category from the list', 'invalid_category', [{ field: 'categoryId', message: 'Choose a category from the list' }]);
     }
-    if (input.thumbnailKey && !input.thumbnailKey.startsWith(`images/${userId}/`)) throw badRequest('Invalid thumbnail', 'invalid_thumbnail');
+    if (input.thumbnailKey && !input.thumbnailKey.startsWith(`images/${userId}/`)) {
+      throw badRequest('Upload the thumbnail again', 'invalid_thumbnail', [{ field: 'thumbnailKey', message: 'Upload the thumbnail again' }]);
+    }
     if (input.promoVideoAssetId) await this.media.ownedAsset(userId, input.promoVideoAssetId);
   }
 
@@ -146,48 +163,96 @@ export class InstructorService {
     return this.courseDetail(a.user.id, course.id);
   }
 
-  async courseDetail(userId: string, courseId: string) {
+  /**
+   * InstructorCourse. For a published course with draft changes the content is the DRAFT (what the studio edits)
+   * unless `version: 'live'` is asked for; `version` and `revision` say which one this is.
+   */
+  async courseDetail(userId: string, courseId: string, want?: Version) {
     await this.ownCourse(userId, courseId);
-    const c = await this.prisma.course.findUniqueOrThrow({
+    const row = await this.prisma.course.findUniqueOrThrow({
       where: { id: courseId },
-      include: {
-        category: { select: { id: true, name: true, slug: true } },
-        sections: {
-          orderBy: { position: 'asc' },
-          include: {
-            lectures: {
-              orderBy: { position: 'asc' },
-              include: {
-                videoAsset: { select: { id: true, status: true, durationSec: true, captionsKey: true, provider: true } },
-                resources: { select: { id: true, title: true, sizeBytes: true, mime: true } },
-                quiz: { select: { questions: true } },
-              },
-            },
-          },
-        },
-      },
+      include: { category: { select: { id: true, name: true, slug: true } } },
     });
-    const { thumbnailKey, sections, ...rest } = c;
+    const rev = row.status === 'published' ? await this.revisions.open(courseId) : null;
+    const live = await this.revisions.liveTree(courseId);
+    const version: Version = rev && want !== 'live' ? 'draft' : 'live';
+    const tree = version === 'draft' ? (rev!.snapshot as unknown as T.CourseTree) : live;
+    const revision = rev ? await this.revisions.summary(rev, live) : null;
+    return this.render(row, tree, version, revision);
+  }
+
+  private async render(
+    row: Prisma.CourseGetPayload<{ include: { category: { select: { id: true; name: true; slug: true } } } }>,
+    tree: T.CourseTree,
+    version: Version,
+    revision: unknown,
+  ) {
+    const lectures = T.allLectures(tree).map((x) => x.lecture);
+    const assetIds = [...new Set([...lectures.map((l) => l.videoAssetId), tree.course.promoVideoAssetId].filter((x): x is string => !!x))];
+    const assets = assetIds.length
+      ? await this.prisma.videoAsset.findMany({ where: { id: { in: assetIds } }, select: { id: true, status: true, durationSec: true, captionsKey: true, provider: true } })
+      : [];
+    const byId = new Map(assets.map((x) => [x.id, x]));
+    const videoView = (id: string | null) => {
+      const v = id ? byId.get(id) : undefined;
+      return v ? { id: v.id, status: v.status, durationSec: v.durationSec, hasCaptions: !!v.captionsKey, provider: v.provider } : null;
+    };
+    const c = tree.course;
+    const category = c.categoryId === row.category?.id ? row.category : c.categoryId ? await this.prisma.category.findUnique({ where: { id: c.categoryId }, select: { id: true, name: true, slug: true } }) : null;
     return {
-      ...rest,
-      thumbnailKey,
-      thumbnailUrl: this.media.imageUrl(thumbnailKey),
-      sections: sections.map((s) => ({
+      id: row.id,
+      slug: row.slug,
+      instructorId: row.instructorId,
+      status: row.status,
+      reviewNote: row.reviewNote,
+      publishedAt: row.publishedAt,
+      lastVerifiedAt: row.lastVerifiedAt,
+      ratingAvg: row.ratingAvg,
+      ratingCount: row.ratingCount,
+      studentCount: row.studentCount,
+      currency: row.currency,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      ...c,
+      category,
+      thumbnailUrl: this.media.imageUrl(c.thumbnailKey),
+      promoVideo: videoView(c.promoVideoAssetId),
+      version,
+      revision,
+      sections: tree.sections.map((s, si) => ({
         id: s.id,
+        courseId: row.id,
         title: s.title,
-        position: s.position,
-        lectures: s.lectures.map(({ videoAsset, quiz, ...l }) => ({
-          ...l,
-          video: videoAsset ? { id: videoAsset.id, status: videoAsset.status, durationSec: videoAsset.durationSec, hasCaptions: !!videoAsset.captionsKey, provider: videoAsset.provider } : null,
-          quiz: quiz ? { questions: quiz.questions } : null,
-        })),
+        position: si,
+        lectures: s.lectures.map((l, li) => {
+          const video = videoView(l.videoAssetId);
+          return {
+            id: l.id,
+            sectionId: s.id,
+            title: l.title,
+            position: li,
+            type: l.type,
+            videoAssetId: l.videoAssetId,
+            articleMd: l.articleMd,
+            summary: l.summary ?? '',
+            durationSec: video?.status === 'ready' ? video.durationSec : l.durationSec,
+            isPreview: l.isPreview,
+            resources: l.resources.map((r) => ({ id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime })),
+            video,
+            quiz: l.quiz ? { questions: l.quiz } : null,
+          };
+        }),
       })),
     };
   }
 
   async updateCourse(a: Actor, courseId: string, input: CourseInput) {
-    await this.editableCourse(a.user.id, courseId);
+    const c = await this.editableCourse(a.user.id, courseId);
     await this.validateCourseInput(a.user.id, input);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.updateCourseFields(t, input));
+      return this.courseDetail(a.user.id, courseId);
+    }
     await this.prisma.course.update({ where: { id: courseId }, data: input });
     if (input.priceCents !== undefined) {
       await this.audit.log({ actorId: a.user.id, action: 'course.price_changed', targetType: 'course', targetId: courseId, ip: a.ip, meta: { priceCents: input.priceCents } });
@@ -207,26 +272,45 @@ export class InstructorService {
     return { ok: true };
   }
 
+  /** Submit a new/changed course for review; for a published course this submits its draft revision. */
   async submit(a: Actor, courseId: string) {
     const c = await this.ownCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.submit(a, courseId);
+      return this.courseDetail(a.user.id, courseId);
+    }
     if (!['draft', 'changes_requested', 'unpublished', 'rejected'].includes(c.status)) {
       throw conflict(`A ${c.status.replace('_', ' ')} course cannot be submitted`, 'invalid_status');
     }
-    const lectures = await this.prisma.lecture.findMany({ where: { section: { courseId } }, include: { videoAsset: { select: { status: true } } } });
-    const problems: string[] = [];
-    if (!c.description.trim()) problems.push('add a description');
-    if (!c.categoryId) problems.push('choose a category');
-    if (!lectures.length) problems.push('add at least one lecture');
-    if (lectures.some((l) => l.type === 'video' && l.videoAsset?.status !== 'ready')) problems.push('every video lecture needs a processed video');
-    if (problems.length) throw badRequest(`Before submitting: ${problems.join(', ')}`, 'not_ready', problems);
+    const tree = await this.revisions.liveTree(courseId);
+    const ids = [...new Set([...T.allLectures(tree).map((x) => x.lecture.videoAssetId), tree.course.promoVideoAssetId].filter((x): x is string => !!x))];
+    const assets = await this.prisma.videoAsset.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } });
+    const status = new Map(assets.map((x) => [x.id, x.status as string]));
+    const problems = T.readinessProblems(tree, (id) => status.get(id));
+    if (problems.length) throw badRequest(`Before submitting: ${problems.map((p) => p.message.toLowerCase()).join(', ')}`, 'not_ready', problems);
     await this.prisma.course.update({ where: { id: courseId }, data: { status: 'in_review' } });
     await this.audit.log({ actorId: a.user.id, action: 'course.submitted', targetType: 'course', targetId: courseId, ip: a.ip });
     return this.courseDetail(a.user.id, courseId);
   }
 
+  /** Throw away the draft changes of a published course (the live course was never touched). */
+  async discardRevision(a: Actor, courseId: string) {
+    const c = await this.ownCourse(a.user.id, courseId);
+    if (c.status !== 'published') throw notFound('Draft changes');
+    await this.revisions.discard(a, courseId);
+    return this.courseDetail(a.user.id, courseId);
+  }
+
   // ---------- sections ----------
   async addSection(a: Actor, courseId: string, title: string) {
-    await this.editableCourse(a.user.id, courseId);
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      const s = await this.revisions.mutate(courseId, (t) => {
+        const sec = T.addSection(t, title);
+        return { id: sec.id, courseId, title: sec.title, position: t.sections.length - 1 };
+      });
+      return s;
+    }
     const max = await this.prisma.section.aggregate({ where: { courseId }, _max: { position: true } });
     return this.prisma.section.create({ data: { courseId, title, position: (max._max.position ?? -1) + 1 } });
   }
@@ -239,18 +323,34 @@ export class InstructorService {
   }
 
   async updateSection(a: Actor, courseId: string, sectionId: string, title: string) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      return this.revisions.mutate(courseId, (t) => {
+        const s = T.renameSection(t, sectionId, title);
+        return { id: s.id, courseId, title: s.title, position: t.sections.indexOf(s) };
+      });
+    }
     await this.ownSection(a.user.id, courseId, sectionId);
     return this.prisma.section.update({ where: { id: sectionId }, data: { title } });
   }
 
   async deleteSection(a: Actor, courseId: string, sectionId: string) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.deleteSection(t, sectionId));
+      return { ok: true };
+    }
     await this.ownSection(a.user.id, courseId, sectionId);
     await this.prisma.section.delete({ where: { id: sectionId } });
     return { ok: true };
   }
 
   async reorderSections(a: Actor, courseId: string, ids: string[]) {
-    await this.editableCourse(a.user.id, courseId);
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.reorderSections(t, ids));
+      return this.courseDetail(a.user.id, courseId);
+    }
     const existing = await this.prisma.section.findMany({ where: { courseId }, select: { id: true } });
     assertSameSet(existing.map((s) => s.id), ids);
     await this.prisma.$transaction(ids.map((id, i) => this.prisma.section.update({ where: { id }, data: { position: i } })));
@@ -272,7 +372,28 @@ export class InstructorService {
     return { videoAssetId: asset.id, durationSec: asset.durationSec };
   }
 
+  private async treeVideo(userId: string, videoAssetId: string | null | undefined) {
+    if (videoAssetId === undefined) return undefined;
+    if (videoAssetId === null) return { videoAssetId: null, durationSec: 0 };
+    const asset = await this.media.ownedAsset(userId, videoAssetId);
+    return { videoAssetId: asset.id, durationSec: asset.durationSec };
+  }
+
+  private treeLectureView(t: T.CourseTree, lectureId: string) {
+    const { section, lecture, index } = T.findLecture(t, lectureId);
+    const { resources: _r, quiz: _q, ...l } = lecture;
+    return { ...l, sectionId: section.id, position: index };
+  }
+
   async addLecture(a: Actor, courseId: string, sectionId: string, input: LectureInput & { title: string }) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      const video = await this.treeVideo(a.user.id, input.videoAssetId);
+      return this.revisions.mutate(courseId, (t) => {
+        const l = T.addLecture(t, sectionId, { ...input, video });
+        return this.treeLectureView(t, l.id);
+      });
+    }
     await this.ownSection(a.user.id, courseId, sectionId);
     const max = await this.prisma.lecture.aggregate({ where: { sectionId }, _max: { position: true } });
     const video = await this.videoFields(a.user.id, input.videoAssetId);
@@ -283,6 +404,7 @@ export class InstructorService {
         type: input.type ?? 'video',
         isPreview: input.isPreview ?? false,
         articleMd: input.articleMd ?? null,
+        summary: input.summary ?? '',
         position: (max._max.position ?? -1) + 1,
         ...(video as object),
       },
@@ -290,6 +412,14 @@ export class InstructorService {
   }
 
   async updateLecture(a: Actor, courseId: string, lectureId: string, input: LectureInput) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      const video = await this.treeVideo(a.user.id, input.videoAssetId);
+      return this.revisions.mutate(courseId, (t) => {
+        T.updateLecture(t, lectureId, { ...input, video });
+        return this.treeLectureView(t, lectureId);
+      });
+    }
     await this.ownLecture(a.user.id, courseId, lectureId);
     const { videoAssetId, sectionId, ...rest } = input;
     const data: Prisma.LectureUncheckedUpdateInput = { ...rest, ...(await this.videoFields(a.user.id, videoAssetId)) };
@@ -303,12 +433,22 @@ export class InstructorService {
   }
 
   async deleteLecture(a: Actor, courseId: string, lectureId: string) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.deleteLecture(t, lectureId));
+      return { ok: true };
+    }
     await this.ownLecture(a.user.id, courseId, lectureId);
     await this.prisma.lecture.delete({ where: { id: lectureId } });
     return { ok: true };
   }
 
   async reorderLectures(a: Actor, courseId: string, sectionId: string, ids: string[]) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.reorderLectures(t, sectionId, ids));
+      return this.courseDetail(a.user.id, courseId);
+    }
     await this.ownSection(a.user.id, courseId, sectionId);
     const existing = await this.prisma.lecture.findMany({ where: { sectionId }, select: { id: true } });
     assertSameSet(existing.map((l) => l.id), ids);
@@ -317,10 +457,20 @@ export class InstructorService {
   }
 
   async setQuiz(a: Actor, courseId: string, lectureId: string, questions: QuizQuestionInput[]) {
-    await this.ownLecture(a.user.id, courseId, lectureId);
     for (const [i, q] of questions.entries()) {
-      if (q.correct >= q.options.length) throw badRequest(`Question ${i + 1}: correct answer index is out of range`, 'invalid_quiz');
+      if (q.correct >= q.options.length) {
+        const message = `Question ${i + 1}: the correct answer must be one of its ${q.options.length} options`;
+        throw badRequest(message, 'invalid_quiz', [{ field: `questions.${i}.correct`, message }]);
+      }
     }
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      return this.revisions.mutate(courseId, (t) => {
+        T.setQuiz(t, lectureId, questions);
+        return { lectureId, questions };
+      });
+    }
+    await this.ownLecture(a.user.id, courseId, lectureId);
     return this.prisma.quiz.upsert({
       where: { lectureId },
       create: { lectureId, questions: questions as unknown as Prisma.InputJsonValue },
@@ -329,6 +479,11 @@ export class InstructorService {
   }
 
   async deleteQuiz(a: Actor, courseId: string, lectureId: string) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.setQuiz(t, lectureId, null));
+      return { ok: true };
+    }
     await this.ownLecture(a.user.id, courseId, lectureId);
     await this.prisma.quiz.deleteMany({ where: { lectureId } });
     return { ok: true };
@@ -336,17 +491,27 @@ export class InstructorService {
 
   /** Step 2 of a resource upload: the file must already be in storage under the caller's prefix. */
   async addResource(a: Actor, courseId: string, lectureId: string, input: { title: string; storageKey: string }) {
-    await this.ownLecture(a.user.id, courseId, lectureId);
+    const c = await this.editableCourse(a.user.id, courseId);
     if (!input.storageKey.startsWith(`resources/${a.user.id}/`) || input.storageKey.includes('..')) throw badRequest('Invalid storage key', 'invalid_key');
     const head = await this.storage.head(input.storageKey);
     if (!head) throw badRequest('Upload the file first', 'upload_missing');
+    if (c.status === 'published') {
+      const r = await this.revisions.mutate(courseId, (t) => T.addResource(t, lectureId, { title: input.title, storageKey: input.storageKey, sizeBytes: head.size, mime: head.contentType }));
+      await this.audit.log({ actorId: a.user.id, action: 'resource.added_to_draft', targetType: 'course', targetId: courseId, ip: a.ip, meta: { resourceId: r.id } });
+      return { id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime };
+    }
+    await this.ownLecture(a.user.id, courseId, lectureId);
     const r = await this.prisma.resource.create({ data: { lectureId, title: input.title, storageKey: input.storageKey, sizeBytes: head.size, mime: head.contentType } });
     await this.audit.log({ actorId: a.user.id, action: 'resource.added', targetType: 'resource', targetId: r.id, ip: a.ip });
     return { id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime };
   }
 
   async deleteResource(a: Actor, courseId: string, resourceId: string) {
-    await this.editableCourse(a.user.id, courseId);
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.deleteResource(t, resourceId));
+      return { ok: true };
+    }
     const r = await this.prisma.resource.findFirst({ where: { id: resourceId, lecture: { section: { courseId } } } });
     if (!r) throw notFound('Resource');
     await this.prisma.resource.delete({ where: { id: r.id } });

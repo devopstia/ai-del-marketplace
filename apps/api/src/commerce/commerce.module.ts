@@ -11,6 +11,6 @@ import { WebhooksService } from './webhooks.service';
 @Module({
   controllers: [CommerceController, WebhooksController],
   providers: [CommerceService, ConnectService, FulfilmentService, RefundsService, StripeService, WebhooksService],
-  exports: [FulfilmentService, RefundsService, StripeService],
+  exports: [CommerceService, FulfilmentService, RefundsService, StripeService],
 })
 export class CommerceModule {}

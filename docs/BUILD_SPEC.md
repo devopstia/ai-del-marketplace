@@ -29,11 +29,13 @@ Session(id, userId, expiresAt, ip, userAgent, revokedAt)
 InstructorProfile(userId PK, headline, bio, website, status pending|approved|rejected, reviewNote?, isPlatform bool (DEL: never paid out), stripeAccountId?, payoutsEnabled bool)
 Category(id, slug unique, name, icon, sort)
 Course(id, slug unique, instructorId→User, categoryId, title, subtitle, description (markdown), language, level beginner|intermediate|advanced,
-  objectives text[], requirements text[], priceCents, currency 'usd', thumbnailKey?, promoVideoAssetId?, status draft|in_review|changes_requested|rejected|published|unpublished,
-  reviewNote?, publishedAt?, ratingAvg, ratingCount, studentCount, createdAt, updatedAt)
+  objectives text[], requirements text[], priceCents (0 or 499..99999), currency 'usd', thumbnailKey?, promoVideoAssetId?, status draft|in_review|changes_requested|rejected|published|unpublished,
+  reviewNote?, publishedAt?, ratingAvg, ratingCount, studentCount, lastVerifiedAt?, createdAt, updatedAt)
+CourseRevision(id, courseId, status draft|in_review|changes_requested|approved|rejected, snapshot jsonb (editable course tree), reviewNote?, submittedAt?, decidedAt?, decidedById?)
+  // edits to a PUBLISHED course; at most one open (draft|in_review|changes_requested) per course; approval applies it in one transaction
 Section(id, courseId, title, position)
-Lecture(id, sectionId, title, position, type video|article|quiz, videoAssetId?, articleMd?, durationSec, isPreview bool)
-VideoAsset(id, ownerId, provider local|mux, status uploading|processing|ready|failed, storageKey?, muxUploadId?, muxAssetId?, muxPlaybackId?, durationSec, captionsKey?, error?)
+Lecture(id, sectionId, title, summary, position, type video|article|quiz, videoAssetId?, articleMd?, durationSec, isPreview bool)
+VideoAsset(id, ownerId, provider local|mux, status uploading|processing|ready|failed, storageKey?, muxUploadId?, muxAssetId?, muxPlaybackId?, durationSec, captionsKey? (WebVTT; player shows captions off by default), error?)
 Resource(id, lectureId, title, storageKey, sizeBytes, mime)        // lab ZIPs, scripts
 Quiz(id, lectureId unique, questions jsonb [{q, options[3..5], correct, why}]) ; QuizAttempt(id, userId, quizId, score, answers jsonb, at)
 CartItem(userId, courseId) PK(userId,courseId)
@@ -43,7 +45,7 @@ Enrollment(userId, courseId, orderLineId?, source purchase|free|admin, createdAt
 LectureProgress(userId, lectureId, positionSec, completed bool, updatedAt) PK(userId,lectureId)
 Review(id, userId, courseId, rating 1..5, body, status visible|hidden, instructorReply?, createdAt) unique(userId,courseId)
 Certificate(id, userId, courseId, code unique, issuedAt)
-PlatformSetting(key PK, value jsonb)   // commission_bps (default 0), etc.
+PlatformSetting(key PK, value jsonb)   // commission_bps (default 2000 = instructors keep 80%), etc.
 WebhookEvent(id PK = stripe event id, type, processedAt)   // idempotency
 AuditLog(id, actorId?, action, targetType, targetId, ip, meta jsonb, at)
 
@@ -57,7 +59,7 @@ Cart/checkout: `GET/POST/DELETE /cart` (+ `/cart/:courseId`) · `POST /checkout`
 `POST /webhooks/stripe` (raw body, signature verified) · `POST /dev/test-payments/:orderId/complete` (only when DEV_TEST_PAYMENTS=true and NODE_ENV!=production; calls the same fulfilment function) ·
 `GET /orders` · `GET /orders/:id` (receipt).
 Learning: `GET /me/learning` (enrolled courses + progress % + last lecture) · `GET /me/courses/:slug` (full curriculum for enrolled) ·
-`POST /lectures/:id/playback` → `{ url, expiresAt, captionsUrl? }` (enrolled or owner/admin) · `PUT /lectures/:id/progress {positionSec, completed}` ·
+`POST /lectures/:id/playback` → `{ url, expiresAt, format, captionsUrl? }` (enrolled or owner/admin) · `PUT /lectures/:id/progress {positionSec, completed}` ·
 `GET /lectures/:id/resources` · `POST /resources/:id/download` → signed URL · `GET/POST /lectures/:id/quiz` (submit attempt) ·
 `POST /courses/:slug/reviews` (enrolled only) · `POST /courses/:slug/certificate` (when 100% complete).
 Instructor (role instructor, own data only): `POST /instructor/apply` · `GET/PUT /instructor/profile` ·
@@ -69,6 +71,16 @@ Instructor (role instructor, own data only): `POST /instructor/apply` · `GET/PU
 Admin (admin/super_admin): `GET /admin/stats` · `GET /admin/review-queue` · `POST /admin/courses/:id/approve|request-changes|reject|unpublish {note}` ·
 `GET /admin/courses|users|instructors|orders` · `POST /admin/instructors/:id/approve|reject` · `PATCH /admin/users/:id {status, roles}` (super_admin for roles) ·
 categories CRUD · `GET/PUT /admin/settings` (commission_bps) · `POST /admin/orders/:id/refund` · `GET /admin/audit`.
+
+## Pricing and revenue share
+Single-course purchases only. A course is free (0) or $4.99–$999.99 (`apps/api/src/common/pricing.ts`, served by
+`GET /platform/terms`). Independent instructors keep 80% (`commission_bps` 2000); DEL's own (isPlatform) courses keep
+100% for the platform and are never transferred.
+
+## Catalogue import (DEL)
+`npm run import:del` → `apps/api/src/import/import-del.ts` (course copy in `del-catalogue.ts`). Source mounted read-only
+(`docker-compose.import.yml`). Tutorial `.mjs` files are parsed as literals only (`js-literal.ts`), never executed.
+Deterministic ids, so re-imports update in place and keep learner progress.
 
 ## Payments (Stripe, test mode)
 - Checkout: create Order(pending) + OrderLines (commission from settings; instructorShare = price − commission) → Checkout Session
@@ -91,8 +103,8 @@ categories CRUD · `GET/PUT /admin/settings` (commission_bps) · `POST /admin/or
 super_admin `admin@del.example`, instructor DevOps Easy Learning `courses@del.example` (approved, platform-owned), a second
 instructor `nadia@instructor.example` (approved, no Stripe yet), student `student@del.example`; passwords from `.env`
 (`SEED_PASSWORD`). Categories: AI Foundations, AI for DevOps, CI/CD & GitOps, MCP & Agents, Cloud AI (AWS & Azure), Automation (n8n).
-Courses: 4 DEL courses + 2 by the second instructor, with sections, lectures (2 previews each), sample short videos generated by
-ffmpeg (test pattern + tone, 10–20 s) uploaded to MinIO, one resource ZIP, one quiz, reviews.
+Courses: 4 demo DEL courses (replaced by `npm run import:del`) + 2 by the second instructor, with sections, lectures (2 previews each), sample short videos generated by
+ffmpeg (test pattern + tone, 10–20 s) uploaded to MinIO, one resource ZIP, one quiz. No reviews or ratings (real ones only).
 
 ## Quality bar
 - API: unit tests for fulfilment, ownership checks, webhook idempotency, auth; e2e (supertest) for register→cart→checkout(test

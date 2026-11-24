@@ -1,12 +1,17 @@
 {
   "name": "ai-del-marketplace",
   "private": true,
-  "workspaces": ["apps/api", "apps/web"],
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
   "scripts": {
     "dev:api": "npm run start:dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
     "test": "npm test -w apps/api && npm run typecheck -w apps/web",
     "up": "docker compose up -d --build",
-    "down": "docker compose down"
+    "down": "docker compose down",
+    "seed": "docker compose exec api npm run seed",
+    "import:del": "./scripts/import-del.sh"
   }
 }

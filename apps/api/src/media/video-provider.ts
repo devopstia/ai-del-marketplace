@@ -14,6 +14,7 @@ export interface Playback {
   expiresAt: string;
   /** mp4 = progressive file (local provider), hls = .m3u8 stream (mux) */
   format: 'mp4' | 'hls';
+  /** WebVTT; the player shows captions OFF by default, the learner can turn them on */
   captionsUrl?: string;
 }
 

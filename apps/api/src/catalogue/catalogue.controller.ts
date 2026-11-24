@@ -13,6 +13,7 @@ const listSchema = z.object({
   page: z.coerce.number().int().min(1).max(1000).default(1),
   pageSize: z.coerce.number().int().min(1).max(48).default(12),
 });
+const featuredSchema = z.object({ limit: z.coerce.number().int().min(1).max(24).default(6) });
 const pageSchema = z.object({ page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(50).default(10) });
 
 @Public()
@@ -43,6 +44,17 @@ export class CatalogueController {
   @Get('courses/:slug/reviews')
   reviews(@Param('slug') slug: string, @ZQuery(pageSchema) q: z.infer<typeof pageSchema>) {
     return this.svc.courseReviews(slug, q.page, q.pageSize);
+  }
+
+  @Get('platform/terms')
+  terms() {
+    return this.svc.terms();
+  }
+
+  /** Declared before instructors/:id so "featured" is not read as an id. */
+  @Get('instructors/featured')
+  featured(@ZQuery(featuredSchema) q: z.infer<typeof featuredSchema>) {
+    return this.svc.featuredInstructors(q.limit);
   }
 
   @Get('instructors/:id')

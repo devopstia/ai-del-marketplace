@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuditService } from '../common/audit.service';
 import { Actor } from '../common/auth-context';
-import { badRequest, notFound } from '../common/errors';
+import { badRequest, notFound, unavailable } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { env } from '../config/env';
 import { FulfilmentService } from './fulfilment.service';
@@ -30,6 +30,9 @@ export class ConnectService {
 
   async onboardingLink(a: Actor) {
     const p = await this.profile(a.user.id);
+    if (!this.stripe.configured) {
+      throw unavailable('Payouts are not available yet: Stripe is not configured on this platform', 'stripe_not_configured');
+    }
     const stripe = this.stripe.client;
     let accountId = p.stripeAccountId;
     if (!accountId) {

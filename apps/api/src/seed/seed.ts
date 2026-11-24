@@ -2,7 +2,7 @@
  * Local seed (idempotent): `npm run seed -w apps/api` or, in Docker, `docker compose exec api npm run seed`.
  * Accounts use SEED_PASSWORD from .env. Generates short sample videos (ffmpeg test pattern + tone), a WebVTT file,
  * a lab ZIP and thumbnails, and uploads them to the private bucket. Re-running updates accounts and skips courses
- * that already exist.
+ * that already exist. Creates no reviews or ratings. Then run `npm run import:del` for the real DEL catalogue.
  */
 import 'reflect-metadata';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -12,11 +12,12 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ARGON2_OPTS } from '../auth/auth.service';
+import { DEFAULT_COMMISSION_BPS } from '../common/pricing';
 import { StorageService } from '../common/storage.service';
 import { env } from '../config/env';
 import { PrismaClient } from '../generated/prisma/client';
 import type { Role } from '../generated/prisma/enums';
-import { CATEGORIES, COURSES, REVIEW_TEXT, REVIEWERS, SeedCourse } from './content';
+import { CATEGORIES, COURSES, SeedCourse } from './content';
 import { makeZip } from './zip';
 
 const e = env();
@@ -113,6 +114,7 @@ async function seedCourse(c: SeedCourse, idx: number, ownerId: string, categoryI
         const key = `videos/${asset.id}/source.mp4`;
         await storage.put(key, readFileSync(file), 'video/mp4');
         const durationSec = probe(file);
+        // Captions are available (the player shows them off by default).
         let captionsKey: string | null = null;
         if (l.captions) {
           captionsKey = `videos/${asset.id}/captions.vtt`;
@@ -166,31 +168,21 @@ async function main() {
     const row = await prisma.category.upsert({ where: { slug: c.slug }, create: { ...c, sort: i }, update: { name: c.name, icon: c.icon, sort: i } });
     cats.set(c.slug, row.id);
   }
-  await prisma.platformSetting.upsert({ where: { key: 'commission_bps' }, create: { key: 'commission_bps', value: 0 }, update: {} });
+  await prisma.platformSetting.upsert({ where: { key: 'commission_bps' }, create: { key: 'commission_bps', value: DEFAULT_COMMISSION_BPS }, update: {} });
 
+  // Once the real DEL catalogue is imported (npm run import:del), the demo DEL courses are not recreated.
+  const imported = await prisma.course.count({ where: { instructorId: del.id, slug: { notIn: COURSES.map((c) => c.slug) } } });
+  if (imported) log('real DEL catalogue present: demo DEL courses skipped');
   const courses = [];
   for (const [i, c] of COURSES.entries()) {
+    if (imported && c.owner === 'del') continue;
     courses.push(await seedCourse(c, i, c.owner === 'del' ? del.id : nadia.id, cats.get(c.category)!));
   }
 
-  // Verified reviews: reviewers are enrolled (admin grant), then review.
-  const reviewers = [];
-  for (const r of REVIEWERS) reviewers.push(await upsertUser(r.email, r.name, ['student'], hash));
-  for (const [ci, course] of courses.entries()) {
-    for (const [ri, reviewer] of reviewers.entries()) {
-      if ((ci + ri) % 3 === 2) continue; // not everyone reviews everything
-      const key = { userId_courseId: { userId: reviewer.id, courseId: course.id } };
-      if (!(await prisma.enrollment.findUnique({ where: key }))) {
-        await prisma.enrollment.create({ data: { userId: reviewer.id, courseId: course.id, source: 'admin' } });
-      }
-      const t = REVIEW_TEXT[(ci + ri) % REVIEW_TEXT.length];
-      await prisma.review.upsert({ where: key, create: { userId: reviewer.id, courseId: course.id, rating: t.rating, body: t.body }, update: {} });
-    }
-    const [agg, students] = await Promise.all([
-      prisma.review.aggregate({ where: { courseId: course.id, status: 'visible' }, _avg: { rating: true }, _count: { _all: true } }),
-      prisma.enrollment.count({ where: { courseId: course.id, revokedAt: null } }),
-    ]);
-    await prisma.course.update({ where: { id: course.id }, data: { ratingAvg: agg._avg.rating ?? 0, ratingCount: agg._count._all, studentCount: students } });
+  // No invented reviews or ratings (owner rule: reviews only from real enrolled learners). Learner counts are real rows.
+  for (const course of courses) {
+    const students = await prisma.enrollment.count({ where: { courseId: course.id, revokedAt: null } });
+    await prisma.course.update({ where: { id: course.id }, data: { studentCount: students } });
   }
 
   // The demo student owns the free course, so My Learning isn't empty; paid courses are left to buy.

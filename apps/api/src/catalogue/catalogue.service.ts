@@ -3,6 +3,8 @@ import type { Prisma } from '../generated/prisma/client';
 import { AuthUser, isAdmin } from '../common/auth-context';
 import { badRequest, notFound } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
+import { CURRENCY, PRICE_MAX_CENTS, PRICE_MIN_CENTS } from '../common/pricing';
+import { SettingsService } from '../common/settings.service';
 import { MediaService } from '../media/media.service';
 import { cardInclude, toCard } from './course-card';
 
@@ -30,7 +32,20 @@ export class CatalogueService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
+    private readonly settings: SettingsService,
   ) {}
+
+  /** Public marketplace terms (pricing rules + revenue share) so the web never hard-codes them. */
+  async terms() {
+    const commissionBps = await this.settings.commissionBps();
+    return {
+      currency: CURRENCY,
+      pricing: { freeAllowed: true, minCents: PRICE_MIN_CENTS, maxCents: PRICE_MAX_CENTS },
+      commissionBps,
+      instructorSharePercent: Math.round((10000 - commissionBps) / 100),
+      singleCoursePurchases: true,
+    };
+  }
 
   categories() {
     return this.prisma.category.findMany({
@@ -89,7 +104,18 @@ export class CatalogueService {
             position: true,
             lectures: {
               orderBy: { position: 'asc' },
-              select: { id: true, title: true, position: true, type: true, durationSec: true, isPreview: true, _count: { select: { resources: true } } },
+              select: {
+                id: true,
+                title: true,
+                position: true,
+                type: true,
+                summary: true,
+                durationSec: true,
+                isPreview: true,
+                quiz: { select: { id: true } },
+                videoAsset: { select: { captionsKey: true } },
+                resources: { orderBy: { createdAt: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true } },
+              },
             },
           },
         },
@@ -111,6 +137,18 @@ export class CatalogueService {
       { ...c, instructor: { id: c.instructor.id, name: c.instructor.name }, sections: c.sections.map((s) => ({ lectures: s.lectures })) },
       (k) => this.media.imageUrl(k),
     );
+    const lectures = c.sections.flatMap((s) => s.lectures);
+    const labFiles = c.sections.flatMap((s) => s.lectures.flatMap((l) => l.resources.map((r) => ({ title: r.title, sizeBytes: r.sizeBytes, mime: r.mime, lectureId: l.id, lectureTitle: l.title }))));
+    const totals = {
+      sections: c.sections.length,
+      lectures: lectures.length,
+      videoLectures: lectures.filter((l) => l.type === 'video').length,
+      previewLectures: lectures.filter((l) => l.isPreview).length,
+      quizzes: lectures.filter((l) => l.quiz).length,
+      resources: labFiles.length,
+      captionedLectures: lectures.filter((l) => l.videoAsset?.captionsKey).length,
+      durationSec: card.totalDurationSec,
+    };
     return {
       ...card,
       description: c.description,
@@ -119,6 +157,11 @@ export class CatalogueService {
       status: c.status,
       updatedAt: c.updatedAt,
       hasPromo: !!c.promoVideoAssetId,
+      lastVerifiedAt: c.lastVerifiedAt,
+      resourceCount: totals.resources,
+      hasCaptions: totals.captionedLectures > 0,
+      totals,
+      labFiles,
       instructor: {
         id: c.instructor.id,
         name: c.instructor.name,
@@ -129,7 +172,7 @@ export class CatalogueService {
       curriculum: c.sections.map((s) => ({
         id: s.id,
         title: s.title,
-        lectures: s.lectures.map(({ _count, ...l }) => ({ ...l, resourceCount: _count.resources })),
+        lectures: s.lectures.map(({ resources, quiz, videoAsset, ...l }) => ({ ...l, resourceCount: resources.length, hasQuiz: !!quiz, hasCaptions: !!videoAsset?.captionsKey })),
       })),
       viewer: viewerState,
     };
@@ -169,11 +212,8 @@ export class CatalogueService {
       select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, website: true } } },
     });
     if (!u) throw notFound('Instructor');
-    const courses = await this.listCourses({ instructorId: id, sort: 'popular', page: 1, pageSize: 50 });
-    const stats = await this.prisma.course.aggregate({
-      where: { instructorId: id, status: 'published' },
-      _sum: { studentCount: true, ratingCount: true },
-    });
+    const courses = await this.listCourses({ instructorId: id, sort: 'popular', page: 1, pageSize: 48 });
+    const [stats] = await this.instructorStats([id]);
     return {
       id: u.id,
       name: u.name,
@@ -181,9 +221,75 @@ export class CatalogueService {
       headline: u.instructorProfile!.headline,
       bio: u.instructorProfile!.bio,
       website: u.instructorProfile!.website,
-      stats: { courses: courses.total, students: stats._sum.studentCount ?? 0, reviews: stats._sum.ratingCount ?? 0 },
+      stats: { courses: stats.courseCount, students: stats.studentCount, reviews: stats.reviewCount },
       courses: courses.items,
     };
+  }
+
+  /**
+   * Per instructor, over PUBLISHED courses only: courseCount, studentCount (distinct learners with an active
+   * enrolment, so a learner in two courses counts once), reviewCount and the review-weighted ratingAvg.
+   */
+  async instructorStats(ids: string[]) {
+    if (!ids.length) return [];
+    const [courses, students] = await Promise.all([
+      this.prisma.course.groupBy({ by: ['instructorId'], where: { instructorId: { in: ids }, status: 'published' }, _count: { _all: true } }),
+      this.prisma.$queryRaw<{ instructorId: string; n: bigint }[]>`
+        SELECT c."instructorId", COUNT(DISTINCT e."userId") AS n
+        FROM enrollments e JOIN courses c ON c.id = e."courseId"
+        WHERE c."instructorId" = ANY(${ids}) AND c.status = 'published' AND e."revokedAt" IS NULL
+        GROUP BY c."instructorId"`,
+    ]);
+    const reviews = await this.prisma.review.groupBy({
+      by: ['courseId'],
+      where: { status: 'visible', course: { instructorId: { in: ids }, status: 'published' } },
+      _count: { _all: true },
+      _sum: { rating: true },
+    });
+    const courseOwner = new Map(
+      (await this.prisma.course.findMany({ where: { id: { in: reviews.map((r) => r.courseId) } }, select: { id: true, instructorId: true } })).map((c) => [c.id, c.instructorId]),
+    );
+    return ids.map((id) => {
+      const mine = reviews.filter((r) => courseOwner.get(r.courseId) === id);
+      const reviewCount = mine.reduce((n, r) => n + r._count._all, 0);
+      const ratingSum = mine.reduce((n, r) => n + (r._sum.rating ?? 0), 0);
+      return {
+        instructorId: id,
+        courseCount: courses.find((c) => c.instructorId === id)?._count._all ?? 0,
+        studentCount: Number(students.find((s) => s.instructorId === id)?.n ?? 0),
+        reviewCount,
+        ratingAvg: reviewCount ? Math.round((ratingSum / reviewCount) * 10) / 10 : null,
+      };
+    });
+  }
+
+  /** Approved instructors with at least one published course, most learners first. */
+  async featuredInstructors(limit: number) {
+    const users = await this.prisma.user.findMany({
+      where: { status: 'active', instructorProfile: { status: 'approved' }, courses: { some: { status: 'published' } } },
+      select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, isPlatform: true } } },
+    });
+    const stats = await this.instructorStats(users.map((u) => u.id));
+    const byId = new Map(stats.map((s) => [s.instructorId, s]));
+    const items = users
+      .map((u) => {
+        const s = byId.get(u.id)!;
+        return {
+          id: u.id,
+          name: u.name,
+          avatarUrl: u.avatarUrl,
+          headline: u.instructorProfile?.headline ?? '',
+          bio: u.instructorProfile?.bio ?? '',
+          isPlatform: !!u.instructorProfile?.isPlatform,
+          courseCount: s.courseCount,
+          studentCount: s.studentCount,
+          reviewCount: s.reviewCount,
+          ratingAvg: s.ratingAvg,
+        };
+      })
+      .sort((a, b) => b.studentCount - a.studentCount || b.courseCount - a.courseCount || a.name.localeCompare(b.name))
+      .slice(0, limit);
+    return { items };
   }
 
   async previewPlayback(lectureId: string, viewer?: AuthUser) {

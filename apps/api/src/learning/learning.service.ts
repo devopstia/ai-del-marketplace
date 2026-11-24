@@ -133,6 +133,7 @@ export class LearningService {
           id: l.id,
           title: l.title,
           type: l.type,
+          summary: l.summary,
           durationSec: l.durationSec,
           isPreview: l.isPreview,
           articleMd: l.type === 'article' ? l.articleMd : undefined,

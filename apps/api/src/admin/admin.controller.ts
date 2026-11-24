@@ -11,7 +11,7 @@ const usersQuery = z.object({ q: z.string().max(100).optional(), role: z.enum(['
 const userPatch = z
   .object({ status: z.enum(['active', 'suspended']).optional(), roles: z.array(z.enum(['student', 'instructor', 'admin', 'super_admin'])).max(4).optional() })
   .refine((v) => v.status || v.roles, 'Nothing to change');
-const instructorsQuery = z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional() });
+const instructorsQuery = z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional(), q: z.string().max(100).optional(), ...paging });
 const categorySchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: z.string().regex(/^[a-z0-9-]{2,80}$/).optional(),
@@ -19,9 +19,18 @@ const categorySchema = z.object({
   sort: z.number().int().min(0).max(1000).optional(),
 });
 const settingsSchema = z.object({ commission_bps: z.number().int().min(0).max(10000) });
-const ordersQuery = z.object({ status: z.enum(['pending', 'paid', 'failed', 'refunded', 'partially_refunded']).optional(), ...paging });
+const ordersQuery = z.object({ status: z.enum(['pending', 'paid', 'failed', 'refunded', 'partially_refunded']).optional(), q: z.string().max(100).optional(), ...paging });
 const refundSchema = z.object({ lineIds: z.array(z.string().uuid()).max(100).optional(), reason: z.string().max(500).optional() });
-const auditQuery = z.object({ action: z.string().max(80).optional(), actorId: z.string().uuid().optional(), targetType: z.string().max(40).optional(), targetId: z.string().max(80).optional(), ...paging });
+const auditQuery = z.object({
+  action: z.string().max(80).optional(),
+  actorId: z.string().uuid().optional(),
+  targetType: z.string().max(40).optional(),
+  targetId: z.string().max(80).optional(),
+  q: z.string().max(100).optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+  ...paging,
+});
 const reviewPatch = z.object({ status: z.enum(['visible', 'hidden']) });
 
 @Roles('admin')
@@ -47,7 +56,7 @@ export class AdminController {
   @Patch('users/:id')
   updateUser(@Param('id') id: string, @ZBody(userPatch) b: z.infer<typeof userPatch>, @ActorCtx() a: Actor) { return this.svc.updateUser(a, id, b); }
 
-  @Get('instructors') instructors(@ZQuery(instructorsQuery) q: z.infer<typeof instructorsQuery>) { return this.svc.instructors(q.status); }
+  @Get('instructors') instructors(@ZQuery(instructorsQuery) q: z.infer<typeof instructorsQuery>) { return this.svc.instructors(q); }
   @HttpCode(200) @Post('instructors/:id/approve')
   approveInstructor(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decideInstructor(a, id, true, b.note); }
   @HttpCode(200) @Post('instructors/:id/reject')
