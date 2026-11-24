@@ -9,6 +9,7 @@ import type { StripeStatus } from "@/lib/types";
 import { PageHead } from "@/components/shell/AppShell";
 import { Skeleton } from "@/components/Empty";
 import { useToast } from "@/components/Toast";
+import { TermsNote } from "@/components/studio/TermsNote";
 
 const map = (r: unknown): StripeStatus => {
   const o = obj(r);
@@ -66,10 +67,11 @@ export default function PayoutsPage() {
           ) : null}
         </section>
       ) : null}
+      <TermsNote className="mt-6 max-w-4xl" />
       <section className="mt-10 max-w-4xl">
         <h2 className="font-display text-lg font-bold">How transfers work</h2>
         <ol className="mt-4 grid gap-6 sm:grid-cols-3">
-          {[["Learner pays", "Stripe Checkout charges the learner on the platform account."], ["We split the sale", "The platform commission is kept; your share is calculated per course."], ["Stripe pays you", "Your share is transferred to your Stripe account, then paid to your bank on Stripe’s schedule."]].map(([t, d], i) => (
+          {[["Learner pays", "Stripe Checkout charges the learner on the platform account."], ["We split the sale", "Stripe’s processing fee comes off first; your share is your rate of what’s left. Every sale shows the numbers in Sales."], ["Stripe pays you", "16 days after the sale, when the refund period is over, your share is transferred to your Stripe account. Stripe then pays it to your bank."]].map(([t, d], i) => (
             <li key={t} className="border-t-2 border-ink pt-4"><span className="font-display text-2xl font-extrabold text-violet">{i + 1}</span><p className="mt-1 font-bold">{t}</p><p className="mt-1 text-sm text-ink-2">{d}</p></li>
           ))}
         </ol>

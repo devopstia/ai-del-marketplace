@@ -411,4 +411,34 @@ describe('e2e: buy and learn', () => {
     const sales = await teacher.agent.get('/api/instructor/sales').expect(200);
     expect(sales.body.totals.feesCents).toBeGreaterThan(0);
   });
+
+  it('DEL Studio: a super admin works in the studio as DEL; the audit log names the real person', async () => {
+    if (!available) return;
+    const delAcct = await prisma.instructorProfile.findFirst({ where: { isPlatform: true } });
+    const del = delAcct ? { user: { id: delAcct.userId } } : await userAgent('s-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const delCourse = await publishedCourse(del.user.id, 's-del-course', 1999);
+    const boss = await userAgent('s-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const admin = await userAgent('s-admin@e2e.example', ['student', 'admin']);
+
+    await admin.send('post', '/api/auth/act-as', { mode: 'del' }).expect(403);
+    await boss.agent.get('/api/instructor/courses').expect(403); // not an instructor themselves
+    const on = await boss.send('post', '/api/auth/act-as', { mode: 'del' }).expect(200);
+    expect(on.body.actingAs.id).toBe(del.user.id);
+    const me = await boss.agent.get('/api/auth/me').expect(200);
+    expect(me.body.user).toMatchObject({ id: boss.user.id, actingAs: { id: del.user.id } });
+
+    const list = await boss.agent.get('/api/instructor/courses').expect(200);
+    expect(list.body.items.map((c: any) => c.id)).toContain(delCourse.course.id);
+    // Only studio routes are swapped: admin routes still see the super admin.
+    await boss.agent.get('/api/admin/stats').expect(200);
+
+    await boss.send('patch', `/api/instructor/courses/${delCourse.course.id}`, { subtitle: 'Edited from DEL Studio' }).expect(200);
+    await boss.send('post', `/api/instructor/courses/${delCourse.course.id}/submit`).expect(200);
+    const entry = await prisma.auditLog.findFirst({ where: { targetId: delCourse.course.id, action: 'course.revision_submitted' } });
+    expect(entry).toMatchObject({ actorId: boss.user.id, meta: expect.objectContaining({ actingAs: del.user.id }) });
+    expect(await prisma.auditLog.count({ where: { action: 'auth.act_as_started', actorId: boss.user.id } })).toBe(1);
+
+    await boss.send('post', '/api/auth/act-as', { mode: 'self' }).expect(200);
+    await boss.agent.get('/api/instructor/courses').expect(403);
+  });
 });

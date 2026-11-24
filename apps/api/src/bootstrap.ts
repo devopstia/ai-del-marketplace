@@ -1,3 +1,4 @@
+import { actingContextMiddleware } from './common/acting';
 import { INestApplication } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
@@ -18,6 +19,7 @@ export function configureApp(app: INestApplication) {
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   });
+  app.use(actingContextMiddleware);
   app.use(cookieParser());
   express.useBodyParser('json', { limit: '1mb' });
   app.enableCors({

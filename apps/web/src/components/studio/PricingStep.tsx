@@ -36,7 +36,7 @@ export function PricingStep({ course, patch, goto, locked }: EditorCtx) {
   return (
     <fieldset disabled={locked} className="max-w-3xl">
       <h2 className="font-display text-xl font-bold">Set your price</h2>
-      <p className="mt-1 text-ink-2">Prices are in US dollars. The platform commission is set by the admin and shown on each sale in Sales.</p>
+      <p className="mt-1 text-ink-2">Prices are in US dollars. You earn your share of each sale after Stripe’s processing fee; Sales shows every sale’s numbers.</p>
       <div className="mt-6 flex flex-wrap gap-2" role="radiogroup" aria-label="Suggested prices">
         {tiers.map((t) => (
           <button key={t} type="button" role="radio" aria-checked={cents === t} onClick={() => { setCents(t); setRaw((t / 100).toFixed(2)); }}

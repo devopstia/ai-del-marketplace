@@ -90,6 +90,12 @@ export class AuthService {
     return { ...rest, instructor: instructorProfile };
   }
 
+  /** DEL's own instructor account (the platform-owned profile), for the super admin's "DEL Studio" switch. */
+  async platformInstructor() {
+    const p = await this.prisma.instructorProfile.findFirst({ where: { isPlatform: true, status: 'approved' }, orderBy: { createdAt: 'asc' }, select: { user: { select: { id: true, name: true } } } });
+    return p?.user ?? null;
+  }
+
   async listSessions(userId: string, currentId?: string) {
     const rows = await this.prisma.session.findMany({
       where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },

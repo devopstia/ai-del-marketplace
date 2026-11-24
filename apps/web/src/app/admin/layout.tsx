@@ -4,6 +4,7 @@ import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Receipt, Sc
 import { AppShell } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { Skeleton } from "@/components/Empty";
+import { ConsoleSwitch } from "@/components/shell/ConsoleSwitch";
 
 const nav = [
   { href: "/admin", label: "Overview", icon: Gauge, exact: true },
@@ -31,5 +32,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  return <AppShell area="Admin console" nav={nav}>{children}</AppShell>;
+  return <AppShell area="Admin console" nav={nav} footer={<ConsoleSwitch to="del" />}>{children}</AppShell>;
 }

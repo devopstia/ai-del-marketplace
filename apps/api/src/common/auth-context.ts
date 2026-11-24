@@ -9,7 +9,7 @@ export interface AuthUser {
   roles: Role[];
 }
 
-export type AppRequest = Request & { user?: AuthUser; sessionId?: string; rawBody?: Buffer };
+export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; rawBody?: Buffer };
 
 export const IS_PUBLIC = 'isPublic';
 export const ROLES = 'roles';

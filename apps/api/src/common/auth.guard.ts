@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import type { Role } from '../generated/prisma/enums';
 import { AppRequest, hasRole, IS_PUBLIC, ROLES } from './auth-context';
 import { SESSION_COOKIE } from './cookies';
+import { ACT_AS_COOKIE, ACT_AS_PLATFORM, acting, STUDIO_PATH } from './acting';
 import { forbidden, unauthorized } from './errors';
 import { PrismaService } from './prisma.service';
 
@@ -32,6 +33,7 @@ export class AuthGuard implements CanActivate {
         const { status: _s, ...user } = session.user;
         req.user = user;
         req.sessionId = session.id;
+        await this.maybeActAsPlatform(req);
       }
     }
 
@@ -41,5 +43,22 @@ export class AuthGuard implements CanActivate {
     if (!req.user) throw unauthorized();
     if (roles?.length && !roles.some((r) => hasRole(req.user, r))) throw forbidden();
     return true;
+  }
+
+  /** Super admin in "DEL Studio" mode: studio requests run as DEL's instructor account; the real user is kept for audit. */
+  private async maybeActAsPlatform(req: AppRequest) {
+    if (req.cookies?.[ACT_AS_COOKIE] !== ACT_AS_PLATFORM || !req.user?.roles.includes('super_admin')) return;
+    if (!STUDIO_PATH.test(req.path ?? req.url ?? '')) return;
+    const del = await this.prisma.instructorProfile.findFirst({
+      where: { isPlatform: true, status: 'approved', user: { status: 'active' } },
+      orderBy: { createdAt: 'asc' },
+      select: { user: { select: { id: true, email: true, name: true, roles: true } } },
+    });
+    if (!del) return;
+    const real = req.user;
+    req.realUser = real;
+    req.user = { ...del.user, roles: Array.from(new Set([...del.user.roles, 'instructor' as const])) };
+    const ctx = acting.getStore();
+    if (ctx) Object.assign(ctx, { realUserId: real.id, actingAsId: del.user.id });
   }
 }

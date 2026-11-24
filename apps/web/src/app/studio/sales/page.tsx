@@ -6,10 +6,25 @@ import { dateTime, moneyExact } from "@/lib/format";
 import { dailySeries, daysAgoIso } from "@/lib/series";
 import { PageHead, Kpis, DataTable } from "@/components/shell/AppShell";
 import { BarChart } from "@/components/BarChart";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Skeleton } from "@/components/Empty";
+import { TermsNote } from "@/components/studio/TermsNote";
+import type { SaleRow } from "@/lib/types";
+import { date } from "@/lib/format";
 
 const ranges = [[7, "7 days"], [30, "30 days"], [90, "90 days"], [365, "12 months"]] as const;
+
+/** Where this sale's money stands, in plain words. */
+function payoutLabel(r: SaleRow): { status: string; text: string } {
+  if (r.refundedAt) return { status: "refunded", text: "Refunded" };
+  if (r.disputeStatus === "open") return { status: "pending", text: "On hold: card dispute" };
+  if (r.payee === "platform") return { status: "draft", text: "DEL course" };
+  if (r.payee === "del_agreement") return { status: "draft", text: "Paid to DEL (agreement)" };
+  if (r.transferStatus === "paid") return { status: "paid", text: "Transferred" };
+  if (r.transferStatus === "reversed") return { status: "refunded", text: "Taken back" };
+  if (r.transferStatus === "pending" && r.transferDueAt && new Date(r.transferDueAt) > new Date()) return { status: "pending", text: `Held until ${date(r.transferDueAt)}` };
+  if (r.transferStatus === "pending") return { status: "pending", text: "Due: waiting for Stripe setup" };
+  return { status: "draft", text: "No payout" };
+}
 
 export default function SalesPage() {
   const [days, setDays] = useState<number>(30);
@@ -17,7 +32,7 @@ export default function SalesPage() {
   const series = dailySeries((data?.rows ?? []).map((r) => ({ at: r.at, cents: r.instructorShareCents })), Math.min(days, 90));
   return (
     <>
-      <PageHead title="Sales" sub="Every paid enrolment, your share after the platform commission, and its payout status."
+      <PageHead title="Sales" sub="Every paid enrolment: what the learner paid, Stripe’s fee, your share and when it’s paid."
         actions={
           <div role="radiogroup" aria-label="Date range" className="flex rounded-lg border border-line bg-surface p-1">
             {ranges.map(([d, l]) => (
@@ -26,13 +41,14 @@ export default function SalesPage() {
           </div>
         } />
       {error ? <p className="text-rose">{error}</p> : null}
+      <TermsNote className="mb-6" />
       {data ? (
         <>
           <Kpis items={[
             { label: "Your earnings", value: moneyExact(data.instructorShareCents) },
-            { label: "Gross sales", value: moneyExact(data.totalCents) },
-            { label: "Platform commission", value: moneyExact(Math.max(0, data.totalCents - data.instructorShareCents)) },
-            { label: "Enrolments sold", value: String(data.count) },
+            { label: "Learners paid", value: moneyExact(data.totalCents) },
+            { label: "Stripe fees", value: moneyExact(data.feesCents) },
+            { label: "Held in refund period", value: moneyExact(data.heldCents) },
           ]} />
           {days <= 90 ? (
             <section className="mt-8 rounded-panel border border-line bg-surface p-5 sm:p-6">
@@ -41,16 +57,16 @@ export default function SalesPage() {
             </section>
           ) : null}
           <h2 className="mb-3 mt-10 font-display text-lg font-bold">Transactions</h2>
-          <DataTable head={["Date", "Course", "Learner", "Price", "Your share", "Payout"]} min={760}
+          <DataTable head={["Date", "Course", "Price", "Stripe fee", "Your share", "Payout"]} min={760}
             empty={!data.rows.length ? <p className="px-4 py-10 text-center text-ink-2">No sales in this period.</p> : null}>
             {data.rows.map((r) => (
               <tr key={r.id}>
                 <td className="whitespace-nowrap px-4 py-3 text-ink-2">{dateTime(r.at)}</td>
                 <td className="px-4 py-3 font-bold">{r.courseTitle}</td>
-                <td className="px-4 py-3">{r.buyerName ?? "—"}</td>
                 <td className="px-4 py-3 tabular-nums">{moneyExact(r.priceCents)}</td>
-                <td className="px-4 py-3 font-bold tabular-nums">{moneyExact(r.instructorShareCents)}</td>
-                <td className="px-4 py-3"><StatusBadge status={r.transferStatus === "none" ? "draft" : r.transferStatus ?? "pending"} /></td>
+                <td className="px-4 py-3 tabular-nums text-ink-2">{r.feeCents ? `−${moneyExact(r.feeCents)}` : "—"}</td>
+                <td className="px-4 py-3 font-bold tabular-nums">{r.payee === "platform" ? "—" : moneyExact(r.instructorShareCents)}</td>
+                <td className="px-4 py-3 text-sm">{payoutLabel(r).text}</td>
               </tr>
             ))}
           </DataTable>

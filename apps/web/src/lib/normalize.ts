@@ -1,7 +1,7 @@
 // Tolerant converters from raw API JSON to the app's types.
 // The API contract lives in docs/BUILD_SPEC.md and docs/API.md; these keep the UI stable if a field is
 // nested slightly differently (e.g. `instructor.name` vs `instructorName`).
-import type { StudioRevision,
+import type { SaleRow, StudioRevision,
   AdminInstructor, AdminStats, AdminUser, AuditEntry, Cart, Category, Certificate, CourseCard, CourseDetail,
   InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, Review, ReviewSummary, Role,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
@@ -62,6 +62,7 @@ export function toMe(x: unknown): Me | null {
     status: str(u.status, "active"),
     instructorStatus: (str(u.instructorStatus ?? ip.status ?? o.instructorStatus) || null) as Me["instructorStatus"],
     createdAt: str(u.createdAt) || undefined,
+    actingAs: obj(u.actingAs).id ? { id: str(obj(u.actingAs).id), name: str(obj(u.actingAs).name) } : null,
   };
 }
 
@@ -380,6 +381,12 @@ export function toSales(x: unknown): SalesReport {
       priceCents: num(ro.priceCents),
       instructorShareCents: num(ro.instructorShareCents ?? ro.priceCents),
       transferStatus: str(ro.transferStatus) || undefined,
+      feeCents: num(ro.feeCents),
+      netCents: num(ro.netCents ?? ro.priceCents),
+      payee: (str(ro.payee, "instructor") as SaleRow["payee"]),
+      transferDueAt: str(ro.transferDueAt) || null,
+      refundedAt: str(ro.refundedAt) || null,
+      disputeStatus: str(ro.disputeStatus) || null,
     };
   });
   const totals = obj(o.totals ?? o.summary);
@@ -387,6 +394,8 @@ export function toSales(x: unknown): SalesReport {
     totalCents: num(o.totalCents ?? totals.grossCents ?? totals.totalCents, rows.reduce((a, r) => a + r.priceCents, 0)),
     instructorShareCents: num(o.instructorShareCents ?? totals.earningsCents ?? totals.instructorShareCents ?? totals.netCents, rows.reduce((a, r) => a + r.instructorShareCents, 0)),
     count: num(o.count ?? totals.sales ?? totals.count, rows.length),
+    feesCents: num(totals.feesCents),
+    heldCents: num(totals.heldCents),
     rows,
     series: arr(o.series ?? o.daily).map((s) => ({ date: str(obj(s).date), cents: num(obj(s).cents ?? obj(s).totalCents) })),
   };

@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Skeleton } from "@/components/Empty";
+import { ConsoleSwitch } from "@/components/shell/ConsoleSwitch";
 
 const nav = [
   { href: "/studio", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -19,7 +20,8 @@ const nav = [
 export default function StudioLayout({ children }: { children: React.ReactNode }) {
   const { me, loading, has } = useAuth();
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
-  if (!me || !has("instructor") || me.instructorStatus === "pending") {
+  const acting = !!me?.actingAs;
+  if (!me || (!acting && (!has("instructor") || me.instructorStatus === "pending"))) {
     return (
       <>
         <SiteHeader />
@@ -33,5 +35,14 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
       </>
     );
   }
-  return <AppShell area="Instructor studio" nav={nav}>{children}</AppShell>;
+  return (
+    <AppShell area={acting ? "DEL Studio" : "Instructor studio"} nav={nav} footer={acting ? <ConsoleSwitch to="admin" /> : null}>
+      {acting ? (
+        <p className="-mt-2 mb-6 rounded-tile border border-line bg-cyan-soft px-4 py-2.5 text-sm text-ink" role="status" data-testid="acting-banner">
+          You’re working as <b>{me.actingAs!.name}</b>. Courses, sales and students here are DEL’s; every change is recorded under your name.
+        </p>
+      ) : null}
+      {children}
+    </AppShell>
+  );
 }

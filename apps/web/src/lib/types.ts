@@ -14,6 +14,8 @@ export interface Me {
   status?: string;
   instructorStatus?: "pending" | "approved" | "rejected" | null;
   createdAt?: string;
+  /** Super admin working in the studio as DEL ("DEL Studio"); null otherwise. */
+  actingAs?: { id: string; name: string } | null;
 }
 
 export interface Category {
@@ -281,9 +283,17 @@ export interface SaleRow {
   priceCents: number;
   instructorShareCents: number;
   transferStatus?: string;
+  feeCents: number;
+  netCents: number;
+  payee: "instructor" | "platform" | "del_agreement";
+  transferDueAt: string | null;
+  refundedAt: string | null;
+  disputeStatus: string | null;
 }
 
 export interface SalesReport {
+  feesCents: number;
+  heldCents: number;
   totalCents: number;
   instructorShareCents: number;
   count: number;
