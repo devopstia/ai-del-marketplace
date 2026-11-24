@@ -14,7 +14,7 @@
 | 2026-11-24 | **Revenue share 80/20**: independent instructors keep 80%, the platform keeps 20% (commission_bps = 2000), published openly on /teach. DEL's own courses: no transfer | Owner |
 | 2026-11-24 | **Labs**: students run labs on their own computer or a cheap cloud VM using our lab ZIPs; no hosted sandboxes for now | Owner |
 | 2026-11-24 | AI provider/budget (Phase 3): skipped for now | Owner |
-| 2026-11-24 | **No transcripts/captions shown on videos** | Owner: "no transcript on the video please" |
+| 2026-11-24 | **Captions available but OFF by default**; the student can turn them on | Owner: "Turn off the transcript by default. a student can add it if they want" (refines "no transcript on the video") |
 
 ## Open (need the owner)
 - AI provider and monthly cap for Phase 3 (owner: skip for now).

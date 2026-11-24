@@ -28,9 +28,9 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 8. **Security is non-negotiable**: httpOnly session cookies + CSRF, ownership checks in the service layer, signed short-lived media
    URLs, verified idempotent webhooks, audit log for privileged and financial actions, secrets only in `.env` (never committed).
 9. **Git**: feature branches; local commits; **no push, merge or non-local deployment without the owner's approval**.
-11. **No transcripts or captions on videos** (owner, 2026-11-24: "no transcript on the video please"): no captions track, CC button,
-    transcript panel or captions upload; course pages don't advertise captions. (Transcripts may be stored privately later for AI search
-    only if the owner approves.)
+11. **Captions/transcripts OFF by default** (owner, 2026-11-24: "Turn off the transcript by default. a student can add it if they
+    want"): captions are available where a video has them, but never shown until the student turns them on (CC button); the
+    student's own choice may be remembered. No always-visible transcript panel.
 10. **Done means tested**: `npm test -w apps/api` (unit + e2e), `./scripts/smoke-api.sh`, `npm run typecheck && npm run lint -w apps/web`,
     Playwright `npm run test:e2e -w apps/web` (wait ~60 s after the API smoke run: register is rate-limited per IP), all green on a
     fresh stack (`docker compose down -v`), then reseed for a clean demo.
