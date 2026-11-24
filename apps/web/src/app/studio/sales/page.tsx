@@ -29,7 +29,8 @@ function payoutLabel(r: SaleRow): { status: string; text: string } {
 export default function SalesPage() {
   const [days, setDays] = useState<number>(30);
   const { data, error } = useApi(`/instructor/sales?from=${daysAgoIso(days)}&to=${daysAgoIso(-1)}`, toSales);
-  const series = dailySeries((data?.rows ?? []).map((r) => ({ at: r.at, cents: r.instructorShareCents })), Math.min(days, 90));
+  // Refunded sales earn nothing, so they are left out of the chart (they stay in the list, marked Refunded).
+  const series = dailySeries((data?.rows ?? []).filter((r) => !r.refundedAt).map((r) => ({ at: r.at, cents: r.instructorShareCents })), Math.min(days, 90));
   return (
     <>
       <PageHead title="Sales" sub="Every paid enrolment: what the learner paid, Stripe’s fee, your share and when it’s paid."
@@ -65,7 +66,7 @@ export default function SalesPage() {
                 <td className="px-4 py-3 font-bold">{r.courseTitle}</td>
                 <td className="px-4 py-3 tabular-nums">{moneyExact(r.priceCents)}</td>
                 <td className="px-4 py-3 tabular-nums text-ink-2">{r.feeCents ? `−${moneyExact(r.feeCents)}` : "—"}</td>
-                <td className="px-4 py-3 font-bold tabular-nums">{r.payee === "platform" ? "—" : moneyExact(r.instructorShareCents)}</td>
+                <td className="px-4 py-3 font-bold tabular-nums">{r.payee === "platform" || r.refundedAt ? "—" : moneyExact(r.instructorShareCents)}</td>
                 <td className="px-4 py-3 text-sm">{payoutLabel(r).text}</td>
               </tr>
             ))}
