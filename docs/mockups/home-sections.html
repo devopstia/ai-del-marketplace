@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DEL mockups: homepage sections for approval</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Schibsted+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Same tokens as apps/web/src/app/globals.css (the approved v1 site) */
+:root{--paper:#f4f5fa;--surface:#fff;--sunken:#e4e7f2;--line:#d9dceb;--line-strong:#bfc4da;--ink:#141833;--muted:#5a6079;
+--violet:#4f3fb0;--violet-strong:#3f3196;--violet-soft:#e9e6fb;--cyan:#1e9bd7;--cyan-ink:#0b6d9e;--cyan-soft:#def1fb;--amber:#c98a0c;
+--mint:#138a5b;--mint-soft:#ddf4e9;--stage:#141833;--shadow:0 1px 2px rgba(20,24,51,.06),0 12px 32px -12px rgba(20,24,51,.22)}
+:root[data-theme="dark"]{--paper:#0c0f22;--surface:#141834;--sunken:#0a0d1d;--line:#262c52;--line-strong:#363d6b;--ink:#e8eaf7;--muted:#9599b8;
+--violet:#9d8fff;--violet-strong:#b7adff;--violet-soft:#241f55;--cyan:#58c3f2;--cyan-ink:#7fd2f6;--cyan-soft:#0f2b44;--mint:#3fcf92;--mint-soft:#0f3326;
+--shadow:0 1px 2px rgba(0,0,0,.4),0 16px 40px -14px rgba(0,0,0,.6)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible Next",system-ui,sans-serif;line-height:1.5}
+h1,h2,h3,.display{font-family:"Schibsted Grotesk",system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+a{color:inherit}.wrap{max-width:1360px;margin:0 auto;padding:0 32px}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 16px/1 "Atkinson Hyperlegible Next";padding:14px 22px;border-radius:12px;border:1px solid transparent;cursor:pointer;text-decoration:none}
+.btn-primary{background:var(--violet);color:#fff}.btn-primary:hover{background:var(--violet-strong)}
+.btn-ghost{background:transparent;border-color:var(--line-strong);color:var(--ink)}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+/* review chrome (not part of the design) */
+.review{position:sticky;top:0;z-index:50;background:#141833;color:#fff;font-size:14px}
+.review .wrap{display:flex;gap:18px;align-items:center;min-height:52px;flex-wrap:wrap}
+.review a{color:#c9c3ff;text-decoration:none}.review button{margin-left:auto;background:#2b2f57;color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}
+.label{font:700 13px/1 "Atkinson Hyperlegible Next";color:var(--violet);background:var(--violet-soft);display:inline-block;padding:7px 10px;border-radius:999px;margin:56px 0 18px}
+/* header (unchanged from the live site, for context) */
+.nav{background:var(--paper);border-bottom:1px solid var(--line)}.nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;font:800 19px "Schibsted Grotesk";text-decoration:none}
+.search{flex:1;max-width:440px;display:flex;align-items:center;gap:8px;background:var(--sunken);border:1px solid var(--line);border-radius:999px;padding:10px 16px;color:var(--muted)}
+.nav .sp{margin-left:auto;display:flex;align-items:center;gap:20px;font-weight:600}
+
+/* 1. HERO — a 2-slide slider; the right side is fully composed */
+.hero{position:relative;overflow:hidden}
+.slides{position:relative;min-height:600px}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .5s ease}.slide.on{opacity:1;visibility:visible;position:relative}
+@media (prefers-reduced-motion:reduce){.slide{transition:none}}
+.hero-grid{display:grid;grid-template-columns:1.02fr 1fr;gap:56px;align-items:center;padding-top:56px;padding-bottom:96px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--violet);background:var(--violet-soft);padding:8px 14px;border-radius:999px;font-size:15px}
+.hero h1{font-size:clamp(44px,5vw,76px);line-height:1.02;font-weight:900;margin:22px 0 20px}
+.hero h1 em{font-style:normal;color:var(--violet)}
+.lead{font-size:20px;color:var(--muted);max-width:560px;margin:0 0 30px}
+.hsearch{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line-strong);border-radius:16px;padding:8px 8px 8px 18px;max-width:560px;box-shadow:var(--shadow)}
+.hsearch input{flex:1;border:0;background:transparent;font:500 17px "Atkinson Hyperlegible Next";color:var(--ink);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.chip{border:1px solid var(--line-strong);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600;background:var(--surface);text-decoration:none}
+.proof{display:flex;gap:28px;margin-top:30px;color:var(--muted);font-size:15px}.proof b{display:block;color:var(--ink);font:800 26px "Schibsted Grotesk"}
+/* collage */
+.stage{position:relative;height:520px}
+.loop{position:absolute;inset:auto -40px 10px -20px;opacity:.55;z-index:0}
+.cover{position:absolute;border-radius:18px;overflow:hidden;background:var(--stage);box-shadow:var(--shadow)}
+.cover img{display:block;width:100%;height:100%;object-fit:cover}
+.c-main{left:8%;top:40px;width:78%;aspect-ratio:16/9;z-index:3}
+.c-back1{right:-2%;top:0;width:42%;aspect-ratio:16/9;transform:rotate(4deg);z-index:2;opacity:.95}
+.c-back2{left:-4%;bottom:56px;width:40%;aspect-ratio:16/9;transform:rotate(-5deg);z-index:2;opacity:.95}
+.card{position:absolute;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);z-index:4}
+.course-card{left:22%;bottom:0;width:62%;padding:18px 20px}
+.course-card .t{font:800 19px/1.2 "Schibsted Grotesk";margin:4px 0 8px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;padding:6px 10px;border-radius:999px}
+.p-mint{background:var(--mint-soft);color:var(--mint)}.p-cyan{background:var(--cyan-soft);color:var(--cyan-ink)}
+.float{padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+.f-prev{right:0;top:52%;}.f-lab{left:0;top:16px}
+.play{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5}
+.slider-ui{position:absolute;left:0;right:0;bottom:28px;z-index:6}
+.slider-ui .wrap{display:flex;align-items:center;gap:12px}
+.dot{width:34px;height:6px;border-radius:6px;background:var(--line-strong);border:0;cursor:pointer;padding:0}.dot.on{background:var(--violet)}
+.arrow{width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);background:var(--surface);cursor:pointer;color:var(--ink);font-size:18px}
+/* slide 2 (instructors) */
+.teach-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;padding-top:56px;padding-bottom:96px}
+.big80{font:900 clamp(90px,11vw,160px)/.9 "Schibsted Grotesk";color:var(--violet);letter-spacing:-.04em}
+.earn{padding:24px;border-radius:20px}
+.earn-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px}.earn-row:last-child{border:0}
+.earn-row b{font:800 18px "Schibsted Grotesk"}.earn-row .you{color:var(--mint);font-size:24px}
+
+/* 2. INSTRUCTOR SECTION (replaces the dark band) */
+.teach{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:48px;box-shadow:var(--shadow)}
+.teach h2{font-size:clamp(34px,3.4vw,48px);line-height:1.06;font-weight:900}
+.points{list-style:none;padding:0;margin:22px 0 28px;display:grid;gap:14px}
+.points li{display:flex;gap:12px;align-items:flex-start;font-size:17px}.ic{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--violet-soft);color:var(--violet)}
+.studio{background:var(--sunken);border-radius:18px;padding:18px;border:1px solid var(--line)}
+.studio .bar{display:flex;gap:6px;margin-bottom:12px}.studio .bar i{width:10px;height:10px;border-radius:50%;background:var(--line-strong)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.kpi{background:var(--surface);border-radius:12px;padding:12px;border:1px solid var(--line)}
+.kpi span{color:var(--muted);font-size:13px}.kpi b{display:block;font:800 22px "Schibsted Grotesk"}
+.chart{background:var(--surface);border-radius:12px;padding:14px;margin-top:10px;border:1px solid var(--line);display:flex;align-items:flex-end;gap:6px;height:120px}
+.chart i{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(var(--violet),var(--cyan))}
+
+/* 3. REGISTER / LOGIN side panel */
+.auth{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:stretch}
+.form{padding:8px 0}.form h2{font-size:44px;font-weight:900}
+.field{margin-top:18px}.field label{display:block;font-weight:700;margin-bottom:8px}
+.field input{width:100%;font:500 16px "Atkinson Hyperlegible Next";padding:14px 16px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.side{position:relative;overflow:hidden;background:var(--stage);color:#e8eaf7;border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:22px}
+.side h3{font-size:24px;font-weight:800;color:#fff}
+.mini{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px}
+.mini img{width:150px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block}
+.mini .t{font:800 17px/1.25 "Schibsted Grotesk";color:#fff}.mini .m{color:#b7bbd8;font-size:14px;margin-top:4px}
+.vlist{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+.vlist li{display:flex;gap:10px;font-size:15px;color:#dfe2f3}.vlist svg{flex:none;color:#58c3f2;margin-top:2px}
+.inside{border-top:1px solid rgba(255,255,255,.12);padding-top:16px}.inside .ih{font-weight:700;color:#fff;margin-bottom:6px}.inside .row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed rgba(255,255,255,.12);font-size:15px;color:#dfe2f3}.inside .row b{color:#58c3f2;white-space:nowrap}
+.accent{position:absolute;right:-60px;bottom:-60px;width:260px;opacity:.35;pointer-events:none}
+
+/* 4. TAUGHT BY PRACTITIONERS */
+.inst{display:grid;grid-template-columns:1.6fr 1fr;gap:24px}
+.icard{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr;gap:22px}
+.mono{width:84px;height:84px;border-radius:22px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:grid;place-items:center}
+.icard h3{font-size:26px;font-weight:800}.role{color:var(--muted);margin:2px 0 12px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tag{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--sunken);color:var(--ink)}
+.stats{display:flex;gap:28px;margin:18px 0}.stats b{font:800 24px "Schibsted Grotesk";display:block}.stats span{color:var(--muted);font-size:14px}
+.thumbs{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.thumbs a{display:block;border-radius:12px;overflow:hidden;position:relative;text-decoration:none}
+.thumbs img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.thumbs span{position:absolute;left:8px;bottom:8px;background:rgba(20,24,51,.85);color:#fff;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px}
+.join{border-radius:22px;padding:28px;background:var(--violet);color:#fff;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.join h3{font-size:28px;font-weight:900;color:#fff}.join p{color:#e2defc}
+.join .k{font:900 64px/1 "Schibsted Grotesk"}
+.steps{margin:14px 0 0;padding-left:20px;display:grid;gap:8px;color:#fff;font-weight:600}
+.join .btn{background:#fff;color:var(--violet);align-self:flex-start}
+.note{color:var(--muted);font-size:14px;margin:10px 0 0}
+section.block{padding-bottom:8px}
+@media (max-width:900px){.hero-grid,.teach-grid,.teach,.auth,.inst{grid-template-columns:1fr}.stage{height:420px}.thumbs{grid-template-columns:repeat(2,1fr)}.vlist{grid-template-columns:1fr}.teach{padding:28px}.nav .search{display:none}.proof{flex-wrap:wrap;gap:16px}}
+@media (max-width:640px){.nav .sp span,.nav .wrap>span{display:none}.brand{font-size:16px}}
+@media (max-width:900px){.stage{height:auto;display:grid;gap:12px}.stage .cover,.stage .card{position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;width:100%;transform:none}.c-back1,.c-back2,.f-lab,.loop{display:none}.slider-ui{position:static;margin:8px 0 24px}.hero-grid,.teach-grid{padding-bottom:24px}.slides{min-height:0}}
+@media (max-width:480px){.wrap{padding:0 16px}.stage{height:360px}.mini{grid-template-columns:1fr}.mini img{width:100%}}
+</style>
+</head>
+<body>
+<div class="review"><div class="wrap"><b>Mockup for approval</b><a href="#s1">1 · Hero slider</a><a href="#s2">2 · Instructor section</a><a href="#s3">3 · Sign-up panel</a><a href="#s4">4 · Taught by practitioners</a><button id="theme">Toggle dark mode</button></div></div>
+
+<div class="nav"><div class="wrap"><a class="brand" href="#"><svg width="40" height="20" viewBox="0 0 40 20"><path d="M10 2a8 8 0 1 0 0 16c5 0 8-8 10-8s5 8 10 8a8 8 0 1 0 0-16c-5 0-8 8-10 8S15 2 10 2Z" fill="none" stroke="#4f3fb0" stroke-width="3.5"/></svg>DevOps Easy Learning</a><span style="font-weight:600">Browse courses</span><div class="search">⌕ Search Kubernetes, MCP agents, Bedrock…</div><div class="sp"><span>Teach on DEL</span><span>Log in</span><a class="btn btn-primary" style="padding:10px 16px" href="#">Join free</a></div></div></div>
+
+<!-- 1. HERO SLIDER -->
+<section class="hero" id="s1" aria-roledescription="carousel" aria-label="Highlights">
+ <div class="wrap"><span class="label">1 · Homepage hero (2-slide slider) — fixes "empty" area</span></div>
+ <div class="slides">
+  <div class="slide on" aria-roledescription="slide" aria-label="1 of 2">
+   <div class="wrap hero-grid">
+    <div>
+     <span class="eyebrow">New · AI for DevOps, 38 lessons with labs</span>
+     <h1>Learn AI and DevOps the way <em>production works.</em></h1>
+     <p class="lead">Every idea explained with a real-life scenario, then built in a hands-on lab you run on your own computer or cloud account.</p>
+     <form class="hsearch" onsubmit="return false"><span>⌕</span><input placeholder="What do you want to build?"><button class="btn btn-primary">Search</button></form>
+     <div class="chips"><a class="chip" href="#">Amazon Bedrock</a><a class="chip" href="#">RAG</a><a class="chip" href="#">AI agents</a><a class="chip" href="#">Kubernetes</a><a class="chip" href="#">MCP</a><a class="chip" href="#">n8n</a></div>
+     <div class="proof"><div><b>38</b>video lessons</div><div><b>4 h</b>of focused video</div><div><b>11</b>downloadable labs</div></div>
+    </div>
+    <div class="stage">
+     <svg class="loop" viewBox="0 0 600 260"><path d="M150 30a100 100 0 1 0 0 200c90 0 210-200 300-200a100 100 0 1 1 0 200c-90 0-210-200-300-200Z" fill="none" stroke="#4f3fb0" stroke-width="16" opacity=".35"/><path d="M150 30a100 100 0 1 0 0 200c90 0 210-200 300-200a100 100 0 1 1 0 200c-90 0-210-200-300-200Z" fill="none" stroke="#1e9bd7" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/></svg>
+     <div class="cover c-back1"><img src="assets/04-bedrock-chatbot-live.jpg" alt=""></div>
+     <div class="cover c-back2"><img src="assets/06-rag-stack-live.jpg" alt=""></div>
+     <div class="cover c-main"><img src="assets/01-tm1-big-words.jpg" alt="AI for DevOps course cover"><span class="play" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M6 3l11 7-11 7z" fill="#4f3fb0"/></svg></span></div>
+     <div class="card float f-lab"><span class="pill p-cyan">Lab ZIP</span>Bedrock chatbot, ready to run</div>
+     <div class="card float f-prev"><span class="pill p-mint">▶ Free preview</span>The big words of AI · 5:56</div>
+     <div class="card course-card"><span class="pill p-cyan">New course</span><div class="t">AI for DevOps: from the vocabulary of AI to agents in production</div><div class="meta"><span>DevOps Easy Learning</span><span>14 sections · 38 lessons</span><span>Beginner → advanced</span><b style="color:var(--ink)">$89.99</b></div></div>
+    </div>
+   </div>
+  </div>
+  <div class="slide" aria-roledescription="slide" aria-label="2 of 2">
+   <div class="wrap teach-grid">
+    <div>
+     <span class="eyebrow">For instructors</span>
+     <h1 style="font-size:clamp(40px,4.4vw,64px)">Teach what you run in production.</h1>
+     <p class="lead">Publish your course on a marketplace built for AI and DevOps engineers, with a fair split you can read before you sign up.</p>
+     <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn-primary" href="#s2">Start teaching</a><a class="btn btn-ghost" href="#s2">See how it works</a></div>
+    </div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center">
+     <div><div class="big80">80%</div><div style="font-weight:700;font-size:18px">of every sale is yours</div></div>
+     <div class="card earn" style="position:relative"><div style="font-weight:700;margin-bottom:6px">Example: one sale at $89.99</div>
+      <div class="earn-row"><span>Course price</span><b>$89.99</b></div><div class="earn-row"><span>Platform (20%)</span><b>$18.00</b></div><div class="earn-row"><span>You keep</span><b class="you">$71.99</b></div>
+      <p class="note">Stripe processing fees apply. Paid to your own Stripe account.</p></div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <div class="slider-ui"><div class="wrap"><button class="arrow" id="prev" aria-label="Previous slide">‹</button><button class="dot on" aria-label="Slide 1"></button><button class="dot" aria-label="Slide 2"></button><button class="arrow" id="next" aria-label="Next slide">›</button></div></div>
+</section>
+
+<!-- 2. INSTRUCTOR SECTION -->
+<section class="block" id="s2"><div class="wrap">
+ <span class="label">2 · Instructor section — replaces the dark "Teach it here" band</span>
+ <div class="teach">
+  <div>
+   <h2>You run it in production. Teach it here, and keep 80% of every sale.</h2>
+   <ul class="points">
+    <li><span class="ic">▤</span><div><b>A studio that guides you.</b> Details, media, curriculum, quizzes and pricing, step by step, with a readiness checklist.</div></li>
+    <li><span class="ic">⛨</span><div><b>Private video hosting.</b> Signed, expiring playback links. No public video URLs.</div></li>
+    <li><span class="ic">$</span><div><b>Paid through Stripe.</b> Your share goes to your own Stripe account automatically.</div></li>
+   </ul>
+   <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn-primary" href="#">Start teaching</a><a class="btn btn-ghost" href="#">How it works</a></div>
+  </div>
+  <div class="studio" aria-label="Instructor studio preview">
+   <div class="bar"><i></i><i></i><i></i></div>
+   <div class="kpis"><div class="kpi"><span>Revenue (30 days)</span><b>$1,439</b></div><div class="kpi"><span>Students</span><b>20</b></div><div class="kpi"><span>Rating</span><b>4.8</b></div></div>
+   <div class="chart" aria-hidden="true"><i style="height:30%"></i><i style="height:42%"></i><i style="height:38%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:66%"></i><i style="height:60%"></i><i style="height:78%"></i><i style="height:72%"></i><i style="height:90%"></i></div>
+   <p class="note">Illustrative studio preview (example numbers).</p>
+  </div>
+ </div>
+</div></section>
+
+<!-- 3. SIGN-UP PANEL -->
+<section class="block" id="s3"><div class="wrap">
+ <span class="label">3 · Sign-up / login page — side panel redesigned</span>
+ <div class="auth">
+  <div class="form"><h2>Create your account</h2><p class="lead" style="font-size:18px;margin:8px 0 6px">Free to join. Pay only for the courses you choose.</p>
+   <div class="field"><label>Full name</label><input></div><div class="field"><label>Email</label><input></div><div class="field"><label>Password</label><input type="password"><p class="note">At least 10 characters. A short sentence works well.</p></div>
+   <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:18px">Create account</button><p style="text-align:center">Already have an account? <a href="#" style="color:var(--violet);font-weight:700">Log in</a></p></div>
+  <aside class="side">
+   <h3>Start with the course everyone asks about</h3>
+   <div class="mini"><img src="assets/01-tm1-big-words.jpg" alt=""><div><div class="t">AI for DevOps: from the vocabulary of AI to agents in production</div><div class="m">14 sections · 38 lessons · 11 labs</div><span class="pill p-mint" style="margin-top:8px">▶ 4 free previews</span></div></div>
+   <div class="inside"><div class="ih">What's inside</div>
+    <div class="row"><span>Before AI and the vocabulary of AI</span><b>16 lessons</b></div>
+    <div class="row"><span>Cloud AI on AWS and Azure, agents and RAG</span><b>11 lessons</b></div>
+    <div class="row"><span>Hands-on labs: chatbots, RAG, troubleshooting agents</span><b>9 labs</b></div>
+    <div class="row"><span>Automation, CI/CD and MCP</span><b>growing</b></div></div>
+   <ul class="vlist">
+    <li><svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>Watch free previews before you buy</li>
+    <li><svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>Resume any lesson where you stopped</li>
+    <li><svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>Run every lab on your own computer</li>
+    <li><svg width="18" height="18" viewBox="0 0 18 18"><path d="M3 9.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>Earn a verifiable certificate</li>
+   </ul>
+  </aside>
+ </div>
+</div></section>
+
+<!-- 4. TAUGHT BY PRACTITIONERS -->
+<section class="block" id="s4" style="padding-bottom:80px"><div class="wrap">
+ <span class="label">4 · "Taught by practitioners" — instructor showcase</span>
+ <h2 style="font-size:40px;font-weight:900">Taught by practitioners</h2>
+ <p class="lead" style="margin:6px 0 24px">Every instructor is reviewed before they publish, and every course is checked before it goes live.</p>
+ <div class="inst">
+  <article class="icard">
+   <div class="mono" aria-hidden="true"><svg width="54" height="27" viewBox="0 0 40 20"><path d="M10 2a8 8 0 1 0 0 16c5 0 8-8 10-8s5 8 10 8a8 8 0 1 0 0-16c-5 0-8 8-10 8S15 2 10 2Z" fill="none" stroke="#fff" stroke-width="3.5"/></svg></div>
+   <div><h3>DevOps Easy Learning</h3><div class="role">Practical AI and DevOps training for engineers</div>
+    <div class="tags"><span class="tag">AWS Bedrock</span><span class="tag">Azure AI Foundry</span><span class="tag">RAG</span><span class="tag">AI agents</span><span class="tag">Kubernetes</span></div>
+    <div class="stats"><div><b>1</b><span>course</span></div><div><b>38</b><span>lessons</span></div><div><b>11</b><span>labs</span></div></div>
+    <a href="#" style="color:var(--violet);font-weight:700">View profile</a></div>
+   <div class="thumbs"><a href="#"><img src="assets/01-tm1-big-words.jpg" alt=""><span>The big words of AI</span></a><a href="#"><img src="assets/04-bedrock-chatbot-live.jpg" alt=""><span>Bedrock chatbot lab</span></a><a href="#"><img src="assets/06-rag-stack-live.jpg" alt=""><span>RAG stack lab</span></a><a href="#"><img src="assets/09-k8s-doctor-live.jpg" alt=""><span>Kubernetes doctor</span></a></div>
+  </article>
+  <aside class="join"><div><div class="k">80%</div><h3>Your course could be here</h3><p>Apply, build in the studio, pass review, and keep 80% of every sale.</p><ol class="steps"><li>Apply in two minutes</li><li>Build your course in the studio</li><li>We review it, you publish, you get paid</li></ol></div><a class="btn" href="#">Become an instructor</a></aside>
+ </div>
+ <p class="note">Numbers shown are real counts only (no ratings until real students review). The card repeats for each approved instructor.</p>
+</div></section>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')],dots=[...document.querySelectorAll('.dot')];let i=0,t;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function go(n){i=(n+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('on',k===i));dots.forEach((d,k)=>d.classList.toggle('on',k===i));}
+function auto(){clearInterval(t);if(!reduce)t=setInterval(()=>go(i+1),7000);}
+dots.forEach((d,k)=>d.onclick=()=>{go(k);auto();});document.getElementById('prev').onclick=()=>{go(i-1);auto();};document.getElementById('next').onclick=()=>{go(i+1);auto();};
+const hero=document.querySelector('.hero');hero.addEventListener('mouseenter',()=>clearInterval(t));hero.addEventListener('mouseleave',auto);auto();
+document.getElementById('theme').onclick=()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';};
+</script>
+</body>
+</html>
