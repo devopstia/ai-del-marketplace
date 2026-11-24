@@ -55,7 +55,8 @@ the learner's computer or VM with our lab ZIPs.
    generated cover only as fallback, never with duplicated titles), course page (fix the "Preview this course" overlap, fill the
    page purposefully: what you'll build, lab files list, last verified badge, curriculum, instructor, reviews), player (mobile-first,
    no clipped Notes tab), studio and admin mobile layouts (cards instead of clipped tables), no large empty page bottoms.
-5. Screenshots of every changed page at 1440/390, light/dark, reviewed before done.
+5. **Homepage hero = 2-slide slider** (owner, 2026-11-24: "we should have 2 slider landing page"): slide 1 learners (learn AI and DevOps the way production works, real course art, search), slide 2 instructors (Teach on DEL, you keep 80%, CTA Start teaching). Auto-advance ~7 s, pause on hover/focus, arrows + dots, swipe, keyboard/ARIA, no auto-advance with reduced motion, no layout shift.
+6. Screenshots of every changed page at 1440/390, light/dark, reviewed before done.
 
 ## C. Done means (AGENTS.md rule 10)
 API unit + e2e green, `scripts/smoke-api.sh` green (extend for revisions, pagination, order detail, featured instructors),
