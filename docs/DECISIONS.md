@@ -36,3 +36,13 @@
   `backup/phase1-2026-11-24`. Work continues on `feat/redesign-plan`. Restore any path with
   `git checkout checkpoint-2026-11-24-discovery -- <path>`.
 - Approved design still `design-approved-2026-11-24` (`9b0170e`). No code changes until the owner approves `docs/ROADMAP.md` v2.
+
+## 2026-11-24: owner approval of roadmap v2 and payment/AI decisions
+- Roadmap v2 order approved; Step 0 (truthfulness fixes) starts now; one phase at a time, screenshots at 390/1440/1920, owner OK before the next.
+- **DEL owns and operates the marketplace**, has its own Stripe (platform) account and is the super admin organisation. The owner must be able to switch between the super admin dashboard (whole marketplace) and the DEL instructor dashboard (DEL's own courses).
+- Independent instructors connect their own Stripe accounts (Connect). Super admin may configure an authorised arrangement so an instructor's revenue is paid to DEL instead (instructor's agreement required, within Stripe's supported models).
+- **Commission: 80% instructor / 20% platform, calculated on the amount after Stripe processing fees** (e.g. $100, $3 fee → $97 → $77.60 / $19.40), with taxes, refunds and adjustments accounted for; documented formula. DEL courses: revenue attributed to DEL, no self-transfer.
+- **Per-instructor commission overrides**: super admin only, audited; instructors see their rate and how earnings are calculated.
+- **Refunds**: start from a 14-day policy for eligible purchases; research and recommend; define eligibility, instructor responsibilities, commission reversals, disputes; do not assume refunds only before payouts.
+- **No AI integration at this stage** (Phase 7 deferred).
+- The Stripe Connect flow, commission calculation and refund handling must be presented for approval **before** any payment code changes.
