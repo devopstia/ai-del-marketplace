@@ -97,6 +97,17 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect.poll(() => page.locator("video").getAttribute("src")).toContain("http");
     await expect(page.getByRole("navigation", { name: "Course content" }).first()).toBeAttached();
   });
+  test("refund from the receipt (within 14 days, little watched)", async ({ page }) => {
+    await login(page, email, password, "/orders");
+    const href = await page.getByRole("link", { name: "Receipt" }).first().getAttribute("href");
+    await page.goto(href!);
+    const panel = page.getByTestId("refund-panel");
+    await expect(panel).toContainText("within 14 days");
+    await panel.getByRole("checkbox").first().check();
+    await panel.getByTestId("request-refund").click();
+    await page.getByTestId("confirm-learner-refund").click();
+    await expect(page.getByText(/Refund issued/)).toBeVisible();
+  });
 });
 
 test.describe.serial("instructor publishes, admin approves", () => {
@@ -176,6 +187,19 @@ test.describe.serial("instructor publishes, admin approves", () => {
     await page.goto(`/courses?q=${encodeURIComponent(title)}`);
     await page.getByTestId("course-row").first().click();
     await expect(page.getByText(subtitle).first()).toBeVisible();
+  });
+
+  test("admin Money page reconciles and DEL Studio switch works", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/finance");
+    await expect(page.getByRole("heading", { name: "Money" })).toBeVisible();
+    await expect(page.getByText(/paid orders add up/)).toBeVisible();
+    await page.getByTestId("open-del-studio").first().click();
+    await expect(page.getByTestId("acting-banner")).toContainText("DevOps Easy Learning");
+    await page.goto("/studio/sales");
+    await expect(page.getByTestId("terms-note")).toContainText("DEL");
+    await page.getByTestId("back-to-admin").first().click();
+    await expect(page).toHaveURL(/\/admin$/);
   });
 
   test("admin role changes ask for confirmation", async ({ page }) => {
