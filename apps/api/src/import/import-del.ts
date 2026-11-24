@@ -26,7 +26,7 @@ import { PrismaClient } from '../generated/prisma/client';
 import type { CourseLevel } from '../generated/prisma/enums';
 import type { CourseTree, TreeLecture, TreeQuestion, TreeSection } from '../instructor/course-tree';
 import { applyTree } from '../instructor/revisions.service';
-import { CATALOGUE, DEMO_DEL_SLUGS, FAKE_REVIEWER_EMAILS, priceForDuration } from './del-catalogue';
+import { AI_FOR_DEVOPS, AI_FOR_DEVOPS_PREVIEW_SECTIONS, AI_FOR_DEVOPS_PRICE_CENTS, CATALOGUE, DEMO_DEL_SLUGS, FAKE_REVIEWER_EMAILS } from './del-catalogue';
 import { srtToVtt } from './srt';
 import { defaultExportString, firstArgOfCall, isCall, LiteralReader, ParseError } from './js-literal';
 
@@ -148,32 +148,26 @@ async function main() {
       return size;
     };
 
+    // Owner (2026-11-24): ONE well-structured course, "AI for DevOps": every finished video, from every folder, is a lecture.
     const importedSlugs: string[] = [];
-    let freeCourseId: string | null = null;
+    const def = AI_FOR_DEVOPS;
+    const firstId = def.sections[0].ids[0];
+    const categoryId = categories.get(def.category);
+    if (!categoryId) throw new Error(`Category ${def.category} is missing: run the seed first`);
+    const lectures = new Map<string, TreeLecture>();
+    const videos: (Video & { dir: string })[] = [];
+    let lastVerified = 0;
+    let thumbnailKey: string | null = null;
     const folders = readdirSync(outDir, { withFileTypes: true }).filter((d) => d.isDirectory() && /^\d+-/.test(d.name)).map((d) => d.name).sort();
     for (const folder of folders) {
       const dir = join(outDir, folder);
-      const category = folder.replace(/^\d+-/, '');
-      const videos: Video[] = readdirSync(dir)
-        .map((f) => /^(\d+)-(.+)\.mp4$/.exec(f))
-        .filter((m): m is RegExpExecArray => !!m)
-        .map((m) => ({ nn: m[1], id: m[2], mp4: join(dir, m[0]), plan: planById.get(m[2]) }))
-        .sort((a, b) => (a.plan?.order ?? Number(a.nn)) - (b.plan?.order ?? Number(b.nn)) || a.nn.localeCompare(b.nn));
-      if (!videos.length) continue;
-      const def = CATALOGUE[category];
-      if (!def) {
-        warn(`no course definition for ${folder} (${videos.length} videos): skipped; add it to del-catalogue.ts`);
-        continue;
+      for (const f of readdirSync(dir)) {
+        const m = /^(\d+)-(.+)\.mp4$/.exec(f);
+        if (m) videos.push({ nn: m[1], id: m[2], mp4: join(dir, m[0]), plan: planById.get(m[2]), dir });
       }
-      const categoryId = categories.get(def.category);
-      if (!categoryId) throw new Error(`Category ${def.category} is missing: run the seed first`);
-      log(`${folder}: ${videos.length} videos → ${def.title}`);
-
-      const previews = videos.length >= 3 ? 2 : videos.length - 1; // never the whole course
-      const lectures = new Map<string, TreeLecture>();
-      let lastVerified = 0;
-      let thumbnailKey: string | null = null;
-      for (const [i, v] of videos.entries()) {
+    }
+    log(`${videos.length} finished videos in ${folders.length} folders → ${def.title}`);
+    for (const v of videos) {
         if (!v.plan) warn(`${v.id}: not in plan.mjs (title from the file name)`);
         const assetId = stableId(`video:${v.id}`);
         const videoKey = `videos/del-${v.id}/source.mp4`;
@@ -183,7 +177,7 @@ async function main() {
         totals.durationSec += durationSec;
 
         let captionsKey: string | null = null;
-        const srt = join(dir, 'captions', `${v.nn}-${v.id}.en.srt`);
+        const srt = join(v.dir, 'captions', `${v.nn}-${v.id}.en.srt`);
         if (existsSync(srt)) {
           captionsKey = `videos/del-${v.id}/captions.en.vtt`;
           await storage.put(captionsKey, srtToVtt(readFileSync(srt, 'utf8')), 'text/vtt');
@@ -196,18 +190,18 @@ async function main() {
           update: { ownerId: del.id, provider: 'local', status: 'ready', storageKey: videoKey, durationSec, captionsKey, error: null },
         });
 
-        const thumb = join(dir, `${v.nn}-${v.id}-thumbnail.png`);
-        if (i === 0 && existsSync(thumb)) {
+        const thumb = join(v.dir, `${v.nn}-${v.id}-thumbnail.png`);
+        if (!thumbnailKey && v.id === firstId && existsSync(thumb)) {
           thumbnailKey = `images/${del.id}/del-${v.id}.png`;
           await upload(thumbnailKey, thumb, 'image/png');
         }
 
         const resources = [];
-        const zip = join(dir, `${v.nn}-${v.id}-lab.zip`);
+        const zip = join(v.dir, `${v.nn}-${v.id}-lab.zip`);
         if (existsSync(zip)) {
           const key = `resources/${del.id}/del-${v.id}/${v.nn}-${v.id}-lab.zip`;
           const sizeBytes = await upload(key, zip, 'application/zip');
-          resources.push({ id: stableId(`resource:${v.id}:lab`), title: 'Lab files (ZIP)', storageKey: key, sizeBytes, mime: 'application/zip' });
+          resources.push({ id: stableId(`resource:${def.slug}:${v.id}:lab`), title: 'Lab files (ZIP)', storageKey: key, sizeBytes, mime: 'application/zip' });
           totals.resources++;
         }
 
@@ -229,10 +223,10 @@ async function main() {
         }
 
         lectures.set(v.id, {
-          id: stableId(`lecture:${v.id}`),
+          id: stableId(`lecture:${def.slug}:${v.id}`),
           title: lectureTitle(v.plan?.title ?? v.id.replace(/-/g, ' ')),
           type: 'video',
-          isPreview: i < previews,
+          isPreview: false,
           articleMd: null,
           summary,
           videoAssetId: assetId,
@@ -240,66 +234,80 @@ async function main() {
           resources,
           quiz,
         });
-      }
-
-      // Sections from the catalogue, in plan order inside each; unlisted videos go to the last section.
-      const listed = new Set(def.sections.flatMap((s) => s.ids));
-      const sections: TreeSection[] = def.sections
-        .map((s) => ({ id: stableId(`section:${def.slug}:${s.title}`), title: s.title, lectures: videos.filter((v) => s.ids.includes(v.id)).map((v) => lectures.get(v.id)!) }))
-        .filter((s) => s.lectures.length);
-      const extra = videos.filter((v) => !listed.has(v.id));
-      if (extra.length) {
-        warn(`${folder}: ${extra.map((v) => v.id).join(', ')} not in a section: added to "More lessons"`);
-        sections.push({ id: stableId(`section:${def.slug}:more`), title: 'More lessons', lectures: extra.map((v) => lectures.get(v.id)!) });
-      }
-      for (const s of def.sections) for (const id of s.ids) if (!lectures.has(id)) warn(`${def.slug}: "${id}" has no finished video yet`);
-      // Preview flags follow the final order (first two lectures of the course).
-      sections.flatMap((s) => s.lectures).forEach((l, i) => (l.isPreview = i < previews));
-
-      const courseDuration = sections.flatMap((s) => s.lectures).reduce((n, l) => n + l.durationSec, 0);
-      const audiences = videos.map((v) => v.plan?.audience ?? '');
-      const tree: CourseTree = {
-        version: 1,
-        course: {
-          title: def.title,
-          subtitle: def.subtitle,
-          description: def.description,
-          language: 'en',
-          level: levelOf(audiences),
-          objectives: def.objectives,
-          requirements: def.requirements,
-          priceCents: def.free ? 0 : priceForDuration(courseDuration),
-          categoryId,
-          thumbnailKey,
-          promoVideoAssetId: null,
-        },
-        sections,
-      };
-
-      const existing = await prisma.course.findUnique({ where: { slug: def.slug } });
-      if (existing && existing.instructorId !== del.id) throw new Error(`Slug ${def.slug} belongs to another instructor`);
-      const courseId = existing?.id ?? stableId(`course:${def.slug}`);
-      await prisma.$transaction(
-        async (tx) => {
-          if (!existing) {
-            await tx.course.create({ data: { id: courseId, slug: def.slug, instructorId: del.id, title: def.title, status: 'published', publishedAt: new Date() } });
-          }
-          await applyTree(tx, courseId, tree, { ownerId: del.id, requireReady: true });
-          await tx.course.update({
-            where: { id: courseId },
-            data: { status: 'published', publishedAt: existing?.publishedAt ?? new Date(), lastVerifiedAt: new Date(lastVerified), reviewNote: null },
-          });
-          // An import is the source of truth for DEL's catalogue: an open studio revision would be stale.
-          await tx.courseRevision.updateMany({ where: { courseId, status: { in: ['draft', 'in_review', 'changes_requested'] } }, data: { status: 'rejected', reviewNote: 'Replaced by a catalogue import' } });
-        },
-        { timeout: 120_000, maxWait: 10_000 },
-      );
-      if (def.free) freeCourseId = courseId;
-      importedSlugs.push(def.slug);
-      totals.courses++;
-      totals.lectures += videos.length;
-      log(`  ${existing ? 'updated' : 'created'}: ${def.slug} · ${videos.length} lectures · ${Math.round(courseDuration / 60)} min · ${tree.course.priceCents ? `$${(tree.course.priceCents / 100).toFixed(2)}` : 'free'} · ${tree.course.level}`);
     }
+
+    // Sections in teaching order; videos not listed go to "More lessons" (never silently dropped).
+    const listed = new Set(def.sections.flatMap((s) => s.ids));
+    const byId = new Map(videos.map((v) => [v.id, v]));
+    const sections: TreeSection[] = def.sections
+      .map((s) => ({ id: stableId(`section:${def.slug}:${s.title}`), title: s.title, lectures: s.ids.filter((id) => byId.has(id)).map((id) => lectures.get(id)!) }))
+      .filter((s) => s.lectures.length);
+    const extra = videos.filter((v) => !listed.has(v.id));
+    if (extra.length) {
+      warn(`${extra.map((v) => v.id).join(', ')} not in a section: added to "More lessons"`);
+      sections.push({ id: stableId(`section:${def.slug}:more`), title: 'More lessons', lectures: extra.map((v) => lectures.get(v.id)!) });
+    }
+    for (const s of def.sections) for (const id of s.ids) if (!byId.has(id)) warn(`"${id}" has no finished video yet (section "${s.title}")`);
+    // Free previews: the first lecture of a few sections, a taste of every part of the course.
+    for (const s of sections) if (AI_FOR_DEVOPS_PREVIEW_SECTIONS.includes(s.title) && s.lectures[0]) s.lectures[0].isPreview = true;
+
+    const courseDuration = sections.flatMap((s) => s.lectures).reduce((n, l) => n + l.durationSec, 0);
+    const lectureCount = sections.reduce((n, s) => n + s.lectures.length, 0);
+    const tree: CourseTree = {
+      version: 1,
+      course: {
+        title: def.title,
+        subtitle: def.subtitle,
+        description: def.description,
+        language: 'en',
+        level: 'beginner',
+        objectives: def.objectives,
+        requirements: def.requirements,
+        priceCents: AI_FOR_DEVOPS_PRICE_CENTS,
+        categoryId,
+        thumbnailKey,
+        promoVideoAssetId: null,
+      },
+      sections,
+    };
+    const existing = await prisma.course.findUnique({ where: { slug: def.slug } });
+    if (existing && existing.instructorId !== del.id) throw new Error(`Slug ${def.slug} belongs to another instructor`);
+    const courseId = existing?.id ?? stableId(`course:${def.slug}`);
+    await prisma.$transaction(
+      async (tx) => {
+        if (!existing) {
+          await tx.course.create({ data: { id: courseId, slug: def.slug, instructorId: del.id, title: def.title, status: 'published', publishedAt: new Date() } });
+        }
+        // Keep the price the instructor may have set in the studio on re-imports.
+        if (existing) tree.course.priceCents = existing.priceCents;
+        await applyTree(tx, courseId, tree, { ownerId: del.id, requireReady: true });
+        await tx.course.update({
+          where: { id: courseId },
+          data: { status: 'published', publishedAt: existing?.publishedAt ?? new Date(), lastVerifiedAt: new Date(lastVerified), reviewNote: null },
+        });
+        await tx.courseRevision.updateMany({ where: { courseId, status: { in: ['draft', 'in_review', 'changes_requested'] } }, data: { status: 'rejected', reviewNote: 'Replaced by a catalogue import' } });
+      },
+      { timeout: 180_000, maxWait: 10_000 },
+    );
+    importedSlugs.push(def.slug);
+    totals.courses++;
+    totals.lectures += lectureCount;
+    log(`  ${existing ? 'updated' : 'created'}: ${def.slug} · ${sections.length} sections · ${lectureCount} lectures · ${Math.round(courseDuration / 60)} min · $${(tree.course.priceCents / 100).toFixed(2)}`);
+
+    // The earlier separate DEL courses (one per folder) are folded into this one.
+    for (const slug of Object.values(CATALOGUE).map((c) => c.slug)) {
+      const c = await prisma.course.findFirst({ where: { slug, instructorId: del.id } });
+      if (!c) continue;
+      if (await prisma.orderLine.count({ where: { courseId: c.id } })) {
+        await prisma.course.update({ where: { id: c.id }, data: { status: 'unpublished', reviewNote: 'Folded into the AI for DevOps course' } });
+        await prisma.cartItem.deleteMany({ where: { courseId: c.id } });
+        log(`separate course unpublished (it has orders): ${slug}`);
+      } else {
+        await prisma.course.delete({ where: { id: c.id } });
+        log(`separate course removed: ${slug}`);
+      }
+    }
+    const freeCourseId: string | null = courseId;
 
     // The seed's demo DEL courses are replaced by the real ones.
     for (const slug of DEMO_DEL_SLUGS) {
@@ -324,11 +332,11 @@ async function main() {
     await prisma.enrollment.deleteMany({ where: { userId: { in: fakeIds }, source: 'admin' } });
     log(`invented reviews removed: ${removedReviews.count}`);
 
-    // The demo student keeps a course in My learning: the free AI Foundations course.
+    // The demo student keeps the course in My learning (a demo enrolment, not a purchase).
     const student = await prisma.user.findUnique({ where: { email: 'student@del.example' }, select: { id: true } });
     if (student && freeCourseId) {
       const key = { userId_courseId: { userId: student.id, courseId: freeCourseId } };
-      if (!(await prisma.enrollment.findUnique({ where: key }))) await prisma.enrollment.create({ data: { userId: student.id, courseId: freeCourseId, source: 'free' } });
+      if (!(await prisma.enrollment.findUnique({ where: key }))) await prisma.enrollment.create({ data: { userId: student.id, courseId: freeCourseId, source: 'admin' } });
       touched.add(freeCourseId);
     }
 

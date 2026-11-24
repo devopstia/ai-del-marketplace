@@ -181,3 +181,53 @@ export function priceForDuration(totalSec: number): number {
 export const DEMO_DEL_SLUGS = ['ai-foundations-for-devops-engineers', 'ai-powered-cicd-with-github-actions', 'build-mcp-servers-and-ai-agents', 'cloud-ai-on-aws-bedrock-and-azure'];
 /** Seed reviewer accounts whose reviews were invented; the import removes those reviews (no fake ratings). */
 export const FAKE_REVIEWER_EMAILS = ['priya@student.example', 'marco@student.example', 'lena@student.example'];
+
+/**
+ * Owner (2026-11-24): "one well structured course" — every DEL video is a lecture of ONE course, AI for DevOps, organised as
+ * a learning path. Sections list video ids in teaching order; videos not finished yet are skipped with a warning and appear
+ * automatically when they exist. The per-folder CATALOGUE above is kept only to remove those older separate courses.
+ */
+export const AI_FOR_DEVOPS: CatalogueCourse = {
+  slug: 'ai-for-devops',
+  category: 'ai-for-devops',
+  title: 'AI for DevOps: from the vocabulary of AI to agents in production',
+  subtitle: 'Learn AI the way DevOps engineers use it: every idea explained with a real-life scenario, then built in a hands-on lab',
+  description:
+    'A complete path for DevOps and cloud engineers who want to use AI with confidence. You start with how problems were solved before AI and the vocabulary every AI conversation uses, explained with everyday scenarios. Then you see what AI changes in real operations work, choose the right cloud AI service on AWS and Azure, understand agents and RAG, and learn what it takes to run an LLM application in production.\n\nThe second half is hands-on: live labs on AWS, Azure and Docker where you build chatbots on Amazon Bedrock and Azure AI Foundry, complete RAG systems with Terraform, and troubleshooting agents for Docker and Kubernetes. Every lab ships as a ZIP you run on your own computer or a cheap cloud VM, with clean-up steps that delete only what you created. Each lesson ends with a short quiz.',
+  objectives: [
+    'Use the vocabulary of AI correctly: models, tokens, context, embeddings, RAG, agents, hosting and AI security',
+    'Choose the right AWS or Azure AI service, and decide between prompting, RAG and fine-tuning',
+    'Build AI chatbots on Amazon Bedrock and Azure AI Foundry with least privilege and keys kept server-side',
+    'Build complete RAG systems on Docker, Azure and AWS with Terraform',
+    'Run troubleshooting agents with allow-lists, human approval, verification and reports',
+    'Operate LLM applications: versions, evaluation, knowledge freshness, cost and security',
+  ],
+  requirements: [
+    'No AI experience needed: the course starts from the basics',
+    'Comfort with a terminal for the labs',
+    'Docker on your computer or a cloud VM; an AWS account (free tier is enough for most labs); Azure only for the Azure labs, or your own API key',
+  ],
+  sections: [
+    { title: 'Before AI: how problems were solved', ids: ['computers-before-ai', 'devops-before-ai', 'short-history-of-ai', 'what-is-machine-learning'] },
+    { title: 'AI vocabulary: the big words', ids: ['tm1-big-words', 'tm2-practice-architecture-application', 'tm3-model-words'] },
+    { title: 'AI vocabulary: talking to a model and judging its answers', ids: ['tm4-talking-to-a-model', 'tm5-answer-quality'] },
+    { title: 'AI vocabulary: RAG', ids: ['tm6-rag-words-preparing', 'tm7-embeddings-vectors', 'tm8-rag-search-answer', 'tm9-where-data-lives'] },
+    { title: 'AI vocabulary: agents, running and securing AI', ids: ['tm10-agent-words', 'tm11-running-models', 'tm12-operating-securing'] },
+    { title: 'By hand vs. with AI', ids: ['devops-with-ai'] },
+    { title: 'Cloud AI services on AWS and Azure', ids: ['aws-ai-services-map', 'azure-ai-services-map', 'choosing-ai-service', 'amazon-bedrock-explained', 'azure-ai-foundry-explained'] },
+    { title: 'Agents and RAG: the ideas', ids: ['s1-skill-based-agents', 'r10-kagent-explained', 'r7-one-architecture-three-implementations'] },
+    { title: 'AI in production', ids: ['r1-llmops-day-to-day', 'r6-who-builds-who-runs', 'r8-managed-or-self-hosted'] },
+    { title: 'Lab: first steps in the cloud', ids: ['s3-help-site-live'] },
+    { title: 'Lab: AI chatbots on Azure and AWS', ids: ['azure-foundry-model-live', 'bedrock-chatbot-live', 'foundry-chat-live'] },
+    { title: 'Lab: RAG systems', ids: ['rag-stack-live', 'azure-rag-live', 'aws-rag-live'] },
+    { title: 'Lab: troubleshooting agents', ids: ['k8s-doctor-live', 's2-docker-skill-agents-live'] },
+    { title: 'Automation with n8n and Mattermost', ids: ['n1-n8n-mattermost-explained'] },
+    { title: 'AI in CI/CD pipelines', ids: ['ci1-ai-in-cicd'] },
+    { title: 'Model Context Protocol (MCP)', ids: ['m1-what-is-mcp', 'm2-inside-mcp'] },
+  ],
+};
+
+/** Default price of the single course (DEL can change it in the studio). */
+export const AI_FOR_DEVOPS_PRICE_CENTS = 8999;
+/** Free previews: the first lecture of each of these sections (a taste of every part of the course). */
+export const AI_FOR_DEVOPS_PREVIEW_SECTIONS = ['Before AI: how problems were solved', 'AI vocabulary: the big words', 'Cloud AI services on AWS and Azure', 'Lab: AI chatbots on Azure and AWS'];
