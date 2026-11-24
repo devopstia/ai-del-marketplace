@@ -77,3 +77,15 @@
   recover), per-instructor terms and "pay to DEL" (super admin only, audited), commission setting super-admin only, finance
   overview with reconciliation checks, immediate-access consent at checkout. Stripe calls are tested with a fake client;
   real Stripe test-mode runs need the owner's test keys.
+
+## 2026-11-24: Steps 2–7 implemented (owner: "please do … Steps 2–7 … and the payment work"), awaiting review
+Each step has its own rollback tag and commit (branches stacked: feat/step1-home → feat/payments → feat/step2-course →
+feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-studio → feat/step7-admin). Undo one step with
+`git checkout checkpoint-2026-11-24-<step> -- <paths>`.
+- Step 2 course page (`checkpoint-2026-11-24-step2-course`): refund line by the buy button, captions/quizzes in "includes", FAQ from real policy.
+- Step 3 /teach (`…-step3-teach`): real share from the API, after-fee formula, payout timing, worked $100 example.
+- Step 4 player (`…-step4-player`): lesson summary shown (was never displayed), Up next, Lab files tab only when a lesson has files.
+- Step 5 My learning (`…-step5-learning`): honest resume label, no half-empty suggestion grid.
+- Step 6 studio (`…-step6-studio`): DEL Studio switch for super admins (audit names the real person), terms note, per-sale fee and payout status.
+- Step 7 admin (`…-step7-admin`): Money page (totals, reconciliation, refund requests, disputes), Edit terms per instructor, super-admin-only commission.
+- Screenshots: `docs/design/steps2-7-2026-11-24/`.
