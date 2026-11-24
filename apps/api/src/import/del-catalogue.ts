@@ -221,9 +221,10 @@ export const AI_FOR_DEVOPS: CatalogueCourse = {
     { title: 'Lab: AI chatbots on Azure and AWS', ids: ['azure-foundry-model-live', 'bedrock-chatbot-live', 'foundry-chat-live'] },
     { title: 'Lab: RAG systems', ids: ['rag-stack-live', 'azure-rag-live', 'aws-rag-live'] },
     { title: 'Lab: troubleshooting agents', ids: ['k8s-doctor-live', 's2-docker-skill-agents-live'] },
-    { title: 'Automation with n8n and Mattermost', ids: ['n1-n8n-mattermost-explained'] },
+    { title: 'Automation with n8n and Mattermost', ids: ['n1-n8n-mattermost-explained', 'n2-deploy-n8n-mattermost-live'] },
     { title: 'AI in CI/CD pipelines', ids: ['ci1-ai-in-cicd'] },
     { title: 'Model Context Protocol (MCP)', ids: ['m1-what-is-mcp', 'm2-inside-mcp'] },
+    { title: 'Claude Code: its files and settings', ids: ['cc1-claude-md-in-depth'] },
   ],
 };
 
