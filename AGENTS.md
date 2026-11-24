@@ -35,6 +35,14 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     modification slowly. Only front"). The big Phase 1 front-end redesign was rejected and reverted (kept only in
     `git stash` "rejected-front-upgrade-2026-11-24" for reference; don't re-apply it wholesale). Change ONE page/section at a time,
     show the owner screenshots (390/1440/1920), wait for OK, then the next. Never run a parallel bulk redesign.
+13. **Always preserve the approved design before changing it** (owner, 2026-11-24, mandatory): before modifying an existing
+    design, make sure the current working version is committed, mark it with an annotated tag (`design-approved-<date>`) and a
+    `backup/…` branch, record the hash, and do the work on a dedicated `feat/…` branch. Never merge or deploy a redesign without the
+    owner's approval. Rollback on request: `git checkout <tag> -- apps/web` (or the affected paths) on the working branch, then
+    rebuild the web container; unrelated work stays. Current approved design: tag `design-approved-2026-11-24` = commit `9b0170e`.
+14. **Natural, not AI-generated design** (owner, 2026-11-24): clean typography, consistent spacing, proper alignment, professional
+    colour; avoid excessive gradients, glows, repetitive cards, oversized headings, needless animation and decoration. Improve the
+    existing identity, don't replace it. Preserve the course listing and course detail pages (owner likes them).
 10. **Done means tested**: `npm test -w apps/api` (unit + e2e), `./scripts/smoke-api.sh`, `npm run typecheck && npm run lint -w apps/web`,
     Playwright `npm run test:e2e -w apps/web` (wait ~60 s after the API smoke run: register is rate-limited per IP), all green on a
     fresh stack (`docker compose down -v`), then reseed for a clean demo.

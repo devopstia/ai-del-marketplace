@@ -17,6 +17,7 @@
 | 2026-11-24 | **Captions available but OFF by default**; the student can turn them on | Owner: "Turn off the transcript by default. a student can add it if they want" (refines "no transcript on the video") |
 | 2026-11-24 | Phase 1 front-end redesign **rejected and reverted**; front-end changes from now on one small step at a time, each reviewed by the owner. Back-end Phase 1 kept | Owner |
 | 2026-11-24 | **One course: "AI for DevOps"** with all DEL videos as a structured learning path (14 sections); the 8 per-folder courses removed; default price $89.99 (changeable); Nadia's demo courses unpublished so only this course is listed | Owner: "just one well structure course… AI for DevOps" |
+| 2026-11-24 | Approved design preserved: tag `design-approved-2026-11-24` (commit `9b0170e`) + branch `backup/design-approved-2026-11-24`; landing-page redesign on `feat/landing-redesign`, not merged without approval. Course listing + detail pages preserved | Owner (mandatory rollback rule) |
 
 ## Open (need the owner)
 - AI provider and monthly cap for Phase 3 (owner: skip for now).
