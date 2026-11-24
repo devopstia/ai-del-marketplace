@@ -27,7 +27,7 @@ export default function StudioDashboard() {
   const rated = cs.filter((c) => c.ratingCount);
   const ratingN = rated.reduce((a, c) => a + (c.ratingCount ?? 0), 0);
   const avg = ratingN ? rated.reduce((a, c) => a + (c.ratingAvg ?? 0) * (c.ratingCount ?? 0), 0) / ratingN : 0;
-  const series = dailySeries((sales.data?.rows ?? []).map((r) => ({ at: r.at, cents: r.instructorShareCents })));
+  const series = dailySeries((sales.data?.rows ?? []).filter((r) => !r.refundedAt).map((r) => ({ at: r.at, cents: r.instructorShareCents })));
 
   return (
     <>
