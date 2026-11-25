@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { CoversModule } from './covers/covers.module';
+import { SupportModule } from './support/support.module';
 import { AuthGuard } from './common/auth.guard';
 import { CommonModule } from './common/common.module';
 import { CsrfCookieMiddleware, CsrfGuard } from './common/csrf';
@@ -24,6 +25,7 @@ import { MediaModule } from './media/media.module';
     CatalogueModule,
     PromotionsModule,
     CoversModule,
+    SupportModule,
     CommerceModule,
     LearningModule,
     InstructorModule,

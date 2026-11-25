@@ -622,4 +622,75 @@ describe('e2e: buy and learn', () => {
     const actions = (await prisma.auditLog.findMany({ where: { action: { in: ['course.cover_changed', 'cover_template.created', 'cover_template.updated'] } }, select: { action: true } })).map((x) => x.action);
     for (const a of ['course.cover_changed', 'cover_template.created', 'cover_template.updated']) expect(actions).toContain(a);
   });
+
+  it('support center: open a ticket, staff reply, statuses, internal notes, confirm, reopen, rules', async () => {
+    if (!available) return;
+    const sam = await userAgent('sp2-student@e2e.example', ['student']);
+    const other = await userAgent('sp2-other@e2e.example', ['student']);
+    const admin = await userAgent('sp2-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('sp2-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    jobs.sendEmail.mockClear();
+
+    // Validation and attachments: types, sizes and keys tied to the uploader.
+    expect((await sam.send('post', '/api/support/tickets', { subject: 'Hi', category: 'technical', description: 'short' }).expect(400)).body.error.code).toBe('subject');
+    expect((await sam.send('post', '/api/support/uploads', { name: 'x.exe', contentType: 'application/x-msdownload', sizeBytes: 10 }).expect(400)).body.error.code).toBe('attachment_type');
+    const up = await sam.send('post', '/api/support/uploads', { name: 'shot.png', contentType: 'image/png', sizeBytes: 1200 }).expect(200);
+    expect(up.body.key).toMatch(new RegExp(`^support/${sam.user.id}/`));
+    const stolen = { key: `support/${other.user.id}/x.png`, name: 'x.png', mime: 'image/png', sizeBytes: 10 };
+    expect((await sam.send('post', '/api/support/tickets', { subject: 'Video stops at 2:10', category: 'video_playback', description: 'The lecture stops playing after two minutes.', attachments: [stolen] }).expect(400)).body.error.code).toBe('attachment_key');
+
+    // Open: number SUP-xxxxxx, status new, the requester sees it, nobody else does.
+    const created = await sam.send('post', '/api/support/tickets', { subject: 'Video stops at 2:10', category: 'video_playback', description: 'The lecture stops playing <b>after</b> two minutes.', context: { browser: 'Chrome', os: 'Windows', page: '/learn/x' } }).expect(201);
+    const no = created.body.number;
+    expect(no).toMatch(/^SUP-\d{6}$/);
+    const t0 = (await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body;
+    expect(t0).toMatchObject({ status: 'new', awaiting: 'staff', subject: 'Video stops at 2:10' });
+    expect(t0.messages[0].body).toBe('The lecture stops playing <b>after</b> two minutes.'); // stored as plain text
+    expect(t0.context).toBeUndefined(); // browser details are for staff
+    await other.agent.get(`/api/support/tickets/${no}`).expect(404);
+    await other.agent.get('/api/admin/support/tickets').expect(403);
+    expect((await sam.agent.get('/api/support/tickets').expect(200)).body.items.map((x: any) => x.number)).toContain(no);
+
+    // Staff: queue, an internal note the requester never sees, a reply (open + email), a request for information.
+    const q = await admin.agent.get(`/api/admin/support/tickets?q=${no}`).expect(200);
+    expect(q.body.items[0]).toMatchObject({ number: no, status: 'new' });
+    expect((await admin.agent.get('/api/admin/support/summary').expect(200)).body.awaitingStaff).toBeGreaterThanOrEqual(1);
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'note', body: 'Probably the CDN; check logs.' }).expect(201);
+    const r1 = await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'reply', body: 'Thanks, we are looking into it.' }).expect(201);
+    expect(r1.body).toMatchObject({ status: 'open', assignedTo: { id: admin.user.id } });
+    const seen = (await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body;
+    expect(seen.messages.map((m: any) => m.body)).not.toContain('Probably the CDN; check logs.');
+    expect(seen.messages.find((m: any) => m.staff).author.name).toBe('DEL Support');
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'request_info', body: 'Which browser version?' }).expect(201);
+    expect((await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body).toMatchObject({ status: 'waiting_user', awaiting: 'requester' });
+    await sam.send('post', `/api/support/tickets/${no}/messages`, { body: 'Chrome 131.' }).expect(201);
+    expect((await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body.status).toBe('open');
+
+    // Resolve → still need help → resolve → confirm (closed). Only a super admin may close directly.
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'resolve', body: 'Fixed on our side.' }).expect(201);
+    expect((await sam.send('post', `/api/support/tickets/${no}/still-need-help`).expect(200)).body.status).toBe('open');
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'resolve', body: 'Fixed again.' }).expect(201);
+    expect((await sam.send('post', `/api/support/tickets/${no}/resolved`).expect(200)).body.status).toBe('closed');
+    expect((await sam.send('post', `/api/support/tickets/${no}/messages`, { body: 'One more thing' }).expect(409)).body.error.code).toBe('ticket_closed');
+    const re = await sam.send('post', `/api/support/tickets/${no}/reopen`, { note: 'It happens again on Firefox.' }).expect(200);
+    expect(re.body.status).toBe('open');
+    expect((await admin.send('patch', `/api/admin/support/tickets/${no}`, { status: 'closed' }).expect(409)).body.error.code).toBe('close_not_allowed');
+    await admin.send('patch', `/api/admin/support/tickets/${no}`, { priority: 'urgent', assignedToId: sam.user.id }).expect(400);
+    expect((await boss.send('patch', `/api/admin/support/tickets/${no}`, { status: 'closed' }).expect(200)).body.status).toBe('closed');
+
+    // Emails went to the requester for reply, request for information and both resolves; resolved tickets auto-close.
+    const templates = jobs.sendEmail.mock.calls.map((c: any[]) => c[0].template);
+    expect(templates).toEqual(expect.arrayContaining(['support-reply', 'support-info-requested', 'support-resolved']));
+    expect(jobs.sendEmail.mock.calls.every((c: any[]) => c[0].to === 'sp2-student@e2e.example')).toBe(true);
+    const old = await sam.send('post', '/api/support/tickets', { subject: 'Certificate name is wrong', category: 'certificates', description: 'My certificate shows an old name.' }).expect(201);
+    await admin.send('post', `/api/admin/support/tickets/${old.body.number}/messages`, { kind: 'resolve', body: 'Updated.' }).expect(201);
+    await prisma.supportTicket.update({ where: { number: Number(old.body.number.slice(4)) }, data: { resolvedAt: new Date(Date.now() - 8 * 86400000) } });
+    expect((await sam.agent.get(`/api/support/tickets/${old.body.number}`).expect(200)).body.status).toBe('closed');
+
+    // Rate limit: at most five new tickets an hour.
+    for (let i = 0; i < 3; i++) await sam.send('post', '/api/support/tickets', { subject: `Question number ${i}`, category: 'other', description: 'A question about the platform.' }).expect(201);
+    expect((await sam.send('post', '/api/support/tickets', { subject: 'One too many', category: 'other', description: 'A question about the platform.' }).expect(429)).body.error.code).toBe('too_many_tickets');
+    expect(await prisma.auditLog.count({ where: { action: { in: ['support.ticket_opened', 'support.reply', 'support.resolve', 'support.ticket_updated'] } } })).toBeGreaterThan(4);
+  });
 });

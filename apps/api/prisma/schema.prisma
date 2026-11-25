@@ -143,6 +143,9 @@ model User {
   auditLogs          AuditLog[]
 
   @@map("users")
+  supportTickets    SupportTicket[]  @relation("TicketRequester")
+  assignedTickets   SupportTicket[]  @relation("TicketAssignee")
+  supportMessages   SupportMessage[] @relation("TicketMessageAuthor")
 }
 
 model Session {
@@ -645,4 +648,81 @@ model CoverTemplate {
 
   @@index([active, sort])
   @@map("cover_templates")
+}
+
+enum TicketStatus {
+  new
+  open
+  waiting_user
+  resolved
+  closed
+}
+
+enum TicketPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+/// Support Center (owner 2026-11-25, adapted from the Insurance Knowledge Hub). Shown as SUP-000123 (number, padded).
+/// Status moves happen on the server only; requesters reply, confirm or reopen.
+model SupportTicket {
+  id              String         @id @default(uuid())
+  number          Int            @unique @default(autoincrement())
+  requesterId     String
+  requester       User           @relation("TicketRequester", fields: [requesterId], references: [id])
+  subject         String
+  category        String
+  priority        TicketPriority @default(normal)
+  status          TicketStatus   @default(new)
+  courseId        String?
+  orderId         String?
+  /// Browser, OS, device, page, installed app: supplied by the browser when the ticket is opened.
+  context         Json?
+  assignedToId    String?
+  assignedTo      User?          @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  firstResponseAt DateTime?
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  messages        SupportMessage[]
+
+  @@index([requesterId, updatedAt])
+  @@index([status, updatedAt])
+  @@map("support_tickets")
+}
+
+/// One message in a ticket: plain text (never HTML). `internal` notes are visible to staff only.
+model SupportMessage {
+  id          String              @id @default(uuid())
+  ticketId    String
+  ticket      SupportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User                @relation("TicketMessageAuthor", fields: [authorId], references: [id])
+  staff       Boolean             @default(false)
+  internal    Boolean             @default(false)
+  /// system messages record status changes ("Marked as resolved").
+  kind        String              @default("message")
+  body        String
+  createdAt   DateTime            @default(now())
+  attachments SupportAttachment[]
+
+  @@index([ticketId, createdAt])
+  @@map("support_messages")
+}
+
+/// A private file on a message (screenshots, PDFs): stored under support/<uploaderId>/, served only to people who may read the ticket.
+model SupportAttachment {
+  id         String         @id @default(uuid())
+  messageId  String
+  message    SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  storageKey String         @unique
+  name       String
+  mime       String
+  sizeBytes  Int
+  createdAt  DateTime       @default(now())
+
+  @@map("support_attachments")
 }
