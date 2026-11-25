@@ -48,3 +48,25 @@ export function CourseResultRow({ c }: { c: CourseCard }) {
     </Link>
   );
 }
+
+/** Result card for the two-column catalogue grid: cover on top, then the same facts as the result row. */
+export function CourseResultCard({ c }: { c: CourseCard }) {
+  return (
+    <Link href={`/courses/${c.slug}`} className="group flex flex-col rounded-tile" data-testid="course-row">
+      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+      <div className="mt-4 flex items-start justify-between gap-4">
+        <h3 className="font-display text-lg font-bold leading-snug text-ink group-hover:text-violet">{c.title}</h3>
+        <Price cents={c.priceCents} currency={c.currency} className="shrink-0 text-xl" />
+      </div>
+      {c.subtitle ? <p className="mt-1.5 line-clamp-2 text-[0.95rem] text-ink-2">{c.subtitle}</p> : null}
+      <p className="mt-1.5 text-sm text-muted">{c.instructor.name}</p>
+      <div className="mt-1.5"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div>
+      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+        <span className="inline-flex items-center gap-1"><Clock className="size-3.5" />{hours(c.totalDurationSec)}</span>
+        {c.lectureCount ? <span>{plural(c.lectureCount, "lecture")}</span> : null}
+        <span className="inline-flex items-center gap-1"><BarChart3 className="size-3.5" />{levelLabel[c.level]}</span>
+        {c.studentCount ? <span className="inline-flex items-center gap-1"><Users className="size-3.5" />{compact(c.studentCount)} {c.studentCount === 1 ? "student" : "students"}</span> : null}
+      </p>
+    </Link>
+  );
+}
