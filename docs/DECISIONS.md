@@ -112,3 +112,36 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - 2026-11-25 `feat/courses-improvements`: /courses filter counts (facets), several topics at once, cleaner cards (see commit
   b86ee1d). Verified on a fresh stack (`down -v`): API 129/129, smoke 135/135, web typecheck + lint, Playwright 16/16 with
   E2E_PASSWORD. Then clean demo (seed, import-del, demo-catalogue) + the 5 sample courses re-added.
+
+## 2026-11-25: feat/courses-improvements merged into `main` (owner: "merge this into main")
+- Local merge only. Rollback tag `main-before-merge-2026-11-25-b` (= `1ce1b75`), release tag `release-local-2026-11-25-b`.
+- Next: `feat/home-improvements` (homepage fixes + leftovers), rollback tag `checkpoint-2026-11-25-home`, backup branch
+  `backup/main-2026-11-25-b`.
+- 2026-11-25 `feat/home-improvements`: homepage made truthful and consistent with /courses ("Start here" no longer claims
+  reviews; "Most enrolled" only with 3+ courses that have learners; shared card rules; covers without a second title, never
+  repeating beside each other; node-graph cover always spread; instructors use the full row). Purchase card lists video time
+  and readings separately. /courses: tidy filter URLs, two topics named in the heading. Screenshots `docs/design/home-improve-2026-11-25/`.
+- 2026-11-25 owner disliked "Taught by practitioners" + dark teach band ("design it well"): replaced by option C from the
+  comparison page: each instructor with their real courses ("Learn from the people who build it") and a one-row teach invite.
+- 2026-11-25 /teach tuned (owner: "improve and tune this up"): live earnings calculator (price + sales per month, same
+  arithmetic as the API split, honest estimate note) replaces the fixed $100 example; price rule from live terms; step 1
+  links to the application; closing call to action. Screenshots `docs/design/teach-2026-11-25/`.
+
+## 2026-11-25: Course sales and promotions (owner brief + approved plan)
+- Branch `feat/promotions` (from `feat/home-improvements`), rollback tag `checkpoint-2026-11-25-promotions`, backup branch
+  `backup/home-improvements-2026-11-25`.
+- Owner decisions: instructors are included in marketplace promotions by default and can opt a course out (DEL courses always
+  in); when an instructor sale and a promotion overlap, the lowest price wins (no stacking); instructor sales need at least
+  10% off, not below $4.99, up to 31 days, one at a time. Promotions: 5–90% off, up to 90 days, super admin only.
+- Prices are computed at request time (no job, nothing written to the course), so sales stop by themselves. The commission
+  split uses the amount actually paid; order lines keep the regular price and which sale applied. See docs/API.md.
+- Owner, mid-build: **dark is the default theme for the whole site**; a visitor's saved choice of light (toggle) is kept.
+
+## 2026-11-25: Dark-mode QA pass (owner: "dark mode … must be treated as our primary design experience")
+- Branch `feat/dark-qa` (from `feat/promotions`), rollback tag `checkpoint-2026-11-25-dark-qa`, backup `backup/promotions-2026-11-25`.
+- Permanent rule: AGENTS.md rule 16 (dark first, contrast, browser QA with `scripts/qa-dark.mjs`, 390/768/1440/1920, fix before review).
+- Found and fixed: white text on light accents in dark (violet tabs, rose danger buttons via new `--on-rose`, amber badge,
+  mint/cyan step markers), border-coloured icons invisible in dark (lock, empty stars, checklist), rank numbers; homepage and
+  orders scrolling sideways (screen-reader labels escaping scroll boxes); phone site menu trapped in the 64px header (now a
+  portal); cramped titles printed on small covers (covers show topic + pattern only); select wider than phones; light-theme
+  accents darkened to pass AA. Final scan: every page, every role, 390/768/1440/1920 in dark, no failures; light spot-check clean.

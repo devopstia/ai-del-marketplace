@@ -1,5 +1,7 @@
 import { CommerceService } from './commerce.service';
 
+const noSales: any = { prices: async () => new Map(), pricesForIds: async () => new Map() };
+
 const card = (id: string, priceCents: number, instructorId = 'teacher') => ({
   id, slug: id, title: `Course ${id}`, subtitle: '', thumbnailKey: null, priceCents, currency: 'usd', ratingAvg: 0, ratingCount: 0, studentCount: 0, level: 'beginner', language: 'en', publishedAt: null,
   instructorId, instructor: { id: instructorId, name: 'T' }, category: null, sections: [], status: 'published',
@@ -17,7 +19,7 @@ function build() {
       createMany: jest.fn(async ({ data }: any) => data.forEach((d: any) => cart.push(d.courseId))),
     },
   };
-  const svc = new CommerceService(prisma, {} as any, {} as any, {} as any, {} as any, { imageUrl: () => null } as any);
+  const svc = new CommerceService(prisma, {} as any, {} as any, {} as any, {} as any, { imageUrl: () => null } as any, noSales);
   return { svc, prisma, cart };
 }
 

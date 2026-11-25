@@ -40,7 +40,10 @@ function Pattern({ seed, a, b }: { seed: number; a: string; b: string }) {
   }
   if (kind === 2) {
     // Node graph: agents and their connections
-    const pts = Array.from({ length: 7 }).map((_, i) => [250 + ((seed >> (i * 2)) % 130), 30 + ((seed >> (i * 3)) % 150)] as const);
+    // One node per vertical band, so the graph always spreads across the right side of the cover.
+    let r = (seed % 2147483646) + 1;
+    const rand = (n: number) => (r = (r * 16807) % 2147483647) % n;
+    const pts = Array.from({ length: 7 }).map((_, i) => [236 + i * 22 + rand(14), 28 + rand(160)] as const);
     return (
       <g>
         {pts.slice(1).map(([x, y], i) => (
@@ -64,13 +67,13 @@ function Pattern({ seed, a, b }: { seed: number; a: string; b: string }) {
   );
 }
 
-/** Cover seeds for a grid, read left to right: a cover never repeats the pattern or ground of the one before it or
- *  two before it (the one above in a two-column grid). Unchanged covers keep their usual look. */
-export function coverSeeds(slugs: string[]): number[] {
+/** Cover seeds for a grid, read left to right: a cover never repeats the pattern or ground of the covers `avoid` places
+ *  before it (by default the one beside it and the one above it in a two-column grid). Unclashing covers keep their look. */
+export function coverSeeds(slugs: string[], avoid: number[] = [1, 2]): number[] {
   const out: number[] = [];
   slugs.forEach((slug, i) => {
     let s = hash(slug);
-    const clash = (x: number) => [out[i - 1], out[i - 2]].some((o) => o !== undefined && (o % 4 === x % 4 || o % grounds.length === x % grounds.length));
+    const clash = (x: number) => avoid.map((d) => out[i - d]).some((o) => o !== undefined && (o % 4 === x % 4 || o % grounds.length === x % grounds.length));
     for (let n = 0; n < 24 && clash(s); n++) s++;
     out.push(s);
   });
@@ -78,7 +81,7 @@ export function coverSeeds(slugs: string[]): number[] {
 }
 
 export function CourseCover({
-  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = true,
+  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = false,
 }: { slug: string; title: string; category?: string | null; thumbnailUrl?: string | null; size?: "sm" | "md" | "lg"; className?: string; seed?: number; showTitle?: boolean }) {
   const seed = seedOverride ?? hash(slug || title);
   const g = grounds[seed % grounds.length]!;

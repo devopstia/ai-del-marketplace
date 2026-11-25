@@ -1,13 +1,15 @@
 import { devPaymentsEnabled, resetEnvCache } from '../config/env';
 import { CommerceService } from './commerce.service';
 
+const noSales: any = { prices: async () => new Map(), pricesForIds: async () => new Map() };
+
 describe('CommerceService.checkout (order lines + commission)', () => {
   const items = [
     { courseId: 'c-nadia', course: { id: 'c-nadia', title: 'n8n', priceCents: 4999, currency: 'usd', status: 'published', instructorId: 'i-nadia' } },
     { courseId: 'c-del', course: { id: 'c-del', title: 'CI/CD', priceCents: 6999, currency: 'usd', status: 'published', instructorId: 'i-del' } },
   ];
 
-  function build(opts: { commissionBps: number; devPayments?: boolean; stripe?: boolean; nadia?: { commissionBps?: number | null; payToPlatform?: boolean } }) {
+  function build(opts: { commissionBps: number; devPayments?: boolean; stripe?: boolean; nadia?: { commissionBps?: number | null; payToPlatform?: boolean }; pricing?: any }) {
     process.env.DEV_TEST_PAYMENTS = String(opts.devPayments ?? true);
     resetEnvCache();
     const created: any[] = [];
@@ -34,6 +36,7 @@ describe('CommerceService.checkout (order lines + commission)', () => {
       { configured: !!opts.stripe } as any,
       { fulfil: jest.fn() } as any,
       { imageUrl: () => null } as any,
+      opts.pricing ?? noSales,
     );
     return { svc, created };
   }
@@ -47,6 +50,20 @@ describe('CommerceService.checkout (order lines + commission)', () => {
     expect(created[0].totalCents).toBe(11998);
     expect(nadia).toMatchObject({ priceCents: 4999, commissionBps: 1500, instructorShareCents: 4249, transferStatus: 'pending' });
     expect(del).toMatchObject({ priceCents: 6999, commissionBps: 10000, instructorShareCents: 0, transferStatus: 'none' });
+  });
+
+  it('a sale running now sets the line price, keeps the regular price, and the split uses the sale price', async () => {
+    const endsAt = new Date(Date.now() + 86400_000);
+    const pricing = {
+      pricesForIds: async () => new Map([['c-nadia', { listPriceCents: 4999, priceCents: 2999, sale: { kind: 'course_sale', id: 's1', name: null, endsAt, percentOff: 40 } }]]),
+    };
+    const { svc, created } = build({ commissionBps: 2000, pricing });
+    await svc.checkout({ user: { id: 'u1', email: 'u@x', name: 'U', roles: ['student'] }, ip: null }, { immediateAccessConsent: true });
+    const [nadia, del] = created[0].lines.create;
+    expect(created[0].totalCents).toBe(2999 + 6999);
+    // 80% of 2999 (before the Stripe fee is known)
+    expect(nadia).toMatchObject({ priceCents: 2999, listPriceCents: 4999, saleKind: 'course_sale', saleId: 's1', instructorShareCents: 2399 });
+    expect(del).toMatchObject({ priceCents: 6999, listPriceCents: 6999, saleKind: null, saleId: null });
   });
 
   it('default commission 0: instructor share is the full price', async () => {

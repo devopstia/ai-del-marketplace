@@ -19,7 +19,7 @@ export default function StudentsPage() {
     <>
       <PageHead title="Students" sub="Learners enrolled in your courses and how far they’ve got."
         actions={
-          <select aria-label="Filter by course" className="field !w-auto" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+          <select aria-label="Filter by course" className="field !w-auto max-w-full" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
             <option value="">All courses</option>
             {(courses.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>

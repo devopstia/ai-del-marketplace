@@ -64,7 +64,7 @@ export default function SalesPage() {
               <tr key={r.id}>
                 <td className="whitespace-nowrap px-4 py-3 text-ink-2">{dateTime(r.at)}</td>
                 <td className="px-4 py-3 font-bold">{r.courseTitle}</td>
-                <td className="px-4 py-3 tabular-nums">{moneyExact(r.priceCents)}</td>
+                <td className="px-4 py-3 tabular-nums">{moneyExact(r.priceCents)}{r.listPriceCents && r.listPriceCents > r.priceCents ? <span className="block text-xs text-rose">Sale · was {moneyExact(r.listPriceCents)}</span> : null}</td>
                 <td className="px-4 py-3 tabular-nums text-ink-2">{r.feeCents ? `−${moneyExact(r.feeCents)}` : "—"}</td>
                 <td className="px-4 py-3 font-bold tabular-nums">{r.payee === "platform" || r.refundedAt ? "—" : moneyExact(r.instructorShareCents)}</td>
                 <td className="px-4 py-3 text-sm">{payoutLabel(r).text}</td>

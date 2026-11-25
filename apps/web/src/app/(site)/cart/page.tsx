@@ -5,8 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { toCart } from "@/lib/normalize";
-import { money, moneyExact, hours } from "@/lib/format";
+import { moneyExact, hours } from "@/lib/format";
 import type { Cart } from "@/lib/types";
+import { Price, SaleTag } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { RatingInline } from "@/components/Stars";
 import { Empty, Skeleton } from "@/components/Empty";
@@ -38,6 +39,8 @@ export default function CartPage() {
     }
   }
 
+  // Sale savings on what is in the cart; sale prices are fixed when the order is created at checkout.
+  const saved = (cart?.items ?? []).reduce((n, i) => n + Math.max(0, (i.course.listPriceCents ?? i.course.priceCents) - i.course.priceCents), 0);
   return (
     <div className="container-x max-w-6xl pt-10">
       <h1 className="font-display text-[2.4rem] font-extrabold">Shopping cart</h1>
@@ -54,19 +57,19 @@ export default function CartPage() {
             <ul className="divide-y divide-line">
               {cart.items.map(({ courseId, course: c }) => (
                 <li key={courseId} className="grid grid-cols-[96px_1fr] gap-4 py-5 sm:grid-cols-[160px_1fr_auto]" data-testid="cart-item">
-                  <Link href={`/courses/${c.slug}`}><CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" /></Link>
+                  <Link href={`/courses/${c.slug}`}><CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" showTitle={false} /></Link>
                   <div className="min-w-0">
                     <Link href={`/courses/${c.slug}`} className="font-display font-bold leading-snug hover:text-violet">{c.title}</Link>
                     <p className="text-sm text-muted">By {c.instructor.name}</p>
-                    <div className="mt-1"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div>
+                    {c.sale ? <div className="mt-1"><SaleTag sale={c.sale} withName /></div> : c.ratingCount ? <div className="mt-1"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div> : null}
                     <p className="mt-1 text-xs text-muted">{hours(c.totalDurationSec)} total</p>
                     <div className="mt-2 flex items-center gap-4 sm:hidden">
-                      <span className="font-display font-extrabold">{money(c.priceCents, c.currency)}</span>
+                      <Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} />
                       <button type="button" className="link text-sm" onClick={() => remove(courseId)}>Remove</button>
                     </div>
                   </div>
                   <div className="hidden flex-col items-end gap-2 sm:flex">
-                    <span className="font-display text-lg font-extrabold">{money(c.priceCents, c.currency)}</span>
+                    <span className="text-right"><Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} className="text-lg" /></span>
                     <button type="button" className="btn btn-ghost btn-sm text-muted" onClick={() => remove(courseId)} aria-label={`Remove ${c.title}`}><Trash2 className="size-4" />Remove</button>
                   </div>
                 </li>
@@ -76,6 +79,9 @@ export default function CartPage() {
           <aside className="h-fit rounded-panel border border-line bg-surface p-6 lg:sticky lg:top-24">
             <p className="text-sm font-bold text-muted">Total</p>
             <p className="font-display text-4xl font-extrabold tabular-nums">{moneyExact(cart.totalCents, cart.currency)}</p>
+            {saved > 0 ? (
+              <p className="mt-1 text-sm"><s className="text-muted">{moneyExact(cart.totalCents + saved, cart.currency)}</s> <span className="font-bold text-rose">You save {moneyExact(saved, cart.currency)}</span></p>
+            ) : null}
             <Link href="/checkout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Check out</Link>
             <p className="mt-3 text-xs text-muted">You’ll confirm and pay on the next step. Card details are entered on Stripe, never on this site.</p>
           </aside>

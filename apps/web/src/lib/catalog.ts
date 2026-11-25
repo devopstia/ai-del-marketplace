@@ -13,7 +13,7 @@ export async function getCourses(query: Record<string, string | string[] | numbe
   const r = await serverGet(`/courses${qs(query)}`);
   if (!r.ok) return { ok: false, items: [], total: 0, page: 1, pageSize: 12, facets: null };
   const f = (r.data as { facets?: CatalogueFacets } | null)?.facets;
-  const facets = f && typeof f === "object" ? { category: f.category ?? {}, level: f.level ?? {}, price: { free: f.price?.free ?? 0, paid: f.price?.paid ?? 0 } } : null;
+  const facets = f && typeof f === "object" ? { category: f.category ?? {}, level: f.level ?? {}, price: { free: f.price?.free ?? 0, paid: f.price?.paid ?? 0 }, onSale: f.onSale ?? 0 } : null;
   return { ok: true, ...paged(r.data, toCourseCard, "courses"), facets };
 }
 
@@ -39,6 +39,27 @@ export async function getInstructor(id: string): Promise<{ instructor: Instructo
 export async function getFeaturedInstructors(limit = 3): Promise<InstructorSummary[]> {
   const r = await serverGet(`/instructors/featured${qs({ limit })}`);
   return r.ok ? list(r.data).map(toInstructor) : [];
+}
+
+export interface DealsSummary {
+  onSaleCount: number;
+  maxPercentOff: number;
+  promotions: { id: string; name: string; percentOff: number; endsAt: string; scope: "all" | "categories" | "courses" }[];
+}
+
+/** What is on sale right now (banner, Deals link, /deals). Null when the API is unreachable. */
+export async function getDeals(): Promise<DealsSummary | null> {
+  const r = await serverGet("/deals");
+  if (!r.ok) return null;
+  const o = obj(r.data);
+  return {
+    onSaleCount: Number(o.onSaleCount ?? 0),
+    maxPercentOff: Number(o.maxPercentOff ?? 0),
+    promotions: list(o.promotions).map((p) => {
+      const x = obj(p);
+      return { id: String(x.id), name: String(x.name ?? "Sale"), percentOff: Number(x.percentOff ?? 0), endsAt: String(x.endsAt), scope: (x.scope as DealsSummary["promotions"][number]["scope"]) ?? "all" };
+    }),
+  };
 }
 
 /** Public marketplace terms (revenue share, price range). Null when the API is unreachable. */

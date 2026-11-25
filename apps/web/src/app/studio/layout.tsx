@@ -1,5 +1,5 @@
 "use client";
-import { BadgeDollarSign, BookOpen, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
+import { BadgeDollarSign, BookOpen, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
@@ -11,6 +11,7 @@ const nav = [
   { href: "/studio", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/studio/courses", label: "Courses", icon: BookOpen },
   { href: "/studio/sales", label: "Sales", icon: BadgeDollarSign },
+  { href: "/studio/promotions", label: "Promotions", icon: Tag },
   { href: "/studio/students", label: "Students", icon: Users },
   { href: "/studio/reviews", label: "Reviews", icon: MessageSquareText },
   { href: "/studio/payouts", label: "Payouts", icon: Wallet },

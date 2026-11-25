@@ -48,7 +48,7 @@ export function ReviewForm({ slug, enrolled: enrolledProp }: { slug: string; enr
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} star${n > 1 ? "s" : ""}`}
             onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)} onClick={() => setRating(n)} className="rounded p-0.5">
-            <Star className={`size-7 ${(hover || rating) >= n ? "text-amber" : "text-line-strong"}`} fill="currentColor" strokeWidth={0} />
+            <Star className={`size-7 ${(hover || rating) >= n ? "text-amber" : "text-muted/45"}`} fill="currentColor" strokeWidth={0} />
           </button>
         ))}
       </div>

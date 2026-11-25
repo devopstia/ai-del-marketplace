@@ -130,7 +130,7 @@ export function CourseEditor({ id }: { id: string }) {
               <li key={k}>
                 <Link href={`/studio/courses/${id}?step=${k}`} aria-current={active ? "step" : undefined}
                   className={`-mb-px flex items-center gap-2.5 border-b-2 px-3 py-3 text-sm font-bold sm:px-4 ${active ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
-                  <span className={`grid size-6 place-items-center rounded-full text-xs tabular-nums ${stepDone[k] ? "bg-mint text-white" : active ? "bg-violet text-on-violet" : "bg-surface-2 text-ink-2"}`}>
+                  <span className={`grid size-6 place-items-center rounded-full text-xs tabular-nums ${stepDone[k] ? "bg-mint text-paper" : active ? "bg-violet text-on-violet" : "bg-surface-2 text-ink-2"}`}>
                     {stepDone[k] ? <Check className="size-3.5" strokeWidth={3} /> : i + 1}
                   </span>
                   {label}

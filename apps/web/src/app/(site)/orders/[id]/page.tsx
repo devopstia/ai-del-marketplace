@@ -42,7 +42,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
             <thead className="border-b border-line text-left text-muted"><tr><th className="py-2 font-bold">Course</th><th className="py-2 text-right font-bold">Price</th></tr></thead>
             <tbody className="divide-y divide-line">
               {o.lines.map((l) => (
-                <tr key={l.id}><td className="py-3"><span className="font-bold">{l.title}</span>{l.instructorName ? <span className="block text-muted">{l.instructorName}</span> : null}{l.refundedAt ? <span className="block text-rose">Refunded</span> : null}</td><td className="py-3 text-right tabular-nums">{moneyExact(l.priceCents, o.currency)}</td></tr>
+                <tr key={l.id}><td className="py-3"><span className="font-bold">{l.title}</span>{l.instructorName ? <span className="block text-muted">{l.instructorName}</span> : null}{l.refundedAt ? <span className="block text-rose">Refunded</span> : null}</td><td className="py-3 text-right tabular-nums">{l.listPriceCents && l.listPriceCents > l.priceCents ? <s className="mr-2 text-muted">{moneyExact(l.listPriceCents, o.currency)}</s> : null}{moneyExact(l.priceCents, o.currency)}</td></tr>
               ))}
             </tbody>
             <tfoot><tr className="border-t-2 border-ink"><td className="py-3 font-bold">Total</td><td className="py-3 text-right font-display text-xl font-extrabold tabular-nums">{moneyExact(o.totalCents, o.currency)}</td></tr></tfoot>

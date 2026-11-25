@@ -16,11 +16,12 @@ const sorts = [
   ["newest", "Newest"],
   ["price_asc", "Price: low to high"],
   ["price_desc", "Price: high to low"],
+  ["discount", "Biggest discount"],
 ] as const;
 const levels = [["", "All levels"], ["beginner", "Beginner"], ["intermediate", "Intermediate"], ["advanced", "Advanced"]] as const;
 const prices = [["", "Any price"], ["free", "Free"], ["paid", "Paid"]] as const;
 
-type SP = { q?: string; category?: string | string[]; level?: string; price?: string; sort?: string; page?: string };
+type SP = { q?: string; category?: string | string[]; level?: string; price?: string; onSale?: string; sort?: string; page?: string };
 
 /** One filter option. The count is how many courses it would show with the other filters kept; an empty option is disabled. */
 function Option({ type, name, value, checked, label, count }: { type: "radio" | "checkbox"; name: string; value: string; checked: boolean; label: string; count?: number }) {
@@ -40,25 +41,32 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   const picked = (Array.isArray(sp.category) ? sp.category : sp.category ? sp.category.split(",") : []).filter(Boolean);
   const [cats, res] = await Promise.all([
     getCategories(),
-    getCourses({ q: sp.q, category: picked, level: sp.level, price: sp.price, sort: sp.sort || "popular", page }),
+    getCourses({ q: sp.q, category: picked, level: sp.level, price: sp.price, onSale: sp.onSale ? "1" : undefined, sort: sp.sort || "popular", page }),
   ]);
   const f = res.facets;
   const seeds = coverSeeds(res.items.map((c) => c.slug));
   const pages = Math.max(1, Math.ceil(res.total / (res.pageSize || 12)));
   const pickedCats = cats.filter((c) => picked.includes(c.slug));
-  const heading = sp.q ? `Results for “${sp.q}”` : pickedCats.length === 1 ? pickedCats[0]!.name : pickedCats.length > 1 ? `${pickedCats.length} topics` : "All courses";
+  const heading = sp.onSale && !sp.q && !pickedCats.length ? "Courses on sale" : sp.q ? `Results for “${sp.q}”` : pickedCats.length === 1 ? pickedCats[0]!.name : pickedCats.length === 2 ? pickedCats.map((c) => c.name).join(" and ") : pickedCats.length > 2 ? `${pickedCats.length} topics` : "All courses";
   const base = { ...sp, category: picked, page: undefined };
   const active = [
     sp.q && { key: "q", label: `“${sp.q}”`, href: `/courses${qs({ ...base, q: undefined })}` },
     ...pickedCats.map((c) => ({ key: `cat-${c.slug}`, label: c.name, href: `/courses${qs({ ...base, category: picked.filter((x) => x !== c.slug) })}` })),
     sp.level && { key: "level", label: levels.find((l) => l[0] === sp.level)?.[1] ?? sp.level, href: `/courses${qs({ ...base, level: undefined })}` },
     sp.price && { key: "price", label: sp.price === "free" ? "Free" : "Paid", href: `/courses${qs({ ...base, price: undefined })}` },
+    sp.onSale && { key: "onSale", label: "On sale", href: `/courses${qs({ ...base, onSale: undefined })}` },
   ].filter(Boolean) as { key: string; label: string; href: string }[];
 
   const filters = (
     <AutoSubmit action="/courses" className="space-y-7">
       {sp.q ? <input type="hidden" name="q" value={sp.q} /> : null}
       {sp.sort ? <input type="hidden" name="sort" value={sp.sort} /> : null}
+      {f && (f.onSale > 0 || sp.onSale) ? (
+        <fieldset>
+          <legend className="mb-2 font-display font-bold text-ink">Deals</legend>
+          <Option type="checkbox" name="onSale" value="1" checked={!!sp.onSale} label="On sale now" count={f.onSale} />
+        </fieldset>
+      ) : null}
       <fieldset>
         <div className="mb-2 flex items-baseline justify-between">
           <legend className="font-display font-bold text-ink">Topic</legend>
@@ -100,6 +108,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
             {picked.map((c) => <input key={c} type="hidden" name="category" value={c} />)}
             {sp.level ? <input type="hidden" name="level" value={sp.level} /> : null}
             {sp.price ? <input type="hidden" name="price" value={sp.price} /> : null}
+            {sp.onSale ? <input type="hidden" name="onSale" value="1" /> : null}
             <label htmlFor="sort" className="text-sm text-muted">Sort by</label>
             <span className="relative">
               <select id="sort" name="sort" defaultValue={sp.sort || "popular"} className="field !min-h-9 !w-auto cursor-pointer appearance-none !py-1 !pr-9 text-sm font-bold">

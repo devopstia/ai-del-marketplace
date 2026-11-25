@@ -561,6 +561,8 @@ export class InstructorService {
         paidAt: l.order.paidAt,
         course: l.course,
         priceCents: l.priceCents,
+        listPriceCents: l.listPriceCents ?? l.priceCents,
+        saleKind: l.saleKind,
         feeCents: l.feeCents,
         netCents: l.netCents,
         commissionBps: l.commissionBps,

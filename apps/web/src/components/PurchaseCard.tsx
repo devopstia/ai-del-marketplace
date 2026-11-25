@@ -2,13 +2,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Award, Captions, Download, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
+import { Award, Captions, Download, FileText, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
 import { api, ApiError, errMsg } from "@/lib/api";
 import { list, obj } from "@/lib/normalize";
-import { hours, money } from "@/lib/format";
+import { hours } from "@/lib/format";
 import type { CourseDetail } from "@/lib/types";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./Toast";
+import { Price, SaleTag } from "./CourseViews";
 import { CourseCover } from "./CourseCover";
 import { PreviewButton } from "./PreviewContext";
 
@@ -52,9 +53,12 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
 
   const free = course.priceCents === 0;
   const quizzes = course.sections.reduce((a, s) => a + s.lectures.filter((l) => l.hasQuiz).length, 0);
+  const lectures = course.sections.flatMap((s) => s.lectures);
+  const videoSec = lectures.filter((l) => l.type === "video").reduce((a, l) => a + l.durationSec, 0);
+  const readings = lectures.filter((l) => l.type === "article").length;
   return (
     <div className="overflow-hidden rounded-panel border border-line bg-surface shadow-float" data-testid="purchase-card">
-      <div className="relative">
+      <div className="relative" data-qa-on-media>
         <CourseCover slug={course.slug} title={course.title} category={course.category?.name} thumbnailUrl={course.thumbnailUrl} className="!rounded-none" />
         {firstPreviewId ? (
           <PreviewButton lectureId={firstPreviewId} className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/45 font-bold text-white transition-colors hover:bg-black/55">
@@ -71,7 +75,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
           </>
         ) : (
           <>
-            <p className={`font-display text-[2rem] font-extrabold leading-none ${free ? "text-mint" : "text-ink"}`}>{money(course.priceCents, course.currency)}</p>
+            <p className="leading-none" data-testid="course-price"><Price cents={course.priceCents} listCents={course.listPriceCents} currency={course.currency} className="text-[2rem] leading-none" /></p>
+            {course.sale ? <SaleTag sale={course.sale} withName className="mt-2.5" /> : null}
             <div className="mt-5 grid gap-2.5">
               {inCart ? (
                 <Link href="/cart" className="btn btn-primary w-full"><ShoppingCart className="size-4" />Go to cart</Link>
@@ -92,7 +97,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
         )}
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>
         <ul className="mt-2.5 space-y-2 text-sm text-ink-2">
-          <li className="flex items-center gap-2.5"><MonitorPlay className="size-4 text-muted" />{hours(course.totalDurationSec)} of on-demand video</li>
+          {videoSec ? <li className="flex items-center gap-2.5"><MonitorPlay className="size-4 text-muted" />{hours(videoSec)} of on-demand video</li> : null}
+          {readings ? <li className="flex items-center gap-2.5"><FileText className="size-4 text-muted" />{readings} {readings === 1 ? "reading" : "readings"}</li> : null}
           {course.hasCaptions ? <li className="flex items-center gap-2.5"><Captions className="size-4 text-muted" />English captions (off until you turn them on)</li> : null}
           {quizzes ? <li className="flex items-center gap-2.5"><ListChecks className="size-4 text-muted" />{quizzes} short {quizzes === 1 ? "quiz" : "quizzes"} with explanations</li> : null}
           {course.resourceCount > 0 ? <li className="flex items-center gap-2.5"><Download className="size-4 text-muted" />Downloadable lab files</li> : null}

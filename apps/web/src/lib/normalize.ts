@@ -1,7 +1,7 @@
 // Tolerant converters from raw API JSON to the app's types.
 // The API contract lives in docs/BUILD_SPEC.md and docs/API.md; these keep the UI stable if a field is
 // nested slightly differently (e.g. `instructor.name` vs `instructorName`).
-import type { SaleRow, StudioRevision,
+import type { SaleInfo, SaleRow, StudioRevision,
   AdminInstructor, AdminStats, AdminUser, AuditEntry, Cart, Category, Certificate, CourseCard, CourseDetail,
   InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, Review, ReviewSummary, Role,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
@@ -83,6 +83,12 @@ function instructorRef(o: R): { id: string; name: string } {
   return { id: str(i.id ?? i.userId ?? o.instructorId), name: str(i.name ?? o.instructorName, "DevOps Easy Learning") };
 }
 
+export function toSale(x: unknown): SaleInfo | null {
+  const s = obj(x);
+  if (!s.id || !s.endsAt) return null;
+  return { kind: s.kind === "promotion" ? "promotion" : "course_sale", id: str(s.id), name: s.name ? str(s.name) : null, endsAt: str(s.endsAt), percentOff: num(s.percentOff) };
+}
+
 export function toCourseCard(x: unknown): CourseCard {
   const o = obj(x);
   const cat = obj(o.category);
@@ -106,6 +112,8 @@ export function toCourseCard(x: unknown): CourseCard {
     updatedAt: (o.updatedAt as string) ?? null,
     hasPreview: o.hasPreview === true,
     outcome: typeof o.outcome === "string" && o.outcome.trim() ? o.outcome.trim() : null,
+    listPriceCents: o.listPriceCents != null ? num(o.listPriceCents) : num(o.priceCents),
+    sale: toSale(o.sale),
   };
 }
 
@@ -246,6 +254,7 @@ export function toOrder(x: unknown): Order {
         title: str(lo.title ?? c.title, "Course"),
         slug: str(lo.slug ?? c.slug) || undefined,
         priceCents: num(lo.priceCents),
+        listPriceCents: lo.listPriceCents != null ? num(lo.listPriceCents) : undefined,
         instructorName: str(ins.name ?? lo.instructorName) || undefined,
         refundedAt: (lo.refundedAt as string) ?? null,
       };
@@ -381,6 +390,7 @@ export function toSales(x: unknown): SalesReport {
       courseTitle: str(ro.courseTitle ?? c.title, "Course"),
       buyerName: str(buyer.name ?? ro.buyerName) || undefined,
       priceCents: num(ro.priceCents),
+      listPriceCents: ro.listPriceCents != null ? num(ro.listPriceCents) : undefined,
       instructorShareCents: num(ro.instructorShareCents ?? ro.priceCents),
       transferStatus: str(ro.transferStatus) || undefined,
       feeCents: num(ro.feeCents),

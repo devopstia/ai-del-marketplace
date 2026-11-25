@@ -20,7 +20,8 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 4. **Every visible control works.** No button, link, menu or form that does nothing. Never present a feature as working unless it is
    implemented and tested end to end. Unfinished features are hidden, not shown as placeholders.
 5. **Exceptional, premium design**: impressive from the first screen; consistent typography, colour, spacing, motion; no excess
-   empty space, no repetitive rectangle grids, no generic template look; every page has a clear purpose. Light/dark, 390–1440 px,
+   empty space, no repetitive rectangle grids, no generic template look; every page has a clear purpose. **Dark is the default
+   theme for the whole site** (owner, 2026-11-25); light is available from the toggle and remembered. Light/dark, 390–1440 px,
    accessible (keyboard, focus, contrast, reduced motion). Review every changed screen in screenshots at **390, 1440 and 1920 px** (the owner works on a ~1970 px screen) before calling it done; no empty regions or stranded elements (owner, 2026-11-24: homepage hero "empty", instructor band "not good", /teach "not well design").
 6. **Dashboards are organized, not overloaded**: student (engaging learning), instructor (professional business tools), super admin
    (full operational visibility).
@@ -58,6 +59,22 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     Playwright `npm run test:e2e -w apps/web` (wait ~60 s after the API smoke run: register is rate-limited per IP), all green on a
     fresh stack (`docker compose down -v`), then a clean demo: fresh stack, `npm run seed`, `./scripts/import-del.sh`,
     `./scripts/demo-catalogue.sh` (only "AI for DevOps" listed, per the owner).
+16. **Dark mode is the primary design; browser QA is part of "done"** (owner, 2026-11-25: "Dark mode should not look like an
+    afterthought. It must be treated as our primary design experience."). Every agent, for every frontend component, page or
+    feature it creates or changes:
+    1. **Design dark first.** Dark is the site default; build and judge the work in dark, then confirm light still works. Use
+       the design tokens in `apps/web/src/app/globals.css` (`--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--violet`,
+       …); never hard-code a light-only colour (`bg-white`, `text-black`, `#fff` text on a token background, etc.).
+    2. **Check readability and consistency**: text contrast at least 4.5:1 (3:1 for large text and icons), the same surfaces,
+       borders, buttons, focus rings, hover, selected, disabled, alert and toast states as the rest of the site; no invisible
+       text, no light patches, no overlapping or misaligned elements.
+    3. **QA in a real browser before calling it done.** Open every changed page and its states (empty, loading, error, filled,
+       signed out / student / instructor / admin as relevant) and run the contrast scan
+       `node scripts/qa-dark.mjs [--as student|instructor|admin] [--widths 390,768,1440,1920] [--light] paths…` (it fails on text
+       under the contrast threshold and on pages that scroll sideways). Text drawn over an image or video can't be measured: mark
+       its container `data-qa-on-media` and check it by eye. A clean build is not proof.
+    4. **Check sizes**: phone 390, tablet 768, desktop 1440 and the owner's 1920 px, with no sideways scrolling.
+    5. **Fix dark-mode problems before asking for review**, and show the owner dark screenshots (light only where relevant).
 
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).

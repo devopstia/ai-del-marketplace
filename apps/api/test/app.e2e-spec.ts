@@ -471,4 +471,101 @@ describe('e2e: buy and learn', () => {
     await boss.send('post', '/api/auth/act-as', { mode: 'self' }).expect(200);
     await boss.agent.get('/api/instructor/courses').expect(403);
   });
+
+  it('sales and promotions: instructor sales, marketplace promotions, checkout at the sale price, expiry', async () => {
+    if (!available) return;
+    const teacher = await userAgent('sp-teacher@e2e.example', ['student', 'instructor'], {});
+    const rival = await userAgent('sp-rival@e2e.example', ['student', 'instructor'], {});
+    const del = await userAgent('sp-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const admin = await userAgent('sp-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('sp-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const buyer = await userAgent('sp-buyer@e2e.example', ['student']);
+    const c = (await publishedCourse(teacher.user.id, 'sp-fifty', 5000)).course;
+    const r = (await publishedCourse(rival.user.id, 'sp-forty', 4000)).course;
+    const d = (await publishedCourse(del.user.id, 'sp-del', 6000)).course;
+    const http = request(app.getHttpServer());
+    const day = 86400000;
+    const inDays = (n: number) => new Date(Date.now() + n * day).toISOString();
+    const priceOf = async (slug: string) => (await http.get(`/api/courses/${slug}`).expect(200)).body;
+
+    // Rules and ownership: at least 10% off, not below $4.99, up to 31 days, own courses only, instructors only.
+    const code = async (res: any) => (await res).body.error?.code;
+    expect(await code(teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 4600, endsAt: inDays(2) }).expect(400))).toBe('sale_price');
+    expect(await code(teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 400, endsAt: inDays(2) }).expect(400))).toBe('sale_price');
+    expect(await code(teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 2999, endsAt: inDays(40) }).expect(400))).toBe('sale_length');
+    expect(await code(teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 2999, startsAt: inDays(-2), endsAt: inDays(2) }).expect(400))).toBe('sale_start');
+    await rival.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 2999, endsAt: inDays(2) }).expect(404);
+    await admin.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 2999, endsAt: inDays(2) }).expect(403);
+
+    // A sale that starts now: the storefront shows both prices; a second overlapping sale is refused.
+    const sale = await teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 2999, endsAt: inDays(2) }).expect(201);
+    expect(sale.body).toMatchObject({ status: 'active', salePriceCents: 2999, listPriceCents: 5000, percentOff: 40 });
+    expect(await code(teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 3999, startsAt: inDays(1), endsAt: inDays(3) }).expect(409))).toBe('sale_overlap');
+    expect(await priceOf('sp-fifty')).toMatchObject({ priceCents: 2999, listPriceCents: 5000, sale: { kind: 'course_sale', percentOff: 40 } });
+    const onSale = await http.get('/api/courses?onSale=1&pageSize=48').expect(200);
+    expect(onSale.body.items.map((i: any) => i.slug)).toContain('sp-fifty');
+    expect(onSale.body.items.map((i: any) => i.slug)).not.toContain('sp-forty');
+    expect(onSale.body.facets.onSale).toBe(onSale.body.total);
+    expect((await http.get('/api/deals').expect(200)).body.onSaleCount).toBeGreaterThanOrEqual(1);
+
+    // Checkout charges the sale price; the split is 80% of the sale price's net; the line keeps the regular price.
+    await buyer.send('post', '/api/cart', { courseId: c.id }).expect(201);
+    expect((await buyer.agent.get('/api/cart').expect(200)).body).toMatchObject({ totalCents: 2999, items: [{ priceCents: 2999, listPriceCents: 5000 }] });
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: co.body.orderId }, include: { lines: true } });
+    const [expected] = splitOrder(simulatedStripeFee(2999), [{ baseCents: 2999, platformBps: 2000 }]);
+    expect(order.totalCents).toBe(2999);
+    expect(order.lines[0]).toMatchObject({ priceCents: 2999, listPriceCents: 5000, saleKind: 'course_sale', saleId: sale.body.id, netCents: expected.netCents, instructorShareCents: expected.instructorShareCents });
+    expect((await buyer.agent.get(`/api/orders/${order.id}`).expect(200)).body.lines[0]).toMatchObject({ priceCents: 2999, listPriceCents: 5000 });
+
+    // When the sale ends, the regular price is back with nothing else to do.
+    await prisma.courseSale.update({ where: { id: sale.body.id }, data: { startsAt: new Date(Date.now() - 3 * day), endsAt: new Date(Date.now() - 1000) } });
+    expect(await priceOf('sp-fifty')).toMatchObject({ priceCents: 5000, sale: null });
+    expect((await http.get('/api/courses?onSale=1&pageSize=48').expect(200)).body.items.map((i: any) => i.slug)).not.toContain('sp-fifty');
+    expect(await code(teacher.send('post', `/api/instructor/courses/${c.id}/sales/${sale.body.id}/cancel`).expect(409))).toBe('sale_closed');
+
+    // Scheduled sale: no effect yet; edit, then cancel.
+    const later = await teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 3999, startsAt: inDays(1), endsAt: inDays(3) }).expect(201);
+    expect(later.body.status).toBe('scheduled');
+    expect((await priceOf('sp-fifty')).priceCents).toBe(5000);
+    const edited = await teacher.send('patch', `/api/instructor/courses/${c.id}/sales/${later.body.id}`, { salePriceCents: 3499, startsAt: inDays(1), endsAt: inDays(4) }).expect(200);
+    expect(edited.body).toMatchObject({ salePriceCents: 3499, status: 'scheduled' });
+    expect((await teacher.send('post', `/api/instructor/courses/${c.id}/sales/${later.body.id}/cancel`).expect(200)).body.status).toBe('canceled');
+
+    // Marketplace promotion: super admin only; 50% off everything in scope.
+    const promoBody = { name: 'E2E half price', percentOff: 50, endsAt: inDays(3), scope: 'all' };
+    await admin.send('post', '/api/admin/promotions', promoBody).expect(403);
+    expect(await code(boss.send('post', '/api/admin/promotions', { ...promoBody, percentOff: 95 }).expect(400))).toBe('promo_percent');
+    const promo = await boss.send('post', '/api/admin/promotions', promoBody).expect(201);
+    expect(promo.body).toMatchObject({ status: 'active', percentOff: 50 });
+    expect(await priceOf('sp-forty')).toMatchObject({ priceCents: 2000, listPriceCents: 4000, sale: { kind: 'promotion', name: 'E2E half price' } });
+    expect((await priceOf('sp-fifty')).priceCents).toBe(2500);
+
+    // Opt-out: an instructor can leave a course out; DEL's own courses are always included.
+    await teacher.send('put', `/api/instructor/courses/${c.id}/promotions`, { promoOptOut: true }).expect(200);
+    expect(await priceOf('sp-fifty')).toMatchObject({ priceCents: 5000, sale: null });
+    expect(await code(del.send('put', `/api/instructor/courses/${d.id}/promotions`, { promoOptOut: true }).expect(400))).toBe('platform_course');
+    expect((await priceOf('sp-del')).priceCents).toBe(3000);
+
+    // Lowest price wins, never stacked: own sale $39.99 vs 50% off ($25.00).
+    await teacher.send('post', `/api/instructor/courses/${c.id}/sales`, { salePriceCents: 3999, endsAt: inDays(2) }).expect(201);
+    expect(await priceOf('sp-fifty')).toMatchObject({ priceCents: 3999, sale: { kind: 'course_sale' } });
+    await teacher.send('put', `/api/instructor/courses/${c.id}/promotions`, { promoOptOut: false }).expect(200);
+    expect(await priceOf('sp-fifty')).toMatchObject({ priceCents: 2500, sale: { kind: 'promotion' } });
+
+    // Overview for the studio; admin oversight; super admin cancels; audit trail.
+    const ov = await teacher.agent.get('/api/instructor/promotions').expect(200);
+    expect(ov.body.courses.find((x: any) => x.id === c.id)).toMatchObject({ priceCents: 5000, maxSalePriceCents: 4500, inPromotions: [promo.body.id] });
+    const open = await admin.agent.get('/api/admin/course-sales').expect(200);
+    const running = open.body.items.find((s: any) => s.course.id === c.id && s.status === 'active');
+    expect(running).toBeTruthy();
+    await admin.send('post', `/api/admin/course-sales/${running.id}/cancel`, { note: 'Price typo, please fix' }).expect(403);
+    await boss.send('post', `/api/admin/course-sales/${running.id}/cancel`, { note: 'Price typo, please fix' }).expect(200);
+    await boss.send('post', `/api/admin/promotions/${promo.body.id}/cancel`).expect(200);
+    expect(await priceOf('sp-fifty')).toMatchObject({ priceCents: 5000, sale: null });
+    expect(await priceOf('sp-forty')).toMatchObject({ priceCents: 4000, sale: null });
+    const actions = (await prisma.auditLog.findMany({ where: { action: { in: ['course_sale.created', 'course_sale.updated', 'course_sale.canceled', 'promotion.created', 'promotion.canceled', 'course.promo_opt_out'] } }, select: { action: true } })).map((x) => x.action);
+    for (const a of ['course_sale.created', 'course_sale.updated', 'course_sale.canceled', 'promotion.created', 'promotion.canceled', 'course.promo_opt_out']) expect(actions).toContain(a);
+  });
 });

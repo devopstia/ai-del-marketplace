@@ -220,3 +220,62 @@ test.describe.serial("instructor publishes, admin approves", () => {
     await expect(adminChip).toHaveAttribute("aria-pressed", "false");
   });
 });
+
+test.describe.serial("sales and promotions", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run instructor/admin flows");
+  let title = "";
+
+  test("instructor puts a published course on sale from the studio", async ({ page }) => {
+    await login(page, USERS.instructor, PASSWORD, "/studio/promotions");
+    const pick = page.getByTestId("promo-course").filter({ has: page.getByText("published", { exact: true }) }).filter({ has: page.getByTestId("put-on-sale") }).first();
+    title = (await pick.getByRole("link").first().innerText()).trim();
+    // The "Put on sale" button goes away once the form opens, so keep hold of the row by its title.
+    const row = page.getByTestId("promo-course").filter({ hasText: title });
+    await row.getByTestId("put-on-sale").click();
+    await row.getByRole("button", { name: "−20%" }).click();
+    await row.getByRole("button", { name: "3 days" }).click();
+    await row.getByTestId("save-sale").click();
+    await expect(row.getByText("Running")).toBeVisible();
+  });
+
+  test("learners see the sale: crossed-out price on Deals and the course page", async ({ page }) => {
+    await logout(page);
+    await page.goto("/deals");
+    const card = page.getByTestId("course-row").filter({ hasText: title });
+    // −20% unless a bigger marketplace promotion is running (lowest price wins).
+    await expect(card).toContainText(/−\d+%/);
+    await expect(card.locator("s")).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Deals/ }).first()).toBeVisible();
+    await card.click();
+    await expect(page.getByTestId("course-price").first()).toContainText("Regular price");
+  });
+
+  test("super admin runs and cancels a marketplace promotion", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/promotions");
+    await page.getByTestId("new-promo").click();
+    const name = `E2E sale ${Date.now()}`;
+    await page.getByLabel("Name learners see").fill(name);
+    await page.getByLabel("Discount").fill("15");
+    await page.getByRole("button", { name: "3 days" }).click();
+    await page.getByTestId("save-promo").click();
+    const row = page.getByRole("row").filter({ hasText: name });
+    await expect(row.getByText("Running")).toBeVisible();
+    await page.goto("/deals");
+    await expect(page.getByText(name).first()).toBeVisible();
+    await page.goto("/admin/promotions");
+    await row.getByRole("button", { name: "Cancel" }).click();
+    await row.getByRole("button", { name: "Yes, cancel" }).click();
+    await expect(row.getByText("Cancelled")).toBeVisible();
+  });
+
+  test("instructor cancels the sale and the regular price returns", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.instructor, PASSWORD, "/studio/promotions");
+    const row = page.getByTestId("promo-course").filter({ hasText: title });
+    await row.getByRole("button", { name: "Cancel sale" }).click();
+    await row.getByTestId("confirm-cancel-sale").click();
+    await expect(row.getByTestId("put-on-sale")).toBeVisible();
+  });
+});
+

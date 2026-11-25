@@ -64,7 +64,8 @@ super_admin · `super` = super_admin. "Own" means the service only ever returns/
 |---|---|---|
 | GET | `/health` | `{ status: "ok", time }` |
 | GET | `/categories` | `{ items: [{ id, slug, name, icon, courseCount }] }` |
-| GET | `/courses?q&category&level&price&sort&page&pageSize` | Published only. `category` = slug; several with `category=a&category=b` or `category=a,b` (max 10, any of them), `level` = beginner\|intermediate\|advanced, `price` = free\|paid, `sort` = popular (default)\|newest\|rating\|price_asc\|price_desc, `pageSize` ≤ 48 (default 12). `q`: every word (max 6, case-insensitive, simple plural stemming) must appear in the title, subtitle, description, instructor name, or a section/lecture title of the live course. Returns `{ items: CourseCard[], facets, page, pageSize, total, totalPages }`. `facets = { category: {slug: n}, level: {level: n}, price: {free, paid} }`: how many courses each option would show with the other filters kept (a facet ignores its own filter). CourseCard adds `hasPreview` (any free-preview lecture) and `outcome` (first objective or null) |
+| GET | `/courses?q&category&level&price&sort&page&pageSize` | Published only. `category` = slug; several with `category=a&category=b` or `category=a,b` (max 10, any of them), `level` = beginner\|intermediate\|advanced, `price` = free\|paid, `sort` = popular (default)\|newest\|rating\|price_asc\|price_desc, `pageSize` ≤ 48 (default 12). `q`: every word (max 6, case-insensitive, simple plural stemming) must appear in the title, subtitle, description, instructor name, or a section/lecture title of the live course. Returns `{ items: CourseCard[], facets, page, pageSize, total, totalPages }`. `facets = { category: {slug: n}, level: {level: n}, price: {free, paid} }`: how many courses each option would show with the other filters kept (a facet ignores its own filter). CourseCard adds `hasPreview` (any free-preview lecture) and `outcome` (first objective or null). Sales: `onSale=1` lists only discounted courses (`facets.onSale` counts them); `sort=discount` orders by percent off; price sorts use the current price. CourseCard `priceCents` is what a learner pays **now**, `listPriceCents` the regular price, `sale` = `{ kind: course_sale\|promotion, id, name, endsAt, percentOff }` or null |
+| GET | `/deals` | What is on sale now: `{ onSaleCount, maxPercentOff, promotions: [{ id, name, percentOff, endsAt, scope }] }` (site banner, Deals link, /deals) |
 | GET | `/courses/:slug` | CourseDetail (below). Owner/admin can also see unpublished. **No asset URLs.** |
 | GET | `/courses/:slug/reviews?page&pageSize` | `{ items: [{ id, rating, body, instructorReply, createdAt, author: { name, avatarUrl }, verifiedPurchase }], ratingAvg, ratingCount, distribution: { "1".."5": n }, page, pageSize, total }` |
 | GET | `/instructors/featured?limit` | `{ items: FeaturedInstructor[] }`, approved instructors with ≥ 1 published course, most learners first (`limit` 1–24, default 6). Use this for home-page stats. |
@@ -289,6 +290,28 @@ type AdminOrder = { id; status; provider; currency; totalCents; refundedCents; p
            transferStatus: 'none'|'pending'|'paid'|'reversed'; transferId: string | null; refundedAt: string | null; refundable: boolean }[];
   history: { id; action; at; meta; actor: { id; name } | null }[] };
 ```
+
+## Sales and promotions (owner decisions 2026-11-25)
+Prices are worked out at request time: an instructor's sale (fixed sale price) and marketplace promotions (% off) apply only
+between `startsAt` and `endsAt`; the lowest price wins and discounts never stack; free courses never change; nothing is
+written to the course, so the regular price returns by itself. Instructors are in marketplace promotions unless they opt a
+course out (DEL courses always in). Cart, checkout and Stripe use the current price; each order line stores `priceCents`
+(paid), `listPriceCents` (regular), `saleKind`, `saleId`; the commission split is on `priceCents`. Every change is audited.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/instructor/promotions` | instructor: own courses with current price, open sales, opt-out, promotions that reach them, rules |
+| GET | `/instructor/courses/:id/sales` | instructor (owner): the course's sales, newest first |
+| POST | `/instructor/courses/:id/sales` | `{ salePriceCents, startsAt?, endsAt }` (ISO). Rules: paid course, ≥10% off, ≥ $4.99, ≤ 31 days, start not in the past, no overlap (409 `sale_overlap`) |
+| PATCH | `/instructor/courses/:id/sales/:saleId` | same body; a running sale keeps its start; ended/cancelled → 409 `sale_closed` |
+| POST | `/instructor/courses/:id/sales/:saleId/cancel` | ends it now (running) or drops it (scheduled) |
+| PUT | `/instructor/courses/:id/promotions` | `{ promoOptOut }`; DEL courses → 400 `platform_course` |
+| GET | `/admin/promotions` | admin: promotions with `status` and `courseCount` (live courses in scope) |
+| POST | `/admin/promotions` | **super_admin**: `{ name, percentOff 5–90, startsAt?, endsAt (≤ 90 days), scope: all\|categories\|courses, categoryIds?, courseIds? }` |
+| PATCH | `/admin/promotions/:id` | **super_admin**: same body; running keeps its start |
+| POST | `/admin/promotions/:id/cancel` | **super_admin** |
+| GET | `/admin/course-sales?status=open\|all` | admin: instructor sales with course and instructor |
+| POST | `/admin/course-sales/:id/cancel` | **super_admin**: `{ note }` (5+ chars, kept in the audit log) |
 
 ## Money: split, payout hold, refunds, disputes (owner-approved, docs/PAYMENTS_PROPOSAL.md)
 
