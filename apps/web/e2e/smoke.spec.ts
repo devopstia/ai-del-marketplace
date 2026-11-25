@@ -307,3 +307,35 @@ test.describe.serial("standard course covers", () => {
   });
 });
 
+test.describe.serial("support center", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  let number = "";
+
+  test("a student opens a request", async ({ page }) => {
+    await login(page, USERS.student, PASSWORD, "/support/new");
+    await page.getByTestId("ticket-category").selectOption("technical");
+    await page.getByTestId("ticket-subject").fill(`E2E help ${Date.now()}`);
+    await page.getByTestId("composer-text").fill("The page does not load after I sign in.");
+    await page.getByTestId("composer-send").click();
+    await page.waitForURL(/\/support\/SUP-\d{6}$/);
+    number = page.url().split("/").pop()!;
+    await expect(page.getByTestId("ticket-thread")).toContainText("does not load");
+  });
+
+  test("support staff answer from the queue", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, `/admin/support/${number}`);
+    await page.getByRole("tab", { name: "Resolve" }).click();
+    await page.getByTestId("composer-text").fill("Fixed, please try again.");
+    await page.getByTestId("composer-send").click();
+    await expect(page.getByTestId("ticket-thread")).toContainText("Marked as resolved");
+  });
+
+  test("the student confirms it is solved", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.student, PASSWORD, `/support/${number}`);
+    await page.getByTestId("confirm-resolved").click();
+    await expect(page.getByText("Still having this problem?")).toBeVisible();
+  });
+});
+

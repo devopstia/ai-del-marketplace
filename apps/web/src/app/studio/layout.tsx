@@ -1,5 +1,5 @@
 "use client";
-import { BadgeDollarSign, BookOpen, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
+import { BadgeDollarSign, BookOpen, LifeBuoy, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
@@ -16,6 +16,7 @@ const nav = [
   { href: "/studio/reviews", label: "Reviews", icon: MessageSquareText },
   { href: "/studio/payouts", label: "Payouts", icon: Wallet },
   { href: "/studio/profile", label: "Profile", icon: UserRound },
+  { href: "/support", label: "Help and support", icon: LifeBuoy },
 ];
 
 export default function StudioLayout({ children }: { children: React.ReactNode }) {

@@ -51,7 +51,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         </article>
       ) : null}
       {o && (o.status === "paid" || o.status === "partially_refunded") ? <RefundPanel orderId={o.id} onRefunded={() => setN((x) => x + 1)} /> : null}
-      {o ? <div className="mt-5 print:hidden"><PrintButton /></div> : null}
+      {o ? <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden"><PrintButton /><Link href={`/support/new?order=${o.id}&from=${encodeURIComponent(`/orders/${o.id}`)}`} className="btn btn-ghost">Get help with this order</Link></div> : null}
     </div>
   );
 }

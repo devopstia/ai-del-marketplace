@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell } from "@/components/shell/AppShell";
@@ -13,6 +13,7 @@ const nav = [
   { href: "/admin/review", label: "Review queue", icon: ClipboardCheck },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
   { href: "/admin/instructors", label: "Instructors", icon: GraduationCap },
+  { href: "/admin/support", label: "Support", icon: LifeBuoy },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/orders", label: "Orders", icon: Receipt },
   { href: "/admin/finance", label: "Money", icon: Landmark },
@@ -31,6 +32,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const requests = useApi(isAdmin ? "/admin/refund-requests?status=pending" : null, (r) => count(r).length);
   const disputes = useApi(isAdmin ? "/admin/disputes" : null, (r) => count(r).filter((d) => obj(d).status === "open").length);
   const attention = (requests.data ?? 0) + (disputes.data ?? 0);
+  // Badge on Support: requests waiting for staff.
+  const support = useApi(isAdmin ? "/admin/support/summary" : null, (r) => Number(obj(r).awaitingStaff ?? 0));
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
   if (!has("admin")) {
     return (
@@ -43,6 +46,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  const items = nav.map((n) => (n.href === "/admin/finance" && attention ? { ...n, badge: attention } : n));
+  const items = nav.map((n) => (n.href === "/admin/finance" && attention ? { ...n, badge: attention } : n.href === "/admin/support" && support.data ? { ...n, badge: support.data } : n));
   return <AppShell area="Admin console" nav={items} footer={<ConsoleSwitch to="del" />}>{children}</AppShell>;
 }
