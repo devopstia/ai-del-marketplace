@@ -16,7 +16,7 @@ export default function SupportHome() {
           <p className="mt-1 text-ink-2">Ask us anything about your account, payments, courses or the app. We reply here and by email.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/help" className="btn btn-ghost"><PlayCircle className="size-4" />Help videos</Link>
+          <Link href="/help" className="btn btn-ghost"><PlayCircle className="size-4" />Platform videos</Link>
           <Link href="/support/new" className="btn btn-primary" data-testid="new-ticket"><Plus className="size-4" />New request</Link>
         </div>
       </div>

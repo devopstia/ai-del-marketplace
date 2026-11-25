@@ -117,6 +117,47 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     can always be reviewed by a person; only a Super Admin overturns an automatic decline. AI may summarise refund facts
     for admins but never decides or invents numbers.
 
+21. **Four roles and studios** (owner, 2026-11-25; docs/ROLES_AND_STUDIOS.md). Student is the default for every
+    public sign-up (any method; registration schemas `.strict()`), Instructor only through an approved application
+    or a super admin grant with a reason, Admin only with explicit permissions (`common/permissions.ts`, `@Perm`),
+    Super Admin = DEL. Enforced in the API on every request, never by hiding menus. Only super admins change roles;
+    no self-changes; step-up authenticator code for Admin/Super Admin changes; last super admin protected; every
+    change audited. Every studio uses `AppShell`: collapsible sidebar, studio switcher, **Back to marketplace**
+    always visible, back button, breadcrumbs; users must never feel trapped in a studio. New student pages go in
+    the Student Studio (`/student/...`).
+
+22. **Course content** (owner, 2026-11-25). Instructors build the whole curriculum on one screen
+    (`components/studio/CurriculumStep.tsx`): drag sections and lessons (also between sections, one
+    `PUT /instructor/courses/:id/curriculum`), upload each lesson's video from its row, several videos at once,
+    and **files per lesson** (ZIP, PDF, Word, configs) where learners need them; the **complete course package**
+    (`course_resources`) is an extra, never a replacement. Learners see a lesson's files under its video. Published
+    courses change only through the draft revision. Paid files only for owners, admins and active enrolments.
+
+23. **Production and global access** (owner, 2026-11-25; docs/DEPLOYMENT.md). Insurance Hub is the reference
+    architecture: same AWS account, own `del-marketplace-*` resources and secrets (SSM Parameter Store, instance
+    role, GitHub OIDC; never Hub credentials, never secrets in git, images or workflows). **Do not create production
+    resources or deploy until the owner authorises it and gives the domain** (`release.yml` stays gated by
+    `PRODUCTION_ENABLED`). **Never copy the Hub's geographic blocking** (nginx geo allowlist, CloudFront geo
+    restriction, WAF geo rules): the marketplace is global, Africa included; protect it with rate limits, MFA and
+    Stripe fraud checks instead. Never modify, delete or disrupt Insurance Hub resources.
+
+24. **Email** (owner, 2026-11-25; docs/EMAIL.md). Every email goes through a template in `src/email/templates.ts`
+    (the Hub's layout with DEL branding, dark-mode variant, text part) and the queue (`jobs.sendEmail`, with a
+    `dedupeKey` when a retry could repeat it). No email for routine sign-ins. Locally read them in Mailpit
+    (http://127.0.0.1:8025); production sends through Resend.
+
+25. **Manual enrollment** (owner, 2026-11-25; docs/MANUAL_ENROLLMENT.md). Instructors request (own courses only),
+    super admins verify external payments (allocation per course, actual fees, USD with the original currency),
+    approve and activate, or enroll directly; never Stripe charges or payouts; 80/20 of the net per instructor;
+    invitations hashed, single use, 7 days, newest link only, email code before the password, then Google
+    Authenticator. Never grants Instructor or Admin roles.
+
+26. **DevOps Easy Learning full program** (owner, 2026-11-25). The marketplace sells individual courses and
+    promotes the full training program on **https://www.devopseasylearning.com** (`lib/del-program.ts`; the www host
+    because the bare domain's certificate doesn't cover it): homepage band, footer, course pages, Student Studio.
+    Not in the top menu bar (owner). Enrolment and payment for the program happen only on that site, never through
+    the marketplace checkout. Social links (YouTube, Facebook, X, TikTok, LinkedIn) live in `components/SocialLinks.tsx`.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
@@ -126,4 +167,5 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 
 ## Where things are
 `docs/ASSESSMENT.md` (original assessment) · `docs/DECISIONS.md` · `docs/BUILD_SPEC.md` · `docs/API.md` · `docs/research/` ·
-`docs/ROADMAP.md` (improvement roadmap, when written) · `scripts/` (env, smoke).
+`docs/ROADMAP.md` (improvement roadmap, when written) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
+`docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md`. Local email inbox: http://127.0.0.1:8025.

@@ -26,7 +26,7 @@ export default function HelpVideo({ params }: { params: Promise<{ slug: string }
 
   return (
     <div className="container-x max-w-6xl pb-14 pt-6">
-      <Link href="/help" className="inline-flex items-center gap-1.5 text-sm font-bold text-violet hover:underline"><ArrowLeft className="size-4" />Help videos</Link>
+      <Link href="/help" className="inline-flex items-center gap-1.5 text-sm font-bold text-violet hover:underline"><ArrowLeft className="size-4" />Platform videos</Link>
       {error ? <p className="mt-6 text-rose">{error}</p> : null}
       {!data && !error ? <Skeleton className="mt-4 aspect-video w-full max-w-4xl" /> : null}
       {data ? (

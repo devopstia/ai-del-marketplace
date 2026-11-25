@@ -105,7 +105,7 @@ export default function AdminHelp() {
 
   return (
     <div className="max-w-5xl">
-      <PageHead title="Help videos" sub="Short “how to use DEL” videos for students and instructors, shown at /help. Videos made with video-academy/ are published here by its publish tool, or upload one yourself."
+      <PageHead title="Platform videos" sub="Short “how to use DEL” videos for students and instructors, shown at /help. Videos made with video-academy/ are published here by its publish tool, or upload one yourself."
         actions={!form ? <button type="button" className="btn btn-primary" onClick={() => setForm("new")} data-testid="new-help-video"><Plus className="size-4" />New video</button> : null} />
       {form && data ? <Editor data={data} edit={form === "new" ? undefined : form} onClose={() => setForm(null)} onDone={() => { setForm(null); reload(); }} /> : null}
       {error ? <p className="text-rose">{error}</p> : null}

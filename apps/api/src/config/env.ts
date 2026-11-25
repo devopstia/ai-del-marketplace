@@ -19,8 +19,9 @@ const schema = z.object({
   HLS_REENCODE: z.string().default('false').transform((v) => v === 'true' || v === '1'),
   WEB_URL: z.string().url().default('http://127.0.0.1:3000'),
   API_URL: z.string().url().default('http://127.0.0.1:4000'),
-  S3_ENDPOINT: z.string().url().default('http://127.0.0.1:9000'),
-  S3_PUBLIC_ENDPOINT: z.string().url().default('http://127.0.0.1:9000'),
+  /** A MinIO/S3-compatible URL, or "aws" for Amazon S3 with the instance role (production). */
+  S3_ENDPOINT: z.string().url().or(z.literal('aws')).default('http://127.0.0.1:9000'),
+  S3_PUBLIC_ENDPOINT: z.string().url().or(z.literal('aws')).default('http://127.0.0.1:9000'),
   S3_BUCKET: z.string().default('del-media'),
   S3_REGION: z.string().default('us-east-1'),
   S3_ACCESS_KEY: z.string().default(''),
@@ -56,6 +57,12 @@ const schema = z.object({
    * Local development only: `false` skips the Google Authenticator step so the owner can sign in quickly while testing.
    * Ignored in production (the code is always required there). docs/AUTH.md.
    */
+  /** console (log only) | smtp (local Mailpit or any SMTP server) | resend (production, HTTPS API). */
+  EMAIL_PROVIDER: z.enum(['console', 'smtp', 'resend']).default('console'),
+  SMTP_URL: z.string().default(''),
+  EMAIL_FROM: z.string().default('DevOps Easy Learning <no-reply@devopseasylearning.com>'),
+  EMAIL_REPLY_TO: z.string().default('support@devopseasylearning.com'),
+  RESEND_API_KEY: z.string().default(''),
   /** Where Contact page messages go (DEL support inbox). */
   CONTACT_EMAIL: z.string().email().default('support@devopseasylearning.com'),
   MFA_REQUIRED: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),

@@ -119,6 +119,7 @@ export class OAuthService {
       });
       await this.audit.log({ actorId: user.id, action: 'auth.register', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method: p } });
       await this.notifyRegistration(user.name, p);
+      await this.jobs.sendEmail({ to: user.email, template: 'welcome', data: { name: user.name } });
     }
     try {
       const r = await this.signIn.begin(user!, p, req, res, ctx, { next: st.next });

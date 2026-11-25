@@ -16,6 +16,8 @@ export interface EmailJob {
   data?: Record<string, unknown>;
   /** Reply-To (e.g. the sender of a contact message). */
   replyTo?: string;
+  /** Same key = same email: a retried operation never sends it twice (BullMQ job id). */
+  dedupeKey?: string;
   /** Private storage objects attached to the email (fetched by the worker at send time). */
   attachments?: { key: string; name: string; mime: string }[];
 }
@@ -69,7 +71,7 @@ export class JobsService {
 
   async sendEmail(job: EmailJob) {
     try {
-      await this.email.add('send', job, { attempts: 3, removeOnComplete: 1000, removeOnFail: 1000 });
+      await this.email.add('send', job, { attempts: 4, backoff: { type: 'exponential', delay: 30_000 }, removeOnComplete: 5000, removeOnFail: 5000, ...(job.dedupeKey ? { jobId: `mail:${job.dedupeKey}` } : {}) });
     } catch (e) {
       // Email is best effort: never fail a business action because the queue is down.
       this.logger.warn(`email enqueue failed: ${(e as Error).message}`);

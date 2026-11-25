@@ -81,12 +81,20 @@ export class FulfilmentService {
         },
         tx,
       );
-      return { orderId, alreadyFulfilled: false, enrolledCourseIds: enrolled, userId: order.userId };
+      return { orderId, alreadyFulfilled: false, enrolledCourseIds: enrolled, renewedCourseIds: renewed, userId: order.userId };
     });
 
     if (!result.alreadyFulfilled && result.userId) {
-      const user = await this.prisma.user.findUnique({ where: { id: result.userId }, select: { email: true } });
-      if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', data: { orderId } });
+      // The receipt email is best effort: building it never blocks the order.
+      try {
+        const user = await this.prisma.user.findUnique({ where: { id: result.userId }, select: { email: true, name: true } });
+        const o = await this.prisma.order.findUnique({ where: { id: orderId }, select: { totalCents: true, lines: { select: { courseId: true, priceCents: true, course: { select: { title: true } } } } } });
+        const ens = await this.prisma.enrollment.findMany({ where: { userId: result.userId, courseId: { in: o?.lines.map((l) => l.courseId) ?? [] } }, select: { courseId: true, accessExpiresAt: true } });
+        const lines = (o?.lines ?? []).map((l) => ({ title: l.course?.title ?? '', priceCents: l.priceCents, accessUntil: ens.find((e) => e.courseId === l.courseId)?.accessExpiresAt ?? null, renewal: result.renewedCourseIds?.includes(l.courseId) ?? false }));
+        if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', dedupeKey: `receipt:${orderId}`, data: { orderId, name: user.name, total: o?.totalCents ?? 0, lines } });
+      } catch (e) {
+        this.logger?.warn?.(`receipt email skipped: ${(e as Error).message}`);
+      }
     }
     if (!result.alreadyFulfilled) await this.settleFee(orderId, payment.via);
     const { userId: _u, ...out } = result;

@@ -6,7 +6,7 @@ import { SocialLinks } from "./SocialLinks";
 const cols: [string, [string, string][]][] = [
   ["Learn", [["Browse courses", "/courses"], ["AI for DevOps", "/courses?category=ai-for-devops"], ["MCP & Agents", "/courses?category=mcp-agents"], ["Free courses", "/courses?price=free"], ["Full training program ↗", programLink(DEL_PROGRAM.aboutUrl, "footer")], ["DevOps Easy Learning ↗", programLink("https://www.devopseasylearning.com/", "footer")]]],
   ["Teach", [["Become an instructor", "/teach"], ["Instructor studio", "/studio"], ["Payouts with Stripe", "/teach#payouts"]]],
-  ["Your account", [["Student Studio", "/student"], ["My courses", "/student/courses"], ["Purchase history", "/student/purchases"], ["Contact us", "/contact"], ["Verify a certificate", "/certificates/verify"], ["Help videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
+  ["Your account", [["Student Studio", "/student"], ["My courses", "/student/courses"], ["Purchase history", "/student/purchases"], ["Contact us", "/contact"], ["Verify a certificate", "/certificates/verify"], ["Platform videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
 ];
 
 export function SiteFooter() {

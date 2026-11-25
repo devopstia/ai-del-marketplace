@@ -281,13 +281,13 @@ export class ManualEnrollmentService {
     const fresh = await this.load(id);
     const titles = await this.titles(fresh.items.map((i) => i.courseId));
     if (student) {
-      await this.jobs.sendEmail({ to: student.email, template: fresh.items.length > 1 ? 'courses-assigned' : 'course-access-activated', data: { name: student.name, courses: fresh.items.map((i) => ({ title: titles[i.courseId], expiresAt: i.expiresAt })), link: `${env().WEB_URL}/student/courses` } });
+      await this.jobs.sendEmail({ to: student.email, template: fresh.items.length > 1 ? 'courses-assigned' : 'course-access-activated', dedupeKey: `me-activated:${id}`, data: { name: student.name, courses: fresh.items.map((i) => ({ title: titles[i.courseId], expiresAt: i.expiresAt })), link: `${env().WEB_URL}/student/courses` } });
     } else {
       await this.newInvitation(a, fresh, true);
     }
     if (fresh.requestedByRole === 'instructor') {
       const inst = await this.prisma.user.findUnique({ where: { id: fresh.requestedById }, select: { email: true, name: true } });
-      if (inst) await this.jobs.sendEmail({ to: inst.email, template: 'manual-enrollment-approved', data: { name: inst.name, ref: ref(fresh.number), student: fresh.studentName, link: `${env().WEB_URL}/studio/enrollments` } });
+      if (inst) await this.jobs.sendEmail({ to: inst.email, template: 'manual-enrollment-approved', dedupeKey: `me-approved:${id}`, data: { name: inst.name, ref: ref(fresh.number), student: fresh.studentName, link: `${env().WEB_URL}/studio/enrollments` } });
     }
     return this.detail(a.user, id);
   }

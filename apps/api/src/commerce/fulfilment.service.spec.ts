@@ -37,6 +37,7 @@ function fakeDb() {
     },
     enrollment: {
       findUnique: jest.fn(async ({ where }: any) => state.enrollments.find((e) => e.userId === where.userId_courseId.userId && e.courseId === where.userId_courseId.courseId) ?? null),
+      findMany: jest.fn(async () => state.enrollments),
       create: jest.fn(async ({ data }: any) => state.enrollments.push({ accessExpiresAt: null, ...data, revokedAt: null })),
       update: jest.fn(),
     },
