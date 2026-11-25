@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { use, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, LifeBuoy } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { clock } from "@/lib/format";
@@ -13,6 +14,7 @@ export default function HelpVideo({ params }: { params: Promise<{ slug: string }
   const { slug } = use(params);
   const { data, error } = useApi(`/help/videos/${encodeURIComponent(slug)}`, toDetail);
   const player = useRef<PlayerHandle>(null);
+  const router = useRouter();
   const [now, setNow] = useState(0);
   const jump = (t: number) => {
     const v = player.current?.video;
@@ -30,7 +32,8 @@ export default function HelpVideo({ params }: { params: Promise<{ slug: string }
       {data ? (
         <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0">
-            <VideoPlayer ref={player} key={data.playback.url} src={data.playback.url} format={data.playback.format} captionsUrl={data.playback.captionsUrl} title={data.title} onTime={(t) => setNow(t)} />
+            <VideoPlayer ref={player} key={data.playback.url} src={data.playback.url} format={data.playback.format} captionsUrl={data.playback.captionsUrl} title={data.title} onTime={(t) => setNow(t)}
+              onNext={data.next[0] ? () => router.push(`/help/${data.next[0].slug}`) : undefined} nextTitle={data.next[0]?.title} />
             <p className="mt-5 text-sm font-bold text-violet">{data.categoryName}</p>
             <h1 className="mt-1 font-display text-[clamp(1.6rem,3vw,2.2rem)] font-extrabold leading-tight">{data.title}</h1>
             <p className="mt-2 max-w-3xl text-ink-2">{data.summary}</p>

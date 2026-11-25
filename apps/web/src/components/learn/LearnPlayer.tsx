@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, FileText, ListChecks, Loader2, PanelRightClose, PanelRightOpen, PlayCircle, Star } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
@@ -24,8 +24,11 @@ const AUTOPLAY_SECONDS = 5;
 
 type Tab = "overview" | "content" | "resources" | "quiz" | "notes" | "review";
 
-export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: string }) {
-  const router = useRouter();
+export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string; lectureId: string }) {
+  // Lessons change in place (history.pushState): the player stays mounted, so full screen survives "Next".
+  const pathname = usePathname();
+  const lectureId = pathname.match(/^\/learn\/[^/]+\/([^/?#]+)/)?.[1] ?? initialLecture;
+  const stageRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [reviews, setReviews] = useState<ReviewInfo | null>(null);
@@ -49,10 +52,15 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
       setReviews(toReviewInfo(r));
       const ai = obj(obj(r).accessInfo);
       setAccess(ai.expiresAt ? { state: String(ai.state), expiresAt: String(ai.expiresAt), daysLeft: Number(ai.daysLeft ?? 0) } : null);
-      const sec = c.sections.find((s) => s.lectures.some((l) => l.id === lectureId));
-      setOpenSections(new Set(sec ? [sec.id] : c.sections.slice(0, 1).map((s) => s.id)));
     }).catch((e) => setLoadErr(errMsg(e)));
-  }, [slug, lectureId]);
+  }, [slug]);
+  // Keep the current lesson's section open in the outline.
+  useEffect(() => {
+    if (!course) return;
+    const sec = course.sections.find((s) => s.lectures.some((l) => l.id === lectureId)) ?? course.sections[0];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (sec) setOpenSections((o) => (o.has(sec.id) ? o : new Set([...o, sec.id])));
+  }, [course, lectureId]);
 
   const flat = useMemo(() => course?.sections.flatMap((s) => s.lectures) ?? [], [course]);
   const idx = flat.findIndex((l) => l.id === lectureId);
@@ -132,14 +140,21 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
   useEffect(() => {
     if (countdown === null) return;
     if (countdown <= 0) {
-      if (next) router.push(`/learn/${slug}/${next.id}`);
+      if (next) go(next);
       return;
     }
     const t = setTimeout(() => setCountdown((c) => (c === null ? null : c - 1)), 1000);
     return () => clearTimeout(t);
-  }, [countdown, next, router, slug]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown, next, slug]);
 
-  const go = (l?: LectureOutline) => l && router.push(`/learn/${slug}/${l.id}`);
+  function go(l?: LectureOutline) {
+    if (!l || l.id === lectureId) return;
+    if (lecture?.type === "video" && posRef.current > 0) void save(posRef.current, !!lecture.completed);
+    posRef.current = 0;
+    window.history.pushState(null, "", `/learn/${slug}/${l.id}`);
+    if (!document.fullscreenElement) window.scrollTo({ top: 0 });
+  }
 
   if (loadErr) {
     return (
@@ -193,7 +208,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
                         className={`mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-[5px] border-[1.5px] ${l.completed ? "border-mint bg-mint text-white" : "border-line-strong bg-surface"}`}>
                         {l.completed ? <Check className="size-3" strokeWidth={3} /> : null}
                       </button>
-                      <Link href={`/learn/${slug}/${l.id}`} aria-current={current ? "page" : undefined} className="min-w-0 flex-1">
+                      <Link href={`/learn/${slug}/${l.id}`} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); go(l); }} aria-current={current ? "page" : undefined} className="min-w-0 flex-1">
                         <span className={`block leading-snug ${current ? "font-bold text-ink" : "text-ink-2"}`}>{l.title}</span>
                         <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted"><Icon className="size-3.5" />{l.durationSec ? clock(l.durationSec) : l.type === "quiz" ? "Quiz" : "Reading"}</span>
                       </Link>
@@ -236,7 +251,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
             </p>
           ) : null}
           <div className="bg-stage">
-            <div className="mx-auto max-w-[1200px] px-0 sm:px-4 sm:py-4">
+            <div ref={stageRef} className="player-stage mx-auto max-w-[1200px] px-0 sm:px-4 sm:py-4">
               {!lecture ? (
                 <div className="grid aspect-video place-items-center"><Loader2 className="size-8 animate-spin text-white/70" /></div>
               ) : lecture.type === "video" ? (
@@ -249,6 +264,11 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
                     protectedStream={playback.protected}
                     autoPlay
                     title={lecture.title}
+                    fullscreenRef={stageRef}
+                    onPrev={prev ? () => go(prev) : undefined}
+                    onNext={next ? () => go(next) : undefined}
+                    prevTitle={prev?.title}
+                    nextTitle={next?.title}
                     startAt={playback.positionSec ?? 0}
                     onTime={(t, d) => {
                       posRef.current = t;

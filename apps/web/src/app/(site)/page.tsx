@@ -4,6 +4,7 @@ import { getCategories, getCourse, getCourses, getFeaturedInstructors, getInstru
 import { InstructorShowcase, TeachInvite } from "@/components/home/InstructorShowcase";
 import { CoursePath } from "@/components/home/CoursePath";
 import { HeroLoop } from "@/components/HeroLoop";
+import { FullProgram } from "@/components/promo/FullProgram";
 import { CourseBadges, CourseTile, MIN_STUDENTS_SHOWN, Price } from "@/components/CourseViews";
 import { CourseCover, coverSeeds } from "@/components/CourseCover";
 import { categoryIcon } from "@/components/CategoryIcon";
@@ -201,6 +202,8 @@ export default async function Home() {
           </div>
         </section>
       ) : null}
+
+      {!offline ? <FullProgram /> : null}
 
       {people.length ? (
         <section className="container-x pb-4 pt-20">

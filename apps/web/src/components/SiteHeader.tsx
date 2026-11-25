@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
+import { DEL_PROGRAM, programLink } from "@/lib/del-program";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap } from "lucide-react";
+import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap, Users } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "./AuthProvider";
@@ -111,6 +112,7 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
         <nav className="ml-2 hidden items-center lg:flex" aria-label="Main">
           <Link href="/courses" className={`${nav} ${active("/courses")}`}>Browse courses</Link>
           {dealsCount > 0 ? <Link href="/deals" className={`${nav} ${active("/deals")} inline-flex items-center gap-1.5`}>Deals<span className="rounded-full bg-rose-soft px-1.5 text-xs font-extrabold tabular-nums text-rose">{dealsCount}</span></Link> : null}
+          <a href={programLink(DEL_PROGRAM.aboutUrl, "header")} target="_blank" rel="noopener" className={nav} data-testid="nav-full-program" title={`${DEL_PROGRAM.name} on devopseasylearning.com`}>Full program</a>
         </nav>
         <SearchBox className="mx-2 hidden max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">
@@ -166,6 +168,9 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
                 </Link>
               );
             })}
+            <a href={programLink(DEL_PROGRAM.aboutUrl, "mobile-menu")} target="_blank" rel="noopener" className="flex items-center gap-3 rounded-lg px-3 py-3 font-bold text-ink hover:bg-surface-2">
+              <Users className="size-5 text-muted" />Full training program<span className="ml-auto text-xs font-normal text-muted">devopseasylearning.com</span>
+            </a>
             {!me ? (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Link href="/login" onClick={() => setMobile(false)} className="btn btn-outline">Log in</Link>

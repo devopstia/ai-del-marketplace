@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { LoopMark } from "./Logo";
+import { DEL_PROGRAM, programLink } from "@/lib/del-program";
 
 const cols: [string, [string, string][]][] = [
-  ["Learn", [["Browse courses", "/courses"], ["AI for DevOps", "/courses?category=ai-for-devops"], ["MCP & Agents", "/courses?category=mcp-agents"], ["Free courses", "/courses?price=free"]]],
+  ["Learn", [["Browse courses", "/courses"], ["AI for DevOps", "/courses?category=ai-for-devops"], ["MCP & Agents", "/courses?category=mcp-agents"], ["Free courses", "/courses?price=free"], ["Full training program ↗", programLink(DEL_PROGRAM.aboutUrl, "footer")], ["DevOps Easy Learning ↗", programLink("https://www.devopseasylearning.com/", "footer")]]],
   ["Teach", [["Become an instructor", "/teach"], ["Instructor studio", "/studio"], ["Payouts with Stripe", "/teach#payouts"]]],
   ["Your account", [["My learning", "/my-learning"], ["Orders and receipts", "/orders"], ["Verify a certificate", "/certificates/verify"], ["Help videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
 ];
@@ -23,7 +24,7 @@ export function SiteFooter() {
             <h2 className="font-display text-sm font-bold text-ink">{title}</h2>
             <ul className="mt-3 space-y-2">
               {links.map(([label, href]) => (
-                <li key={href}><Link href={href} className="text-sm text-muted hover:text-ink">{label}</Link></li>
+                <li key={href}>{href.startsWith("http") ? <a href={href} target="_blank" rel="noopener" className="text-sm text-muted hover:text-ink">{label}</a> : <Link href={href} className="text-sm text-muted hover:text-ink">{label}</Link>}</li>
               ))}
             </ul>
           </div>
