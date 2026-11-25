@@ -395,6 +395,17 @@ Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
 | POST | `/auth/identities/:id/unlink` | signed in | needs a code; not the last way in |
 | POST | `/admin/users/:id/mfa/reset` | super_admin | never one's own; audited |
 
+## Access and refunds (2026-11-25, docs/ACCESS_AND_REFUNDS.md)
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| GET | `/me/learning` | signed in | `items` (with `access`: state, purchasedAt, expiresAt, daysLeft, canRenew) and `expired` |
+| GET | `/me/courses/:slug` | access | adds `accessInfo`, `rating`, `canReview`, `myReview` |
+| PUT | `/lectures/:id/progress` | access | `{ positionSec, completed?, played?: [[start, end], …] }` (unique seconds) |
+| GET | `/orders/:id/refund` · POST `/orders/:id/refund` | buyer | facts per line · decided at once: `refunded` / `declined` / `pending_review` / `partial` |
+| GET | `/orders/:id/refund-requests` · POST `/refund-requests/:id/review` | buyer | decisions · ask a person to review a decline |
+| GET | `/admin/refund-requests?status=needs_action\|pending\|auto_approved\|approved\|auto_declined\|declined` | admin | facts, AI summary, history, counts |
+| POST | `/admin/refund-requests/:id/approve` · `/decline` | admin; super_admin for exceptions | note required to decline or overturn |
+
 ## Webhooks (server to server; no cookies/CSRF)
 
 - `POST /webhooks/stripe`: raw body, `Stripe-Signature` verified with `STRIPE_WEBHOOK_SECRET`; event ids stored for idempotency.

@@ -1,4 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
+import { accessState, daysLeft, hasAccess } from '../access/access';
+import { mergeRanges, parseRanges, rangeSeconds } from '../access/consumption';
 import { ProtectionService } from '../protection/protection.service';
 import { AuditService } from '../common/audit.service';
 import { AuthUser, isAdmin } from '../common/auth-context';
@@ -32,7 +34,8 @@ export class LearningService {
     if (course.instructorId === user.id) return 'owner';
     if (isAdmin(user)) return 'admin';
     const e = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId: user.id, courseId: course.id } } });
-    return e && !e.revokedAt ? 'enrolled' : null;
+    // Enforced here for every lecture, video, resource, quiz and progress call: an expired year means no access.
+    return hasAccess(e) ? 'enrolled' : null;
   }
 
   private async lectureWithCourse(lectureId: string) {
@@ -72,15 +75,27 @@ export class LearningService {
         select: { positionSec: true, updatedAt: true, lecture: { select: { id: true, title: true } } },
       });
       const cert = await this.prisma.certificate.findUnique({ where: { userId_courseId: { userId, courseId: e.courseId } }, select: { code: true } });
+      const line = e.orderLineId ? await this.prisma.orderLine.findUnique({ where: { id: e.orderLineId }, select: { order: { select: { paidAt: true } } } }) : null;
+      const state = accessState(e);
       items.push({
         course: { id: e.course.id, slug: e.course.slug, title: e.course.title, thumbnailUrl: this.media.imageUrl(e.course.coverKey), instructor: e.course.instructor },
         enrolledAt: e.createdAt,
+        // One-year access (owner 2026-11-25): when it was bought, when it ends, days left; expired courses keep progress.
+        access: { state, purchasedAt: line?.order.paidAt ?? e.createdAt, expiresAt: e.accessExpiresAt, daysLeft: daysLeft(e.accessExpiresAt), canRenew: state === 'expiring' || state === 'expired' },
         progress,
         lastLecture: last ? { id: last.lecture.id, title: last.lecture.title, positionSec: last.positionSec, at: last.updatedAt } : null,
         certificateCode: cert?.code ?? null,
       });
     }
-    return { items };
+    return { items: items.filter((i) => i.access.state !== 'expired'), expired: items.filter((i) => i.access.state === 'expired') };
+  }
+
+  /** The learner's access dates for the player (null for owners, admins and courses without an end date). */
+  private async accessInfo(userId: string, courseId: string) {
+    const e = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } });
+    if (!e?.accessExpiresAt) return null;
+    const state = accessState(e);
+    return { state, expiresAt: e.accessExpiresAt, daysLeft: daysLeft(e.accessExpiresAt), canRenew: state === 'expiring' || state === 'expired' };
   }
 
   /** Full curriculum for someone with access (no URLs: playback/download go through signed-URL endpoints). */
@@ -130,6 +145,7 @@ export class LearningService {
       myReview: review,
       // Reviews inside the learning view (owner 2026-11-25): the same numbers as the public course page.
       rating: { average: Math.round(c.ratingAvg * 10) / 10, count: c.ratingCount },
+      accessInfo: await this.accessInfo(user.id, c.id),
       canReview: access === 'enrolled',
       sections: c.sections.map((s) => ({
         id: s.id,
@@ -165,16 +181,19 @@ export class LearningService {
     return this.media.playback(lecture.videoAsset, user.id);
   }
 
-  async saveProgress(user: AuthUser, lectureId: string, input: { positionSec: number; completed?: boolean }) {
+  async saveProgress(user: AuthUser, lectureId: string, input: { positionSec: number; completed?: boolean; played?: [number, number][] }) {
     const { lecture, access } = await this.requireLectureAccess(user, lectureId);
     if (!access) throw forbidden('Enrol in this course to track progress', 'not_enrolled');
     const pos = lecture.durationSec > 0 ? Math.min(input.positionSec, lecture.durationSec) : input.positionSec;
     const existing = await this.prisma.lectureProgress.findUnique({ where: { userId_lectureId: { userId: user.id, lectureId } } });
     const completed = (existing?.completed ?? false) || !!input.completed; // completion is sticky
+    // Unique seconds watched: merged with what was already played, so replays never add (docs/ACCESS_AND_REFUNDS.md).
+    const ranges = mergeRanges([...parseRanges(existing?.watchedRanges), ...(input.played ?? [])], lecture.durationSec);
+    const watched = { watchedRanges: ranges as unknown as object, watchedSec: rangeSeconds(ranges) };
     const row = await this.prisma.lectureProgress.upsert({
       where: { userId_lectureId: { userId: user.id, lectureId } },
-      create: { userId: user.id, lectureId, positionSec: pos, completed },
-      update: { positionSec: pos, completed },
+      create: { userId: user.id, lectureId, positionSec: pos, completed, ...watched },
+      update: { positionSec: pos, completed, ...watched },
     });
     const course = await this.progressFor(user.id, lecture.section.courseId);
     return { lectureId, positionSec: row.positionSec, completed: row.completed, courseProgress: course };

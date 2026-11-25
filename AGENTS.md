@@ -106,7 +106,16 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     - Secrets, seeds and tokens are stored hashed or sealed, never logged; provider keys only in `.env`; the test
       provider never in production. Privileged changes (MFA reset, linking) are audited and emailed.
     - Tests, scripts and tools sign in through the real code step (`scripts/totp.mjs`, `SEED_MFA_SECRET`), never by
-      bypassing it.
+      bypassing it. `MFA_REQUIRED=false` in a local `.env` skips the code step on the owner's machine only (ignored in
+      production); run the test suites with `MFA_REQUIRED=true`.
+
+20. **One-year access and refunds** (owner, 2026-11-25: "I do not want our platform to offer lifetime access";
+    docs/ACCESS_AND_REFUNDS.md). Never write "lifetime access" anywhere. A purchase gives 12 months; expiry is enforced in
+    the API (`hasAccess`), never only in the UI; progress is never deleted; renewal is a new purchase at the current
+    price, never automatic. Refunds: within 14 days **and** at most 25 % of the course video watched, measured only
+    from merged playback ranges (unique seconds), never estimated; every request is recorded with its facts; a decline
+    can always be reviewed by a person; only a Super Admin overturns an automatic decline. AI may summarise refund facts
+    for admins but never decides or invents numbers.
 
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).

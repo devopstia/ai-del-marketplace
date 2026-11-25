@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/?app=del",
     name: "DevOps Easy Learning",
     short_name: "DEL",
-    description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs, real cloud demos, lifetime access.",
+    description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs and real cloud demos.",
     start_url: "/my-learning?source=pwa",
     scope: "/",
     display: "standalone",

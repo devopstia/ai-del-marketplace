@@ -41,7 +41,7 @@ function Success() {
       {paid ? <CheckCircle2 className="mx-auto size-14 text-mint" /> : <Loader2 className="mx-auto size-12 animate-spin text-violet" />}
       <h1 className="mt-5 font-display text-[2.4rem] font-extrabold leading-tight" data-testid="checkout-success">{paid ? "You’re enrolled" : "Confirming your payment"}</h1>
       <p className="mt-3 text-lg text-ink-2">
-        {paid ? "Your courses are ready in My learning. A receipt is saved under Orders." : `Waiting for Stripe to confirm the payment${tries > 6 ? ". This is taking longer than usual; you can safely leave this page." : "…"}`}
+        {paid ? "Your courses are ready in My learning, with 12 months of access from today. A receipt is saved under Orders." : `Waiting for Stripe to confirm the payment${tries > 6 ? ". This is taking longer than usual; you can safely leave this page." : "…"}`}
       </p>
       {order ? (
         <ul className="mx-auto mt-8 max-w-md divide-y divide-line rounded-tile border border-line bg-surface text-left">

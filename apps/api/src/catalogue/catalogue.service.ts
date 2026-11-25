@@ -1,3 +1,4 @@
+import { accessState, daysLeft, hasAccess } from '../access/access';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
 import { AuthUser, isAdmin } from '../common/auth-context';
@@ -177,13 +178,18 @@ export class CatalogueService {
     const canSeeUnpublished = viewer && c && (c.instructorId === viewer.id || isAdmin(viewer));
     if (!c || (c.status !== 'published' && !canSeeUnpublished)) throw notFound('Course');
 
-    let viewerState = { signedIn: false, enrolled: false, inCart: false, isOwner: false };
+    let viewerState: { signedIn: boolean; enrolled: boolean; inCart: boolean; isOwner: boolean; access?: { state: string; expiresAt: Date | null; daysLeft: number | null; canRenew: boolean } } = { signedIn: false, enrolled: false, inCart: false, isOwner: false };
     if (viewer) {
       const [enr, cart] = await Promise.all([
         this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId: viewer.id, courseId: c.id } } }),
         this.prisma.cartItem.findUnique({ where: { userId_courseId: { userId: viewer.id, courseId: c.id } } }),
       ]);
-      viewerState = { signedIn: true, enrolled: !!enr && !enr.revokedAt, inCart: !!cart, isOwner: c.instructorId === viewer.id };
+      // One-year access: `enrolled` means access in force today; `access` tells the page when it ends and if it can be renewed.
+      const state = enr ? accessState(enr) : null;
+      viewerState = {
+        signedIn: true, enrolled: hasAccess(enr), inCart: !!cart, isOwner: c.instructorId === viewer.id,
+        ...(enr && state !== 'revoked' ? { access: { state: state!, expiresAt: enr.accessExpiresAt, daysLeft: daysLeft(enr.accessExpiresAt), canRenew: state === 'expiring' || state === 'expired' } } : {}),
+      };
     }
 
     const card = toCard(

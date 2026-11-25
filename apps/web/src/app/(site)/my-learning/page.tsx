@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Award, BookOpen, Loader2, PlayCircle } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
@@ -23,6 +24,28 @@ function resumeHref(i: LearningItem) {
   return i.lastLectureId ? `/learn/${i.course.slug}/${i.lastLectureId}` : `/learn/${i.course.slug}`;
 }
 
+/** Days left, recomputed every minute so the countdown moves on an open page. */
+function useNow(ms = 60_000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), ms); return () => clearInterval(id); }, [ms]);
+  return now;
+}
+const DAY = 86_400_000;
+
+/** Bought / access until / days left, and Renew in the last 30 days (one-year access, owner 2026-11-25). */
+function AccessLine({ item, now }: { item: LearningItem; now: number }) {
+  const a = item.access;
+  if (!a?.expiresAt) return null;
+  const left = Math.max(0, Math.ceil((new Date(a.expiresAt).getTime() - now) / DAY));
+  const soon = left <= 30;
+  return (
+    <p className={`text-xs ${soon ? "font-bold text-amber" : "text-muted"}`} data-testid="access-line">
+      {a.purchasedAt ? `Bought ${date(a.purchasedAt)} · ` : ""}Access until {date(a.expiresAt)} · <span className="tabular-nums">{left} day{left === 1 ? "" : "s"} left</span>
+      {a.canRenew ? <> · <Link href={`/courses/${item.course.slug}`} className="link">Renew</Link></> : null}
+    </p>
+  );
+}
+
 function CertificateAction({ item, onIssued }: { item: LearningItem; onIssued: (code: string) => void }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -44,11 +67,24 @@ function CertificateAction({ item, onIssued }: { item: LearningItem; onIssued: (
 export default function MyLearning() {
   const { me } = useAuth();
   const [items, setItems] = useState<LearningItem[] | null>(null);
+  const [expired, setExpired] = useState<LearningItem[]>([]);
+  const now = useNow();
+  const router = useRouter();
+  const toast = useToast();
+  const [renewing, setRenewing] = useState<string | null>(null);
+  async function renew(i: LearningItem) {
+    setRenewing(i.course.slug);
+    try { await api("/cart", { method: "POST", body: { courseId: i.course.id } }); router.push("/checkout"); }
+    catch (e) { toast("error", errMsg(e)); setRenewing(null); }
+  }
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState<(typeof tabs)[number][0]>("all");
 
   useEffect(() => {
-    api("/me/learning").then((r) => setItems(list(r, "courses", "enrollments").map(toLearningItem))).catch((e) => setErr(errMsg(e)));
+    api("/me/learning").then((r) => {
+      setItems(list(r, "courses", "enrollments").map(toLearningItem));
+      setExpired(Array.isArray(obj(r).expired) ? (obj(r).expired as unknown[]).map(toLearningItem) : []);
+    }).catch((e) => setErr(errMsg(e)));
   }, []);
 
   const sorted = useMemo(() => [...(items ?? [])].sort((a, b) => (b.lastActivityAt ?? "").localeCompare(a.lastActivityAt ?? "")), [items]);
@@ -126,11 +162,33 @@ export default function MyLearning() {
                     {i.lastActivityAt ? <span className="text-xs text-muted">Last studied {date(i.lastActivityAt)}</span> : null}
                     <CertificateAction item={i} onIssued={issue(i.course.slug)} />
                   </div>
+                  <div className="mt-1.5"><AccessLine item={i} now={now} /></div>
                 </div>
                 <Link href={resumeHref(i)} className="btn btn-outline btn-sm col-span-2 sm:col-span-1">{i.progressPct === 0 ? "Start course" : i.progressPct >= 100 ? "Review course" : "Resume"}</Link>
               </li>
             ))}
             {!shown.length ? <li className="py-10 text-center text-ink-2">No courses in this list yet.</li> : null}
+          </ul>
+        </section>
+      ) : null}
+
+      {expired.length ? (
+        <section className="mt-14" aria-labelledby="expired-h" data-testid="expired-courses">
+          <h2 id="expired-h" className="font-display text-2xl font-extrabold">Expired courses</h2>
+          <p className="mt-1 text-ink-2">Your 12 months of access ended. Your progress is saved: renew to continue where you left off. Nothing is charged automatically.</p>
+          <ul className="mt-4 divide-y divide-line rounded-tile border border-line bg-surface">
+            {expired.map((i) => (
+              <li key={i.course.slug} className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)_auto]" data-testid="expired-item">
+                <div className="opacity-70"><CourseCover slug={i.course.slug} title={i.course.title} thumbnailUrl={i.course.thumbnailUrl} size="sm" /></div>
+                <div className="min-w-0">
+                  <p className="font-bold">{i.course.title}</p>
+                  <p className="text-sm text-muted">Access ended {date(i.access?.expiresAt)} · {i.progressPct}% complete, saved</p>
+                </div>
+                <button type="button" className="btn btn-primary btn-sm col-span-2 sm:col-span-1" disabled={renewing === i.course.slug} onClick={() => void renew(i)} data-testid="renew-expired">
+                  {renewing === i.course.slug ? <Loader2 className="size-4 animate-spin" /> : null}Renew for 12 months
+                </button>
+              </li>
+            ))}
           </ul>
         </section>
       ) : null}

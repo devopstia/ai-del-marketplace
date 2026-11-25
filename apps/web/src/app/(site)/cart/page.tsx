@@ -84,6 +84,7 @@ export default function CartPage() {
             ) : null}
             <Link href="/checkout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Check out</Link>
             <p className="mt-3 text-xs text-muted">You’ll confirm and pay on the next step. Card details are entered on Stripe, never on this site.</p>
+            <p className="mt-2 text-xs text-muted">Each course includes <span className="font-bold text-ink-2">12 months of access</span> from purchase (not lifetime). <Link href="/policies/access-and-refunds" className="link">Access and refunds</Link></p>
           </aside>
         </div>
       ) : null}

@@ -17,6 +17,7 @@ import { ARGON2_OPTS } from '../src/auth/auth.service';
 import { configureApp } from '../src/bootstrap';
 import { JobsService } from '../src/common/jobs';
 import { seal } from '../src/common/seal';
+import { sendAccessReminders } from '../src/access/reminders';
 import { codeAt, newSecret, stepAt } from '../src/auth/totp';
 import { PrismaService } from '../src/common/prisma.service';
 import { resetEnvCache } from '../src/config/env';
@@ -401,19 +402,21 @@ describe('e2e: buy and learn', () => {
 
     // Refund policy: eligible now; watching 25% or more of a course makes it ineligible.
     const lc50 = order.lines.find((l) => l.courseId === c50.course.id)!;
-    await prisma.lectureProgress.create({ data: { userId: buyer.user.id, lectureId: c50.lecture.id, positionSec: 20, completed: true } });
+    await prisma.lectureProgress.create({ data: { userId: buyer.user.id, lectureId: c50.lecture.id, positionSec: 20, completed: true, watchedSec: 20, watchedRanges: [[0, 20]] } });
     const el = await buyer.agent.get(`/api/orders/${order.id}/refund`).expect(200);
     expect(el.body.lines.find((l: any) => l.lineId === lc50.id)).toMatchObject({ eligible: false, reason: 'watched_too_much', watchedPercent: 100 });
     const l100 = el.body.lines.find((l: any) => l.courseId === c100.course.id);
     expect(l100).toMatchObject({ eligible: true, reason: null });
     expect(el.body).toMatchObject({ policy: { windowDays: 14, maxWatchedPercent: 25, selfServicePerYear: 3 }, selfServiceLeft: 3 });
-    const denied = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [lc50.id] }).expect(400);
-    expect(denied.body.error.code).toBe('watched_too_much');
+    // Not eligible: recorded and declined at once (with the reason), never silently refused.
+    const denied = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [lc50.id] }).expect(200);
+    expect(denied.body.status).toBe('declined');
+    expect((await prisma.refundRequest.findFirstOrThrow({ where: { id: denied.body.requestId } })).status).toBe('auto_declined');
     await request(app.getHttpServer()).get(`/api/orders/${order.id}/refund`).expect(401);
     const other = await userAgent('m-other@e2e.example', ['student']);
     await other.agent.get(`/api/orders/${order.id}/refund`).expect(404);
     const done = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [l100.lineId], reason: 'Not what I needed' }).expect(200);
-    expect(done.body).toEqual({ status: 'refunded' });
+    expect(done.body).toMatchObject({ status: 'refunded', requests: [{ status: 'refunded' }] });
     expect(await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: buyer.user.id, courseId: c100.course.id } } })).toMatchObject({ revokedAt: expect.any(Date) });
     expect(await prisma.orderLine.findUniqueOrThrow({ where: { id: l100.lineId } })).toMatchObject({ transferStatus: 'none', refundedAt: expect.any(Date) });
 
@@ -1027,5 +1030,154 @@ describe('e2e: buy and learn', () => {
     expect(b2.body.status).toBe('hidden');
     expect(b2.body.courseRating).toEqual({ average: 4, count: 1 });
     expect((await bob.agent.get('/api/me/courses/rv-course').expect(200)).body.myReview.status).toBe('hidden');
+  });
+
+  describe('one-year access and the 25% refund rule (owner 2026-11-25)', () => {
+    const jobs = () => app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const DAY = 86_400_000;
+    async function buy(u: Awaited<ReturnType<typeof userAgent>>, courseId: string) {
+      await u.send('post', '/api/cart', { courseId }).expect(201);
+      const co = await u.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+      await u.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+      return co.body.orderId as string;
+    }
+    async function course100(teacherId: string, slug: string) {
+      const c = await publishedCourse(teacherId, slug, 2000);
+      await prisma.lecture.update({ where: { id: c.lecture.id }, data: { durationSec: 100 } });
+      await prisma.videoAsset.updateMany({ where: { lectures: { some: { id: c.lecture.id } } }, data: { durationSec: 100 } });
+      return c;
+    }
+
+    it('a purchase gives exactly 12 months; expiry locks the course (backend), keeps progress, and renewal extends it', async () => {
+      const teacher = await userAgent('acc-teacher@e2e.example', ['student', 'instructor'], {});
+      const stu = await userAgent('acc-stu@e2e.example', ['student']);
+      const { course, lecture } = await course100(teacher.user.id, 'acc-course');
+      const orderId = await buy(stu, course.id);
+      const paidAt = (await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).paidAt!;
+      const enr = await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } });
+      const oneYear = new Date(paidAt); oneYear.setUTCMonth(oneYear.getUTCMonth() + 12);
+      expect(enr.accessExpiresAt?.toISOString()).toBe(oneYear.toISOString());
+      const ml = (await stu.agent.get('/api/me/learning').expect(200)).body;
+      expect(ml.items.find((i: any) => i.course.slug === 'acc-course').access).toMatchObject({ state: 'active', canRenew: false, daysLeft: expect.any(Number) });
+      expect((await stu.agent.get('/api/courses/acc-course').expect(200)).body.viewer.access).toMatchObject({ state: 'active', canRenew: false });
+      // Can't buy again while more than 30 days are left.
+      expect((await stu.send('post', '/api/cart', { courseId: course.id }).expect(409)).body.error.code).toBe('already_enrolled');
+      await stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec: 40, played: [[0, 40]] }).expect(200);
+
+      // Expired: locked everywhere on the server, listed under Expired, progress kept, renewal offered.
+      await prisma.enrollment.update({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } }, data: { accessExpiresAt: new Date(Date.now() - DAY) } });
+      await stu.send('post', `/api/lectures/${lecture.id}/playback`).expect(403);
+      await stu.agent.get('/api/me/courses/acc-course').expect(403);
+      await stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec: 50 }).expect(403);
+      const after = (await stu.agent.get('/api/me/learning').expect(200)).body;
+      expect(after.items.some((i: any) => i.course.slug === 'acc-course')).toBe(false);
+      expect(after.expired[0]).toMatchObject({ course: { slug: 'acc-course' }, access: { state: 'expired', canRenew: true } });
+      expect((await prisma.lectureProgress.findFirstOrThrow({ where: { userId: stu.user.id } })).watchedSec).toBe(40);
+
+      // Renewal = buying again: a fresh year from today, progress where it was.
+      const renewal = await buy(stu, course.id);
+      const r2 = (await prisma.order.findUniqueOrThrow({ where: { id: renewal } })).paidAt!;
+      const e2 = await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } });
+      const y2 = new Date(r2); y2.setUTCMonth(y2.getUTCMonth() + 12);
+      expect(e2.accessExpiresAt?.toISOString()).toBe(y2.toISOString());
+      await stu.send('post', `/api/lectures/${lecture.id}/playback`).expect(200);
+      expect((await stu.agent.get('/api/me/courses/acc-course').expect(200)).body.sections[0].lectures[0].progress.positionSec).toBe(40);
+
+      // Early renewal (last 30 days) adds a year after the current end; refunding it gives the earlier end back.
+      const end = new Date(Date.now() + 10 * DAY);
+      await prisma.enrollment.update({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } }, data: { accessExpiresAt: end } });
+      await prisma.accessPeriod.updateMany({ where: { userId: stu.user.id, courseId: course.id, revokedAt: null }, data: { endsAt: end } });
+      const early = await buy(stu, course.id);
+      const ext = new Date(end); ext.setUTCMonth(ext.getUTCMonth() + 12);
+      expect((await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } })).accessExpiresAt?.toISOString()).toBe(ext.toISOString());
+      // (The student watched 40% earlier, so their own request would be declined: consumption is per course.)
+      expect((await stu.send('post', `/api/orders/${early}/refund`, {}).expect(200)).body.status).toBe('declined');
+      const boss = await userAgent('acc-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      await boss.send('post', `/api/admin/orders/${early}/refund`, { reason: 'test: renewal refund' }).expect(200);
+      const back = await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } });
+      expect(back.revokedAt).toBeNull();
+      expect(back.accessExpiresAt?.toISOString()).toBe(end.toISOString());
+    });
+
+    it('consumption counts unique seconds: replays and skips do not add', async () => {
+      const teacher = await userAgent('cons-teacher@e2e.example', ['student', 'instructor'], {});
+      const stu = await userAgent('cons-stu@e2e.example', ['student']);
+      const { course, lecture } = await course100(teacher.user.id, 'cons-course');
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: course.id, source: 'free' } });
+      const save = (played: [number, number][], positionSec: number) => stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec, played }).expect(200);
+      await save([[0, 10]], 10);
+      await save([[0, 10]], 10); // replay
+      await save([[9.5, 20]], 20); // continuous with a tiny overlap
+      await save([[80, 90]], 90); // skipped 20→80, watched 10 s
+      const row = await prisma.lectureProgress.findFirstOrThrow({ where: { userId: stu.user.id, lectureId: lecture.id } });
+      expect(row.watchedSec).toBe(30);
+      expect(row.watchedRanges).toEqual([[0, 20], [80, 90]]);
+      await save([[0, 500]], 100); // clamped to the lesson length
+      expect((await prisma.lectureProgress.findFirstOrThrow({ where: { userId: stu.user.id, lectureId: lecture.id } })).watchedSec).toBe(100);
+    });
+
+    it('refunds: 20% and 25% refunded automatically, 30% declined with the email, 14-day window, review, Super Admin exception', async () => {
+      const teacher = await userAgent('rf-teacher@e2e.example', ['student', 'instructor'], {});
+      const admin = await userAgent('rf-admin@e2e.example', ['student', 'admin']);
+      const boss = await userAgent('rf-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const results: Record<string, any> = {};
+      for (const pct of [20, 25, 30]) {
+        const stu = await userAgent(`rf-${pct}@e2e.example`, ['student']);
+        const { course, lecture } = await course100(teacher.user.id, `rf-course-${pct}`);
+        const orderId = await buy(stu, course.id);
+        await stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec: pct, played: [[0, pct]] }).expect(200);
+        jobs().sendEmail.mockClear();
+        const r = await stu.send('post', `/api/orders/${orderId}/refund`, {}).expect(200);
+        results[pct] = { stu, orderId, body: r.body, emails: jobs().sendEmail.mock.calls.map((c) => c[0]) };
+      }
+      expect(results[20].body.status).toBe('refunded');
+      expect(results[25].body.status).toBe('refunded'); // exactly 25% still qualifies
+      expect(results[30].body.status).toBe('declined');
+      expect(results[30].emails).toContainEqual(expect.objectContaining({ template: 'refund-declined', data: expect.objectContaining({ watchedPercent: 30, thresholdPercent: 25 }) }));
+      expect(results[20].emails).toContainEqual(expect.objectContaining({ template: 'refund-approved' }));
+      const declined = await prisma.refundRequest.findFirstOrThrow({ where: { orderId: results[30].orderId } });
+      expect(declined).toMatchObject({ status: 'auto_declined' });
+      expect((declined.analysis as any).lines[0]).toMatchObject({ totalSec: 100, watchedSec: 30, watchedPercent: 30, thresholdPercent: 25, eligible: false, reason: 'watched_too_much', withinWindow: true });
+
+      // Outside the 14-day window: declined even at 0% watched.
+      const late = await userAgent('rf-late@e2e.example', ['student']);
+      const lc = await course100(teacher.user.id, 'rf-course-late');
+      const lateOrder = await buy(late, lc.course.id);
+      await prisma.order.update({ where: { id: lateOrder }, data: { refundEligibleUntil: new Date(Date.now() - DAY) } });
+      const lr = await late.send('post', `/api/orders/${lateOrder}/refund`, {}).expect(200);
+      expect(lr.body.status).toBe('declined');
+      expect(((await prisma.refundRequest.findFirstOrThrow({ where: { orderId: lateOrder } })).analysis as any).lines[0].reason).toBe('window_closed');
+
+      // The student asks for a review; it waits for a person; only a Super Admin can overturn it.
+      const stu30 = results[30].stu;
+      await stu30.send('post', `/api/refund-requests/${declined.id}/review`, { note: 'short' }).expect(400);
+      await stu30.send('post', `/api/refund-requests/${declined.id}/review`, { note: 'The video froze and replayed by itself; I watched about 10 minutes.' }).expect(200);
+      const queue = (await admin.agent.get('/api/admin/refund-requests?status=needs_action').expect(200)).body;
+      expect(queue.items.map((i: any) => i.id)).toContain(declined.id);
+      expect(queue.items.find((i: any) => i.id === declined.id)).toMatchObject({ needsAction: true, reviewNote: expect.stringContaining('froze'), history: expect.arrayContaining([expect.objectContaining({ action: 'refund.auto_declined' }), expect.objectContaining({ action: 'refund.review_requested' })]) });
+      expect((await admin.send('post', `/api/admin/refund-requests/${declined.id}/approve`, { note: 'ok' }).expect(403)).body.error.code).toBe('super_admin_only');
+      await boss.send('post', `/api/admin/refund-requests/${declined.id}/approve`, {}).expect(400); // a note is required
+      await boss.send('post', `/api/admin/refund-requests/${declined.id}/approve`, { note: 'Player fault confirmed in support ticket.' }).expect(200);
+      expect((await prisma.order.findUniqueOrThrow({ where: { id: results[30].orderId } })).status).toBe('refunded');
+      expect(await prisma.auditLog.count({ where: { action: 'refund.exception_approved' } })).toBe(1);
+    });
+
+    it('expiry reminders: 30, 7 and 1 days before and on expiry, each once', async () => {
+      const stu = await userAgent('rem-stu@e2e.example', ['student']);
+      const teacher = await userAgent('rem-teacher@e2e.example', ['student', 'instructor'], {});
+      const { course } = await publishedCourse(teacher.user.id, 'rem-course', 1000);
+      const now = new Date();
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: course.id, source: 'purchase', accessExpiresAt: new Date(now.getTime() + 20 * DAY) } });
+      jobs().sendEmail.mockClear();
+      const svc = app.get(JobsService);
+      const mine = () => jobs().sendEmail.mock.calls.map((c) => c[0]).filter((m: any) => m.to === 'rem-stu@e2e.example');
+      await sendAccessReminders(prisma as any, svc, now);
+      await sendAccessReminders(prisma as any, svc, now); // same hour again: nothing new
+      expect(mine()).toEqual([expect.objectContaining({ template: 'access-expiring', data: expect.objectContaining({ daysLeft: 20, course: 'rem-course' }) })]);
+      await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 14 * DAY)); // 6 days left → the 7-day reminder
+      await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 21 * DAY)); // ended
+      await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 22 * DAY)); // never twice
+      expect(mine().map((m: any) => [m.template, m.data.daysLeft])).toEqual([['access-expiring', 20], ['access-expiring', 6], ['access-expired', 0]]);
+    });
   });
 });

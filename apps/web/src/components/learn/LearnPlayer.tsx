@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, FileText, ListChecks, Loader2, PanelRightClose, PanelRightOpen, PlayCircle, Star } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { obj, toCourseDetail } from "@/lib/normalize";
-import { clock, hours } from "@/lib/format";
+import { clock, hours, date } from "@/lib/format";
 import type { CourseDetail, LectureOutline, Playback } from "@/lib/types";
 import { LoopMark } from "../Logo";
 import { LoopMeter } from "../LoopMeter";
@@ -29,6 +29,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
   const toast = useToast();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [reviews, setReviews] = useState<ReviewInfo | null>(null);
+  const [access, setAccess] = useState<{ state: string; expiresAt: string; daysLeft: number } | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [playErr, setPlayErr] = useState<string | null>(null);
@@ -46,6 +47,8 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
       const c = toCourseDetail(r);
       setCourse(c);
       setReviews(toReviewInfo(r));
+      const ai = obj(obj(r).accessInfo);
+      setAccess(ai.expiresAt ? { state: String(ai.state), expiresAt: String(ai.expiresAt), daysLeft: Number(ai.daysLeft ?? 0) } : null);
       const sec = c.sections.find((s) => s.lectures.some((l) => l.id === lectureId));
       setOpenSections(new Set(sec ? [sec.id] : c.sections.slice(0, 1).map((s) => s.id)));
     }).catch((e) => setLoadErr(errMsg(e)));
@@ -89,13 +92,32 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
     setCourse((c) => c && { ...c, sections: c.sections.map((s) => ({ ...s, lectures: s.lectures.map((l) => (l.id === id ? { ...l, ...patch } : l)) })) });
   }, []);
 
+  // Seconds actually played, as [start, end] ranges: the server merges them so replays and skips never count
+  // (one-year access and the 25% refund rule, docs/ACCESS_AND_REFUNDS.md).
+  const segRef = useRef<{ start: number; last: number } | null>(null);
+  const playedRef = useRef<[number, number][]>([]);
+  const track = useCallback((t: number) => {
+    const s = segRef.current;
+    if (s && t >= s.last && t - s.last <= 2.5) { s.last = t; return; }
+    if (s && s.last - s.start >= 0.5) playedRef.current.push([s.start, s.last]);
+    segRef.current = { start: t, last: t };
+  }, []);
+  const takePlayed = useCallback(() => {
+    const s = segRef.current;
+    if (s && s.last - s.start >= 0.5) { playedRef.current.push([s.start, s.last]); segRef.current = { start: s.last, last: s.last }; }
+    const out = playedRef.current.map(([a, b]) => [Math.round(a * 10) / 10, Math.round(b * 10) / 10] as [number, number]);
+    playedRef.current = [];
+    return out;
+  }, []);
+
   const save = useCallback(async (positionSec: number, completed: boolean, id = lectureId) => {
     lastSaved.current = Date.now();
+    const played = takePlayed();
     try {
-      await api(`/lectures/${id}/progress`, { method: "PUT", body: { positionSec: Math.floor(positionSec), completed } });
+      await api(`/lectures/${id}/progress`, { method: "PUT", body: { positionSec: Math.floor(positionSec), completed, ...(played.length ? { played } : {}) } });
       if (completed) markLocal(id, { completed: true });
     } catch { /* progress is best-effort; next save retries */ }
-  }, [lectureId, markLocal]);
+  }, [lectureId, markLocal, takePlayed]);
 
   // Save position when leaving the page
   useEffect(() => {
@@ -123,9 +145,13 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
     return (
       <div className="grid min-h-dvh place-items-center p-6 text-center">
         <div>
-          <p className="font-display text-2xl font-bold">You don’t have access to this course yet</p>
-          <p className="mt-2 text-ink-2">{loadErr}</p>
-          <Link href={`/courses/${slug}`} className="btn btn-primary mt-6">View the course page</Link>
+          <p className="font-display text-2xl font-bold">You don’t have access to this course right now</p>
+          <p className="mt-2 max-w-md text-ink-2">If your 12 months of access ended, renew it on the course page: your progress is saved and you continue where you left off.</p>
+          <p className="mt-1 text-sm text-muted">{loadErr}</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link href={`/courses/${slug}`} className="btn btn-primary" data-testid="renew-from-player">Renew or view the course</Link>
+            <Link href="/my-learning" className="btn btn-outline">My learning</Link>
+          </div>
         </div>
       </div>
     );
@@ -203,6 +229,12 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
 
       <div className="flex flex-1">
         <div className="min-w-0 flex-1">
+          {access?.state === "expiring" ? (
+            <p className="flex flex-wrap items-center justify-center gap-x-2 border-b border-line bg-amber-soft px-4 py-2 text-center text-sm font-bold text-amber" data-testid="access-expiring">
+              Your access to this course ends on {date(access.expiresAt)} ({access.daysLeft} day{access.daysLeft === 1 ? "" : "s"} left).
+              <Link href={`/courses/${slug}`} className="underline underline-offset-2">Renew for 12 more months</Link>
+            </p>
+          ) : null}
           <div className="bg-stage">
             <div className="mx-auto max-w-[1200px] px-0 sm:px-4 sm:py-4">
               {!lecture ? (
@@ -220,6 +252,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
                     startAt={playback.positionSec ?? 0}
                     onTime={(t, d) => {
                       posRef.current = t;
+                      track(t);
                       if (Date.now() - lastSaved.current > SAVE_EVERY_MS) void save(t, !!lecture.completed || (d > 0 && t / d > 0.95));
                     }}
                     onPause={(t) => void save(t, !!lecture.completed)}

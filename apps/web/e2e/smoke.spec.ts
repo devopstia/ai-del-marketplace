@@ -432,3 +432,13 @@ test.describe.serial("help videos", () => {
   });
 });
 
+test("12 months of access is disclosed before paying, never lifetime", async ({ page }) => {
+  await page.goto(`/courses/${PAID_COURSE}`);
+  const card = page.locator("[data-testid=purchase-card]:visible").first();
+  await expect(card).toContainText("12 months of access");
+  await expect(page.locator("body")).not.toContainText(/lifetime access/i);
+  await page.goto("/policies/access-and-refunds");
+  await expect(page.getByTestId("policy")).toContainText("12 months from the day you buy it");
+  await expect(page.getByTestId("policy")).toContainText("25% or less");
+});
+

@@ -4,12 +4,14 @@ import type { Job } from 'bullmq';
 import { JobsService, PAYMENTS_QUEUE } from '../common/jobs';
 import { env } from '../config/env';
 import { PayoutsService } from './payouts.service';
+import { PrismaService } from '../common/prisma.service';
+import { sendAccessReminders } from '../access/reminders';
 
 /** Runs in the API process: fee lookups that Stripe hasn't finished yet, and the hourly payout release. */
 @Processor(PAYMENTS_QUEUE)
 export class PaymentsProcessor extends WorkerHost {
   private readonly logger = new Logger('PaymentsJobs');
-  constructor(private readonly payouts: PayoutsService) {
+  constructor(private readonly payouts: PayoutsService, private readonly prisma: PrismaService, private readonly jobs: JobsService) {
     super();
   }
 
@@ -22,6 +24,11 @@ export class PaymentsProcessor extends WorkerHost {
     if (job.name === 'release-transfers') {
       const r = await this.payouts.releaseDue();
       if (r.transferred || r.netted) this.logger.log(`released ${r.transferred} transfers (${r.netted} netted)`);
+      return r;
+    }
+    if (job.name === 'access-reminders') {
+      const r = await sendAccessReminders(this.prisma, this.jobs);
+      if (r.sent) this.logger.log(`sent ${r.sent} access reminders`);
       return r;
     }
     return { ignored: job.name };

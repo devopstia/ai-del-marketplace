@@ -71,6 +71,11 @@ export default function CheckoutPage() {
                 <span>I want access to the course right away. I understand that once I start watching, refunds follow the policy below instead of the 14-day withdrawal right.</span>
               </label>
             ) : null}
+            {cart.totalCents > 0 ? (
+              <p className="mt-3 rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-sm text-ink-2" data-testid="access-terms">
+                <span className="font-bold text-ink">12 months of access, not lifetime.</span> Each course is yours for 12 months from today. Renewing is optional and never charged automatically. Refunds: within 14 days if you’ve watched 25% or less. <Link href="/policies/access-and-refunds" className="link">Read the policy</Link>
+              </p>
+            ) : null}
             <button type="button" className="btn btn-primary mt-5 w-full" onClick={pay} disabled={busy || (cart.totalCents > 0 && !consent)} data-testid="pay">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}Continue to secure payment
             </button>

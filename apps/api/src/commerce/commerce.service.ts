@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { blockingEnrollmentWhere } from '../access/access';
 import { AuditService } from '../common/audit.service';
 import { Actor } from '../common/auth-context';
 import { badRequest, conflict, forbidden, notFound, unavailable } from '../common/errors';
@@ -42,8 +43,9 @@ export class CommerceService {
     const course = await this.prisma.course.findFirst({ where: { id: courseId, status: 'published' } });
     if (!course) throw notFound('Course');
     if (course.instructorId === userId) throw badRequest('You cannot buy your own course', 'own_course');
-    const enr = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } });
-    if (enr && !enr.revokedAt) throw conflict('You are already enrolled in this course', 'already_enrolled');
+    // One-year access: a course can be bought again (renewed) in its last 30 days or after it expired.
+    const enr = await this.prisma.enrollment.findFirst({ where: { userId, courseId, ...blockingEnrollmentWhere() } });
+    if (enr) throw conflict('You already have access to this course. You can renew it in the last 30 days before it ends.', 'already_enrolled');
     await this.prisma.cartItem.upsert({ where: { userId_courseId: { userId, courseId } }, create: { userId, courseId }, update: {} });
     return this.cart(userId);
   }
@@ -69,7 +71,7 @@ export class CommerceService {
     const ids = [...new Set(courseIds)];
     const [courses, enrolled, inCart] = await Promise.all([
       this.prisma.course.findMany({ where: { id: { in: ids }, status: 'published' }, select: { id: true, instructorId: true } }),
-      this.prisma.enrollment.findMany({ where: { userId, courseId: { in: ids }, revokedAt: null }, select: { courseId: true } }),
+      this.prisma.enrollment.findMany({ where: { userId, courseId: { in: ids }, ...blockingEnrollmentWhere() }, select: { courseId: true } }),
       this.prisma.cartItem.findMany({ where: { userId, courseId: { in: ids } }, select: { courseId: true } }),
     ]);
     const pub = new Map(courses.map((c) => [c.id, c]));
@@ -111,7 +113,7 @@ export class CommerceService {
       include: { course: { select: { id: true, title: true, priceCents: true, currency: true, status: true, instructorId: true } } },
     });
     const enrolled = new Set(
-      (await this.prisma.enrollment.findMany({ where: { userId, revokedAt: null, courseId: { in: items.map((i) => i.courseId) } }, select: { courseId: true } })).map((e) => e.courseId),
+      (await this.prisma.enrollment.findMany({ where: { userId, courseId: { in: items.map((i) => i.courseId) }, ...blockingEnrollmentWhere() }, select: { courseId: true } })).map((e) => e.courseId),
     );
     const stale = items.filter((i) => i.course.status !== 'published' || enrolled.has(i.courseId) || i.course.instructorId === userId);
     if (stale.length) await this.prisma.cartItem.deleteMany({ where: { userId, courseId: { in: stale.map((s) => s.courseId) } } });

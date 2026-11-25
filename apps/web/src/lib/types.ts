@@ -127,6 +127,8 @@ export interface CourseDetail extends CourseCard {
   /** True when the server already answered for a signed-in visitor (enrolled/inCart are then authoritative). */
   viewerSignedIn: boolean;
   hasCaptions: boolean;
+  /** One-year access (owner 2026-11-25): the viewer's access to this course, when they have or had it. */
+  access?: { state: "active" | "expiring" | "expired"; expiresAt: string | null; daysLeft: number | null; canRenew: boolean } | null;
 }
 
 export interface Review {
@@ -191,6 +193,8 @@ export interface LearningItem {
   lastLectureTitle?: string | null;
   lastActivityAt?: string | null;
   certificateCode?: string | null;
+  /** One-year access (owner 2026-11-25). Null for free courses and grants without an end date. */
+  access?: { state: "active" | "expiring" | "expired"; purchasedAt: string | null; expiresAt: string | null; daysLeft: number | null; canRenew: boolean } | null;
 }
 
 export interface Playback {

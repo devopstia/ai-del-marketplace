@@ -59,6 +59,8 @@ export class JobsService {
   /** Hourly: transfer instructor shares whose refund-window hold has ended. Safe to call on every start (idempotent). */
   async scheduleRecurring() {
     await this.payments.upsertJobScheduler('release-transfers', { every: 60 * 60 * 1000 }, { name: 'release-transfers', data: {} });
+    // One-year access: expiry reminders and notices (docs/ACCESS_AND_REFUNDS.md).
+    await this.payments.upsertJobScheduler('access-reminders', { every: 60 * 60 * 1000 }, { name: 'access-reminders', data: {} });
   }
 
   async sendEmail(job: EmailJob) {

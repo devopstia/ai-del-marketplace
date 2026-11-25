@@ -94,6 +94,9 @@ enum RefundRequestStatus {
   pending
   approved
   declined
+  /// Automatically decided by the policy (eligible → refunded at once; not eligible → declined with an email).
+  auto_approved
+  auto_declined
 }
 
 enum EnrollmentSource {
@@ -478,7 +481,12 @@ model Enrollment {
 
   @@id([userId, courseId])
   @@index([courseId])
+  @@index([accessExpiresAt])
   @@map("enrollments")
+  /// One-year access (owner 2026-11-25): null = no expiry (free courses, admin grants, the course's own instructor).
+  accessExpiresAt DateTime?
+  /// Expiry reminders already sent ('30d', '7d', '1d', 'expired').
+  remindersSent   String[]  @default([])
 }
 
 model LectureProgress {
@@ -492,6 +500,9 @@ model LectureProgress {
 
   @@id([userId, lectureId])
   @@map("lecture_progress")
+  /// Unique seconds actually played, as merged [start, end] ranges: replays and skips don't add (refund rule, docs/ACCESS_AND_REFUNDS.md).
+  watchedRanges Json     @default("[]")
+  watchedSec    Int      @default(0)
 }
 
 model Review {
@@ -606,6 +617,16 @@ model RefundRequest {
 
   @@index([status, createdAt])
   @@map("refund_requests")
+  /// Facts at the time of the request, from backend records only: purchase and request dates, course duration,
+  /// unique seconds watched, percent, threshold, window, eligibility and reasons per line.
+  analysis       Json?
+  /// Optional AI summary of the facts (Claude); never changes the decision.
+  aiSummary      String?
+  aiModel        String?
+  /// The student asked for a human review of an automatic decline (exceptions, wrong playback data, legal rights).
+  reviewRequestedAt DateTime?
+  reviewNote     String?
+  processedAt    DateTime?
 }
 
 /// An instructor's own sale on one course: a fixed sale price between startsAt and endsAt (UTC). Never stored on the
@@ -879,4 +900,20 @@ model PasswordReset {
 
   @@index([userId])
   @@map("password_resets")
+}
+
+/// One paid year of access to a course (owner 2026-11-25). Renewing early adds a year after the current end; refunding
+/// a renewal revokes only that year. Enrollment.accessExpiresAt is the latest end of the periods still in force.
+model AccessPeriod {
+  id          String    @id @default(uuid())
+  userId      String
+  courseId    String
+  orderLineId String?   @unique
+  startsAt    DateTime
+  endsAt      DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, courseId])
+  @@map("access_periods")
 }

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell } from "@/components/shell/AppShell";
@@ -18,6 +18,7 @@ const nav = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/orders", label: "Orders", icon: Receipt },
   { href: "/admin/finance", label: "Money", icon: Landmark },
+  { href: "/admin/refunds", label: "Refunds", icon: RotateCcw },
   { href: "/admin/promotions", label: "Promotions", icon: Tag },
   { href: "/admin/covers", label: "Cover templates", icon: ImageIcon },
   { href: "/admin/protection", label: "Video protection", icon: ShieldCheck },
@@ -31,9 +32,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAdmin = has("admin");
   // Badge on Money: refund requests and open disputes that need a person.
   const count = (r: unknown) => (Array.isArray(obj(r).items) ? (obj(r).items as unknown[]) : []);
-  const requests = useApi(isAdmin ? "/admin/refund-requests?status=pending" : null, (r) => count(r).length);
+  const requests = useApi(isAdmin ? "/admin/refund-requests?status=needs_action" : null, (r) => Number(obj(obj(r).counts).needs_action ?? 0));
   const disputes = useApi(isAdmin ? "/admin/disputes" : null, (r) => count(r).filter((d) => obj(d).status === "open").length);
-  const attention = (requests.data ?? 0) + (disputes.data ?? 0);
+  const attention = disputes.data ?? 0;
   // Badge on Support: requests waiting for staff.
   const support = useApi(isAdmin ? "/admin/support/summary" : null, (r) => Number(obj(r).awaitingStaff ?? 0));
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
@@ -48,6 +49,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  const items = nav.map((n) => (n.href === "/admin/finance" && attention ? { ...n, badge: attention } : n.href === "/admin/support" && support.data ? { ...n, badge: support.data } : n));
+  const items = nav.map((n) => (n.href === "/admin/finance" && attention ? { ...n, badge: attention } : n.href === "/admin/refunds" && requests.data ? { ...n, badge: requests.data } : n.href === "/admin/support" && support.data ? { ...n, badge: support.data } : n));
   return <AppShell area="Admin console" nav={items} footer={<ConsoleSwitch to="del" />}>{children}</AppShell>;
 }

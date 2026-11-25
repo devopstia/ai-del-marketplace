@@ -16,6 +16,7 @@ import { WebhooksService } from './webhooks.service';
 
 const addSchema = z.object({ courseId: z.string().uuid() });
 const checkoutSchema = z.object({ immediateAccessConsent: z.boolean().optional() }).default({});
+const reviewSchema = z.object({ note: z.string().trim().min(10, 'Tell us briefly what happened (10 characters or more)').max(2000) });
 const refundRequestSchema = z.object({ lineIds: z.array(z.string().uuid()).max(50).optional(), reason: z.string().trim().max(500).optional() });
 export const courseIdsSchema = z.object({ courseIds: z.array(z.string().uuid()).max(50) });
 
@@ -87,7 +88,19 @@ export class CommerceController {
     return this.refunds.eligibility(a.user.id, id);
   }
 
-  /** Learner refund: eligible courses are refunded at once; over the yearly limit the request goes to an admin. */
+  @Get('orders/:id/refund-requests')
+  refundRequestsFor(@Param('id') id: string, @ActorCtx() a: Actor) {
+    return this.refunds.requestsFor(a.user.id, id);
+  }
+
+  /** Ask a person to look at an automatic decline (wrong playback data, legal rights, billing error, exception). */
+  @HttpCode(200)
+  @Post('refund-requests/:id/review')
+  requestReview(@Param('id') id: string, @ZBody(reviewSchema) b: z.infer<typeof reviewSchema>, @ActorCtx() a: Actor) {
+    return this.refunds.requestReview({ id: a.user.id, ip: a.ip }, id, b.note);
+  }
+
+  /** Learner refund: decided at once by the policy (docs/ACCESS_AND_REFUNDS.md). */
   @HttpCode(200)
   @Post('orders/:id/refund')
   requestRefund(@Param('id') id: string, @ZBody(refundRequestSchema) b: z.infer<typeof refundRequestSchema>, @ActorCtx() a: Actor) {

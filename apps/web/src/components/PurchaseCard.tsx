@@ -2,10 +2,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Award, Captions, Download, FileText, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
+import { Award, Captions, Download, FileText, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone, CalendarClock } from "lucide-react";
 import { api, ApiError, errMsg } from "@/lib/api";
 import { list, obj } from "@/lib/normalize";
-import { hours } from "@/lib/format";
+import { hours, date } from "@/lib/format";
 import type { CourseDetail } from "@/lib/types";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./Toast";
@@ -71,10 +71,28 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
         {enrolled ? (
           <>
             <p className="font-display text-lg font-bold text-ink">You’re enrolled in this course</p>
+            {course.access?.expiresAt ? (
+              <p className={`mt-1 text-sm ${course.access.state === "expiring" ? "font-bold text-amber" : "text-ink-2"}`} data-testid="access-until">
+                Access until {date(course.access.expiresAt)}{course.access.daysLeft != null ? ` · ${course.access.daysLeft} day${course.access.daysLeft === 1 ? "" : "s"} left` : ""}
+              </p>
+            ) : null}
             <Link href={`/learn/${course.slug}`} className="btn btn-primary mt-4 w-full" data-testid="go-to-course">Go to course</Link>
+            {course.access?.canRenew ? (
+              inCart ? <Link href="/cart" className="btn btn-outline mt-2.5 w-full"><ShoppingCart className="size-4" />Renewal in your cart</Link> : (
+                <button type="button" className="btn btn-outline mt-2.5 w-full" disabled={!!busy} data-testid="renew"
+                  onClick={async () => { setBusy("cart"); if (await add()) router.push("/checkout"); else setBusy(null); }}>
+                  {busy === "cart" ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}Renew for 12 more months · <Price cents={course.priceCents} currency={course.currency} className="!text-sm" />
+                </button>
+              )
+            ) : null}
           </>
         ) : (
           <>
+            {course.access?.state === "expired" ? (
+              <p className="mb-4 rounded-lg bg-amber-soft px-3 py-2 text-sm font-bold text-amber" data-testid="access-expired">
+                Your access ended on {date(course.access.expiresAt)}. Renew to continue where you left off; your progress is saved.
+              </p>
+            ) : null}
             <p className="leading-none" data-testid="course-price"><Price cents={course.priceCents} listCents={course.listPriceCents} currency={course.currency} className="text-[2rem] leading-none" /></p>
             {course.sale ? <SaleTag sale={course.sale} withName className="mt-2.5" /> : null}
             <div className="mt-5 grid gap-2.5">
@@ -83,7 +101,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
               ) : (
                 <button type="button" className="btn btn-primary w-full" disabled={!!busy} data-testid="add-to-cart"
                   onClick={async () => { setBusy("cart"); if (await add()) toast("ok", "Added to your cart."); setBusy(null); }}>
-                  {busy === "cart" ? <Loader2 className="size-4 animate-spin" /> : <ShoppingCart className="size-4" />}{free ? "Add free course to cart" : "Add to cart"}
+                  {busy === "cart" ? <Loader2 className="size-4 animate-spin" /> : <ShoppingCart className="size-4" />}{free ? "Add free course to cart" : course.access?.state === "expired" ? "Renew access" : "Add to cart"}
                 </button>
               )}
               <button type="button" className="btn btn-outline w-full" disabled={!!busy} data-testid="buy-now"
@@ -91,8 +109,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
                 {busy === "buy" ? <Loader2 className="size-4 animate-spin" /> : null}{free ? "Enrol now" : "Buy now"}
               </button>
             </div>
-            <p className="mt-3 text-center text-xs text-muted">Secure checkout with Stripe. Lifetime access.</p>
-            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5" aria-hidden="true" />14-day refund while you’ve watched under 25%</p> : null}
+            <p className="mt-3 text-center text-xs text-muted">Secure checkout with Stripe.{free ? "" : " 12 months of access, not lifetime."}</p>
+            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5" aria-hidden="true" />Refund within 14 days if you’ve watched 25% or less · <Link href="/policies/access-and-refunds" className="link">Policy</Link></p> : null}
           </>
         )}
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>
@@ -103,7 +121,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
           {quizzes ? <li className="flex items-center gap-2.5"><ListChecks className="size-4 text-muted" />{quizzes} short {quizzes === 1 ? "quiz" : "quizzes"} with explanations</li> : null}
           {course.resourceCount > 0 ? <li className="flex items-center gap-2.5"><Download className="size-4 text-muted" />Downloadable lab files</li> : null}
           <li className="flex items-center gap-2.5"><Smartphone className="size-4 text-muted" />Watch on desktop or mobile</li>
-          <li className="flex items-center gap-2.5"><InfinityIcon className="size-4 text-muted" />Full lifetime access</li>
+          <li className="flex items-center gap-2.5"><CalendarClock className="size-4 text-muted" />{free ? "Free to keep learning" : "12 months of access from purchase"}</li>
           <li className="flex items-center gap-2.5"><Award className="size-4 text-muted" />Certificate of completion</li>
         </ul>
       </div>

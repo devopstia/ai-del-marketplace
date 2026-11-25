@@ -11,7 +11,7 @@ const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-
 
 export const metadata: Metadata = {
   title: { default: "DevOps Easy Learning: AI and DevOps courses", template: "%s · DevOps Easy Learning" },
-  description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs, real cloud demos, lifetime access.",
+  description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs and real cloud demos.",
   metadataBase: new URL(process.env.WEB_URL || "http://127.0.0.1:3000"),
   icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
   manifest: "/manifest.webmanifest",

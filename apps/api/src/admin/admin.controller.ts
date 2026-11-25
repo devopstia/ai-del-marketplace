@@ -32,7 +32,7 @@ const auditQuery = z.object({
   to: z.coerce.date().optional(),
   ...paging,
 });
-const refundReqQuery = z.object({ status: z.enum(['pending', 'approved', 'declined']).optional() });
+const refundReqQuery = z.object({ status: z.enum(['needs_action', 'pending', 'approved', 'declined', 'auto_approved', 'auto_declined']).optional() });
 /** commissionBps = the platform's share of the net (2000 → instructor keeps 80%); null returns to the default. */
 const termsSchema = z.object({ commissionBps: z.number().int().min(0).max(10000).nullable().optional(), payToPlatform: z.boolean().optional(), note: z.string().trim().min(5).max(1000) });
 const reviewPatch = z.object({ status: z.enum(['visible', 'hidden']) });

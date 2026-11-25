@@ -187,3 +187,7 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   Owner decisions for task 2 (2026-11-25): existing enrolments get 1 year from today; renewal = buy again at the
   current price (sales apply, progress kept, no auto-charge); eligible refunds automatic (3/year, then admin);
   AI refund analysis with Claude, hidden until ANTHROPIC_API_KEY is set.
+- One-year access + refund rule (prompts.md task 2): branch `feat/one-year-access` (rollback tag
+  `checkpoint-2026-11-25-one-year-access` = `525a82c`). Access periods, server-enforced expiry, renewal (last 30 days or
+  after expiry), reminders, unique-seconds consumption, automatic refund decisions with review, Admin › Refunds, Claude
+  summaries (hidden without key), policy page, "lifetime" removed everywhere. docs/ACCESS_AND_REFUNDS.md, AGENTS rule 20.

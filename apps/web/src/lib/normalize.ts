@@ -186,6 +186,11 @@ export function toCourseDetail(x: unknown): CourseDetail {
     hasPromo: Boolean(o.hasPromo ?? o.promoVideoAssetId),
     resourceCount: num(raw.resourceCount ?? o.resourceCount ?? obj(raw.totals).resources),
     viewerSignedIn: Boolean(obj(raw.viewer).signedIn),
+    access: (() => {
+      const a = obj(obj(raw.viewer).access);
+      if (!a.state) return null;
+      return { state: a.state as "active" | "expiring" | "expired", expiresAt: (a.expiresAt as string) ?? null, daysLeft: a.daysLeft == null ? null : Number(a.daysLeft), canRenew: a.canRenew === true };
+    })(),
     hasCaptions: Boolean(raw.hasCaptions ?? o.hasCaptions),
   };
 }
@@ -277,6 +282,11 @@ export function toLearningItem(x: unknown): LearningItem {
     lastLectureTitle: (str(o.lastLectureTitle ?? last.title) || null),
     lastActivityAt: (str(o.lastActivityAt ?? last.at ?? o.enrolledAt ?? o.updatedAt) || null),
     certificateCode: (str(o.certificateCode ?? obj(o.certificate).code) || null),
+    access: (() => {
+      const a = obj(o.access);
+      if (!a.state) return null;
+      return { state: a.state as "active" | "expiring" | "expired", purchasedAt: (a.purchasedAt as string) ?? null, expiresAt: (a.expiresAt as string) ?? null, daysLeft: a.daysLeft == null ? null : Number(a.daysLeft), canRenew: a.canRenew === true };
+    })(),
   };
 }
 
