@@ -145,3 +145,7 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   orders scrolling sideways (screen-reader labels escaping scroll boxes); phone site menu trapped in the 64px header (now a
   portal); cramped titles printed on small covers (covers show topic + pattern only); select wider than phones; light-theme
   accents darkened to pass AA. Final scan: every page, every role, 390/768/1440/1920 in dark, no failures; light spot-check clean.
+
+## 2026-11-25: merged into `main` and pushed to GitHub (owner: "merge into main and push")
+- `feat/dark-qa` (homepage + /teach, sales and promotions, dark-mode QA) merged; rollback tag `main-before-merge-2026-11-25-c`
+  (= `147bff5`), release tag `release-2026-11-25`. `main` pushed to `origin`. Not yet run: the full fresh-stack test.
