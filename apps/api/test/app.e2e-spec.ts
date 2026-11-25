@@ -93,8 +93,8 @@ describe('e2e: buy and learn', () => {
       STRIPE_SECRET_KEY: '',
       S3_ENDPOINT: 'http://127.0.0.1:9000',
       S3_PUBLIC_ENDPOINT: 'http://127.0.0.1:9000',
-      S3_ACCESS_KEY: env.S3_ACCESS_KEY ?? 'test',
-      S3_SECRET_KEY: env.S3_SECRET_KEY ?? 'test-secret',
+      S3_ACCESS_KEY: env.S3_ACCESS_KEY ?? process.env.S3_ACCESS_KEY ?? 'test',
+      S3_SECRET_KEY: env.S3_SECRET_KEY ?? process.env.S3_SECRET_KEY ?? 'test-secret',
       WEB_URL: 'http://127.0.0.1:3000',
     });
     resetEnvCache();
