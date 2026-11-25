@@ -117,3 +117,7 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Local merge only. Rollback tag `main-before-merge-2026-11-25-b` (= `1ce1b75`), release tag `release-local-2026-11-25-b`.
 - Next: `feat/home-improvements` (homepage fixes + leftovers), rollback tag `checkpoint-2026-11-25-home`, backup branch
   `backup/main-2026-11-25-b`.
+- 2026-11-25 `feat/home-improvements`: homepage made truthful and consistent with /courses ("Start here" no longer claims
+  reviews; "Most enrolled" only with 3+ courses that have learners; shared card rules; covers without a second title, never
+  repeating beside each other; node-graph cover always spread; instructors use the full row). Purchase card lists video time
+  and readings separately. /courses: tidy filter URLs, two topics named in the heading. Screenshots `docs/design/home-improve-2026-11-25/`.

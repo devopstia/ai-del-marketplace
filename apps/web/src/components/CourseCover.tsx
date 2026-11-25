@@ -40,7 +40,10 @@ function Pattern({ seed, a, b }: { seed: number; a: string; b: string }) {
   }
   if (kind === 2) {
     // Node graph: agents and their connections
-    const pts = Array.from({ length: 7 }).map((_, i) => [250 + ((seed >> (i * 2)) % 130), 30 + ((seed >> (i * 3)) % 150)] as const);
+    // One node per vertical band, so the graph always spreads across the right side of the cover.
+    let r = (seed % 2147483646) + 1;
+    const rand = (n: number) => (r = (r * 16807) % 2147483647) % n;
+    const pts = Array.from({ length: 7 }).map((_, i) => [236 + i * 22 + rand(14), 28 + rand(160)] as const);
     return (
       <g>
         {pts.slice(1).map(([x, y], i) => (

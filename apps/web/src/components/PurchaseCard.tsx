@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Award, Captions, Download, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
+import { Award, Captions, Download, FileText, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
 import { api, ApiError, errMsg } from "@/lib/api";
 import { list, obj } from "@/lib/normalize";
 import { hours, money } from "@/lib/format";
@@ -52,6 +52,9 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
 
   const free = course.priceCents === 0;
   const quizzes = course.sections.reduce((a, s) => a + s.lectures.filter((l) => l.hasQuiz).length, 0);
+  const lectures = course.sections.flatMap((s) => s.lectures);
+  const videoSec = lectures.filter((l) => l.type === "video").reduce((a, l) => a + l.durationSec, 0);
+  const readings = lectures.filter((l) => l.type === "article").length;
   return (
     <div className="overflow-hidden rounded-panel border border-line bg-surface shadow-float" data-testid="purchase-card">
       <div className="relative">
@@ -92,7 +95,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
         )}
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>
         <ul className="mt-2.5 space-y-2 text-sm text-ink-2">
-          <li className="flex items-center gap-2.5"><MonitorPlay className="size-4 text-muted" />{hours(course.totalDurationSec)} of on-demand video</li>
+          {videoSec ? <li className="flex items-center gap-2.5"><MonitorPlay className="size-4 text-muted" />{hours(videoSec)} of on-demand video</li> : null}
+          {readings ? <li className="flex items-center gap-2.5"><FileText className="size-4 text-muted" />{readings} {readings === 1 ? "reading" : "readings"}</li> : null}
           {course.hasCaptions ? <li className="flex items-center gap-2.5"><Captions className="size-4 text-muted" />English captions (off until you turn them on)</li> : null}
           {quizzes ? <li className="flex items-center gap-2.5"><ListChecks className="size-4 text-muted" />{quizzes} short {quizzes === 1 ? "quiz" : "quizzes"} with explanations</li> : null}
           {course.resourceCount > 0 ? <li className="flex items-center gap-2.5"><Download className="size-4 text-muted" />Downloadable lab files</li> : null}

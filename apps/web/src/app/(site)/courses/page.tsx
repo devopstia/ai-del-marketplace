@@ -46,7 +46,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   const seeds = coverSeeds(res.items.map((c) => c.slug));
   const pages = Math.max(1, Math.ceil(res.total / (res.pageSize || 12)));
   const pickedCats = cats.filter((c) => picked.includes(c.slug));
-  const heading = sp.q ? `Results for “${sp.q}”` : pickedCats.length === 1 ? pickedCats[0]!.name : pickedCats.length > 1 ? `${pickedCats.length} topics` : "All courses";
+  const heading = sp.q ? `Results for “${sp.q}”` : pickedCats.length === 1 ? pickedCats[0]!.name : pickedCats.length === 2 ? pickedCats.map((c) => c.name).join(" and ") : pickedCats.length > 2 ? `${pickedCats.length} topics` : "All courses";
   const base = { ...sp, category: picked, page: undefined };
   const active = [
     sp.q && { key: "q", label: `“${sp.q}”`, href: `/courses${qs({ ...base, q: undefined })}` },
