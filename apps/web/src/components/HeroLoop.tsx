@@ -3,6 +3,9 @@ import Link from "next/link";
 import { PlayCircle } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { LOOP_FULL, LOOP_LEFT, LOOP_RIGHT } from "./Logo";
+import { CourseCover } from "./CourseCover";
+import { Price } from "./CourseViews";
+import { RatingInline } from "./Stars";
 
 // Stations sit on the DEL infinity loop: the left lobe is where you learn and build, the right lobe is where you ship and run.
 const stations: { label: string; x: number; y: number; anchor: "start" | "end" | "middle"; dx: number; dy: number }[] = [
@@ -23,11 +26,11 @@ function subscribe(cb: () => void) {
 }
 const useReducedMotion = () => useSyncExternalStore(subscribe, () => matchMedia("(prefers-reduced-motion: reduce)").matches, () => true);
 
-export function HeroLoop({ spotlight }: { spotlight?: { title: string; href: string; meta: string } | null }) {
+export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: string; href: string; meta: string; thumbnailUrl?: string | null; ratingAvg: number; ratingCount: number; priceCents: number; currency?: string } | null }) {
   const reduced = useReducedMotion();
   return (
-    <div className="relative mx-auto w-full max-w-[640px] px-5 sm:px-0">
-      <svg viewBox="-22 -12 164 84" className="w-full overflow-visible" role="img" aria-label="The DevOps loop: plan, code, build, test, release, deploy, operate, monitor, and back again.">
+    <div className="relative mx-auto flex w-full max-w-[640px] flex-col gap-3 px-5 sm:px-0 lg:h-full lg:justify-center">
+      <svg viewBox="-16 -4 152 70" className="w-full overflow-visible" role="img" aria-label="The DevOps loop: plan, code, build, test, release, deploy, operate, monitor, and back again.">
         <defs>
           <linearGradient id="hero-grad" x1="0" x2="120" y1="0" y2="0" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="var(--violet)" />
@@ -67,10 +70,14 @@ export function HeroLoop({ spotlight }: { spotlight?: { title: string; href: str
         ) : null}
       </svg>
       {spotlight ? (
-        <Link href={spotlight.href} className="absolute -bottom-20 right-2 hidden w-64 rounded-tile border border-line bg-surface p-3.5 shadow-float transition-colors hover:border-violet sm:block">
-          <p className="flex items-center gap-1.5 text-xs font-bold text-mint"><PlayCircle className="size-3.5" />Free preview available</p>
-          <p className="mt-1 line-clamp-2 font-display text-sm font-bold leading-snug text-ink">{spotlight.title}</p>
-          <p className="mt-1 line-clamp-1 text-xs text-muted">{spotlight.meta}</p>
+        <Link href={spotlight.href} className="ml-auto hidden w-full max-w-md items-center gap-4 self-end rounded-tile border border-line bg-surface p-3 shadow-float transition-colors hover:border-violet sm:flex">
+          <CourseCover slug={spotlight.slug} title={spotlight.title} thumbnailUrl={spotlight.thumbnailUrl} size="sm" className="!w-32 shrink-0 !rounded-lg" />
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-mint"><PlayCircle className="size-3.5" />Free preview available</p>
+            <p className="mt-1 line-clamp-2 font-display text-sm font-bold leading-snug text-ink">{spotlight.title}</p>
+            <p className="mt-1 line-clamp-1 text-xs text-muted">{spotlight.meta}</p>
+            <p className="mt-1.5 flex items-center gap-3"><RatingInline avg={spotlight.ratingAvg} count={spotlight.ratingCount} /><Price cents={spotlight.priceCents} currency={spotlight.currency} className="text-sm" /></p>
+          </div>
         </Link>
       ) : null}
     </div>

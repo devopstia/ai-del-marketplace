@@ -113,7 +113,7 @@ export default async function Home() {
     <>
       {/* Hero: the DEL loop as the learning pipeline */}
       <section className="relative overflow-hidden border-b border-line">
-        <div className="container-x grid items-center gap-10 pb-16 pt-12 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-6 lg:pb-24 lg:pt-20">
+        <div className="container-x grid items-center gap-10 pb-16 pt-12 lg:items-stretch md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-6 lg:pb-24 lg:pt-20">
           <div className="max-w-xl">
             <h1 className="font-display text-[clamp(2.35rem,5.4vw,4.1rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink">
               Learn AI and DevOps the way production works.
@@ -133,7 +133,7 @@ export default async function Home() {
               ))}
             </div>
           </div>
-          <HeroLoop spotlight={featured ? { title: featured.title, href: `/courses/${featured.slug}`, meta: `${featured.instructor.name}, ${hours(featured.totalDurationSec)}` } : null} />
+          <HeroLoop spotlight={featured ? { slug: featured.slug, thumbnailUrl: featured.thumbnailUrl, ratingAvg: featured.ratingAvg, ratingCount: featured.ratingCount, priceCents: featured.priceCents, currency: featured.currency, title: featured.title, href: `/courses/${featured.slug}`, meta: `${featured.instructor.name}, ${hours(featured.totalDurationSec)}` } : null} />
         </div>
       </section>
 
