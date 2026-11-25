@@ -112,3 +112,8 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - 2026-11-25 `feat/courses-improvements`: /courses filter counts (facets), several topics at once, cleaner cards (see commit
   b86ee1d). Verified on a fresh stack (`down -v`): API 129/129, smoke 135/135, web typecheck + lint, Playwright 16/16 with
   E2E_PASSWORD. Then clean demo (seed, import-del, demo-catalogue) + the 5 sample courses re-added.
+
+## 2026-11-25: feat/courses-improvements merged into `main` (owner: "merge this into main")
+- Local merge only. Rollback tag `main-before-merge-2026-11-25-b` (= `1ce1b75`), release tag `release-local-2026-11-25-b`.
+- Next: `feat/home-improvements` (homepage fixes + leftovers), rollback tag `checkpoint-2026-11-25-home`, backup branch
+  `backup/main-2026-11-25-b`.
