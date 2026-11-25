@@ -90,48 +90,51 @@ function LoopSlide({ reduced }: { reduced: boolean }) {
   );
 }
 
-// AI automation on a RAG stack: knowledge is indexed once, then an agent retrieves it to act on real incidents.
-const ragEdges = ["M21 12H43", "M77 12H99", "M116 19.5V30H60V40.5", "M21 48H43", "M77 48H99"];
-
-function RagNode({ cx, cy, title, sub, accent }: { cx: number; cy: number; title: string; sub: string; accent?: boolean }) {
-  return (
-    <g>
-      <rect x={cx - 17} y={cy - 7.5} width="34" height="15" rx="3.2" fill={accent ? "url(#rag-grad)" : "var(--surface)"} stroke={accent ? "var(--surface)" : "var(--line-strong)"} strokeWidth={accent ? 1 : 0.5} />
-      <text x={cx} y={cy - 1.6} textAnchor="middle" dominantBaseline="middle" className={accent ? "font-display" : "fill-ink font-display"} fill={accent ? "#fff" : undefined} style={{ fontSize: 3.9, fontWeight: 800 }}>{title}</text>
-      <text x={cx} y={cy + 3.2} textAnchor="middle" dominantBaseline="middle" className={accent ? "" : "fill-muted"} fill={accent ? "#fff" : undefined} opacity={accent ? 0.85 : 1} style={{ fontSize: 2.5, fontWeight: 600 }}>{sub}</text>
-    </g>
-  );
-}
+// AI automation on a RAG stack, drawn in the loop's language: the six RAG steps circle the AI agent.
+const RAG_TOP = "M10 30 A50 22 0 0 1 110 30";
+const RAG_BOTTOM = "M110 30 A50 22 0 0 1 10 30";
+const ragSteps: { label: string; x: number; y: number; anchor: "start" | "end" | "middle"; lx: number; ly: number; run?: boolean }[] = [
+  { label: "Ingest", x: 16.7, y: 19, anchor: "end", lx: 12, ly: 14 },
+  { label: "Embed", x: 60, y: 8, anchor: "middle", lx: 60, ly: 2 },
+  { label: "Store", x: 103.3, y: 19, anchor: "start", lx: 108, ly: 14 },
+  { label: "Retrieve", x: 103.3, y: 41, anchor: "start", lx: 108, ly: 48, run: true },
+  { label: "Generate", x: 60, y: 52, anchor: "middle", lx: 60, ly: 60.5, run: true },
+  { label: "Act", x: 16.7, y: 41, anchor: "end", lx: 12, ly: 48, run: true },
+];
 
 function RagSlide({ reduced }: { reduced: boolean }) {
   return (
-    <svg viewBox="-16 -4 152 70" className="w-full overflow-visible" role="img" aria-label="AI automation with a RAG stack: runbooks, docs and logs are embedded into a vector database; when an alert or ticket arrives, an AI agent retrieves that context and takes action with kubectl, Terraform or CI.">
+    <svg viewBox="-16 -4 152 70" className="w-full overflow-visible" role="img" aria-label="The RAG cycle around an AI agent: ingest your docs, runbooks and logs, embed them, store them, then retrieve the right context, generate an answer and act on it.">
       <defs>
-        <linearGradient id="rag-grad" x1="43" x2="77" y1="0" y2="0" gradientUnits="userSpaceOnUse">
+        <linearGradient id="rag-grad" x1="0" x2="120" y1="0" y2="0" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="var(--violet)" />
           <stop offset="1" stopColor="var(--cyan)" />
         </linearGradient>
-        <marker id="rag-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto">
-          <path d="M0 0L6 3L0 6z" fill="var(--violet)" />
-        </marker>
       </defs>
-      <text x="-13" y="0" className="fill-muted font-display" style={{ fontSize: 2.8, fontWeight: 800, letterSpacing: "0.12em" }}>INDEX YOUR KNOWLEDGE</text>
-      <text x="-13" y="62" className="fill-muted font-display" style={{ fontSize: 2.8, fontWeight: 800, letterSpacing: "0.12em" }}>AUTOMATE WITH AN AGENT</text>
-      {ragEdges.map((d, i) => (
-        <path key={d} d={d} fill="none" stroke={i === 2 ? "var(--cyan)" : "var(--violet)"} strokeWidth="0.8" strokeDasharray={i === 2 ? "1.2 1.2" : undefined} markerEnd="url(#rag-arrow)" opacity="0.8" />
+      {/* track */}
+      <ellipse cx="60" cy="30" rx="50" ry="22" fill="none" stroke="var(--line)" strokeWidth="7" />
+      <path d={RAG_TOP} pathLength={1} className="loop-draw" stroke="var(--violet)" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+      <path d={RAG_BOTTOM} pathLength={1} className="loop-draw" style={{ animationDelay: ".5s" }} stroke="var(--cyan)" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+      <ellipse cx="60" cy="30" rx="50" ry="22" fill="none" stroke="var(--surface)" strokeWidth="0.6" strokeDasharray="0.6 2.2" opacity="0.9" />
+      {/* steps */}
+      {ragSteps.map((st) => (
+        <g key={st.label}>
+          <circle cx={st.x} cy={st.y} r="2.6" fill="var(--surface)" stroke={st.run ? "var(--cyan)" : "var(--violet)"} strokeWidth="1.3" />
+          <text x={st.lx} y={st.ly} textAnchor={st.anchor} dominantBaseline="middle" className="fill-ink-2 font-display" style={{ fontSize: 4.1, fontWeight: 700 }}>{st.label}</text>
+        </g>
       ))}
-      <text x="88" y="27.6" textAnchor="middle" className="fill-ink-2 font-display" style={{ fontSize: 2.9, fontWeight: 700 }}>retrieve context</text>
-      <RagNode cx={4} cy={12} title="Knowledge" sub="runbooks · docs · logs" />
-      <RagNode cx={60} cy={12} title="Embed" sub="chunk → vectors" />
-      <RagNode cx={116} cy={12} title="Vector DB" sub="semantic search" />
-      <RagNode cx={4} cy={48} title="Trigger" sub="alert or ticket" />
-      <RagNode cx={60} cy={48} title="AI agent" sub="LLM + your context" accent />
-      <RagNode cx={116} cy={48} title="Action" sub="kubectl · Terraform · CI" />
-      {reduced ? null : ragEdges.map((d, i) => (
-        <circle key={d} r="1.3" fill={i === 2 ? "var(--cyan)" : "var(--violet)"} stroke="var(--surface)" strokeWidth="0.5">
-          <animateMotion dur={i === 2 ? "3s" : "2.2s"} repeatCount="indefinite" begin={`${i * 0.45}s`} path={d} />
+      <text x="60" y="15.5" textAnchor="middle" dominantBaseline="middle" className="fill-muted" style={{ fontSize: 2.7, fontWeight: 600 }}>docs · runbooks · logs</text>
+      <text x="60" y="45" textAnchor="middle" dominantBaseline="middle" className="fill-muted" style={{ fontSize: 2.7, fontWeight: 600 }}>answers + actions</text>
+      {/* travelling request */}
+      {reduced ? null : [0, 1].map((i) => (
+        <circle key={i} r="1.9" fill={i ? "var(--cyan)" : "var(--violet)"} stroke="var(--surface)" strokeWidth="0.8">
+          <animateMotion dur="12s" repeatCount="indefinite" begin={`${-i * 6}s`} path={`${RAG_TOP} A50 22 0 0 1 10 30`} />
         </circle>
       ))}
+      {/* AI agent at the centre */}
+      <circle cx="60" cy="30" r="9" fill="url(#rag-grad)" stroke="var(--surface)" strokeWidth="1.2" />
+      <text x="60" y="28.6" textAnchor="middle" dominantBaseline="middle" className="font-display" fill="#fff" style={{ fontSize: 4.2, fontWeight: 800 }}>AI</text>
+      <text x="60" y="33.4" textAnchor="middle" dominantBaseline="middle" fill="#fff" style={{ fontSize: 2.6, fontWeight: 700 }}>agent</text>
     </svg>
   );
 }
