@@ -27,7 +27,7 @@ export function toCard(c: CardRow, imageUrl: (k: string | null) => string | null
     totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
     lectureCount: lectures.length,
     hasPreview: lectures.some((l) => l.isPreview),
-    outcome: c.objectives[0] ?? null,
+    outcome: c.objectives?.[0] ?? null,
     level: c.level,
     language: c.language,
     publishedAt: c.publishedAt,
