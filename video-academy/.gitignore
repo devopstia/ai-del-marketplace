@@ -1,0 +1,6 @@
+# Heavy or machine-local: never committed.
+.venv/
+.models
+.models/
+.work/
+__pycache__/

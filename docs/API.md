@@ -359,6 +359,26 @@ dispute after a transfer is reversed in Stripe, or recorded in `ledger_entries` 
 Webhooks add `charge.updated` (fee), `charge.dispute.created` (freeze the order's payouts) and `charge.dispute.closed`
 (won: release; lost: revoke access and recover the instructor's share, like a refund).
 
+## Support, protected playback and help videos (2026-11-25)
+Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
+
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| GET/POST | `/support/tickets` | signed in | own requests; create (5 per hour) |
+| GET | `/support/tickets/:number` | requester, admin | `SUP-000123` |
+| POST | `/support/tickets/:number/messages`, `/resolved`, `/still-need-help`, `/reopen` | requester | |
+| POST | `/support/uploads` · GET `/support/attachments/:id` | signed in | private files |
+| GET | `/admin/support/tickets`, `/admin/support/summary`, `/admin/support/staff` | admin | queue |
+| POST/PATCH | `/admin/support/tickets/:number/messages`, `/admin/support/tickets/:number` | admin | reply, note, request_info, resolve; priority, topic, assignee, close (super admin) |
+| POST | `/lectures/:id/playback` | access | encrypted HLS session when packaged, else signed MP4 |
+| GET | `/playback/:sid/index.m3u8`, `/playback/:sid/key` | session owner | `no-store`; others 404 |
+| GET | `/admin/playback/status` | admin | packaging counts |
+| GET | `/help/videos`, `/help/videos/:slug` | public | published, ready videos; 1-hour signed link, chapters, up next |
+| GET | `/admin/help/videos`, `/admin/help/videos/:slug/preview` | admin | all videos; preview drafts |
+| PUT/DELETE | `/admin/help/videos/:slug` | admin | create or update by address; delete |
+| POST | `/admin/help/videos/:slug/publish` | admin | `{ published }`; needs a ready video |
+| POST | `/admin/help/uploads/video` (+ `/:assetId/complete`, `/:assetId/captions`), `/admin/help/uploads/image` · GET `/admin/help/uploads/video/:assetId` | admin | studio upload pipeline |
+
 ## Webhooks (server to server; no cookies/CSRF)
 
 - `POST /webhooks/stripe`: raw body, `Stripe-Signature` verified with `STRIPE_WEBHOOK_SECRET`; event ids stored for idempotency.

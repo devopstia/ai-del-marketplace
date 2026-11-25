@@ -1,0 +1,5 @@
+kokoro-onnx==0.6.1
+soundfile>=0.12
+faster-whisper>=1.0
+python-pptx==1.0.2
+pillow>=10

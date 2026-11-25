@@ -172,3 +172,7 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   `checkpoint-2026-11-25-content-protection` = `c31fa05`, branch `backup/before-content-protection`. Encrypted HLS
   (ffmpeg copy, AES-128 per video, wrapped key), sessions bound to the learner, no visible watermark (owner:
   no letters on videos), signed-MP4 fallback; `PROTECTED_PLAYBACK` switch. Also fixed: captions were on by default (rule 11). docs/CONTENT_PROTECTION.md.
+- 10 Help videos + video engine: branch `feat/help-videos` (from `feat/content-protection`); rollback tag
+  `checkpoint-2026-11-25-help-videos` = `a9f0fd1`, branch `backup/before-help-videos`. Public /help with chapters,
+  Admin › Help videos, `video-academy/` engine ported from the Hub (DEL dark brand, Kokoro voice, Whisper QA), publish
+  tool for the local site. AI voice accepted by the owner ("move on please" after the question). docs/HELP_VIDEOS.md.

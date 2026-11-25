@@ -4,7 +4,7 @@ import { LoopMark } from "./Logo";
 const cols: [string, [string, string][]][] = [
   ["Learn", [["Browse courses", "/courses"], ["AI for DevOps", "/courses?category=ai-for-devops"], ["MCP & Agents", "/courses?category=mcp-agents"], ["Free courses", "/courses?price=free"]]],
   ["Teach", [["Become an instructor", "/teach"], ["Instructor studio", "/studio"], ["Payouts with Stripe", "/teach#payouts"]]],
-  ["Your account", [["My learning", "/my-learning"], ["Orders and receipts", "/orders"], ["Verify a certificate", "/certificates/verify"], ["Help and support", "/support"], ["Install the app", "/install"]]],
+  ["Your account", [["My learning", "/my-learning"], ["Orders and receipts", "/orders"], ["Verify a certificate", "/certificates/verify"], ["Help videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
 ];
 
 export function SiteFooter() {

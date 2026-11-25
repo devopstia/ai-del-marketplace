@@ -334,6 +334,7 @@ model VideoAsset {
   hlsAttempts   Int       @default(0)
   hlsPackagedAt DateTime?
   playbackSessions PlaybackSession[]
+  helpVideo     HelpVideo?
 }
 
 model Resource {
@@ -758,4 +759,28 @@ model PlaybackSession {
 
   @@index([userId, createdAt])
   @@map("playback_sessions")
+}
+
+/// Help videos ("how to use DEL"), produced by video-academy/ and managed in Admin > Help videos (owner 2026-11-25).
+model HelpVideo {
+  id           String      @id @default(uuid())
+  slug         String      @unique
+  title        String
+  summary      String
+  /// students | instructors | everyone
+  audience     String      @default("everyone")
+  category     String
+  sort         Int         @default(0)
+  videoAssetId String?     @unique
+  videoAsset   VideoAsset? @relation(fields: [videoAssetId], references: [id], onDelete: SetNull)
+  /// Public image key (images/<owner>/<file>), the cover drawn by the video engine.
+  coverKey     String?
+  /// [{ "t": seconds, "title": "..." }]
+  chapters     Json?
+  published    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([published, category, sort])
+  @@map("help_videos")
 }

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { LifeBuoy, Plus } from "lucide-react";
+import { LifeBuoy, PlayCircle, Plus } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { Empty, Skeleton } from "@/components/Empty";
 import { StatusPill, categoryLabel, toTickets, when } from "@/components/support/shared";
@@ -15,7 +15,10 @@ export default function SupportHome() {
           <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold leading-tight">Help and support</h1>
           <p className="mt-1 text-ink-2">Ask us anything about your account, payments, courses or the app. We reply here and by email.</p>
         </div>
-        <Link href="/support/new" className="btn btn-primary" data-testid="new-ticket"><Plus className="size-4" />New request</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/help" className="btn btn-ghost"><PlayCircle className="size-4" />Help videos</Link>
+          <Link href="/support/new" className="btn btn-primary" data-testid="new-ticket"><Plus className="size-4" />New request</Link>
+        </div>
       </div>
       {waiting ? <p className="mt-5 rounded-lg bg-amber-soft px-4 py-2.5 text-sm font-bold text-amber">{waiting === 1 ? "One request is" : `${waiting} requests are`} waiting for your answer.</p> : null}
       {error ? <p className="mt-6 text-rose">{error}</p> : null}

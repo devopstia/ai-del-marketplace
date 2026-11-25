@@ -359,3 +359,47 @@ test.describe("content protection", () => {
   });
 });
 
+test.describe.serial("help videos", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  const title = `E2E help video ${Date.now()}`;
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  test("an admin uploads and publishes a help video", async ({ page }) => {
+    const video = tinyVideo();
+    test.skip(!video, "ffmpeg is needed to make a test video");
+    await login(page, USERS.admin, PASSWORD, "/admin/help");
+    await page.getByTestId("new-help-video").click();
+    const form = page.getByTestId("help-editor");
+    await form.getByLabel("Title").fill(title);
+    await form.getByLabel("Summary").fill("A short test of the help videos page.");
+    await form.locator('input[type="file"]').first().setInputFiles(video!);
+    await page.getByTestId("help-save").click();
+    const row = page.getByTestId("help-admin-list").locator("li").filter({ hasText: title });
+    await expect(row).toBeVisible();
+    // The worker probes the file; reload until it is ready, then publish.
+    await expect.poll(async () => {
+      await page.reload();
+      await row.waitFor();
+      return row.getByTestId("help-publish").count();
+    }, { timeout: 60_000, intervals: [2000] }).toBe(1);
+    await row.getByTestId("help-publish").click();
+    await expect(row).toContainText("Published");
+  });
+
+  test("anyone can watch it from /help, captions off", async ({ page }) => {
+    await page.goto("/help");
+    await page.getByTestId("help-row").filter({ hasText: title }).click();
+    await expect(page).toHaveURL(new RegExp(`/help/${slug}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await expect(page.getByTestId("video-player")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Contact support" })).toHaveAttribute("href", /\/support\/new\?category=other/);
+  });
+
+  test("the admin removes it", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/help");
+    page.once("dialog", (d) => void d.accept());
+    await page.getByRole("button", { name: `Delete ${title}` }).click();
+    await expect(page.getByText(title)).toHaveCount(0);
+  });
+});
+

@@ -755,4 +755,45 @@ describe('e2e: buy and learn', () => {
     await buyer.agent.get(path).expect(404);
     await buyer.agent.get(`/api/playback/${sid}/key`).expect(404);
   });
+
+  it('help videos: admins upload and publish; everyone can watch published ones; others cannot manage', async () => {
+    if (!available) return;
+    const admin = await userAgent('help-admin@e2e.example', ['student', 'admin']);
+    const student = await userAgent('help-student@e2e.example', ['student']);
+    const anon = request(app.getHttpServer());
+    const body = { title: 'Find a course', summary: 'Browse, filter and preview courses.', audience: 'students', category: 'getting-started', sort: 1 };
+
+    await student.send('put', '/api/admin/help/videos/find-a-course').send(body).expect(403);
+    await admin.send('put', '/api/admin/help/videos/Bad Slug').send(body).expect(400);
+
+    // Upload through the studio pipeline, owned by the admin; another admin's asset or cover is refused.
+    const up = await admin.send('post', '/api/admin/help/uploads/video').send({ filename: 'find.mp4', contentType: 'video/mp4' }).expect(201);
+    const assetId = up.body.assetId as string;
+    const other = await prisma.videoAsset.create({ data: { ownerId: student.user.id, provider: 'local', status: 'ready', storageKey: 'videos/x/source.mp4', durationSec: 10 } });
+    await admin.send('put', '/api/admin/help/videos/find-a-course').send({ ...body, videoAssetId: other.id }).expect(400);
+    await admin.send('put', '/api/admin/help/videos/find-a-course').send({ ...body, coverKey: `images/${student.user.id}/x.png` }).expect(400);
+
+    const saved = await admin.send('put', '/api/admin/help/videos/find-a-course').send({ ...body, videoAssetId: assetId, chapters: [{ t: 0, title: 'Introduction' }, { t: 12.5, title: 'Step by step' }] }).expect(200);
+    expect(saved.body).toMatchObject({ slug: 'find-a-course', published: false });
+    // Not ready yet: can't publish, not public.
+    await admin.send('post', '/api/admin/help/videos/find-a-course/publish').send({ published: true }).expect(400);
+    await prisma.videoAsset.update({ where: { id: assetId }, data: { status: 'ready', storageKey: `videos/${assetId}/source.mp4`, durationSec: 95, captionsKey: `videos/${assetId}/captions.vtt` } });
+    expect((await anon.get('/api/help/videos').expect(200)).body.total).toBe(0);
+    await anon.get('/api/help/videos/find-a-course').expect(404);
+    const pv = await admin.agent.get('/api/admin/help/videos/find-a-course/preview').expect(200);
+    expect(pv.body.url).toContain('X-Amz-Signature=');
+
+    await admin.send('post', '/api/admin/help/videos/find-a-course/publish').send({ published: true }).expect(200);
+    const list = await anon.get('/api/help/videos').expect(200);
+    expect(list.body).toMatchObject({ total: 1, categories: [{ key: 'getting-started', items: [{ slug: 'find-a-course', durationSec: 95, hasCaptions: true }] }] });
+    const one = await anon.get('/api/help/videos/find-a-course').expect(200);
+    expect(one.body).toMatchObject({ title: 'Find a course', categoryName: 'Getting started', chapters: [{ t: 0, title: 'Introduction' }, { t: 12.5, title: 'Step by step' }], playback: { format: 'mp4' } });
+    expect(one.body.playback.url).toContain(`videos/${assetId}/source.mp4`);
+    expect(one.body.playback.captionsUrl).toContain('captions.vtt');
+
+    await admin.send('post', '/api/admin/help/videos/find-a-course/publish').send({ published: false }).expect(200);
+    await anon.get('/api/help/videos/find-a-course').expect(404);
+    await admin.send('delete', '/api/admin/help/videos/find-a-course').expect(200);
+    expect(await prisma.auditLog.count({ where: { action: { startsWith: 'help.' } } })).toBeGreaterThanOrEqual(4);
+  });
 });
