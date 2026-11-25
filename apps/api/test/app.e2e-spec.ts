@@ -16,6 +16,8 @@ import { AppModule } from '../src/app.module';
 import { ARGON2_OPTS } from '../src/auth/auth.service';
 import { configureApp } from '../src/bootstrap';
 import { JobsService } from '../src/common/jobs';
+import { seal } from '../src/common/seal';
+import { codeAt, newSecret, stepAt } from '../src/auth/totp';
 import { PrismaService } from '../src/common/prisma.service';
 import { resetEnvCache } from '../src/config/env';
 import { PayoutsService } from '../src/commerce/payouts.service';
@@ -83,6 +85,9 @@ describe('e2e: buy and learn', () => {
       DATABASE_URL: url,
       REDIS_URL: process.env.E2E_REDIS_URL ?? 'redis://127.0.0.1:6380',
       DEV_TEST_PAYMENTS: 'true',
+      OAUTH_TEST_PROVIDER: 'true',
+      GOOGLE_CLIENT_ID: '',
+      GOOGLE_CLIENT_SECRET: '',
       STRIPE_SECRET_KEY: '',
       S3_ENDPOINT: 'http://127.0.0.1:9000',
       S3_PUBLIC_ENDPOINT: 'http://127.0.0.1:9000',
@@ -162,9 +167,17 @@ describe('e2e: buy and learn', () => {
     // CSRF is enforced
     await agent.post('/api/auth/register').send({ email: 'buyer@e2e.example', password: 'Long-enough-pw1', name: 'Buyer' }).expect(403);
 
+    // Sign-up earns no session yet: Google Authenticator is set up first (owner 2026-11-25).
     const reg = await agent.post('/api/auth/register').set('X-CSRF-Token', csrf).send({ email: 'buyer@e2e.example', password: 'Long-enough-pw1', name: 'Buyer' }).expect(201);
-    expect(reg.body.user.roles).toEqual(['student']);
-    const setCookie = ([] as string[]).concat(reg.headers['set-cookie'] ?? []);
+    expect(reg.body).toEqual({ mfa: 'enroll' });
+    expect(([] as string[]).concat(reg.headers['set-cookie'] ?? []).some((c) => c.startsWith('sid='))).toBe(false);
+    expect((await agent.get('/api/auth/me').expect(200)).body.user).toBeNull();
+    const setup = await agent.post('/api/auth/mfa/enroll').set('X-CSRF-Token', csrf).expect(200);
+    expect(setup.body.otpauthUrl).toContain('otpauth://totp/DevOps%20Easy%20Learning');
+    const done = await agent.post('/api/auth/mfa/complete').set('X-CSRF-Token', csrf).send({ code: codeAt(setup.body.secret, stepAt()) }).expect(200);
+    expect(done.body.user.roles).toEqual(['student']);
+    expect(done.body.recoveryCodes).toHaveLength(10);
+    const setCookie = ([] as string[]).concat(done.headers['set-cookie'] ?? []);
     expect(setCookie.find((c) => c.startsWith('sid='))).toMatch(/HttpOnly/i);
 
     const list = await agent.get('/api/courses').expect(200);
@@ -228,12 +241,14 @@ describe('e2e: buy and learn', () => {
 
   // ---------- Phase 1 ----------
   const PW = 'Long-enough-pw1';
+  const MFA_SEED = newSecret();
   async function userAgent(email: string, roles: any[], profile?: { isPlatform?: boolean }) {
-    const user = await prisma.user.create({ data: { email, name: email.split('@')[0], passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles } });
+    const user = await prisma.user.create({ data: { email, name: email.split('@')[0], passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles, mfaSecret: seal('mfa', MFA_SEED), mfaEnabledAt: new Date() } });
     if (profile) await prisma.instructorProfile.create({ data: { userId: user.id, status: 'approved', isPlatform: !!profile.isPlatform } });
     const agent = request.agent(app.getHttpServer());
     const csrf: string = (await agent.get('/api/auth/me')).body.csrf;
-    await agent.post('/api/auth/login').set('X-CSRF-Token', csrf).send({ email, password: PW }).expect(200);
+    await agent.post('/api/auth/login').set('X-CSRF-Token', csrf).send({ email, password: PW }).expect(200, { mfa: 'verify' });
+    await agent.post('/api/auth/mfa/complete').set('X-CSRF-Token', csrf).send({ code: codeAt(MFA_SEED, stepAt()) }).expect(200);
     const send = (method: 'post' | 'patch' | 'put' | 'delete', url: string, body?: object) => agent[method](url).set('X-CSRF-Token', csrf).send(body ?? {});
     return { user, agent, send };
   }
@@ -795,5 +810,184 @@ describe('e2e: buy and learn', () => {
     await anon.get('/api/help/videos/find-a-course').expect(404);
     await admin.send('delete', '/api/admin/help/videos/find-a-course').expect(200);
     expect(await prisma.auditLog.count({ where: { action: { startsWith: 'help.' } } })).toBeGreaterThanOrEqual(4);
+  });
+
+  describe('sign-in security (owner 2026-11-25)', () => {
+    const jobs = () => app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const cookieOf = (res: request.Response, name: string) => ([] as string[]).concat(res.headers['set-cookie'] ?? []).find((c) => c.startsWith(`${name}=`));
+    async function fresh() {
+      const agent = request.agent(app.getHttpServer());
+      const csrf: string = (await agent.get('/api/auth/me')).body.csrf;
+      const send = (method: 'post' | 'delete' | 'patch', url: string, body?: object) => agent[method](url).set('X-CSRF-Token', csrf).send(body ?? {});
+      return { agent, csrf, send };
+    }
+    /** A code for a step that hasn't been used yet (codes are single use). */
+    const nextCode = (seed: string, offset = 0) => codeAt(seed, stepAt() + offset);
+
+    it('password policy: every problem at once, the email or name, and breached passwords', async () => {
+      const a = await fresh();
+      const weak = await a.send('post', '/api/auth/register', { email: 'policy@e2e.example', password: 'short', name: 'Pat Policy' }).expect(400);
+      expect(weak.body.error.code).toBe('weak_password');
+      expect(weak.body.error.message).toBe('Password must be at least 12 characters and mix letters and numbers.');
+      const mine = await a.send('post', '/api/auth/register', { email: 'policy@e2e.example', password: 'policy-2026-secure', name: 'Pat Policy' }).expect(400);
+      expect(mine.body.error.message).toContain('not contain your email address or name');
+      const common = await a.send('post', '/api/auth/register', { email: 'policy@e2e.example', password: 'Password12345', name: 'Pat' }).expect(400);
+      expect(common.body.error.code).toBe('password_breached');
+      expect((await a.agent.get('/api/auth/providers').expect(200)).body.passwordPolicy.minLength).toBe(12);
+    });
+
+    it('two-step sign-in: single-use codes, five tries, recovery codes, trusted devices, lockout', async () => {
+      const seed = newSecret();
+      const email = 'mfa-user@e2e.example';
+      await prisma.user.create({ data: { email, name: 'Mia', passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles: ['student'], mfaSecret: seal('mfa', seed), mfaEnabledAt: new Date() } });
+
+      // The password alone gives no session.
+      const a = await fresh();
+      const first = await a.send('post', '/api/auth/login', { email, password: PW }).expect(200);
+      expect(first.body).toEqual({ mfa: 'verify' });
+      expect(cookieOf(first, 'sid')).toBeUndefined();
+      expect(cookieOf(first, 'del_mfa')).toMatch(/HttpOnly/i);
+      expect((await a.agent.get('/api/auth/mfa/pending').expect(200)).body).toMatchObject({ stage: 'verify', method: 'password', email: 'mf••••@e2e.example' });
+      expect((await a.send('post', '/api/auth/mfa/complete', { code: '000000' }).expect(401)).body.error.code).toBe('invalid_code');
+      const code = nextCode(seed);
+      const ok = await a.send('post', '/api/auth/mfa/complete', { code, trustDevice: true }).expect(200);
+      expect(ok.body.user.email).toBe(email);
+      expect(cookieOf(ok, 'del_trust')).toMatch(/HttpOnly/i);
+      await a.send('post', '/api/auth/mfa/complete', { code }).expect(401); // the ticket is used
+
+      // The same code never works twice, even in a new sign-in.
+      const b = await fresh();
+      await b.send('post', '/api/auth/login', { email, password: PW }).expect(200);
+      expect((await b.send('post', '/api/auth/mfa/complete', { code }).expect(401)).body.error.code).toBe('invalid_code');
+      // Five wrong codes burn the ticket.
+      for (let i = 0; i < 3; i++) await b.send('post', '/api/auth/mfa/complete', { code: '111111' }).expect(401);
+      expect((await b.send('post', '/api/auth/mfa/complete', { code: '111111' }).expect(401)).body.error.code).toBe('no_pending_signin');
+      await prisma.user.update({ where: { email }, data: { failedLogins: 0, lockedUntil: null } });
+
+      // Recovery codes: once each.
+      const c = await fresh();
+      await c.send('post', '/api/auth/login', { email, password: PW }).expect(200);
+      const codes = (await a.send('post', '/api/auth/mfa/recovery-codes', { code: nextCode(seed, 1) }).expect(200)).body.recoveryCodes as string[];
+      expect(codes).toHaveLength(10);
+      expect(codes[0]).toMatch(/^[2-9A-HJ-NP-Z]{4}-[2-9A-HJ-NP-Z]{4}-[2-9A-HJ-NP-Z]{2}$/);
+      const viaRecovery = await c.send('post', '/api/auth/mfa/complete', { recoveryCode: codes[0].toLowerCase() }).expect(200);
+      expect(viaRecovery.body.recoveryCodesLeft).toBe(9);
+      const d = await fresh();
+      await d.send('post', '/api/auth/login', { email, password: PW }).expect(200);
+      await d.send('post', '/api/auth/mfa/complete', { recoveryCode: codes[0] }).expect(401);
+
+      // The trusted browser skips the code; forgetting devices ends that.
+      const trusted = await a.send('post', '/api/auth/login', { email, password: PW }).expect(200);
+      expect(trusted.body.user.email).toBe(email);
+      expect((await a.agent.get('/api/auth/security').expect(200)).body).toMatchObject({ hasPassword: true, trustedDevices: 1, mfa: { recoveryCodesLeft: 9 } });
+      await a.send('delete', '/api/auth/trusted-devices').expect(200, { forgotten: 1 });
+      expect((await a.send('post', '/api/auth/login', { email, password: PW }).expect(200)).body).toEqual({ mfa: 'verify' });
+
+      // Lockout: five wrong passwords lock the account; the right one is refused while locked.
+      await prisma.user.update({ where: { email }, data: { failedLogins: 0 } });
+      const e = await fresh();
+      for (let i = 0; i < 5; i++) await e.send('post', '/api/auth/login', { email, password: 'wrong-password-1' }).expect(401);
+      const locked = await e.send('post', '/api/auth/login', { email, password: PW }).expect(423);
+      expect(locked.body.error.code).toBe('account_locked');
+      expect(await prisma.auditLog.count({ where: { action: 'auth.account_locked', targetId: (await prisma.user.findUniqueOrThrow({ where: { email } })).id } })).toBe(2); // the wrong codes above locked it once too
+    });
+
+    it('forgotten password: same answer for everyone, one-hour single-use link, ends sessions and trusted devices, code still asked', async () => {
+      const seed = newSecret();
+      const email = 'reset-user@e2e.example';
+      await prisma.user.create({ data: { email, name: 'Rae', passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles: ['student'], mfaSecret: seal('mfa', seed), mfaEnabledAt: new Date(), failedLogins: 0, lockedUntil: new Date(Date.now() + 600_000) } });
+      const signedIn = await fresh();
+      await prisma.user.update({ where: { email }, data: { lockedUntil: null } });
+      await signedIn.send('post', '/api/auth/login', { email, password: PW }).expect(200);
+      await signedIn.send('post', '/api/auth/mfa/complete', { code: nextCode(seed) }).expect(200);
+      await prisma.user.update({ where: { email }, data: { lockedUntil: new Date(Date.now() + 600_000) } });
+
+      jobs().sendEmail.mockClear();
+      const a = await fresh();
+      const unknown = await a.send('post', '/api/auth/password/forgot', { email: 'nobody@e2e.example' }).expect(200);
+      const known = await a.send('post', '/api/auth/password/forgot', { email }).expect(200);
+      expect(known.body).toEqual(unknown.body);
+      expect(jobs().sendEmail).toHaveBeenCalledTimes(1);
+      const link: string = jobs().sendEmail.mock.calls[0][0].data.link;
+      expect(link).toMatch(/^http:\/\/127\.0\.0\.1:3000\/reset-password\?token=/);
+      const token = new URL(link).searchParams.get('token')!;
+      expect((await a.send('post', '/api/auth/password/reset', { token, password: 'short' }).expect(400)).body.error.code).toBe('weak_password');
+      await a.send('post', '/api/auth/password/reset', { token, password: 'New-garden-hose-77' }).expect(200);
+      expect((await a.send('post', '/api/auth/password/reset', { token, password: 'New-garden-hose-78' }).expect(400)).body.error.code).toBe('reset_link_invalid');
+      await signedIn.agent.get('/api/auth/security').expect(401); // every session ended
+      const again = await a.send('post', '/api/auth/login', { email, password: 'New-garden-hose-77' }).expect(200); // lockout cleared
+      expect(again.body).toEqual({ mfa: 'verify' });
+      expect(jobs().sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: email, template: 'security-password-changed' }));
+    });
+
+    it('social sign-in (test provider): new account, no merge by email, link, in-use, unlink rules, setting a password', async () => {
+      const providers = (await request(app.getHttpServer()).get('/api/auth/providers').expect(200)).body.items;
+      expect(providers).toEqual([{ key: 'test', label: 'Test provider' }]);
+      await request(app.getHttpServer()).get('/api/auth/oauth/google/start').expect(404); // no keys, no button, no route
+
+      /** Runs the provider round trip and returns where the browser lands. */
+      async function social(a: Awaited<ReturnType<typeof fresh>>, who: { email: string; sub: string; name?: string }, mode = 'login') {
+        const start = await a.agent.get(`/api/auth/oauth/test/start?mode=${mode}&next=/courses`).expect(302);
+        const auth = new URL(start.headers.location);
+        expect(auth.pathname).toBe('/api/auth/oauth/test/authorize');
+        expect(cookieOf(start, 'del_oauth')).toMatch(/HttpOnly/i);
+        const page = await a.agent.get(`${auth.pathname}${auth.search}`).expect(200);
+        expect(page.text).toContain('Development only');
+        const approve = await a.agent.get(`/api/auth/oauth/test/approve?state=${auth.searchParams.get('state')}&email=${encodeURIComponent(who.email)}&sub=${who.sub}&name=${who.name ?? 'Social'}`).expect(302);
+        const cb = new URL(approve.headers.location);
+        const back = await a.agent.get(`${cb.pathname}${cb.search}`).expect(302);
+        return back.headers.location as string;
+      }
+
+      // A new person: account created, Google Authenticator set up before any session.
+      const a = await fresh();
+      expect(await social(a, { email: 'sofia@e2e.example', sub: 'g-1', name: 'Sofia' })).toBe('http://127.0.0.1:3000/login/verify?next=%2Fcourses');
+      expect((await a.agent.get('/api/auth/mfa/pending').expect(200)).body).toMatchObject({ stage: 'enroll', method: 'test' });
+      const setup = await a.send('post', '/api/auth/mfa/enroll').expect(200);
+      const done = await a.send('post', '/api/auth/mfa/complete', { code: codeAt(setup.body.secret, stepAt()) }).expect(200);
+      expect(done.body).toMatchObject({ user: { email: 'sofia@e2e.example', name: 'Sofia', roles: ['student'] }, next: '/courses' });
+      const sofia = await prisma.user.findUniqueOrThrow({ where: { email: 'sofia@e2e.example' }, include: { identities: true } });
+      expect(sofia.passwordHash).toBeNull();
+      expect(sofia.identities).toMatchObject([{ provider: 'test', subject: 'g-1' }]);
+      // Signing in again with the same provider account reaches the same account (no duplicate).
+      const again = await fresh();
+      expect(await social(again, { email: 'sofia@e2e.example', sub: 'g-1' })).toContain('/login/verify');
+      expect(await prisma.user.count({ where: { email: 'sofia@e2e.example' } })).toBe(1);
+      // No password yet: password sign-in fails like any wrong password.
+      await again.send('post', '/api/auth/login', { email: 'sofia@e2e.example', password: PW }).expect(401);
+
+      // Someone else's provider account using an existing DEL email is NOT merged.
+      const owner = await userAgent('owner@e2e.example', ['student']);
+      const intruder = await fresh();
+      expect(await social(intruder, { email: 'owner@e2e.example', sub: 'gh-evil' })).toBe('http://127.0.0.1:3000/login?error=email_exists&provider=test');
+      expect(await prisma.authIdentity.count({ where: { subject: 'gh-evil' } })).toBe(0);
+
+      // The real owner links a provider from their signed-in account (the provider proves the second account).
+      const ownerSession = { agent: owner.agent, csrf: '', send: owner.send };
+      expect(await social(ownerSession, { email: 'owner-alt@e2e.example', sub: 'gh-owner' }, 'link')).toBe('http://127.0.0.1:3000/account?linked=test#security');
+      const sec = (await owner.agent.get('/api/auth/security').expect(200)).body;
+      expect(sec.identities).toMatchObject([{ provider: 'test', email: 'owner-alt@e2e.example' }]);
+      // That provider account can't be linked to anybody else.
+      expect(await social(again, { email: 'x@e2e.example', sub: 'gh-owner' })).toContain('/login/verify'); // it signs in the owner instead
+      // Unlinking needs a code; Sofia can't remove her only way in.
+      const owned = sec.identities[0].id as string;
+      expect((await owner.send('post', `/api/auth/identities/${owned}/unlink`, { code: '000000' }).expect(401)).body.error.code).toBe('invalid_code');
+      await owner.send('post', `/api/auth/identities/${owned}/unlink`, { code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+      expect(jobs().sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'owner@e2e.example', template: 'security-identity-unlinked' }));
+    });
+
+    it('a Super Admin resets someone else’s authenticator, never their own', async () => {
+      const boss = await userAgent('auth-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const admin = await userAgent('auth-admin@e2e.example', ['student', 'admin']);
+      const target = await userAgent('auth-target@e2e.example', ['student']);
+      await admin.send('post', `/api/admin/users/${target.user.id}/mfa/reset`).expect(403);
+      expect((await boss.send('post', `/api/admin/users/${boss.user.id}/mfa/reset`).expect(403)).body.error.code).toBe('own_account');
+      await boss.send('post', `/api/admin/users/${target.user.id}/mfa/reset`).expect(200);
+      await target.agent.get('/api/auth/security').expect(401); // sessions ended
+      const t = await prisma.user.findUniqueOrThrow({ where: { id: target.user.id } });
+      expect(t.mfaEnabledAt).toBeNull();
+      const a = await fresh();
+      expect((await a.send('post', '/api/auth/login', { email: 'auth-target@e2e.example', password: PW }).expect(200)).body).toEqual({ mfa: 'enroll' });
+    });
   });
 });

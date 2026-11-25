@@ -12,6 +12,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ARGON2_OPTS } from '../auth/auth.service';
+import { seal } from '../common/seal';
 import { DEFAULT_COMMISSION_BPS } from '../common/pricing';
 import { StorageService } from '../common/storage.service';
 import { env } from '../config/env';
@@ -64,11 +65,20 @@ function vtt(durationSec: number): string {
   return 'WEBVTT\n\n' + lines.map((l, i) => `${i + 1}\n${ts(i * step)} --> ${ts(Math.min(durationSec, (i + 1) * step))}\n${l}\n`).join('\n');
 }
 
+/** Local demo accounts get the authenticator seed from SEED_MFA_SECRET, so tests and demos can sign in (docs/AUTH.md). */
+function demoMfa() {
+  const secret = env().SEED_MFA_SECRET.trim().toUpperCase();
+  if (!secret || env().NODE_ENV === 'production') return {};
+  if (!/^[A-Z2-7]{16,64}$/.test(secret)) throw new Error('SEED_MFA_SECRET must be base32 (A-Z, 2-7), 16+ characters');
+  return { mfaSecret: seal('mfa', secret), mfaEnabledAt: new Date(), mfaLastStep: null };
+}
+
 async function upsertUser(email: string, name: string, roles: Role[], passwordHash: string) {
+  const mfa = demoMfa();
   return prisma.user.upsert({
     where: { email },
-    create: { email, name, roles, passwordHash },
-    update: { name, roles, passwordHash, status: 'active' },
+    create: { email, name, roles, passwordHash, passwordChangedAt: new Date(), ...mfa },
+    update: { name, roles, passwordHash, status: 'active', failedLogins: 0, lockedUntil: null, ...mfa },
   });
 }
 

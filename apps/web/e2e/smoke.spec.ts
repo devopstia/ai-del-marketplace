@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { expect, login, logout, PASSWORD, tinyVideo, USERS, visible } from "./helpers";
+import { expect, freshCode, login, logout, PASSWORD, rememberSeed, tinyVideo, USERS, visible } from "./helpers";
 
 const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-for-devops";
 
@@ -62,14 +62,26 @@ test.describe("public catalogue", () => {
 
 test.describe.serial("learner buys and studies a course", () => {
   const email = `e2e-${Date.now()}@example.com`;
-  const password = "e2e-password-123";
+  const password = "e2e-garden-path-4821";
 
   test("register", async ({ page }) => {
     await page.goto("/register");
     await page.getByLabel("Full name").fill("E2E Learner");
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
+    await expect(page.getByTestId("password-rules")).toContainText("At least 12 characters");
     await page.getByTestId("auth-submit").click();
+    // Every account sets up Google Authenticator before the first session.
+    await expect(page).toHaveURL(/\/login\/verify/);
+    const secret = (await page.getByTestId("mfa-secret").innerText()).replace(/\s/g, "");
+    rememberSeed(email, secret);
+    await expect(page.getByTestId("mfa-qr")).toBeVisible();
+    await page.getByTestId("mfa-code").fill(await freshCode(email));
+    await page.getByTestId("mfa-submit").click();
+    await expect(page.getByTestId("recovery-codes")).toBeVisible();
+    await expect(page.getByTestId("codes-continue")).toBeDisabled();
+    await page.getByTestId("codes-saved").check();
+    await page.getByTestId("codes-continue").click();
     await expect(page).toHaveURL(/\/my-learning/);
     await expect(page.getByRole("heading", { name: "My learning" })).toBeVisible();
   });

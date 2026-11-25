@@ -93,6 +93,21 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     the installed app: no reliance on browser chrome, fixed elements respect `env(safe-area-inset-*)`, phone inputs stay
     16 px. `apps/web/e2e/pwa.spec.ts` must stay green (Chrome's installability check reports no errors).
 
+19. **Sign-in security** (owner, 2026-11-25: "registration extremely easy, but account access must remain secure";
+    docs/AUTH.md). Every agent keeps these true:
+    - Sign-in methods: email + password, Google, GitHub, Facebook, LinkedIn. A provider's button exists only when its
+      keys are set. Every method ends in the same two-step flow: **no session before a Google Authenticator code**
+      (or a recovery code, or a trusted device of an enrolled account). New accounts set it up before their first session.
+    - Accounts are matched by the provider's account id, **never merged by email**; linking happens only from a
+      signed-in account (Account › Security) through the provider. One person = one account (courses, purchases,
+      progress, roles).
+    - Passwords: 12+ characters, letters and numbers, not the email/name, Have I Been Pwned range check (fail open),
+      argon2id; lockout after 5 failures; reset links single use, 1 hour, end every session and trusted device.
+    - Secrets, seeds and tokens are stored hashed or sealed, never logged; provider keys only in `.env`; the test
+      provider never in production. Privileged changes (MFA reset, linking) are audited and emailed.
+    - Tests, scripts and tools sign in through the real code step (`scripts/totp.mjs`, `SEED_MFA_SECRET`), never by
+      bypassing it.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a

@@ -4,6 +4,7 @@
 //  - pages that scroll sideways.
 // Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--widths 390,768,1440] [--light] path [path…]
 // Signs in with the seed accounts (SEED_PASSWORD from .env). Exit code 1 when anything fails.
+import { freshCode, seedSecret } from "./totp.mjs";
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 
@@ -73,6 +74,8 @@ function scan() {
   return { failures: out, overflow: document.documentElement.scrollWidth - window.innerWidth };
 }
 
+const usedStep = {};
+const trust = {};
 const browser = await chromium.launch();
 let bad = 0;
 for (const w of widths) {
@@ -80,11 +83,24 @@ for (const w of widths) {
   const page = await ctx.newPage();
   if (light) await page.addInitScript(() => { try { localStorage.setItem("del-theme-v2", "light"); } catch {} });
   if (role) {
+    if (trust[role]) await ctx.addCookies([trust[role]]);
     await page.goto(`${base}/login`);
     await page.getByLabel("Email").fill(users[role]);
     await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByTestId("auth-submit").click();
-    await page.waitForURL((u) => !u.pathname.startsWith("/login"));
+    await page.waitForURL((u) => !u.pathname.startsWith("/login") || u.pathname === "/login/verify");
+    // Demo accounts use SEED_MFA_SECRET. A code works once, so a retry waits for the next 30-second step; the first
+    // width ticks "Trust this device" and the other widths reuse that cookie.
+    for (let attempt = 0; new URL(page.url()).pathname === "/login/verify" && attempt < 3; attempt++) {
+      const { code, step } = await freshCode(seedSecret(), usedStep[role]);
+      usedStep[role] = step;
+      await page.getByTestId("mfa-code").fill(code);
+      await page.getByTestId("trust-device").check();
+      await page.getByTestId("mfa-submit").click();
+      await page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 5000 }).catch(() => {});
+    }
+    if (new URL(page.url()).pathname.startsWith("/login")) throw new Error(`could not sign in as ${role}`);
+    trust[role] = (await ctx.cookies()).find((c) => c.name === "del_trust") ?? trust[role];
   }
   for (const p of paths) {
     await page.goto(base + p, { waitUntil: "networkidle" });

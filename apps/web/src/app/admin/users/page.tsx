@@ -26,7 +26,7 @@ const roleEffect: Record<Role, string> = {
   super_admin: "has full control, including changing other people’s roles and the commission.",
 };
 
-type Pending = { kind: "role"; user: AdminUser; role: Role; add: boolean } | { kind: "status"; user: AdminUser; status: "active" | "suspended" };
+type Pending = { kind: "role"; user: AdminUser; role: Role; add: boolean } | { kind: "status"; user: AdminUser; status: "active" | "suspended" } | { kind: "mfa"; user: AdminUser };
 
 export default function AdminUsers() {
   const toast = useToast();
@@ -42,6 +42,15 @@ export default function AdminUsers() {
   async function apply() {
     if (!pending) return;
     const u = pending.user;
+    if (pending.kind === "mfa") {
+      setBusy(true);
+      try {
+        await api(`/admin/users/${u.id}/mfa/reset`, { method: "POST" });
+        toast("ok", `${u.name}'s two-step sign-in was reset. They set up a new authenticator at their next sign-in.`);
+        setPending(null);
+      } catch (e) { toast("error", errMsg(e)); } finally { setBusy(false); }
+      return;
+    }
     const body = pending.kind === "role"
       ? { roles: pending.add ? [...u.roles, pending.role] : u.roles.filter((x) => x !== pending.role) }
       : { status: pending.status };
@@ -84,7 +93,10 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
                 <td className="whitespace-nowrap px-4 py-3 text-ink-2">{date(u.createdAt)}</td>
-                <td className="px-4 py-3 text-right">
+                <td className="space-x-1 whitespace-nowrap px-4 py-3 text-right">
+                  {u.id !== me?.id && superAdmin ? (
+                    <button type="button" className="btn btn-sm btn-ghost" onClick={() => setPending({ kind: "mfa", user: u })} data-testid="reset-mfa">Reset 2-step</button>
+                  ) : null}
                   {u.id !== me?.id && has("admin") ? (
                     <button type="button" className={`btn btn-sm ${u.status === "active" ? "btn-ghost text-rose" : "btn-outline"}`} onClick={() => setPending({ kind: "status", user: u, status: u.status === "active" ? "suspended" : "active" })}>
                       {u.status === "active" ? "Suspend" : "Reactivate"}
@@ -98,11 +110,13 @@ export default function AdminUsers() {
         </>
       ) : !error ? <Skeleton className="h-80" /> : null}
 
-      <Modal open={!!pending} onClose={() => setPending(null)} title={pending?.kind === "role" ? (pending.add ? "Add role" : "Remove role") : pending?.kind === "status" && pending.status === "suspended" ? "Suspend user" : "Reactivate user"}>
+      <Modal open={!!pending} onClose={() => setPending(null)} title={pending?.kind === "mfa" ? "Reset two-step sign-in" : pending?.kind === "role" ? (pending.add ? "Add role" : "Remove role") : pending?.kind === "status" && pending.status === "suspended" ? "Suspend user" : "Reactivate user"}>
         {pending ? (
           <div className="space-y-4 p-5">
             <p className="text-ink-2">
-              {pending.kind === "role"
+              {pending.kind === "mfa"
+                ? <>Remove the authenticator from <b className="text-ink">{pending.user.name}</b> ({pending.user.email})? Use this only when they lost their phone and their recovery codes, after confirming who they are. They are signed out everywhere and set up Google Authenticator again at their next sign-in. This is recorded in the audit log.</>
+                : pending.kind === "role"
                 ? <>{pending.add ? "Give" : "Remove"} the <b className="text-ink">{roleName(pending.role)}</b> role {pending.add ? "to" : "from"} <b className="text-ink">{pending.user.name}</b> ({pending.user.email})? With this role a person {roleEffect[pending.role]} They are signed out so the change takes effect at their next sign-in.</>
                 : pending.status === "suspended"
                   ? <>Suspend <b className="text-ink">{pending.user.name}</b> ({pending.user.email})? They are signed out everywhere and can’t sign in until reactivated. Their purchases are kept.</>
@@ -110,9 +124,9 @@ export default function AdminUsers() {
             </p>
             <div className="flex justify-end gap-2">
               <button type="button" className="btn btn-ghost" onClick={() => setPending(null)}>Cancel</button>
-              <button type="button" className={`btn ${(pending.kind === "status" && pending.status === "suspended") || (pending.kind === "role" && !pending.add) ? "btn-danger" : "btn-primary"}`} disabled={busy} onClick={apply} data-testid="confirm-user-change">
+              <button type="button" className={`btn ${pending.kind === "mfa" || (pending.kind === "status" && pending.status === "suspended") || (pending.kind === "role" && !pending.add) ? "btn-danger" : "btn-primary"}`} disabled={busy} onClick={apply} data-testid="confirm-user-change">
                 {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-                {pending.kind === "role" ? (pending.add ? `Add ${roleName(pending.role)}` : `Remove ${roleName(pending.role)}`) : pending.status === "suspended" ? "Suspend" : "Reactivate"}
+                {pending.kind === "mfa" ? "Reset two-step sign-in" : pending.kind === "role" ? (pending.add ? `Add ${roleName(pending.role)}` : `Remove ${roleName(pending.role)}`) : pending.status === "suspended" ? "Suspend" : "Reactivate"}
               </button>
             </div>
           </div>
