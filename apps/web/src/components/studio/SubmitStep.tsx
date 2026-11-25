@@ -22,7 +22,7 @@ export function checklist(c: StudioCourse): Check[] {
     { step: "details", label: "Subtitle", ok: c.subtitle.trim().length > 0, required: false },
     { step: "details", label: "Description of 200 characters or more", ok: c.description.trim().length >= 200, required: false },
     { step: "details", label: "Four or more learning outcomes", ok: c.objectives.filter(Boolean).length >= 4, required: false },
-    { step: "media", label: "Course image", ok: !!c.thumbnailUrl || !!c.thumbnailKey, required: false },
+    { step: "media", label: "Course cover", ok: !!c.thumbnailUrl, required: false },
     { step: "curriculum", label: "Three or more lectures", ok: lectures.length >= 3, required: false },
     { step: "curriculum", label: "At least one free preview", ok: lectures.some((l) => l.isPreview), required: false },
   ];

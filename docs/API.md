@@ -313,6 +313,22 @@ course out (DEL courses always in). Cart, checkout and Stripe use the current pr
 | GET | `/admin/course-sales?status=open\|all` | admin: instructor sales with course and instructor |
 | POST | `/admin/course-sales/:id/cancel` | **super_admin**: `{ note }` (5+ chars, kept in the audit log) |
 
+## Course covers (owner decisions 2026-11-25)
+Every course image is a 1280×720 PNG generated on the server from a cover template and the course title (topic label + DEL
+mark), stored at `images/covers/<courseId>-<hash>.png` and served by `GET /api/media/images/...`; card `thumbnailUrl` is it.
+Covers regenerate when the title, topic or template changes. No custom uploads; changes go live at once (no review).
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/instructor/courses/:id/cover` | owner: `{ course: { title, topic, coverTemplateId, coverUrl }, templates: [{ id, name, group, suggested, … }] }` |
+| GET | `/instructor/courses/:id/cover-preview/:templateId?w&title` | owner: PNG of a template with the course title (w 320–1280) |
+| PUT | `/instructor/courses/:id/cover` | owner: `{ templateId }` (active templates only, 400 `cover_template`); audited |
+| GET | `/admin/cover-templates` | admin: all templates with `courseCount`, plus `layouts`, `motifs` |
+| GET | `/admin/cover-templates/:id/preview?w&title&topic` | admin: PNG preview |
+| POST | `/admin/cover-templates/preview` | **super_admin**: PNG of an unsaved `{ layout, motif, palette, title?, topic?, w? }` |
+| POST | `/admin/cover-templates` | **super_admin**: `{ name, layout, motif, palette: { bg: [hex, hex], ink, a, b, tone }, topics, active?, sort? }` |
+| PATCH | `/admin/cover-templates/:id` | **super_admin**: any of the above; courses using it are regenerated; `active: false` moves them to their best other template (`coursesMoved`); the last active template can't be deactivated |
+
 ## Money: split, payout hold, refunds, disputes (owner-approved, docs/PAYMENTS_PROPOSAL.md)
 
 Rules (`apps/api/src/commerce/money.ts`): per line `net = price − allocated Stripe fee` (fee split by price, largest

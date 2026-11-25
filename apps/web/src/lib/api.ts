@@ -22,7 +22,7 @@ function readCookie(name: string): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-async function ensureCsrf(): Promise<string | null> {
+export async function ensureCsrf(): Promise<string | null> {
   const fromCookie = readCookie("csrf");
   if (fromCookie) return fromCookie;
   if (csrfToken) return csrfToken;

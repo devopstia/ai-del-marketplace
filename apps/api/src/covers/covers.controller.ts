@@ -27,6 +27,8 @@ function png(res: Response, buf: Buffer) {
   res.setHeader('Content-Type', 'image/png');
   res.setHeader('Cache-Control', 'private, max-age=300');
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Shown by the web app (another origin), like course images; a preview holds only the course title.
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.end(buf);
 }
 

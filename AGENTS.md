@@ -76,6 +76,18 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     4. **Check sizes**: phone 390, tablet 768, desktop 1440 and the owner's 1920 px, with no sideways scrolling.
     5. **Fix dark-mode problems before asking for review**, and show the owner dark screenshots (light only where relevant).
 
+17. **Standard course covers only** (owner, 2026-11-25: "every course cover should feel like it belongs to the same
+    platform"). Every course image is a cover generated on the server from a platform template and the course title
+    (`apps/api/src/covers/`: `cover-templates.ts` = the built-in collection, `cover-render.ts` = the renderer,
+    `covers.service.ts` = storage and regeneration). Agents must:
+    - never add a way to upload a custom course image, and never use a video frame or thumbnail as a course cover;
+    - show course images only through the generated cover URL (`thumbnailUrl` on cards = `coverKey`);
+    - make new templates from the existing layouts, palettes and designs (or extend them in the renderer) in the DEL font,
+      with the topic label and DEL mark; check every new one renders at 1280×720 with a long and a short title, in dark and
+      light pages (`npx jest src/covers` in apps/api renders all of them);
+    - keep covers regenerating when the title, topic or template changes; bump `RENDER_VERSION` in `covers.service.ts`
+      after changing the drawing code so existing covers are redrawn.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
