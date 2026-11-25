@@ -133,18 +133,21 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     (`course_resources`) is an extra, never a replacement. Learners see a lesson's files under its video. Published
     courses change only through the draft revision. Paid files only for owners, admins and active enrolments.
 
-23. **Production and global access** (owner, 2026-11-25; docs/DEPLOYMENT.md). Insurance Hub is the reference
-    architecture: same AWS account, own `del-marketplace-*` resources and secrets (SSM Parameter Store, instance
-    role, GitHub OIDC; never Hub credentials, never secrets in git, images or workflows). **Do not create production
-    resources or deploy until the owner authorises it and gives the domain** (`release.yml` stays gated by
-    `PRODUCTION_ENABLED`). **Never copy the Hub's geographic blocking** (nginx geo allowlist, CloudFront geo
+23. **Production and global access** (owner, 2026-11-25; docs/DEPLOYMENT.md). Production is
+    **https://ai-devopseasylearning.com** (staging: staging.ai-devopseasylearning.com), in the Insurance Hub AWS account
+    with its own `del-marketplace-*` resources from `infra/terraform` (EC2, RDS, S3, ECR, SES, SSM, IAM, alarms).
+    Secrets only in SSM Parameter Store (instance role, GitHub OIDC; never Hub credentials, never in git, images or
+    workflows). Releases go through `release.yml` / `scripts/deploy-aws.sh` (staging first, snapshot, SSM; no SSH).
+    **Stripe stays in test mode until the owner explicitly authorises live payments** (Super Admin › Payments &
+    Stripe, typed confirmation + authenticator). **Never upload local training videos or unfinished courses to AWS**
+    until the owner says so. **Never copy the Hub's geographic blocking** (nginx geo allowlist, CloudFront geo
     restriction, WAF geo rules): the marketplace is global, Africa included; protect it with rate limits, MFA and
     Stripe fraud checks instead. Never modify, delete or disrupt Insurance Hub resources.
 
 24. **Email** (owner, 2026-11-25; docs/EMAIL.md). Every email goes through a template in `src/email/templates.ts`
     (the Hub's layout with DEL branding, dark-mode variant, text part) and the queue (`jobs.sendEmail`, with a
     `dedupeKey` when a retry could repeat it). No email for routine sign-ins. Locally read them in Mailpit
-    (http://127.0.0.1:8025); production sends through Resend.
+    (http://127.0.0.1:8025); production sends through Amazon SES for ai-devopseasylearning.com.
 
 25. **Manual enrollment** (owner, 2026-11-25; docs/MANUAL_ENROLLMENT.md). Instructors request (own courses only),
     super admins verify external payments (allocation per course, actual fees, USD with the original currency),
@@ -152,7 +155,12 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     invitations hashed, single use, 7 days, newest link only, email code before the password, then Google
     Authenticator. Never grants Instructor or Admin roles.
 
-26. **DevOps Easy Learning full program** (owner, 2026-11-25). The marketplace sells individual courses and
+26. **Guest cart, review moderation, storage** (owner, 2026-11-25). Visitors shop without an account (course ids only
+    in the browser, `lib/guest-cart.ts`); sign-in is asked only at checkout and the cart merges after any sign-in.
+    Instructors report reviews, never delete them; admins hide/restore with a reason, only super admins delete; honest
+    low ratings stay. New uploads go under `instructors/<id>/courses/<id>/…` (`common/storage-keys.ts`).
+
+27. **DevOps Easy Learning full program** (owner, 2026-11-25). The marketplace sells individual courses and
     promotes the full training program on **https://www.devopseasylearning.com** (`lib/del-program.ts`; the www host
     because the bare domain's certificate doesn't cover it): homepage band, footer, course pages, Student Studio.
     Not in the top menu bar (owner). Enrolment and payment for the program happen only on that site, never through

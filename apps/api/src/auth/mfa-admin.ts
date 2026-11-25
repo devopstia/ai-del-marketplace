@@ -10,12 +10,13 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { seal } from '../common/seal';
 import { env } from '../config/env';
 import { PrismaClient } from '../generated/prisma/client';
+import { databaseSsl } from '../common/prisma.service';
 
 const DEMO = ['admin@del.example', 'courses@del.example', 'nadia@instructor.example', 'student@del.example'];
 
 async function main() {
   const [cmd, arg] = process.argv.slice(2);
-  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: env().DATABASE_URL }) });
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: env().DATABASE_URL, ssl: databaseSsl() }) });
   try {
     if (cmd === 'reset' && arg) {
       const u = await prisma.user.findUnique({ where: { email: arg.trim().toLowerCase() } });

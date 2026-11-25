@@ -1,13 +1,8 @@
-# Release to production (docs/DEPLOYMENT.md "Release"), the Insurance Hub flow adapted to the marketplace:
-#   full CI → images to ECR → (approval in the `production` environment) → database snapshot →
-#   the server pulls the images and restarts via SSM Run Command (no SSH, no keys in the repository) →
-#   health check → keep the 5 newest snapshots.
-#
-# NOT ACTIVE YET. The owner has not authorised production or given the domain (owner, 2026-11-25):
-# - it runs only by hand ("Run workflow"), never on push;
-# - every job is skipped unless the repository variable PRODUCTION_ENABLED is "true";
-# - the `production` environment must require the owner's approval (GitHub › Settings › Environments).
-# Rollback: run it with `commit` set to an earlier release whose images are still in ECR.
+# Release (docs/DEPLOYMENT.md "Release"), the Insurance Hub flow adapted to the marketplace:
+#   full CI → images to ECR (scanned) → staging release + checks → approval in the `production` environment →
+#   RDS snapshot → production release through SSM Run Command (no SSH) → HTTPS health check → keep 5 snapshots.
+# Runs by hand ("Run workflow") and only when the repository variable PRODUCTION_ENABLED is "true".
+# A failed test, scan or health check stops the release. Rollback: run it with `commit` = an earlier release.
 name: release
 
 on:
@@ -36,18 +31,13 @@ jobs:
     needs: ci
     uses: ./.github/workflows/images.yml
 
-  deploy:
+  staging:
     needs: [ci, images]
-    if: >-
-      always() && !cancelled() && vars.PRODUCTION_ENABLED == 'true' &&
-      (inputs.commit != '' || (needs.ci.result == 'success' && needs.images.result == 'success'))
+    if: always() && !cancelled() && vars.PRODUCTION_ENABLED == 'true' && (inputs.commit != '' || (needs.ci.result == 'success' && needs.images.result == 'success'))
     runs-on: ubuntu-24.04
-    environment: production
-    timeout-minutes: 45
-    env:
-      AWS_REGION: ${{ vars.AWS_REGION }}
-      RDS: del-marketplace-rds
-      KEEP_SNAPSHOTS: "5"
+    environment: staging
+    timeout-minutes: 30
+    outputs: { tag: "${{ steps.which.outputs.tag }}" }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -55,21 +45,33 @@ jobs:
         run: |
           if [ -n "${{ inputs.commit }}" ]; then git checkout --quiet "${{ inputs.commit }}"; fi
           sha="$(git rev-parse HEAD)"; echo "tag=${sha::12}" >> "$GITHUB_OUTPUT"
-          echo "Releasing ${sha::12}: $(git log -1 --format=%s)"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/del-marketplace-gh-deploy
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: ./scripts/deploy-aws.sh release staging ${{ steps.which.outputs.tag }}
+      - run: ./scripts/deploy-aws.sh verify staging
+
+  production:
+    needs: staging
+    if: always() && !cancelled() && needs.staging.result == 'success'
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 45
+    env: { RDS: del-marketplace-rds, KEEP_SNAPSHOTS: "5" }
+    steps:
+      - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/del-marketplace-gh-deploy
           aws-region: ${{ vars.AWS_REGION }}
       - name: Snapshot the database
         run: |
-          name="pre-release-${{ steps.which.outputs.tag }}-$(date -u +%Y%m%d-%H%M)"
+          name="pre-release-${{ needs.staging.outputs.tag }}-$(date -u +%Y%m%d-%H%M)"
           aws rds create-db-snapshot --db-instance-identifier "$RDS" --db-snapshot-identifier "$name" --query DBSnapshot.Status --output text
           aws rds wait db-snapshot-available --db-snapshot-identifier "$name"
-      - name: Release ${{ steps.which.outputs.tag }}
-        env: { IMAGE_TAG: "${{ steps.which.outputs.tag }}" }
-        run: ./scripts/deploy-aws.sh release
-      - name: Verify
-        run: ./scripts/deploy-aws.sh verify
+      - run: ./scripts/deploy-aws.sh release production ${{ needs.staging.outputs.tag }}
+      - run: ./scripts/deploy-aws.sh verify production
       - name: Keep the newest snapshots
         if: always()
         run: |

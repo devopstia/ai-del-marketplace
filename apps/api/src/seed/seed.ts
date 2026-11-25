@@ -20,9 +20,10 @@ import { PrismaClient } from '../generated/prisma/client';
 import type { Role } from '../generated/prisma/enums';
 import { CATEGORIES, COURSES, SeedCourse } from './content';
 import { makeZip } from './zip';
+import { databaseSsl } from '../common/prisma.service';
 
 const e = env();
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: e.DATABASE_URL }) });
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: e.DATABASE_URL, ssl: databaseSsl() }) });
 const storage = new StorageService();
 const work = mkdtempSync(join(tmpdir(), 'del-seed-'));
 const log = (m: string) => console.log(`[seed] ${m}`);

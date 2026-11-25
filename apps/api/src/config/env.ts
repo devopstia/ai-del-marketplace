@@ -11,6 +11,8 @@ const schema = z.object({
   DEPLOY_ENV: z.enum(['local', 'staging', 'production']).default('local'),
   PORT: z.coerce.number().int().default(4000),
   DATABASE_URL: z.string().min(1),
+  /** "rds": TLS verified with the Amazon RDS CA bundle (production and staging). */
+  DATABASE_SSL: z.enum(['off', 'rds']).default('off'),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
   SESSION_SECRET: z.string().min(16),
   /** Content protection: encrypted HLS for enrolled learners (owner 2026-11-25). "false" falls back to signed MP4 links. */

@@ -1,95 +1,77 @@
-# Production deployment (prepared, not deployed)
+# Production deployment
 
-Owner, 2026-11-25: deploy the marketplace like Insurance Hub, in **the same AWS account**, with **its own
-resources and secrets**, **globally accessible (no geographic blocking, Africa included)**, and **nothing created
-or deployed until the owner authorises it and gives the domain**.
+Owner, 2026-11-25: launch on **https://ai-devopseasylearning.com** in the same AWS account as Insurance Hub, with its
+own resources and secrets, globally accessible (no geographic blocking, Africa included), **Stripe in test mode until
+the owner authorises live payments**, and **no training videos or unfinished courses uploaded**.
 
-Status: pipeline, production compose file, proxy and release script are in the repository. **No AWS resource
-exists for the marketplace and nothing has been deployed.** `release.yml` cannot run until the repository variable
-`PRODUCTION_ENABLED` is `true`.
-
-## 1. What Insurance Hub does (inspected 2026-11-25)
+## 1. Insurance Hub, the reference (inspected 2026-11-25)
 
 Repository `/home/tia/work/insurance-knowledge-hub` (read without opening `.env`, `.deploy-secrets.env` or `keys/`).
 
-| Area | Insurance Hub | Files |
+| Area | Insurance Hub | Marketplace (what we did differently and why) |
 | --- | --- | --- |
-| CI | GitHub Actions `ci.yml`: path filter, tests per service, frontend, compose check | `.github/workflows/ci.yml` |
-| Images | `images.yml`: tag = 12-char SHA, native arm64 build (`ubuntu-24.04-arm`), push to ECR `insuranceprep/*` | `.github/workflows/images.yml` |
-| Release | `release.yml` on push to `main`: full CI → images → `production` environment → RDS snapshot → open SSH for the runner → server pulls images → verify → close SSH → keep 5 snapshots; rollback by `commit` input | `.github/workflows/release.yml` |
-| AWS access from CI | GitHub OIDC roles (`insuranceprep-gh-images`, `insuranceprep-gh-deploy`), no stored AWS keys | `scripts/deploy-aws.sh cicd` |
-| Infrastructure | Imperative AWS CLI script with idempotent phases: one EC2 m6g.medium (arm64) + Elastic IP, RDS PostgreSQL, S3, SES identity, Route 53, CloudWatch alarms + SNS, ECR | `scripts/deploy-aws.sh`, `DEPLOYMENT-STATUS.md` |
-| TLS / proxy | Caddy (Let's Encrypt) in front of nginx | `docker-compose.prod.yml` |
-| Secrets | A generated secrets file in the repo, written to the server's `.env` over SSH; email keys in DB settings | `scripts/deploy-aws.sh` |
-| Email | notification-service: outbox → Jinja templates (`_base.html`) → Resend in production (SMTP/SES/console selectable) | `services/notification-service/app/` |
-| Monitoring | `/health` per service, compose healthchecks, Route 53 health check, 6 CloudWatch alarms | `docs/RUNBOOK.md` |
-| **Geo restriction** | **nginx `geo` allowlist (US and Canada only), 403 page, weekly DB-IP refresh** | `nginx/nginx.conf` lines 67–147, `nginx/geo/*`, `docs/GEO_ACCESS.md` |
+| Compute | one EC2 m6g.medium (arm64) + Elastic IP, default VPC, us-east-1 | one EC2 **t3a.medium** (x86, images build natively here and in CI), Elastic IP, default VPC |
+| Database | RDS PostgreSQL `insuranceprep-rds` (db.t4g.micro) | own RDS PostgreSQL 16 `del-marketplace-rds` (db.t4g.micro, encrypted, 7-day backups, deletion protection), private, reachable only from the marketplace server's security group |
+| Files | S3 + instance role | S3 `del-marketplace-production-<account>` and `del-marketplace-staging-<account>`: private, Block Public Access, SSE, versioning (production), CORS for the site, lifecycle; signed with the **instance role** (`S3_ENDPOINT=aws`, no keys) |
+| Images | ECR `insuranceprep/*`, arm64 | ECR `del-marketplace/api`, `del-marketplace/web` (scan on push, keep 20) |
+| TLS / proxy | Caddy (Let's Encrypt) → nginx | Caddy only (`deploy/Caddyfile`): HTTPS, HTTP/3, HSTS, HTTP→HTTPS |
+| **Geo** | **nginx geo allowlist, US and Canada only** | **none**: no country rules anywhere (rule 23) |
+| Secrets | generated file committed to the repo, `.env` written over SSH; an SSH key in the repo | **SSM Parameter Store SecureString** `/del-marketplace/<stack>/*` (Terraform), read by the instance role into a root-only `.env` at each release; no secrets in git, images or workflows; **no SSH at all** (SSM Run Command) |
+| Infra as code | AWS CLI script | **Terraform** `infra/terraform/` (state in the private, versioned bucket `del-marketplace-tfstate-<account>`, S3 lock file) |
+| CI/CD | GitHub Actions ci → images → deploy (OIDC roles) | same shape: `ci.yml` → `images.yml` → `release.yml` (staging, approval, production), OIDC role `del-marketplace-gh-deploy` |
+| Email | Resend | **Amazon SES** for `ai-devopseasylearning.com` (DKIM, SPF, DMARC in Route 53) through the instance role |
+| Monitoring | Route 53 health check, CloudWatch alarms, SNS | Route 53 health check on `/api/health`, alarms (site down, instance status with auto-recovery, CPU, RDS storage and CPU) → SNS topic `del-marketplace-alerts` |
 
-## 2. The marketplace version
+Shared with the Hub: only the AWS account, the default VPC and the account's GitHub OIDC provider (read, not changed).
+Terraform names every resource `del-marketplace-*` and tags them `App=del-marketplace`.
 
-Same proven shape, improved where the Hub had a weakness:
+## 2. Layout on the server
 
-| | Marketplace | Why it differs |
-| --- | --- | --- |
-| Compute | One EC2 **t4g.medium** (arm64), tag `App=del-marketplace` | Same pattern; separate instance so a deploy of one app never touches the other |
-| Database | RDS PostgreSQL 16 `del-marketplace-rds` (encrypted, 7-day backups, snapshot before every release) | Own instance; never shares the Hub database |
-| Files / video | S3 `del-marketplace-media-<account>`, private, presigned links; the server signs with its **IAM role** (`S3_ENDPOINT=aws`, no keys) | Workload authentication instead of keys |
-| Images | ECR `del-marketplace/api`, `del-marketplace/web` | Own repositories |
-| Proxy | Caddy only (`deploy/Caddyfile`): HTTPS, HTTP/3, HSTS | **No geo rules** |
-| Secrets | SSM Parameter Store SecureString under `/del-marketplace/prod/*`, read by the instance role at each release into a root-only `.env` | No secrets file in git, no SSH key in the repo (the Hub commits both) |
-| Deploy access | SSM Run Command from the pipeline (no SSH port open at all) | Smaller attack surface than opening port 22 per release |
-| Email | Resend (same provider as the Hub), own sending domain and API key | Own credentials |
-| CI auth | GitHub OIDC roles `del-marketplace-gh-images`, `del-marketplace-gh-deploy` | Same as the Hub, own roles limited to marketplace resources |
+```
+/srv/del-marketplace/
+  edge/        Caddy (project del-edge): ports 80/443, routes by host to the stacks on the docker network "edge"
+  production/  project del-production: api, worker, web, redis  →  https://ai-devopseasylearning.com
+  staging/     project del-staging:    api, worker, web, redis  →  https://staging.ai-devopseasylearning.com
+```
 
-### Global access (owner rule, AGENTS.md rule 23)
+Both stacks use the same RDS instance with separate databases (`marketplace`, `marketplace_staging`) and separate S3
+buckets. Staging uses synthetic demo data only (`seed-staging`), simulated payments (`DEPLOY_ENV=staging`) and is
+marked `noindex`. Production starts empty: the DEL platform instructor and one super admin (`bootstrap-production`).
 
-- **Never** copy the Hub's `nginx/geo` allowlist, `GEO_ALLOWED_COUNTRIES`, `geo-blocked.html`, or any CloudFront
-  geo restriction or WAF geo-match rule.
-- Abuse protection without geography: API rate limits (sign-in, registration, contact, invitations, refunds),
-  Google Authenticator for every account, Stripe Radar for card fraud, Caddy request logs, CloudWatch alarms.
-- Video and downloads are presigned S3 links that work from every country. If video traffic grows, add
-  CloudFront **without** `GeoRestriction` (signed URLs or a key group), not a regional block.
-- Payments: Stripe availability differs by country; learners who can't pay by card use **manual enrollment**
-  (docs/MANUAL_ENROLLMENT.md), which is exactly why that feature exists.
+## 3. Commands (`scripts/deploy-aws.sh`)
 
-## 3. Pipeline (in this repository)
+| Command | What it does |
+| --- | --- |
+| `plan` | `terraform plan` (read-only) |
+| `build [TAG]` | builds the API image and one web image per stack, pushes to ECR (tag = 12-char commit) |
+| `release staging\|production [TAG]` | writes the compose files and the `.env` from SSM on the server, creates the staging database if missing, pulls the images, starts the stack, waits for the API health check, reloads Caddy |
+| `verify staging\|production` | HTTPS and health checks |
+| `seed-staging` | demo data on staging only |
+| `bootstrap-production` | DEL platform instructor + super admin `support@devopseasylearning.com` (password generated into SSM `/del-marketplace/bootstrap/ADMIN_PASSWORD`; Google Authenticator at the first sign-in) |
 
-| Workflow | When | What |
-| --- | --- | --- |
-| `.github/workflows/ci.yml` | every pull request, pushes to `main`/`develop` (not docs-only) | API typecheck, unit tests, end-to-end tests with Postgres, Redis and MinIO containers; web typecheck, lint, build; both Docker images build |
-| `.github/workflows/images.yml` | called by release (or by hand) | arm64 build, push to ECR with the 12-char SHA tag; **skipped unless `PRODUCTION_ENABLED=true`** |
-| `.github/workflows/release.yml` | **by hand only** | CI → images → approval in the `production` environment → RDS snapshot → `scripts/deploy-aws.sh release` (SSM) → `verify` → keep 5 snapshots; rollback with the `commit` input. **Every job skipped unless `PRODUCTION_ENABLED=true`** |
+Infrastructure: `cd infra/terraform && terraform init -backend-config=bucket=del-marketplace-tfstate-<account> && terraform plan`.
 
-Branching (as in the Hub): feature branches → pull request → `main`. `main` protected (required CI). Releases are
-started by the owner (or on push once the owner chooses so; change `on:` in `release.yml`).
+## 4. Release pipeline
 
-## 4. Before the first release (only after the owner's authorisation and domain)
+`ci.yml` (every PR and push): API typecheck, unit and end-to-end tests with Postgres/Redis/MinIO, web typecheck, lint,
+build, Docker builds. `release.yml` (by hand, `PRODUCTION_ENABLED=true`): CI → images (ECR scan, CRITICAL blocks) →
+staging release + checks → `production` environment approval → RDS snapshot → production release → health check →
+keep 5 snapshots. Rollback: run `release` with `commit` = an earlier release (its images stay in ECR); data rollback =
+restore the pre-release snapshot.
 
-1. Owner: authorise production in writing and give the domain (`PUBLIC_HOST`, e.g. `learn.example.com`).
-2. Present the plan: `./scripts/deploy-aws.sh plan` (read-only) prints what exists and what would be created, with
-   rough cost (~40 USD/month before video traffic). Confirm it shows no change to `insuranceprep-*` resources.
-3. After approval, create (all tagged `App=del-marketplace`): ECR repositories; S3 bucket (private, SSE, CORS for
-   the domain); RDS instance in private subnets with its own security group; EC2 instance with the instance role
-   (S3 bucket, `ssm:GetParametersByPath` on `/del-marketplace/prod/*`, ECR pull, SSM managed instance) and a security
-   group open on 80/443 only; GitHub OIDC roles; DNS A record; Resend domain (SPF, DKIM, DMARC).
-4. Put the secrets in SSM (SecureString), one parameter per variable from `.env.example`, including
-   `PUBLIC_HOST`, `ACME_EMAIL`, `ECR_REGISTRY`, `DATABASE_URL`, `SESSION_SECRET` (new, 64 random bytes),
-   `S3_BUCKET`, `S3_REGION`, `WEB_URL=https://<domain>`, `API_URL=https://<domain>`, `STRIPE_*`, `MUX_*`,
-   OAuth client ids/secrets, `RESEND_API_KEY`, `EMAIL_FROM`, `ANTHROPIC_API_KEY` (optional), `SEED_PASSWORD` unset.
-   Never reuse an Insurance Hub value.
-5. GitHub: repository variables `PRODUCTION_ENABLED=true`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `PUBLIC_HOST`;
-   environment `production` with the owner as required reviewer.
-6. Run `release` by hand. Then `npm run seed` is **not** run in production; create the super admin with
-   `node dist/auth/mfa-admin.js` style tooling on the server (docs/AUTH.md) and set up Google Authenticator.
-7. Stripe live webhook `https://<domain>/api/webhooks/stripe`; Mux webhook; OAuth redirect URIs
-   `https://<domain>/api/auth/oauth/<provider>/callback` (docs/AUTH.md).
-8. Monitoring: Route 53 health check on `/api/health`, CloudWatch alarms (instance status, CPU, RDS storage/CPU/
-   connections) to an SNS topic with the owner's email, like the Hub.
+Repository settings used by the workflows (variables, not secrets): `PRODUCTION_ENABLED`, `AWS_ACCOUNT_ID`,
+`AWS_REGION`; environments `staging` and `production` (owner as required reviewer).
 
-## 5. QA before release (staging or local)
+## 5. Payments and email at launch
 
-Local stack = the production containers with MinIO and Mailpit instead of S3 and Resend:
-`docker compose up -d --build`. Check: CI green on the branch; every email in Mailpit (http://127.0.0.1:8025) in
-light and dark; sign-up, sign-in with the code, purchase, refund, manual enrollment and invitation; videos and
-lesson files play/download; `node scripts/qa-dark.mjs` clean; no request is refused by country (there is no code
-path that reads a country).
+- Stripe: **test mode**. A super admin enters test keys in Super Admin › Payments & Stripe (checked with Stripe,
+  stored sealed). Live keys stay inactive until a super admin authorises live payments with a typed confirmation and
+  an authenticator code (owner's explicit instruction). Webhook endpoint: `https://ai-devopseasylearning.com/api/webhooks/stripe`.
+- Email: SES for `ai-devopseasylearning.com`. While the account's SES is in the sandbox, only verified addresses
+  receive email; production access must be requested by the owner (console: SES › Account dashboard › Request
+  production access).
+
+## 6. Not uploaded
+
+No local training videos, video-academy output, unpublished courses or the local database were copied to AWS. The
+pipeline has no step that syncs media. When the owner releases videos, it is a separate, explicit operation.

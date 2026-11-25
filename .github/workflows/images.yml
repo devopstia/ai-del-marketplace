@@ -1,13 +1,12 @@
-# Build and push the release images to Amazon ECR (docs/DEPLOYMENT.md), like Insurance Hub's images.yml:
-# tag = first 12 characters of the commit, built natively for arm64 (Graviton), AWS access through GitHub OIDC
-# (no stored AWS keys). Pushing is OFF until the owner approves production: repository variable
-# PRODUCTION_ENABLED must be "true" and AWS_ACCOUNT_ID / AWS_REGION must be set.
+# Build and push release images to Amazon ECR (docs/DEPLOYMENT.md), following Insurance Hub's images.yml: tag = first
+# 12 characters of the commit; AWS access through GitHub OIDC (no stored keys). One API image and one web image per
+# stack (the browser API address is built into the web app). Scans on push in ECR; critical findings block the release.
 name: images
 
 on:
   workflow_call:
     outputs:
-      tag: { description: Image tag, value: "${{ jobs.tag.outputs.tag }}" }
+      tag: { description: Image tag, value: "${{ jobs.build.outputs.tag }}" }
   workflow_dispatch:
 
 permissions:
@@ -15,38 +14,35 @@ permissions:
   id-token: write
 
 jobs:
-  tag:
+  build:
+    if: vars.PRODUCTION_ENABLED == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     outputs: { tag: "${{ steps.t.outputs.tag }}" }
     steps:
+      - uses: actions/checkout@v4
       - id: t
         run: echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
-
-  build:
-    needs: tag
-    if: vars.PRODUCTION_ENABLED == 'true'
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 40
-    strategy:
-      matrix:
-        include:
-          - { name: api, dockerfile: apps/api/Dockerfile, args: "" }
-          - { name: web, dockerfile: apps/web/Dockerfile, args: "NEXT_PUBLIC_API_URL=https://${{ vars.PUBLIC_HOST }}/api" }
-    steps:
-      - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/del-marketplace-gh-images
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/del-marketplace-gh-deploy
           aws-region: ${{ vars.AWS_REGION }}
       - id: ecr
         uses: aws-actions/amazon-ecr-login@v2
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          build-args: ${{ matrix.args }}
-          push: true
-          tags: ${{ steps.ecr.outputs.registry }}/del-marketplace/${{ matrix.name }}:${{ needs.tag.outputs.tag }}
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: API and worker
+        uses: docker/build-push-action@v6
+        with: { context: ., file: apps/api/Dockerfile, push: true, tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/api:${{ steps.t.outputs.tag }}", cache-from: type=gha, cache-to: "type=gha,mode=max" }
+      - name: Web (staging)
+        uses: docker/build-push-action@v6
+        with: { context: ., file: apps/web/Dockerfile, push: true, build-args: "NEXT_PUBLIC_API_URL=https://staging.ai-devopseasylearning.com/api", tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/web:${{ steps.t.outputs.tag }}-staging", cache-from: type=gha, cache-to: "type=gha,mode=max" }
+      - name: Web (production)
+        uses: docker/build-push-action@v6
+        with: { context: ., file: apps/web/Dockerfile, push: true, build-args: "NEXT_PUBLIC_API_URL=https://ai-devopseasylearning.com/api", tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/web:${{ steps.t.outputs.tag }}-production", cache-from: type=gha, cache-to: "type=gha,mode=max" }
+      - name: Image scan (block on CRITICAL)
+        run: |
+          for repo in api; do
+            aws ecr wait image-scan-complete --repository-name del-marketplace/$repo --image-id imageTag=${{ steps.t.outputs.tag }} || true
+            n=$(aws ecr describe-image-scan-findings --repository-name del-marketplace/$repo --image-id imageTag=${{ steps.t.outputs.tag }} --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text)
+            echo "$repo critical findings: $n"; [ "$n" = "None" ] || [ "$n" = "0" ]
+          done

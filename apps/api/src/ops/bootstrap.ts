@@ -9,9 +9,10 @@ import * as argon2 from 'argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 import { ARGON2_OPTS } from '../auth/auth.service';
+import { databaseSsl } from '../common/prisma.service';
 
 async function main() {
-  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL!, ssl: databaseSsl() }) });
   const email = (process.env.BOOTSTRAP_ADMIN_EMAIL ?? '').trim().toLowerCase();
   const password = process.env.BOOTSTRAP_ADMIN_PASSWORD ?? '';
   if (!email || password.length < 16) throw new Error('BOOTSTRAP_ADMIN_EMAIL and a BOOTSTRAP_ADMIN_PASSWORD of 16+ characters are required');

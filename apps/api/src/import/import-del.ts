@@ -29,6 +29,7 @@ import { applyTree } from '../instructor/revisions.service';
 import { AI_FOR_DEVOPS, AI_FOR_DEVOPS_PREVIEW_SECTIONS, AI_FOR_DEVOPS_PRICE_CENTS, CATALOGUE, DEMO_DEL_SLUGS, FAKE_REVIEWER_EMAILS } from './del-catalogue';
 import { srtToVtt } from './srt';
 import { defaultExportString, firstArgOfCall, isCall, LiteralReader, ParseError } from './js-literal';
+import { databaseSsl } from '../common/prisma.service';
 
 const log = (m: string) => console.log(`[import] ${m}`);
 const warn = (m: string) => console.warn(`[import] WARN ${m}`);
@@ -120,7 +121,7 @@ async function main() {
   const root = process.env.DEL_SOURCE_DIR ?? '/import/ai-devops';
   const outDir = join(root, 'output');
   if (!existsSync(outDir)) throw new Error(`Source not found: ${outDir} (mount it read-only and set DEL_SOURCE_DIR)`);
-  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: e.DATABASE_URL }) });
+  const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: e.DATABASE_URL, ssl: databaseSsl() }) });
   const storage = new StorageService();
   const totals = { courses: 0, lectures: 0, quizzes: 0, questions: 0, resources: 0, captions: 0, durationSec: 0, uploadedBytes: 0, skippedUploads: 0 };
 

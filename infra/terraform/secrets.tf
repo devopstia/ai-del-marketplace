@@ -35,6 +35,7 @@ locals {
     VIDEO_PROVIDER   = "local"
     PROTECTED_PLAYBACK = "true"
     MFA_REQUIRED     = "true"
+    DATABASE_SSL     = "rds"
     OAUTH_TEST_PROVIDER = "false"
     PASSWORD_BREACH_CHECK = "true"
     AUTH_RATE_LIMIT  = "20"

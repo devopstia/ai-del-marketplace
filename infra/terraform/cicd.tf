@@ -88,7 +88,7 @@ resource "aws_cloudwatch_metric_alarm" "site_down" {
 resource "aws_cloudwatch_metric_alarm" "ec2_status" {
   alarm_name          = "${local.name}-instance-status"
   namespace           = "AWS/EC2"
-  metric_name         = "StatusCheckFailed"
+  metric_name         = "StatusCheckFailed_System"
   dimensions          = { InstanceId = aws_instance.app.id }
   statistic           = "Maximum"
   period              = 60
