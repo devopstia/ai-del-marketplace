@@ -2,7 +2,10 @@
 import { Moon, Sun } from "lucide-react";
 
 // Dark is the default for every visitor (owner, 2026-11-25); a saved choice of light from the toggle wins.
-export const themeScript = `(function(){var d=document.documentElement;try{if(localStorage.getItem('del-theme')==='light'){d.classList.remove('dark');d.classList.add('light');return}}catch(e){}d.classList.add('dark')})();`;
+// Dark is the default for every visitor (owner, 2026-11-25). Choices saved before dark became the default ("del-theme")
+// are dropped; only a choice made with the toggle since then ("del-theme-v2") is kept.
+export const THEME_KEY = "del-theme-v2";
+export const themeScript = `(function(){var d=document.documentElement;try{localStorage.removeItem('del-theme');if(localStorage.getItem('${THEME_KEY}')==='light'){d.classList.remove('dark');d.classList.add('light');return}}catch(e){}d.classList.remove('light');d.classList.add('dark')})();`;
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   function toggle() {
@@ -11,7 +14,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     d.classList.remove("dark", "light");
     d.classList.add(isDark ? "light" : "dark");
     try {
-      localStorage.setItem("del-theme", isDark ? "light" : "dark");
+      localStorage.setItem(THEME_KEY, isDark ? "light" : "dark");
     } catch {
       /* storage blocked: theme still switches for this page */
     }

@@ -78,7 +78,7 @@ let bad = 0;
 for (const w of widths) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
-  if (light) await page.addInitScript(() => { try { localStorage.setItem("del-theme", "light"); } catch {} });
+  if (light) await page.addInitScript(() => { try { localStorage.setItem("del-theme-v2", "light"); } catch {} });
   if (role) {
     await page.goto(`${base}/login`);
     await page.getByLabel("Email").fill(users[role]);

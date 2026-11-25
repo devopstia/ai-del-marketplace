@@ -149,3 +149,6 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 ## 2026-11-25: merged into `main` and pushed to GitHub (owner: "merge into main and push")
 - `feat/dark-qa` (homepage + /teach, sales and promotions, dark-mode QA) merged; rollback tag `main-before-merge-2026-11-25-c`
   (= `147bff5`), release tag `release-2026-11-25`. `main` pushed to `origin`. Not yet run: the full fresh-stack test.
+- 2026-11-25 (owner: "the default theme should be dark for everything"): light choices saved by browsers before dark became the
+  default are dropped (old key `del-theme`); only a choice made with the toggle since then (`del-theme-v2`) is kept. Verified:
+  fresh browsers and browsers with an old saved "light" open every area in dark. Branch `fix/dark-default`.
