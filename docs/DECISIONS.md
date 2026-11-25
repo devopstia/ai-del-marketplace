@@ -94,3 +94,7 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Merge commit on `main` (local only, not pushed); rollback tag `main-before-merge-2026-11-24` (= `d2339c2`), release tag
   `release-local-2026-11-24`. Includes Step 0, Step 1, payments, Steps 2–7. `feat/landing-redesign` stays archived (not merged).
 - Local stack runs `main` with the clean demo catalogue. New work starts from `main` on new `feat/…` branches.
+
+## 2026-11-25: checkpoint before new work
+- Rollback point: tag `checkpoint-2026-11-25-start` = commit `bd57c5d` (`main`), backup branch `backup/main-2026-11-25`.
+  Work continues on `feat/next-2026-11-25`. Restore any path with `git checkout checkpoint-2026-11-25-start -- <path>`.
