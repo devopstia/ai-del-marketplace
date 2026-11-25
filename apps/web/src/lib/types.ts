@@ -57,6 +57,16 @@ export interface CourseCard {
   category?: { slug: string; name: string } | null;
   publishedAt?: string | null;
   updatedAt?: string | null;
+  hasPreview?: boolean;
+  /** The course's first "What you'll learn" point. */
+  outcome?: string | null;
+}
+
+/** How many courses each filter option would show, given the other active filters. */
+export interface CatalogueFacets {
+  category: Record<string, number>;
+  level: Record<string, number>;
+  price: { free: number; paid: number };
 }
 
 export interface Paged<T> {

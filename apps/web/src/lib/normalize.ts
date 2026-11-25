@@ -104,6 +104,8 @@ export function toCourseCard(x: unknown): CourseCard {
     category: cat.slug ? { slug: str(cat.slug), name: str(cat.name) } : o.categorySlug ? { slug: str(o.categorySlug), name: str(o.categoryName) } : null,
     publishedAt: (o.publishedAt as string) ?? null,
     updatedAt: (o.updatedAt as string) ?? null,
+    hasPreview: o.hasPreview === true,
+    outcome: typeof o.outcome === "string" && o.outcome.trim() ? o.outcome.trim() : null,
   };
 }
 

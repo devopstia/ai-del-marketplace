@@ -6,7 +6,14 @@ import { CatalogueService } from './catalogue.service';
 
 const listSchema = z.object({
   q: z.string().trim().max(100).optional(),
-  category: z.string().max(80).optional(),
+  // One topic or several: ?category=a&category=b (checkboxes) or ?category=a,b
+  category: z
+    .union([z.string().max(400), z.array(z.string().max(80)).max(10)])
+    .optional()
+    .transform((v) => {
+      const list = (Array.isArray(v) ? v : v ? v.split(',') : []).map((s) => s.trim()).filter(Boolean);
+      return list.length ? [...new Set(list)].slice(0, 10) : undefined;
+    }),
   level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
   price: z.enum(['free', 'paid']).optional(),
   sort: z.enum(['popular', 'newest', 'rating', 'price_asc', 'price_desc']).default('popular'),

@@ -4,7 +4,7 @@ import type { Prisma } from '../generated/prisma/client';
 export const cardInclude = {
   instructor: { select: { id: true, name: true } },
   category: { select: { slug: true, name: true } },
-  sections: { select: { lectures: { select: { durationSec: true } } } },
+  sections: { select: { lectures: { select: { durationSec: true, isPreview: true } } } },
 } satisfies Prisma.CourseInclude;
 
 export type CardRow = Prisma.CourseGetPayload<{ include: typeof cardInclude }>;
@@ -26,6 +26,8 @@ export function toCard(c: CardRow, imageUrl: (k: string | null) => string | null
     studentCount: c.studentCount,
     totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
     lectureCount: lectures.length,
+    hasPreview: lectures.some((l) => l.isPreview),
+    outcome: c.objectives[0] ?? null,
     level: c.level,
     language: c.language,
     publishedAt: c.publishedAt,

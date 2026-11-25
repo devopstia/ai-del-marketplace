@@ -1,7 +1,7 @@
 import "server-only";
 import { serverGet } from "./server-api";
 import { list, paged, toCategory, toCourseCard, toCourseDetail, toInstructor, toReviewSummary, obj } from "./normalize";
-import type { Category, CourseCard, CourseDetail, InstructorSummary, Paged, ReviewSummary } from "./types";
+import type { CatalogueFacets, Category, CourseCard, CourseDetail, InstructorSummary, Paged, ReviewSummary } from "./types";
 import { qs } from "./qs";
 
 export async function getCategories(): Promise<Category[]> {
@@ -9,10 +9,12 @@ export async function getCategories(): Promise<Category[]> {
   return r.ok ? list(r.data, "categories").map(toCategory) : [];
 }
 
-export async function getCourses(query: Record<string, string | number | undefined>): Promise<Paged<CourseCard> & { ok: boolean }> {
+export async function getCourses(query: Record<string, string | string[] | number | undefined>): Promise<Paged<CourseCard> & { ok: boolean; facets: CatalogueFacets | null }> {
   const r = await serverGet(`/courses${qs(query)}`);
-  if (!r.ok) return { ok: false, items: [], total: 0, page: 1, pageSize: 12 };
-  return { ok: true, ...paged(r.data, toCourseCard, "courses") };
+  if (!r.ok) return { ok: false, items: [], total: 0, page: 1, pageSize: 12, facets: null };
+  const f = (r.data as { facets?: CatalogueFacets } | null)?.facets;
+  const facets = f && typeof f === "object" ? { category: f.category ?? {}, level: f.level ?? {}, price: { free: f.price?.free ?? 0, paid: f.price?.paid ?? 0 } } : null;
+  return { ok: true, ...paged(r.data, toCourseCard, "courses"), facets };
 }
 
 export async function getCourse(slug: string): Promise<CourseDetail | null> {
