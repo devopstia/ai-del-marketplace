@@ -1349,4 +1349,119 @@ describe('e2e: buy and learn', () => {
     expect((await stranger.send('post', `/api/course-files/${files[0].id}/download`).expect(200)).body.url).toContain('complete-labs.zip');
     await teacher.send('delete', `/api/instructor/courses/${course.id}/package/${files[0].id}`).expect(200);
   });
+
+  describe('manual enrollment and invitations (owner 2026-11-25)', () => {
+    const jobsMock = () => app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const lastMail = (template: string, to?: string) => jobsMock().sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === template && (!to || j.to === to));
+    const inDays = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
+
+    it('instructor requests several own courses; foreign courses and activation are blocked; super admin verifies payment, commissions per instructor, approves; invitation → code → account → courses', async () => {
+      if (!available) return;
+      const boss = await userAgent('me-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const t1 = await userAgent('me-t1@e2e.example', ['student', 'instructor'], {});
+      const t2 = await userAgent('me-t2@e2e.example', ['student', 'instructor'], {});
+      const a = await publishedCourse(t1.user.id, 'me-a', 4000);
+      const b = await publishedCourse(t1.user.id, 'me-b', 6000);
+      const foreign = await publishedCourse(t2.user.id, 'me-c', 5000);
+      const email = 'ama.new@e2e.example';
+      // instructor can't include another instructor's course, or activate anything
+      expect((await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama Mensah', items: [{ courseId: a.course.id }, { courseId: foreign.course.id }] }).expect(403)).body.error.code).toBe('not_your_course');
+      await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama', items: [{ courseId: a.course.id, expiresAt: inDays(800) }] }).expect(400);
+      const req = (await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama Mensah', items: [{ courseId: a.course.id, expiresAt: inDays(200) }, { courseId: b.course.id }], note: 'Paid by mobile money' }).expect(201)).body;
+      expect(req).toMatchObject({ status: 'pending', student: { hasAccount: false }, paymentStatus: 'payment_pending' });
+      expect(lastMail('manual-enrollment-submitted', 'me-boss@e2e.example')).toBeTruthy();
+      await t1.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(403);
+      await t1.send('post', `/api/enrollments/manual/${req.id}/invitation/link`).expect(403);
+      await t2.agent.get(`/api/enrollments/manual/${req.id}`).expect(404);
+      // duplicate open request for the same course
+      expect((await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama', items: [{ courseId: a.course.id }] }).expect(409)).body.error.code).toBe('duplicate_request');
+      // approval needs a verified payment (or a complimentary reason)
+      expect((await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(409)).body.error.code).toBe('payment_not_verified');
+      // 65,000 XAF at 0.00165 USD = 107.25 USD, fee 2.25 USD, allocation must add up
+      const [ia, ib] = req.items;
+      await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '65000', usdRate: '0.00165', feeUsdCents: 225, allocations: [{ itemId: ia.id, grossUsdCents: 4000 }, { itemId: ib.id, grossUsdCents: 6000 }] }).expect(400);
+      const paid = (await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '65000', usdRate: '0.00165', feeUsdCents: 225, allocations: [{ itemId: ia.id, grossUsdCents: 4290 }, { itemId: ib.id, grossUsdCents: 6435 }] }).expect(201)).body;
+      expect(paid.payments[0]).toMatchObject({ grossUsdCents: 10725, feeUsdCents: 225, netUsdCents: 10500, status: 'pending' });
+      await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '1', usdRate: '1', feeUsdCents: 0, allocations: [{ itemId: ia.id, grossUsdCents: 0 }] }).expect(409);
+      expect((await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(409)).body.error.code).toBe('payment_not_verified');
+      await boss.send('post', `/api/enrollments/payments/${paid.payments[0].id}/verify`).expect(200);
+      const ok = (await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(200)).body;
+      expect(ok).toMatchObject({ status: 'approved', paymentStatus: 'payment_verified', invitation: { status: 'pending' } });
+      // 80/20 of the net per course: fee 225 split 90/135 → nets 4200 and 6300 → instructor 3360 + 5040
+      const al = ok.earnings.sort((x: any, y: any) => x.netUsdCents - y.netUsdCents);
+      expect(al.map((x: any) => [x.netUsdCents, x.instructorCents, x.platformCents, x.payoutStatus])).toEqual([[4200, 3360, 840, 'earnings_recorded'], [6300, 5040, 1260, 'earnings_recorded']]);
+      // the instructor now sees and can resend/copy the invitation; previous link stops working
+      const inviteMail = lastMail('student-invitation', email);
+      const firstToken = inviteMail.data.link.split('/invite/')[1];
+      const copied = (await t1.send('post', `/api/enrollments/manual/${req.id}/invitation/link`).expect(200)).body.link as string;
+      const token = copied.split('/invite/')[1];
+      expect((await request(app.getHttpServer()).get(`/api/invitations/${firstToken}`).expect(410)).body.error.code).toBe('invitation_revoked');
+      const info = (await request(app.getHttpServer()).get(`/api/invitations/${token}`).expect(200)).body;
+      expect(info.courses).toHaveLength(2);
+      expect(info.email).not.toContain('ama.new@');
+      // opening the link is not enough: the email code is required
+      const guest = request.agent(app.getHttpServer());
+      const csrf: string = (await guest.get('/api/auth/me')).body.csrf;
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code: '000000', name: 'Ama Mensah', password: 'Quiet-river-stone-58' }).expect(400);
+      await guest.post(`/api/invitations/${token}/code`).set('X-CSRF-Token', csrf).expect(200);
+      const code = lastMail('invitation-code', email).data.code;
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code: code === '000000' ? '111111' : '000000', name: 'Ama Mensah', password: 'Quiet-river-stone-58' }).expect(400);
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code, name: 'Ama Mensah', password: 'short' }).expect(400);
+      const acc = await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code, name: 'Ama Mensah', password: 'Quiet-river-stone-58' }).expect(200);
+      expect(acc.body).toEqual({ mfa: 'enroll' }); // Google Authenticator next, like every sign-up
+      const student = await prisma.user.findUniqueOrThrow({ where: { email }, include: { enrollments: true } });
+      expect(student).toMatchObject({ roles: ['student'], signupMethod: 'invitation' });
+      expect(student.emailVerifiedAt).not.toBeNull();
+      expect(student.enrollments.map((e) => e.source)).toEqual(['manual', 'manual']);
+      const ea = student.enrollments.find((e) => e.courseId === a.course.id)!;
+      expect(Math.abs(+ea.accessExpiresAt! - +new Date(inDays(200)))).toBeLessThan(5000); // each course keeps its own date
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code, name: 'Ama M', password: 'Quiet-river-stone-58' }).expect(409);
+      // payout only by a super admin, completed needs a reference
+      await t1.send('post', `/api/enrollments/allocations/${al[0].id}/payout`, { status: 'payout_completed', reference: 'x' }).expect(403);
+      await boss.send('post', `/api/enrollments/allocations/${al[0].id}/payout`, { status: 'payout_completed' }).expect(400);
+      await boss.send('post', `/api/enrollments/allocations/${al[0].id}/payout`, { status: 'payout_completed', reference: 'WIRE-55' }).expect(200);
+      const earn = (await t1.agent.get('/api/enrollments/earnings').expect(200)).body;
+      expect(earn.totals).toMatchObject({ instructorCents: 8400, paidOutCents: 3360 });
+      // expiry change and revocation are enforced by the backend
+      await boss.send('put', `/api/enrollments/items/${ia.id}/expiry`, { expiresAt: inDays(400), reason: 'Paid for a longer plan' }).expect(200);
+      expect(lastMail('course-access-extended', email)).toBeTruthy();
+      await boss.send('post', `/api/enrollments/items/${ib.id}/revoke`, { reason: 'Payment reversed' }).expect(200);
+      expect((await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: student.id, courseId: b.course.id } } })).revokedAt).not.toBeNull();
+    });
+
+    it('super admin: direct multi-instructor complimentary enrollment for an existing student, no duplicates, progress kept; reject and needs-info for instructors', async () => {
+      if (!available) return;
+      const boss = await userAgent('me2-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const t1 = await userAgent('me2-t1@e2e.example', ['student', 'instructor'], {});
+      const t2 = await userAgent('me2-t2@e2e.example', ['student', 'instructor'], {});
+      const x = await publishedCourse(t1.user.id, 'me2-x', 3000);
+      const y = await publishedCourse(t2.user.id, 'me2-y', 3000);
+      const stu = await userAgent('me2-stu@e2e.example', ['student']);
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: x.course.id, source: 'purchase', accessExpiresAt: new Date(Date.now() - 86_400_000) } });
+      await prisma.lectureProgress.create({ data: { userId: stu.user.id, lectureId: x.lecture.id, positionSec: 12, completed: true } });
+      await boss.send('post', '/api/enrollments/manual', { studentEmail: 'me2-stu@e2e.example', studentName: 'Sam Stu', items: [{ courseId: x.course.id }, { courseId: y.course.id }], complimentary: true }).expect(400); // reason required
+      const direct = (await boss.send('post', '/api/enrollments/manual', { studentEmail: 'me2-stu@e2e.example', studentName: 'Sam Stu', items: [{ courseId: x.course.id, expiresAt: inDays(90) }, { courseId: y.course.id, expiresAt: inDays(365) }], complimentary: true, complimentaryReason: 'Scholarship for the Douala cohort' }).expect(201)).body;
+      expect(direct).toMatchObject({ status: 'approved', complimentary: true, student: { hasAccount: true }, invitation: { status: 'not_needed' } });
+      expect(lastMail('courses-assigned', 'me2-stu@e2e.example')).toBeTruthy();
+      const ens = await prisma.enrollment.findMany({ where: { userId: stu.user.id }, orderBy: { accessExpiresAt: 'asc' } });
+      expect(ens.map((e) => e.courseId)).toEqual([x.course.id, y.course.id]);
+      expect(await prisma.lectureProgress.count({ where: { userId: stu.user.id, completed: true } })).toBe(1);
+      await stu.agent.get('/api/me/courses/me2-y').expect(200);
+      // now enrolled: a second request is refused
+      expect((await boss.send('post', '/api/enrollments/manual', { studentEmail: 'me2-stu@e2e.example', studentName: 'Sam Stu', items: [{ courseId: y.course.id }], complimentary: true, complimentaryReason: 'again' }).expect(409)).body.error.code).toBe('already_enrolled');
+      // expired access is enforced by the API
+      await prisma.enrollment.update({ where: { userId_courseId: { userId: stu.user.id, courseId: y.course.id } }, data: { accessExpiresAt: new Date(Date.now() - 1000) } });
+      await stu.agent.get('/api/me/courses/me2-y').expect(403);
+      // reject and needs-info → resubmit
+      const r1 = (await t1.send('post', '/api/enrollments/manual', { studentEmail: 'someone@e2e.example', studentName: 'Some One', items: [{ courseId: x.course.id }] }).expect(201)).body;
+      await boss.send('post', `/api/enrollments/manual/${r1.id}/decision`, { decision: 'needs_info', note: 'Which payment reference?' }).expect(200);
+      expect(lastMail('manual-enrollment-needs-info', 'me2-t1@e2e.example')).toBeTruthy();
+      await t1.send('post', `/api/enrollments/manual/${r1.id}/resubmit`, { note: 'Reference MM-1' }).expect(200);
+      await boss.send('post', `/api/enrollments/manual/${r1.id}/decision`, { decision: 'rejected', note: 'Payment not received' }).expect(200);
+      await boss.send('post', `/api/enrollments/manual/${r1.id}/approve`, { complimentary: true, complimentaryReason: 'nope' }).expect(409);
+      expect(await prisma.user.findUnique({ where: { email: 'someone@e2e.example' } })).toBeNull();
+      const lst = (await t1.agent.get('/api/enrollments/manual').expect(200)).body;
+      expect(lst.items.every((i: any) => i.requestedBy.id === t1.user.id)).toBe(true);
+    });
+  });
 });

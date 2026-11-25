@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard, UserPlus } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell, type NavItem } from "@/components/shell/AppShell";
@@ -18,6 +18,7 @@ const groups: { label?: string; items: Item[] }[] = [
   { label: "People", items: [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
     { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
+    { href: "/admin/enrollments", label: "Manual enrollments", icon: UserPlus, perm: "enrollments.manage" },
   ] },
   { label: "Money", items: [
     { href: "/admin/orders", label: "Orders", icon: Receipt, perm: "orders.view" },
@@ -50,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const disputes = useApi(canDo(me, "finance.view") ? "/admin/disputes" : null, (r) => count(r).filter((d) => obj(d).status === "open").length);
   const attention = disputes.data ?? 0;
   // Badge on Support: requests waiting for staff.
+  const manual = useApi(canDo(me, "enrollments.manage") ? "/enrollments/manual?status=open&pageSize=1" : null, (r) => { const c = obj(obj(r).counts); return Number(c.pending ?? 0) + Number(c.needs_info ?? 0); });
   const support = useApi(canDo(me, "support.manage") ? "/admin/support/summary" : null, (r) => Number(obj(r).awaitingStaff ?? 0));
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
   if (!has("admin")) {
@@ -63,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  const badge: Record<string, number | undefined> = { "/admin/finance": attention || undefined, "/admin/refunds": requests.data || undefined, "/admin/support": support.data || undefined, "/admin/contact": contact.data || undefined };
+  const badge: Record<string, number | undefined> = { "/admin/finance": attention || undefined, "/admin/refunds": requests.data || undefined, "/admin/support": support.data || undefined, "/admin/contact": contact.data || undefined, "/admin/enrollments": manual.data || undefined };
   const nav = groups
     .map((g) => ({ label: g.label, items: g.items.filter((n) => (n.superOnly ? has("super_admin") : !n.perm || canDo(me, n.perm))).map(({ perm: _p, superOnly: _s, ...n }) => ({ ...n, badge: badge[n.href] })) }))
     .filter((g) => g.items.length);

@@ -107,6 +107,8 @@ enum EnrollmentSource {
   purchase
   free
   admin
+  /// Manual enrollment (external payment or complimentary), approved by a super admin.
+  manual
 }
 
 enum ReviewStatus {
@@ -943,6 +945,8 @@ model AccessPeriod {
   userId      String
   courseId    String
   orderLineId String?   @unique
+  /// Manual enrollment course line that granted this period (instead of an order line).
+  manualItemId String?  @unique
   startsAt    DateTime
   endsAt      DateTime
   revokedAt   DateTime?
@@ -988,4 +992,132 @@ model CourseResource {
 
   @@index([courseId, position])
   @@map("course_resources")
+}
+
+/// Manual enrollment (owner 2026-11-25, docs/MANUAL_ENROLLMENT.md): a student gets one or more courses after an
+/// external payment (bank transfer, mobile money...) or as a complimentary grant. Instructors request it for their own
+/// courses; only a super admin approves, verifies the payment and activates access. Never charges or pays via Stripe.
+model ManualEnrollment {
+  id               String   @id @default(uuid())
+  number           Int      @unique @default(autoincrement())
+  /// pending | needs_info | approved | rejected | cancelled
+  status           String   @default("pending")
+  studentEmail     String
+  studentName      String
+  /// Set when the email belongs to an existing account (or once the invitation is accepted).
+  studentId        String?
+  requestedById    String
+  /// instructor | super_admin (a super admin's direct enrollment needs no second approval)
+  requestedByRole  String
+  note             String   @default("")
+  reviewNote       String?
+  complimentary    Boolean  @default(false)
+  complimentaryReason String?
+  decidedById      String?
+  decidedAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  items            ManualEnrollmentItem[]
+  payments         ExternalPayment[]
+  invitations      Invitation[]
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([studentEmail])
+  @@map("manual_enrollments")
+}
+
+model ManualEnrollmentItem {
+  id            String    @id @default(uuid())
+  requestId     String
+  request       ManualEnrollment @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  courseId      String
+  /// Course owner when requested (revenue is attributed to them).
+  instructorId  String
+  listPriceCents Int
+  expiresAt     DateTime
+  activatedAt   DateTime?
+  revokedAt     DateTime?
+  allocations   ExternalPaymentAllocation[]
+
+  @@unique([requestId, courseId])
+  @@index([courseId])
+  @@map("manual_enrollment_items")
+}
+
+/// An external payment as recorded and verified by a super admin. Amounts in minor units of `currency`; USD for reports.
+model ExternalPayment {
+  id            String    @id @default(uuid())
+  requestId     String
+  request       ManualEnrollment @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// bank_transfer | mobile_money | cash | paypal | other
+  method        String
+  reference     String
+  currency      String
+  amountMinor   Int
+  /// USD per 1 unit of `currency` (documented rate; 1 for USD).
+  usdRate       String
+  grossUsdCents Int
+  feeUsdCents   Int
+  netUsdCents   Int
+  /// pending | verified
+  status        String    @default("pending")
+  notes         String    @default("")
+  recordedById  String
+  verifiedById  String?
+  verifiedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  allocations   ExternalPaymentAllocation[]
+
+  @@unique([method, reference])
+  @@map("external_payments")
+}
+
+/// One payment's share for one course: what the instructor earned and whether it was paid out (by hand, never Stripe).
+model ExternalPaymentAllocation {
+  id              String   @id @default(uuid())
+  paymentId       String
+  payment         ExternalPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  itemId          String
+  item            ManualEnrollmentItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  instructorId    String
+  grossUsdCents   Int
+  feeUsdCents     Int
+  netUsdCents     Int
+  instructorCents Int
+  platformCents   Int
+  /// earnings_recorded | payout_pending | payout_completed
+  payoutStatus    String   @default("earnings_recorded")
+  payoutReference String?
+  payoutAt        DateTime?
+  payoutById      String?
+
+  @@unique([paymentId, itemId])
+  @@index([instructorId])
+  @@map("external_payment_allocations")
+}
+
+/// Invitation to create a student account for a manual enrollment. Only a hash of the token is stored; a new link
+/// invalidates the previous one. Opening the link proves nothing by itself: the student confirms the email address.
+model Invitation {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique
+  requestId   String
+  request     ManualEnrollment @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  email       String
+  /// pending | accepted | expired | revoked
+  status      String    @default("pending")
+  expiresAt   DateTime
+  createdById String
+  acceptedAt  DateTime?
+  acceptedUserId String?
+  revokedAt   DateTime?
+  /// Six-digit email code for the ownership check (hashed), with its expiry and tries.
+  codeHash    String?
+  codeExpiresAt DateTime?
+  codeTries   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([requestId])
+  @@map("invitations")
 }

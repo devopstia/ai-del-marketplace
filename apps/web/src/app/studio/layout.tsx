@@ -1,5 +1,5 @@
 "use client";
-import { MonitorPlay, BadgeDollarSign, BookOpen, LifeBuoy, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
+import { UserPlus, MonitorPlay, BadgeDollarSign, BookOpen, LifeBuoy, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
 import { AppShell, type NavGroup } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
@@ -11,6 +11,7 @@ const nav: NavGroup[] = [
   { label: "Teach", items: [
     { href: "/studio/courses", label: "Courses", icon: BookOpen },
     { href: "/studio/students", label: "Students", icon: Users },
+    { href: "/studio/enrollments", label: "Manual enrollments", icon: UserPlus },
     { href: "/studio/reviews", label: "Reviews", icon: MessageSquareText },
   ] },
   { label: "Business", items: [
