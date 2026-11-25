@@ -155,7 +155,8 @@ async function seedCourse(c: SeedCourse, idx: number, ownerId: string, categoryI
 
 async function main() {
   if (!e.SEED_PASSWORD || e.SEED_PASSWORD.length < 8) throw new Error('Set SEED_PASSWORD (8+ chars) in .env before seeding');
-  if (e.NODE_ENV === 'production') throw new Error('Refusing to seed demo data in production');
+  // Demo data only locally and on the staging copy; never on the real marketplace (owner 2026-11-25).
+  if (e.NODE_ENV === 'production' && e.DEPLOY_ENV !== 'staging') throw new Error('Refusing to seed demo data in production');
   const hash = await argon2.hash(e.SEED_PASSWORD, ARGON2_OPTS);
 
   const admin = await upsertUser('admin@del.example', 'Platform Admin', ['student', 'admin', 'super_admin'], hash);
