@@ -71,35 +71,38 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   );
 
   return (
-    <div className="container-x pb-10 pt-10">
-      <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.8rem)] font-extrabold text-ink">{heading}</h1>
-      <p className="mt-2 text-ink-2">{res.ok ? `${res.total.toLocaleString("en-US")} ${res.total === 1 ? "course" : "courses"}` : "The catalogue is unavailable right now. Refresh in a minute."}</p>
+    <div className="container-x pb-10 pt-8">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-line pb-5">
+        <div className="min-w-0">
+          <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.8rem)] font-extrabold leading-tight text-ink">{heading}</h1>
+          <p className="mt-1 text-ink-2">{res.ok ? `${res.total.toLocaleString("en-US")} ${res.total === 1 ? "course" : "courses"}` : "The catalogue is unavailable right now. Refresh in a minute."}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <details className="group lg:hidden">
+            <summary className="btn btn-outline btn-sm cursor-pointer list-none"><SlidersHorizontal className="size-4" />Filters{active.length ? ` (${active.length})` : ""}</summary>
+            <div className="panel absolute left-4 right-4 z-30 mt-2 max-h-[70vh] overflow-y-auto p-5 shadow-float">{filters}</div>
+          </details>
+          {active.map((a) => (
+            <Link key={a.k} href={without(a.k)} className="chip hover:bg-violet-soft" aria-label={`Remove filter ${a.label}`}>
+              {a.label}<X className="size-3.5" />
+            </Link>
+          ))}
+          <AutoSubmit action="/courses" className="flex items-center gap-2">
+            {Object.entries(sp).filter(([k, v]) => k !== "sort" && k !== "page" && v).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+            <label htmlFor="sort" className="text-sm text-muted">Sort by</label>
+            <select id="sort" name="sort" defaultValue={sp.sort || "popular"} className="field !min-h-9 !w-auto !py-1 text-sm">
+              {sorts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <noscript><button className="btn btn-sm btn-outline">Sort</button></noscript>
+          </AutoSubmit>
+        </div>
+      </div>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[250px_1fr]">
+      <div className="mt-6 grid gap-10 lg:grid-cols-[250px_1fr]">
         <aside className="hidden lg:block" aria-label="Filters">{filters}</aside>
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3 border-b border-line pb-4">
-            <details className="group lg:hidden">
-              <summary className="btn btn-outline btn-sm cursor-pointer list-none"><SlidersHorizontal className="size-4" />Filters{active.length ? ` (${active.length})` : ""}</summary>
-              <div className="panel absolute left-4 right-4 z-30 mt-2 max-h-[70vh] overflow-y-auto p-5 shadow-float">{filters}</div>
-            </details>
-            {active.map((a) => (
-              <Link key={a.k} href={without(a.k)} className="chip hover:bg-violet-soft" aria-label={`Remove filter ${a.label}`}>
-                {a.label}<X className="size-3.5" />
-              </Link>
-            ))}
-            <AutoSubmit action="/courses" className="ml-auto flex items-center gap-2">
-              {Object.entries(sp).filter(([k, v]) => k !== "sort" && k !== "page" && v).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-              <label htmlFor="sort" className="text-sm text-muted">Sort by</label>
-              <select id="sort" name="sort" defaultValue={sp.sort || "popular"} className="field !min-h-9 !w-auto !py-1 text-sm">
-                {sorts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-              <noscript><button className="btn btn-sm btn-outline">Sort</button></noscript>
-            </AutoSubmit>
-          </div>
-
           {res.items.length ? (
-            <div className="grid gap-x-8 gap-y-10 pt-6 sm:grid-cols-2">{res.items.map((c) => <CourseResultCard key={c.slug} c={c} />)}</div>
+            <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2">{res.items.map((c) => <CourseResultCard key={c.slug} c={c} />)}</div>
           ) : res.ok ? (
             <div className="py-20 text-center">
               <h2 className="font-display text-xl font-bold">No courses match these filters</h2>
