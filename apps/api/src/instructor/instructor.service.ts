@@ -483,6 +483,52 @@ export class InstructorService {
     return this.courseDetail(a.user.id, courseId);
   }
 
+  /** Whole curriculum order after drag and drop (sections, lessons, lessons moved between sections). */
+  async arrange(a: Actor, courseId: string, layout: { id: string; lectureIds: string[] }[]) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.arrange(t, layout));
+      return this.courseDetail(a.user.id, courseId);
+    }
+    const sections = await this.prisma.section.findMany({ where: { courseId }, select: { id: true, lectures: { select: { id: true } } } });
+    assertSameSet(sections.map((s) => s.id), layout.map((x) => x.id));
+    assertSameSet(sections.flatMap((s) => s.lectures.map((l) => l.id)), layout.flatMap((x) => x.lectureIds));
+    await this.prisma.$transaction([
+      ...layout.map((x, i) => this.prisma.section.update({ where: { id: x.id }, data: { position: i } })),
+      ...layout.flatMap((x) => x.lectureIds.map((id, i) => this.prisma.lecture.update({ where: { id }, data: { sectionId: x.id, position: i } }))),
+    ]);
+    await this.audit.log({ actorId: a.user.id, action: 'course.curriculum_arranged', targetType: 'course', targetId: courseId, ip: a.ip });
+    return this.courseDetail(a.user.id, courseId);
+  }
+
+  // ---------- complete course package (course-level downloads, owner 2026-11-25) ----------
+  async packageFiles(userId: string, courseId: string) {
+    await this.editableCourse(userId, courseId);
+    const items = await this.prisma.courseResource.findMany({ where: { courseId }, orderBy: { position: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true, createdAt: true } });
+    return { items };
+  }
+
+  async addPackageFile(a: Actor, courseId: string, input: { title: string; storageKey: string }) {
+    await this.editableCourse(a.user.id, courseId);
+    if (!input.storageKey.startsWith(`resources/${a.user.id}/`) || input.storageKey.includes('..')) throw badRequest('Invalid storage key', 'invalid_key');
+    const head = await this.storage.head(input.storageKey);
+    if (!head) throw badRequest('Upload the file first', 'upload_missing');
+    const count = await this.prisma.courseResource.count({ where: { courseId } });
+    if (count >= 20) throw badRequest('A course package holds up to 20 files', 'too_many_files');
+    const r = await this.prisma.courseResource.create({ data: { courseId, title: input.title, storageKey: input.storageKey, sizeBytes: head.size, mime: head.contentType, position: count } });
+    await this.audit.log({ actorId: a.user.id, action: 'course.package_file_added', targetType: 'course', targetId: courseId, ip: a.ip, meta: { id: r.id, title: r.title } });
+    return { id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime };
+  }
+
+  async deletePackageFile(a: Actor, courseId: string, id: string) {
+    await this.editableCourse(a.user.id, courseId);
+    const r = await this.prisma.courseResource.findFirst({ where: { id, courseId } });
+    if (!r) throw notFound('File');
+    await this.prisma.courseResource.delete({ where: { id } });
+    await this.audit.log({ actorId: a.user.id, action: 'course.package_file_removed', targetType: 'course', targetId: courseId, ip: a.ip, meta: { id, title: r.title } });
+    return { ok: true };
+  }
+
   async setQuiz(a: Actor, courseId: string, lectureId: string, questions: QuizQuestionInput[]) {
     for (const [i, q] of questions.entries()) {
       if (q.correct >= q.options.length) {

@@ -6,7 +6,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, FileText, Lis
 import { api, errMsg } from "@/lib/api";
 import { obj, toCourseDetail } from "@/lib/normalize";
 import { clock, hours, date } from "@/lib/format";
-import type { CourseDetail, LectureOutline, Playback } from "@/lib/types";
+import type { CourseDetail, LectureOutline, Playback, ResourceItem } from "@/lib/types";
 import { LoopMark } from "../Logo";
 import { LoopMeter } from "../LoopMeter";
 import { ThemeToggle } from "../ThemeToggle";
@@ -22,7 +22,7 @@ import { useToast } from "../Toast";
 const SAVE_EVERY_MS = 10_000;
 const AUTOPLAY_SECONDS = 5;
 
-type Tab = "overview" | "content" | "resources" | "quiz" | "notes" | "review";
+type Tab = "overview" | "content" | "resources" | "quiz" | "notes" | "review" | "package";
 
 export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string; lectureId: string }) {
   // Lessons change in place (history.pushState): the player stays mounted, so full screen survives "Next".
@@ -32,6 +32,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
   const toast = useToast();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [reviews, setReviews] = useState<ReviewInfo | null>(null);
+  const [pkg, setPkg] = useState<ResourceItem[]>([]);
   const [access, setAccess] = useState<{ state: string; expiresAt: string; daysLeft: number } | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [playback, setPlayback] = useState<Playback | null>(null);
@@ -56,6 +57,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
       const c = toCourseDetail(r);
       setCourse(c);
       setReviews(toReviewInfo(r));
+      setPkg(Array.isArray(obj(r).packageFiles) ? (obj(r).packageFiles as ResourceItem[]) : []);
       const ai = obj(obj(r).accessInfo);
       setAccess(ai.expiresAt ? { state: String(ai.state), expiresAt: String(ai.expiresAt), daysLeft: Number(ai.daysLeft ?? 0) } : null);
     }).catch((e) => setLoadErr(errMsg(e)));
@@ -181,7 +183,8 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
   const tabs: [Tab, string][] = [
     ["overview", "Overview"],
     ["content", "Contents"],
-    ...(lecture?.hasResources ? ([["resources", "Lab files"]] as [Tab, string][]) : []),
+    ...(lecture?.hasResources ? ([["resources", "Lesson files"]] as [Tab, string][]) : []),
+    ...(pkg.length ? ([["package", "Course package"]] as [Tab, string][]) : []),
     ...(lecture?.hasQuiz || lecture?.type === "quiz" ? ([["quiz", "Quiz"]] as [Tab, string][]) : []),
     ["notes", "Notes"],
     ["review", reviews?.mine ? "Your review" : "Rate course"],
@@ -345,6 +348,13 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                 <div className="max-w-3xl">
                   <h1 className="font-display text-2xl font-extrabold">{lecture?.title}</h1>
                   {lecture?.description ? <Markdown source={lecture.description} className="prose-del mt-3" /> : null}
+                  {lecture?.hasResources ? (
+                    <section className="mt-6" aria-labelledby="lesson-files-h">
+                      <h2 id="lesson-files-h" className="font-display text-lg font-bold">Files for this lesson</h2>
+                      <p className="mt-1 text-sm text-ink-2">Watch the lesson, download these files, follow along on your own machine, then continue to the next lesson.</p>
+                      <div className="mt-3"><ResourcesPanel lectureId={lecture.id} compact /></div>
+                    </section>
+                  ) : null}
                   <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3 text-sm">
                     <div><dt className="text-muted">Course</dt><dd className="font-bold">{course.title}</dd></div>
                     <div><dt className="text-muted">Instructor</dt><dd className="font-bold">{course.instructor.name}</dd></div>
@@ -369,6 +379,12 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
               ) : null}
               {tab === "content" ? <div className="-mx-4 border-t border-line lg:hidden">{outline}</div> : null}
               {tab === "resources" ? <ResourcesPanel lectureId={lectureId} /> : null}
+              {tab === "package" ? (
+                <div>
+                  <p className="mb-3 max-w-2xl text-ink-2">Everything from the course in one place: demo code, configuration files and documents. Each lesson also has its own files.</p>
+                  <ResourcesPanel items={pkg} kind="package" />
+                </div>
+              ) : null}
               {tab === "quiz" ? <QuizPanel lectureId={lectureId} onPassed={() => { void save(posRef.current, true); toast("ok", "Quiz passed."); }} /> : null}
               {tab === "notes" ? <NotesPanel lectureId={lectureId} /> : null}
               {tab === "review" && reviews ? <ReviewPanel slug={slug} info={reviews} onSaved={setReviews} /> : null}

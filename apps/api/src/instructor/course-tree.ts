@@ -239,6 +239,18 @@ export function reorderLectures(t: CourseTree, sectionId: string, ids: string[])
   s.lectures = ids.map((id) => byId.get(id)!);
 }
 
+/**
+ * Drag-and-drop result in one step: the order of sections and, for each, its lessons. Lessons may change section;
+ * every section and lesson must appear exactly once (nothing is created or lost here).
+ */
+export function arrange(t: CourseTree, layout: { id: string; lectureIds: string[] }[]) {
+  assertSameSet(t.sections.map((s) => s.id), layout.map((x) => x.id));
+  const all = new Map(t.sections.flatMap((s) => s.lectures.map((l) => [l.id, l] as const)));
+  assertSameSet([...all.keys()], layout.flatMap((x) => x.lectureIds));
+  const byId = new Map(t.sections.map((s) => [s.id, s]));
+  t.sections = layout.map((x) => ({ ...byId.get(x.id)!, lectures: x.lectureIds.map((id) => all.get(id)!) }));
+}
+
 export function setQuiz(t: CourseTree, lectureId: string, questions: TreeQuestion[] | null) {
   findLecture(t, lectureId).lecture.quiz = questions;
 }

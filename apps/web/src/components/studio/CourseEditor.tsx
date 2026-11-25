@@ -1,4 +1,5 @@
 "use client";
+import { useCrumb } from "../shell/AppShell";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -42,6 +43,7 @@ export function CourseEditor({ id }: { id: string }) {
   const [course, setCourse] = useState<StudioCourse | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  useCrumb(course ? course.title || "Untitled course" : null);
 
   const reload = useCallback(async () => {
     try {

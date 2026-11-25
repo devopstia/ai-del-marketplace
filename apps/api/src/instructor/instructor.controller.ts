@@ -36,6 +36,8 @@ const createSchema = courseFields.partial().extend({ title: str(120).min(3) });
 const updateSchema = courseFields.partial();
 const titleSchema = z.object({ title: str(200).min(1) });
 const idsSchema = z.object({ ids: z.array(z.string().uuid()).max(500) });
+const arrangeSchema = z.object({ sections: z.array(z.object({ id: z.string().uuid(), lectureIds: z.array(z.string().uuid()).max(1000) })).max(200) });
+const packageSchema = z.object({ title: z.string().trim().min(1).max(200), storageKey: z.string().max(400) });
 const lectureFields = z.object({
   title: str(200).min(1),
   type: z.enum(['video', 'article', 'quiz']),
@@ -121,6 +123,20 @@ export class InstructorController {
   addSection(@Param('id') id: string, @ZBody(titleSchema) body: z.infer<typeof titleSchema>, @ActorCtx() a: Actor) {
     return this.svc.addSection(a, id, body.title);
   }
+
+  @Roles('instructor') @Put('courses/:id/curriculum')
+  arrange(@Param('id') id: string, @ZBody(arrangeSchema) body: z.infer<typeof arrangeSchema>, @ActorCtx() a: Actor) {
+    return this.svc.arrange(a, id, body.sections);
+  }
+
+  @Roles('instructor') @Get('courses/:id/package')
+  packageFiles(@Param('id') id: string, @ActorCtx() a: Actor) { return this.svc.packageFiles(a.user.id, id); }
+
+  @Roles('instructor') @Post('courses/:id/package')
+  addPackageFile(@Param('id') id: string, @ZBody(packageSchema) body: z.infer<typeof packageSchema>, @ActorCtx() a: Actor) { return this.svc.addPackageFile(a, id, body); }
+
+  @Roles('instructor') @Delete('courses/:id/package/:fileId')
+  deletePackageFile(@Param('id') id: string, @Param('fileId') fid: string, @ActorCtx() a: Actor) { return this.svc.deletePackageFile(a, id, fid); }
 
   @Roles('instructor') @Put('courses/:id/sections/order')
   reorderSections(@Param('id') id: string, @ZBody(idsSchema) body: z.infer<typeof idsSchema>, @ActorCtx() a: Actor) {

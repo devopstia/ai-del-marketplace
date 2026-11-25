@@ -1307,4 +1307,46 @@ describe('e2e: buy and learn', () => {
     expect(img.headers['content-type']).toBe('image/png');
     await staff.send('patch', `/api/admin/contact/${m.id}`, { status: 'handled' }).expect(200);
   });
+
+  it('curriculum editor: drag-and-drop arrange across sections (draft and published), course package for enrolled learners only', async () => {
+    if (!available) return;
+    const teacher = await userAgent('arr-teacher@e2e.example', ['student', 'instructor'], {});
+    const draft = (await teacher.send('post', '/api/instructor/courses', { title: 'Arrange me' }).expect(201)).body;
+    const s1 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections`, { title: 'Intro' }).expect(201)).body;
+    const s2 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections`, { title: 'Deploy' }).expect(201)).body;
+    const l1 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections/${s1.id}/lectures`, { title: 'A' }).expect(201)).body;
+    const l2 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections/${s1.id}/lectures`, { title: 'B' }).expect(201)).body;
+    const l3 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections/${s2.id}/lectures`, { title: 'C' }).expect(201)).body;
+    const id = (x: any) => x.id ?? x.lecture?.id;
+    // move B to the second section, first place; swap sections
+    const r = await teacher.send('put', `/api/instructor/courses/${draft.id}/curriculum`, { sections: [{ id: s2.id, lectureIds: [id(l2), id(l3)] }, { id: s1.id, lectureIds: [id(l1)] }] }).expect(200);
+    expect(r.body.sections.map((s: any) => [s.title, s.lectures.map((l: any) => l.title)])).toEqual([['Deploy', ['B', 'C']], ['Intro', ['A']]]);
+    // nothing may be dropped or duplicated
+    await teacher.send('put', `/api/instructor/courses/${draft.id}/curriculum`, { sections: [{ id: s2.id, lectureIds: [id(l2)] }, { id: s1.id, lectureIds: [id(l1)] }] }).expect(400);
+    // someone else's course
+    const other = await userAgent('arr-other@e2e.example', ['student', 'instructor'], {});
+    await other.send('put', `/api/instructor/courses/${draft.id}/curriculum`, { sections: [] }).expect(404);
+
+    // published course: the arrangement goes into the draft revision; live order unchanged until approved
+    const { course, section, lecture } = await publishedCourse(teacher.user.id, 'arr-live', 1500);
+    const sec2 = await prisma.section.create({ data: { courseId: course.id, title: 'Extra', position: 1 } });
+    const live = await teacher.send('put', `/api/instructor/courses/${course.id}/curriculum`, { sections: [{ id: sec2.id, lectureIds: [lecture.id] }, { id: section.id, lectureIds: [] }] }).expect(200);
+    expect(live.body.version).toBe('draft');
+    expect((await prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id } })).sectionId).toBe(section.id);
+
+    // course package: upload, list, learner download only with access
+    const storage = app.get(StorageService);
+    const key = `resources/${teacher.user.id}/pkg/complete-labs.zip`;
+    await storage.put(key, Buffer.from('PK zip'), 'application/zip');
+    await teacher.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'All lab files', storageKey: key }).expect(201);
+    await teacher.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'x', storageKey: `resources/${other.user.id}/x.zip` }).expect(400);
+    const files = (await teacher.agent.get(`/api/instructor/courses/${course.id}/package`).expect(200)).body.items;
+    expect(files).toHaveLength(1);
+    const stranger = await userAgent('arr-stranger@e2e.example', ['student']);
+    await stranger.send('post', `/api/course-files/${files[0].id}/download`).expect(403);
+    await prisma.enrollment.create({ data: { userId: stranger.user.id, courseId: course.id, source: 'admin' } });
+    expect((await stranger.agent.get('/api/me/courses/arr-live').expect(200)).body.packageFiles).toHaveLength(1);
+    expect((await stranger.send('post', `/api/course-files/${files[0].id}/download`).expect(200)).body.url).toContain('complete-labs.zip');
+    await teacher.send('delete', `/api/instructor/courses/${course.id}/package/${files[0].id}`).expect(200);
+  });
 });

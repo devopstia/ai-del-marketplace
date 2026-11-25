@@ -1,5 +1,5 @@
 "use client";
-import { BookOpen, ChartNoAxesColumnIncreasing, GraduationCap, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, Receipt, UserRound } from "lucide-react";
+import { MonitorPlay, BookOpen, ChartNoAxesColumnIncreasing, GraduationCap, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, Receipt, UserRound } from "lucide-react";
 import { AppShell, type NavGroup } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { Skeleton } from "@/components/Empty";
@@ -22,6 +22,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       ...(!has("instructor") ? [{ href: "/student/teach", label: "Become an instructor", icon: GraduationCap }] : []),
     ] },
     { label: "Help", items: [
+      { href: "/help", label: "Platform videos", icon: MonitorPlay, testId: "nav-platform-videos" },
       { href: "/support", label: "Help and support", icon: LifeBuoy },
       { href: "/contact", label: "Contact DEL", icon: Mail },
     ] },

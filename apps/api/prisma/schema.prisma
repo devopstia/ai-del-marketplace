@@ -285,6 +285,7 @@ model Course {
   updatedAt         DateTime     @updatedAt
 
   sections     Section[]
+  packageFiles CourseResource[]
   revisions    CourseRevision[]
   cartItems    CartItem[]
   orderLines   OrderLine[]
@@ -971,4 +972,20 @@ model ContactMessage {
 
   @@index([createdAt])
   @@map("contact_messages")
+}
+
+/// Complete course package: course-level downloads (all demo code, configs, docs) next to the per-lesson files.
+model CourseResource {
+  id         String   @id @default(uuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title      String
+  storageKey String
+  sizeBytes  Int
+  mime       String
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([courseId, position])
+  @@map("course_resources")
 }

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell, type NavItem } from "@/components/shell/AppShell";
@@ -28,7 +28,8 @@ const groups: { label?: string; items: Item[] }[] = [
   { label: "Support", items: [
     { href: "/admin/support", label: "Support requests", icon: LifeBuoy, perm: "support.manage" },
     { href: "/admin/contact", label: "Contact messages", icon: Mail, perm: "support.manage" },
-    { href: "/admin/help", label: "Help videos", icon: MonitorPlay, perm: "content.manage" },
+    { href: "/admin/help", label: "Manage platform videos", icon: Clapperboard, perm: "content.manage" },
+    { href: "/help", label: "Platform videos", icon: MonitorPlay, testId: "nav-platform-videos" },
   ] },
   { label: "Platform", items: [
     { href: "/admin/categories", label: "Categories", icon: FolderTree, perm: "content.manage" },

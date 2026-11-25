@@ -52,6 +52,12 @@ export class LearningController {
   }
 
   @HttpCode(200)
+  @Post('course-files/:id/download')
+  downloadPackageFile(@Param('id') id: string, @CurrentUser() u: AuthUser) {
+    return this.svc.downloadPackageFile(u, id);
+  }
+
+  @HttpCode(200)
   @Post('resources/:id/download')
   download(@Param('id') id: string, @CurrentUser() u: AuthUser) {
     return this.svc.download(u, id);

@@ -162,6 +162,7 @@ export class LearningService {
       // Reviews inside the learning view (owner 2026-11-25): the same numbers as the public course page.
       rating: { average: Math.round(c.ratingAvg * 10) / 10, count: c.ratingCount },
       accessInfo: await this.accessInfo(user.id, c.id),
+      packageFiles: await this.prisma.courseResource.findMany({ where: { courseId: c.id }, orderBy: { position: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true } }),
       canReview: access === 'enrolled',
       sections: c.sections.map((s) => ({
         id: s.id,
@@ -225,6 +226,16 @@ export class LearningService {
     const r = await this.prisma.resource.findUnique({ where: { id: resourceId } });
     if (!r) throw notFound('Resource');
     await this.requireLectureAccess(user, r.lectureId);
+    const ttl = 300;
+    const filename = r.storageKey.split('/').pop() ?? 'download';
+    return { url: await this.storage.presignGet(r.storageKey, ttl, { downloadName: filename }), expiresAt: new Date(Date.now() + ttl * 1000).toISOString(), filename };
+  }
+
+  /** Complete course package file: same rule as lesson files (owner, admin, or an active enrolment). */
+  async downloadPackageFile(user: AuthUser, id: string) {
+    const r = await this.prisma.courseResource.findUnique({ where: { id }, include: { course: { select: { id: true, instructorId: true } } } });
+    if (!r) throw notFound('File');
+    if (!(await this.access(user, r.course))) throw forbidden('Enrol in this course to download its files', 'not_enrolled');
     const ttl = 300;
     const filename = r.storageKey.split('/').pop() ?? 'download';
     return { url: await this.storage.presignGet(r.storageKey, ttl, { downloadName: filename }), expiresAt: new Date(Date.now() + ttl * 1000).toISOString(), filename };
