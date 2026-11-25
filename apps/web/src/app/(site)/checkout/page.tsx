@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { Loader2, Lock, ShoppingCart } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { obj, toCart } from "@/lib/normalize";
-import { money, moneyExact } from "@/lib/format";
+import { moneyExact } from "@/lib/format";
 import type { Cart } from "@/lib/types";
+import { Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { Empty, Skeleton } from "@/components/Empty";
 
@@ -33,6 +34,7 @@ export default function CheckoutPage() {
     }
   }
 
+  const saved = (cart?.items ?? []).reduce((n, it) => n + Math.max(0, (it.course.listPriceCents ?? it.course.priceCents) - it.course.priceCents), 0);
   return (
     <div className="container-x max-w-5xl pt-10">
       <h1 className="font-display text-[2.4rem] font-extrabold">Checkout</h1>
@@ -45,12 +47,12 @@ export default function CheckoutPage() {
             <ul className="mt-4 divide-y divide-line border-y border-line">
               {cart.items.map(({ courseId, course: c }) => (
                 <li key={courseId} className="flex items-center gap-4 py-4">
-                  <div className="w-24 shrink-0"><CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" /></div>
+                  <div className="w-24 shrink-0"><CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" showTitle={false} /></div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold leading-snug">{c.title}</p>
                     <p className="text-sm text-muted">{c.instructor.name}</p>
                   </div>
-                  <span className="font-display font-extrabold tabular-nums">{money(c.priceCents, c.currency)}</span>
+                  <span className="text-right tabular-nums"><Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} />{c.sale ? <span className="mt-0.5 block text-xs font-bold text-rose">−{c.sale.percentOff}%</span> : null}</span>
                 </li>
               ))}
             </ul>
@@ -58,7 +60,8 @@ export default function CheckoutPage() {
           <aside className="h-fit rounded-panel border border-line bg-surface p-6">
             <h2 className="font-display text-xl font-bold">Summary</h2>
             <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-ink-2">Courses ({cart.items.length})</dt><dd className="tabular-nums">{moneyExact(cart.totalCents, cart.currency)}</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-2">Courses ({cart.items.length})</dt><dd className="tabular-nums">{moneyExact(cart.totalCents + saved, cart.currency)}</dd></div>
+              {saved > 0 ? <div className="flex justify-between text-rose"><dt>Sale discounts</dt><dd className="tabular-nums">−{moneyExact(saved, cart.currency)}</dd></div> : null}
               <div className="flex justify-between border-t border-line pt-3 text-base font-bold"><dt>Total</dt><dd className="font-display text-xl tabular-nums">{moneyExact(cart.totalCents, cart.currency)}</dd></div>
             </dl>
             {err ? <p role="alert" className="mt-4 rounded-lg bg-rose-soft px-3 py-2 text-sm font-bold text-rose">{err}</p> : null}

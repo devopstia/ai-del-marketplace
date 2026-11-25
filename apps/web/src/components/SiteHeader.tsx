@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap } from "lucide-react";
+import { Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "./AuthProvider";
@@ -89,7 +89,8 @@ function UserMenu() {
   );
 }
 
-export function SiteHeader() {
+/** `dealsCount`: courses on sale right now; the Deals link only exists while there are some. */
+export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
   const { me, loading, cartCount, has } = useAuth();
   const [mobile, setMobile] = useState(false);
   const pathname = usePathname();
@@ -103,6 +104,7 @@ export function SiteHeader() {
         <Logo />
         <nav className="ml-2 hidden items-center lg:flex" aria-label="Main">
           <Link href="/courses" className={`${nav} ${active("/courses")}`}>Browse courses</Link>
+          {dealsCount > 0 ? <Link href="/deals" className={`${nav} ${active("/deals")} inline-flex items-center gap-1.5`}>Deals<span className="rounded-full bg-rose-soft px-1.5 text-xs font-extrabold tabular-nums text-rose">{dealsCount}</span></Link> : null}
         </nav>
         <SearchBox className="mx-2 hidden max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">
@@ -144,6 +146,7 @@ export function SiteHeader() {
             <SearchBox className="mb-3" onDone={() => setMobile(false)} />
             {[
               ["/courses", "Browse courses", GraduationCap],
+              ...(dealsCount > 0 ? [["/deals", `Deals (${dealsCount})`, Tag]] : []),
               [teachHref, has("instructor") ? "Instructor studio" : "Teach on DEL", LayoutDashboard],
               ...(me ? [["/my-learning", "My learning", BookOpen], ["/orders", "Orders and receipts", Receipt], ["/account", "Account", User]] : []),
               ...(has("admin") ? [["/admin", "Admin", Shield]] : []),

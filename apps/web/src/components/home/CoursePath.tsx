@@ -88,7 +88,7 @@ export function CoursePath({ c }: { c: CourseDetail }) {
               {facts.map((f) => <li key={f}>{f}</li>)}
             </ul>
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Price cents={c.priceCents} currency={c.currency} className="text-3xl" />
+              <Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} className="text-3xl" />
               <div className="flex flex-wrap gap-2">
                 <Link href={`/courses/${c.slug}`} className="btn btn-primary" data-testid="path-view-course">View the course</Link>
                 {previews[0] ? <PreviewButton lectureId={previews[0].id} className="btn btn-outline"><PlayCircle className="size-4" aria-hidden="true" />Watch a free lesson</PreviewButton> : null}

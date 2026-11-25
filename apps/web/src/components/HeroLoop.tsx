@@ -139,7 +139,7 @@ function RagSlide({ reduced }: { reduced: boolean }) {
   );
 }
 
-export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: string; href: string; meta: string; thumbnailUrl?: string | null; ratingAvg: number; ratingCount: number; priceCents: number; currency?: string } | null }) {
+export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: string; href: string; meta: string; thumbnailUrl?: string | null; ratingAvg: number; ratingCount: number; priceCents: number; listPriceCents?: number; currency?: string } | null }) {
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -207,7 +207,7 @@ export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: str
             <p className="flex items-center gap-1.5 text-xs font-bold text-mint"><PlayCircle className="size-3.5" />Free preview available</p>
             <p className="mt-1 line-clamp-2 font-display text-sm font-bold leading-snug text-ink">{spotlight.title}</p>
             <p className="mt-1 line-clamp-1 text-xs text-muted">{spotlight.meta}</p>
-            <p className="mt-1.5 flex items-center gap-3"><RatingInline avg={spotlight.ratingAvg} count={spotlight.ratingCount} /><Price cents={spotlight.priceCents} currency={spotlight.currency} className="text-sm" /></p>
+            <p className="mt-1.5 flex items-center gap-3"><RatingInline avg={spotlight.ratingAvg} count={spotlight.ratingCount} /><Price cents={spotlight.priceCents} listCents={spotlight.listPriceCents} currency={spotlight.currency} className="text-sm" /></p>
           </div>
         </Link>
       ) : null}

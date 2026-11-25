@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { Award, Captions, Download, FileText, Infinity as InfinityIcon, ListChecks, Loader2, MonitorPlay, PlayCircle, RotateCcw, ShoppingCart, Smartphone } from "lucide-react";
 import { api, ApiError, errMsg } from "@/lib/api";
 import { list, obj } from "@/lib/normalize";
-import { hours, money } from "@/lib/format";
+import { hours } from "@/lib/format";
 import type { CourseDetail } from "@/lib/types";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./Toast";
+import { Price, SaleTag } from "./CourseViews";
 import { CourseCover } from "./CourseCover";
 import { PreviewButton } from "./PreviewContext";
 
@@ -74,7 +75,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
           </>
         ) : (
           <>
-            <p className={`font-display text-[2rem] font-extrabold leading-none ${free ? "text-mint" : "text-ink"}`}>{money(course.priceCents, course.currency)}</p>
+            <p className="leading-none" data-testid="course-price"><Price cents={course.priceCents} listCents={course.listPriceCents} currency={course.currency} className="text-[2rem] leading-none" /></p>
+            {course.sale ? <SaleTag sale={course.sale} withName className="mt-2.5" /> : null}
             <div className="mt-5 grid gap-2.5">
               {inCart ? (
                 <Link href="/cart" className="btn btn-primary w-full"><ShoppingCart className="size-4" />Go to cart</Link>

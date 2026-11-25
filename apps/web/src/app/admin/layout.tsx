@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell } from "@/components/shell/AppShell";
@@ -16,6 +16,7 @@ const nav = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/orders", label: "Orders", icon: Receipt },
   { href: "/admin/finance", label: "Money", icon: Landmark },
+  { href: "/admin/promotions", label: "Promotions", icon: Tag },
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/audit", label: "Audit log", icon: ScrollText },

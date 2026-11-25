@@ -1,7 +1,8 @@
 "use client";
 import { Moon, Sun } from "lucide-react";
 
-export const themeScript = `(function(){try{var t=localStorage.getItem('del-theme');var d=document.documentElement;if(t==='dark'){d.classList.add('dark')}else if(t==='light'){d.classList.add('light')}}catch(e){}})();`;
+// Dark is the default for every visitor (owner, 2026-11-25); a saved choice of light from the toggle wins.
+export const themeScript = `(function(){var d=document.documentElement;try{if(localStorage.getItem('del-theme')==='light'){d.classList.remove('dark');d.classList.add('light');return}}catch(e){}d.classList.add('dark')})();`;
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   function toggle() {

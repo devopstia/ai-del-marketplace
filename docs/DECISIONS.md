@@ -126,3 +126,13 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - 2026-11-25 /teach tuned (owner: "improve and tune this up"): live earnings calculator (price + sales per month, same
   arithmetic as the API split, honest estimate note) replaces the fixed $100 example; price rule from live terms; step 1
   links to the application; closing call to action. Screenshots `docs/design/teach-2026-11-25/`.
+
+## 2026-11-25: Course sales and promotions (owner brief + approved plan)
+- Branch `feat/promotions` (from `feat/home-improvements`), rollback tag `checkpoint-2026-11-25-promotions`, backup branch
+  `backup/home-improvements-2026-11-25`.
+- Owner decisions: instructors are included in marketplace promotions by default and can opt a course out (DEL courses always
+  in); when an instructor sale and a promotion overlap, the lowest price wins (no stacking); instructor sales need at least
+  10% off, not below $4.99, up to 31 days, one at a time. Promotions: 5–90% off, up to 90 days, super admin only.
+- Prices are computed at request time (no job, nothing written to the course), so sales stop by themselves. The commission
+  split uses the amount actually paid; order lines keep the regular price and which sale applied. See docs/API.md.
+- Owner, mid-build: **dark is the default theme for the whole site**; a visitor's saved choice of light (toggle) is kept.

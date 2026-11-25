@@ -60,6 +60,18 @@ export interface CourseCard {
   hasPreview?: boolean;
   /** The course's first "What you'll learn" point. */
   outcome?: string | null;
+  /** Regular price; `priceCents` is what a learner pays now (lower while a sale runs). */
+  listPriceCents?: number;
+  sale?: SaleInfo | null;
+}
+
+/** A running discount: the instructor's own sale or a marketplace-wide promotion. */
+export interface SaleInfo {
+  kind: "course_sale" | "promotion";
+  id: string;
+  name: string | null;
+  endsAt: string;
+  percentOff: number;
 }
 
 /** How many courses each filter option would show, given the other active filters. */
@@ -67,6 +79,7 @@ export interface CatalogueFacets {
   category: Record<string, number>;
   level: Record<string, number>;
   price: { free: number; paid: number };
+  onSale: number;
 }
 
 export interface Paged<T> {
@@ -151,6 +164,8 @@ export interface OrderLine {
   title: string;
   slug?: string;
   priceCents: number;
+  /** Regular price at purchase (higher than priceCents when a sale applied). */
+  listPriceCents?: number;
   instructorName?: string;
   refundedAt?: string | null;
 }
@@ -291,6 +306,7 @@ export interface SaleRow {
   courseTitle: string;
   buyerName?: string;
   priceCents: number;
+  listPriceCents?: number;
   instructorShareCents: number;
   transferStatus?: string;
   feeCents: number;

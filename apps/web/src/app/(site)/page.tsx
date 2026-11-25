@@ -41,7 +41,7 @@ function Spread({ c }: { c: CourseCard }) {
         </div>
         <div className="flex items-end justify-between gap-4 md:flex-col md:items-end md:justify-end md:text-right">
           <span className="text-sm text-muted">{hours(c.totalDurationSec)} of lessons<br className="hidden md:block" /><span className="md:hidden">, </span>{levelLabel[c.level]}</span>
-          <Price cents={c.priceCents} currency={c.currency} className="text-3xl" />
+          <Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} className="text-3xl" />
         </div>
       </div>
     </Link>
@@ -61,7 +61,7 @@ function RankedRow({ c, rank }: { c: CourseCard; rank?: number }) {
             {c.studentCount >= MIN_STUDENTS_SHOWN ? <span className="tabular-nums">{plural(c.studentCount, "learner")}</span> : null}
           </span>
         </span>
-        <Price cents={c.priceCents} currency={c.currency} />
+        <Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} />
       </Link>
     </li>
   );
@@ -120,7 +120,7 @@ export default async function Home() {
               ))}
             </div>
           </div>
-          <HeroLoop spotlight={featured ? { slug: featured.slug, thumbnailUrl: featured.thumbnailUrl, ratingAvg: featured.ratingAvg, ratingCount: featured.ratingCount, priceCents: featured.priceCents, currency: featured.currency, title: featured.title, href: `/courses/${featured.slug}`, meta: `${featured.instructor.name}, ${hours(featured.totalDurationSec)}` } : null} />
+          <HeroLoop spotlight={featured ? { slug: featured.slug, thumbnailUrl: featured.thumbnailUrl, ratingAvg: featured.ratingAvg, ratingCount: featured.ratingCount, priceCents: featured.priceCents, listPriceCents: featured.listPriceCents, currency: featured.currency, title: featured.title, href: `/courses/${featured.slug}`, meta: `${featured.instructor.name}, ${hours(featured.totalDurationSec)}` } : null} />
         </div>
       </section>
 
