@@ -1,4 +1,4 @@
-// Local demo only: adds 4 sample courses so catalogue layouts can be reviewed with more than one course.
+// Local demo only: adds 5 sample courses so catalogue layouts can be reviewed with more than one course.
 // Lessons are short articles (no video). Every description says it is a sample course.
 // Add:    docker compose exec -T api node - < scripts/demo-dummy-courses.cjs
 // Remove: docker compose exec -T -e REMOVE=1 api node - < scripts/demo-dummy-courses.cjs
@@ -54,6 +54,17 @@ const COURSES = [
     sections: [
       { title: 'Prompts that repeat', lectures: [art('Role, context, constraints, format', 8, true), art('Summarising a noisy log', 9)] },
       { title: 'Prompts on the job', lectures: [art('Incident timelines from chat logs', 10), art('Reviewing Terraform plans', 11)] },
+    ],
+  },
+  {
+    slug: 'sample-n8n-ai-incident-workflows', owner: 'nadia@instructor.example', category: 'automation-n8n', level: 'intermediate', priceCents: 4999,
+    title: 'AI Incident Workflows with n8n',
+    subtitle: 'Turn alerts into triaged tickets, Slack summaries and safe runbook steps with n8n and an LLM',
+    objectives: ['Build n8n workflows from alert webhooks', 'Summarise incidents with an LLM', 'Add human approval before any action'],
+    requirements: ['A free n8n account or Docker', 'Basic JSON and HTTP knowledge'],
+    sections: [
+      { title: 'From alert to ticket', lectures: [art('Webhooks from Prometheus and Grafana', 9, true), art('Enriching alerts with context', 12)] },
+      { title: 'AI in the loop', lectures: [art('LLM summaries your on-call will read', 11), art('Approval steps before runbook actions', 13)] },
     ],
   },
 ];
