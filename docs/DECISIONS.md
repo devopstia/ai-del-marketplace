@@ -123,3 +123,6 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   and readings separately. /courses: tidy filter URLs, two topics named in the heading. Screenshots `docs/design/home-improve-2026-11-25/`.
 - 2026-11-25 owner disliked "Taught by practitioners" + dark teach band ("design it well"): replaced by option C from the
   comparison page: each instructor with their real courses ("Learn from the people who build it") and a one-row teach invite.
+- 2026-11-25 /teach tuned (owner: "improve and tune this up"): live earnings calculator (price + sales per month, same
+  arithmetic as the API split, honest estimate note) replaces the fixed $100 example; price rule from live terms; step 1
+  links to the application; closing call to action. Screenshots `docs/design/teach-2026-11-25/`.
