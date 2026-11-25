@@ -1,7 +1,7 @@
-# Production reverse proxy (docs/DEPLOYMENT.md). HTTPS certificates from Let's Encrypt, renewed by Caddy.
-# Deliberately NO country or region rules (unlike Insurance Hub's nginx geo allowlist): learners and instructors
-# in Africa, the Americas, Europe and Asia must all reach the marketplace. Abuse is handled by rate limits in the
-# API (sign-in, registration, contact form, invitations) and Stripe's own fraud checks, never by geography.
+# Production reverse proxy (docs/DEPLOYMENT.md). HTTPS from Let's Encrypt, renewed by Caddy; HTTP redirects to HTTPS.
+# Deliberately NO country or region rules (unlike Insurance Hub's nginx geo allowlist): learners and instructors in
+# Africa, the Americas, Europe and Asia must all reach the marketplace. Abuse is handled by rate limits in the API,
+# Google Authenticator for every account and Stripe's fraud checks, never by geography.
 {
 	email {$ACME_EMAIL}
 	servers {
@@ -9,18 +9,14 @@
 	}
 }
 
-{$PUBLIC_HOST} {
+(common) {
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		-Server
 	}
-	# Stripe and Mux webhooks need the raw body; they are forwarded untouched like every API call.
-	handle /api/* {
-		reverse_proxy api:4000
-	}
-	handle {
-		reverse_proxy web:3000
+	request_body /api/* {
+		max_size 25MB
 	}
 	log {
 		output stdout
@@ -28,6 +24,28 @@
 	}
 }
 
-www.{$PUBLIC_HOST} {
-	redir https://{$PUBLIC_HOST}{uri} permanent
+{$DOMAIN} {
+	import common
+	handle /api/* {
+		reverse_proxy production-api:4000
+	}
+	handle {
+		reverse_proxy production-web:3000
+	}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# Staging: a full copy with synthetic data for the release tests; not for search engines.
+{$STAGING_HOST} {
+	import common
+	header X-Robots-Tag "noindex, nofollow"
+	handle /api/* {
+		reverse_proxy staging-api:4000
+	}
+	handle {
+		reverse_proxy staging-web:3000
+	}
 }

@@ -1,0 +1,23 @@
+# The HTTPS front for both stacks (docs/DEPLOYMENT.md): Caddy with automatic Let's Encrypt certificates.
+name: del-edge
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DOMAIN: ${DOMAIN}
+      STAGING_HOST: ${STAGING_HOST}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+    logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
+volumes:
+  caddy_data:
+  caddy_config:
+networks:
+  edge:
+    external: true

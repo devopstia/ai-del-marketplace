@@ -1,10 +1,8 @@
-# Production stack on one EC2 instance (docs/DEPLOYMENT.md), the Insurance Hub layout adapted to the marketplace.
-# NOT DEPLOYED: production needs the owner's authorisation and domain first (owner, 2026-11-25).
-# Database: Amazon RDS PostgreSQL. Files and videos: Amazon S3 through the instance role (no keys).
-# Secrets: /srv/del-marketplace/.env, written at each release from SSM Parameter Store (scripts/deploy-aws.sh).
+# One marketplace stack (production or staging) on the EC2 server (docs/DEPLOYMENT.md).
+#   STACK=production|staging, IMAGE_TAG, ECR_REGISTRY come from the release script; secrets from ./<stack>/.env
+#   (written from SSM Parameter Store at each release, root-only). Database: Amazon RDS. Files: S3 via the
+#   instance role. The shared Caddy front (deploy/edge.compose.yml) reaches these containers on the "edge" network.
 # No geographic blocking anywhere: the marketplace is global, Africa included (AGENTS.md rule 23).
-name: del-marketplace
-
 x-app: &app
   image: ${ECR_REGISTRY}/del-marketplace/api:${IMAGE_TAG}
   restart: unless-stopped
@@ -14,27 +12,9 @@ x-app: &app
     REDIS_URL: redis://redis:6379
     S3_ENDPOINT: aws
     S3_PUBLIC_ENDPOINT: aws
-    EMAIL_PROVIDER: resend
-    DEV_TEST_PAYMENTS: "false"
-    OAUTH_TEST_PROVIDER: "false"
-    MFA_REQUIRED: "true"
   logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
 
 services:
-  caddy:
-    image: caddy:2.10-alpine
-    restart: unless-stopped
-    ports: ["80:80", "443:443", "443:443/udp"]
-    environment:
-      PUBLIC_HOST: ${PUBLIC_HOST}
-      ACME_EMAIL: ${ACME_EMAIL}
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on: [web, api]
-    logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
-
   api:
     <<: *app
     command: ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
@@ -42,8 +22,12 @@ services:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 15s
       timeout: 5s
-      retries: 8
+      retries: 12
+      start_period: 60s
     depends_on: [redis]
+    networks:
+      default: {}
+      edge: { aliases: ["${STACK}-api"] }
 
   worker:
     <<: *app
@@ -52,7 +36,7 @@ services:
       api: { condition: service_healthy }
 
   web:
-    image: ${ECR_REGISTRY}/del-marketplace/web:${IMAGE_TAG}
+    image: ${ECR_REGISTRY}/del-marketplace/web:${IMAGE_TAG}-${STACK}
     restart: unless-stopped
     environment:
       API_INTERNAL_URL: http://api:4000/api
@@ -60,6 +44,9 @@ services:
     depends_on:
       api: { condition: service_healthy }
     logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
+    networks:
+      default: {}
+      edge: { aliases: ["${STACK}-web"] }
 
   redis:
     image: redis:7.4-alpine
@@ -68,6 +55,8 @@ services:
     volumes: [redisdata:/data]
 
 volumes:
-  caddy_data:
-  caddy_config:
   redisdata:
+
+networks:
+  edge:
+    external: true
