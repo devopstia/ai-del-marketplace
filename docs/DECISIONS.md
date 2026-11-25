@@ -103,3 +103,12 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - 2026-11-25: 5 sample courses (4, then 1 more on request) for the local demo (owner: "add another 4 dummy course"), via `scripts/demo-dummy-courses.cjs`
   (article lessons only, descriptions say "Sample course"; audited). Remove with
   `docker compose exec -T -e REMOVE=1 api node - < scripts/demo-dummy-courses.cjs`. Not part of the clean demo.
+
+## 2026-11-25: feat/next-2026-11-25 merged into `main` (owner: "merge feat/next-2026-11-25 into main")
+- Local merge only (not pushed). Rollback tag `main-before-merge-2026-11-25` (= `bd57c5d`), release tag `release-local-2026-11-25`
+  (= `1ce1b75`). Includes: hero right column, AI hub, RAG cycle slide 2, /courses two-column grid + header row, sample-course script.
+- Next work on `feat/courses-improvements`: rollback tag `checkpoint-2026-11-25-courses-improve` (= `1ce1b75`), backup branch
+  `backup/main-after-merge-2026-11-25`.
+- 2026-11-25 `feat/courses-improvements`: /courses filter counts (facets), several topics at once, cleaner cards (see commit
+  b86ee1d). Verified on a fresh stack (`down -v`): API 129/129, smoke 135/135, web typecheck + lint, Playwright 16/16 with
+  E2E_PASSWORD. Then clean demo (seed, import-del, demo-catalogue) + the 5 sample courses re-added.

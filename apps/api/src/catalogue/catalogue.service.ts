@@ -10,7 +10,7 @@ import { cardInclude, toCard } from './course-card';
 
 export interface CourseQuery {
   q?: string;
-  category?: string;
+  category?: string[];
   level?: 'beginner' | 'intermediate' | 'advanced';
   price?: 'free' | 'paid';
   sort: 'popular' | 'newest' | 'rating' | 'price_asc' | 'price_desc';
@@ -55,14 +55,16 @@ export class CatalogueService {
   }
 
   async listCourses(q: CourseQuery) {
-    const where: Prisma.CourseWhereInput = { status: 'published' };
-    if (q.q) Object.assign(where, searchWhere(q.q));
-    if (q.category) where.category = { slug: q.category };
-    if (q.level) where.level = q.level;
-    if (q.price === 'free') where.priceCents = 0;
-    if (q.price === 'paid') where.priceCents = { gt: 0 };
-    if (q.instructorId) where.instructorId = q.instructorId;
-    const [total, rows] = await Promise.all([
+    // Each filter is its own clause so facet counts can drop exactly one of them.
+    const base: Prisma.CourseWhereInput = { status: 'published' };
+    if (q.q) Object.assign(base, searchWhere(q.q));
+    if (q.instructorId) base.instructorId = q.instructorId;
+    const byCategory: Prisma.CourseWhereInput = q.category?.length ? { category: { slug: { in: q.category } } } : {};
+    const byLevel: Prisma.CourseWhereInput = q.level ? { level: q.level } : {};
+    const byPrice: Prisma.CourseWhereInput = q.price === 'free' ? { priceCents: 0 } : q.price === 'paid' ? { priceCents: { gt: 0 } } : {};
+    const all = (...parts: Prisma.CourseWhereInput[]): Prisma.CourseWhereInput => ({ AND: [base, ...parts] });
+    const where = all(byCategory, byLevel, byPrice);
+    const [total, rows, catGroups, levelGroups, free, paid] = await Promise.all([
       this.prisma.course.count({ where }),
       this.prisma.course.findMany({
         where,
@@ -71,9 +73,22 @@ export class CatalogueService {
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
       }),
+      // Facets: how many courses each option would show, given the other active filters.
+      this.prisma.course.groupBy({ by: ['categoryId'], where: all(byLevel, byPrice), _count: { _all: true } }),
+      this.prisma.course.groupBy({ by: ['level'], where: all(byCategory, byPrice), _count: { _all: true } }),
+      this.prisma.course.count({ where: all(byCategory, byLevel, { priceCents: 0 }) }),
+      this.prisma.course.count({ where: all(byCategory, byLevel, { priceCents: { gt: 0 } }) }),
     ]);
+    const catIds = catGroups.map((g) => g.categoryId).filter((id): id is string => !!id);
+    const cats = catIds.length ? await this.prisma.category.findMany({ where: { id: { in: catIds } }, select: { id: true, slug: true } }) : [];
+    const slugOf = new Map(cats.map((c) => [c.id, c.slug]));
     return {
       items: rows.map((r) => toCard(r, (k) => this.media.imageUrl(k))),
+      facets: {
+        category: Object.fromEntries(catGroups.filter((g) => g.categoryId && slugOf.has(g.categoryId)).map((g) => [slugOf.get(g.categoryId!)!, g._count._all])),
+        level: Object.fromEntries(levelGroups.map((g) => [g.level, g._count._all])),
+        price: { free, paid },
+      },
       page: q.page,
       pageSize: q.pageSize,
       total,

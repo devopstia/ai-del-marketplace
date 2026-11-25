@@ -116,6 +116,36 @@ describe('e2e: buy and learn', () => {
     await app?.close();
   });
 
+  it('catalogue: several topics at once, facet counts, free-preview flag', async () => {
+    if (!available) return;
+    const teacher = await prisma.user.findUniqueOrThrow({ where: { email: 'teacher@e2e.example' } });
+    const cat2 = await prisma.category.create({ data: { slug: 'e2e-two', name: 'E2E two' } });
+    const free = await prisma.course.create({
+      data: { slug: 'e2e-free', title: 'Free one', instructorId: teacher.id, categoryId: cat2.id, priceCents: 0, level: 'advanced', status: 'published', publishedAt: new Date(), description: 'd' },
+    });
+    const s = await prisma.section.create({ data: { courseId: free.id, title: 'S', position: 0 } });
+    await prisma.lecture.create({ data: { sectionId: s.id, title: 'Preview', position: 0, type: 'article', articleMd: 'x', isPreview: true } });
+    try {
+      const http = request(app.getHttpServer());
+      const both = await http.get('/api/courses?category=e2e&category=e2e-two').expect(200);
+      expect(both.body.items.map((c: any) => c.slug).sort()).toEqual(['e2e-course', 'e2e-free']);
+      expect((await http.get('/api/courses?category=e2e,e2e-two').expect(200)).body.total).toBe(2);
+      const one = await http.get('/api/courses?category=e2e-two').expect(200);
+      expect(one.body.items.map((c: any) => c.slug)).toEqual(['e2e-free']);
+      expect(one.body.items[0].hasPreview).toBe(true);
+      // A facet ignores its own filter but respects the others.
+      expect(one.body.facets.category).toEqual({ e2e: 1, 'e2e-two': 1 });
+      expect(one.body.facets.price).toEqual({ free: 1, paid: 0 });
+      const paid = await http.get('/api/courses?price=paid').expect(200);
+      expect(paid.body.facets.category).toEqual({ e2e: 1 });
+      expect(paid.body.facets.price).toEqual({ free: 1, paid: 1 });
+      expect(paid.body.items[0].hasPreview).toBe(false);
+    } finally {
+      await prisma.course.delete({ where: { id: free.id } });
+      await prisma.category.delete({ where: { id: cat2.id } });
+    }
+  });
+
   it('register → cart → checkout → test payment → enrolled → playback → progress', async () => {
     if (!available) return;
     const agent = request.agent(app.getHttpServer());

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, Users, BarChart3 } from "lucide-react";
+import { Check, Clock, Users, BarChart3, PlayCircle } from "lucide-react";
 import type { CourseCard } from "@/lib/types";
 import { compact, hours, levelLabel, money, plural } from "@/lib/format";
 import { CourseCover } from "./CourseCover";
@@ -49,23 +49,33 @@ export function CourseResultRow({ c }: { c: CourseCard }) {
   );
 }
 
-/** Result card for the two-column catalogue grid: cover on top, then the same facts as the result row. */
-export function CourseResultCard({ c }: { c: CourseCard }) {
+const NEW_FOR_DAYS = 30;
+const MIN_STUDENTS_SHOWN = 10;
+const isNew = (publishedAt?: string | null) => !!publishedAt && Date.now() - new Date(publishedAt).getTime() < NEW_FOR_DAYS * 86400_000;
+
+/** Result card for the two-column catalogue grid: cover on top, then the facts that help choose. */
+export function CourseResultCard({ c, coverSeed }: { c: CourseCard; coverSeed?: number }) {
+  const fresh = isNew(c.publishedAt);
   return (
     <Link href={`/courses/${c.slug}`} className="group flex flex-col rounded-tile" data-testid="course-row">
-      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} seed={coverSeed} showTitle={false} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
       <div className="mt-4 flex items-start justify-between gap-4">
         <h3 className="font-display text-lg font-bold leading-snug text-ink group-hover:text-violet">{c.title}</h3>
         <Price cents={c.priceCents} currency={c.currency} className="shrink-0 text-xl" />
       </div>
       {c.subtitle ? <p className="mt-1.5 line-clamp-2 text-[0.95rem] text-ink-2">{c.subtitle}</p> : null}
-      <p className="mt-1.5 text-sm text-muted">{c.instructor.name}</p>
-      <div className="mt-1.5"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div>
-      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-        <span className="inline-flex items-center gap-1"><Clock className="size-3.5" />{hours(c.totalDurationSec)}</span>
+      {c.outcome ? <p className="mt-2 flex items-start gap-1.5 text-sm text-ink"><Check className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden="true" /><span className="line-clamp-1"><span className="sr-only">You will learn: </span>{c.outcome}</span></p> : null}
+      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+        <span className="text-ink-2">{c.instructor.name}</span>
+        {c.ratingCount ? <RatingInline avg={c.ratingAvg} count={c.ratingCount} /> : null}
+        {fresh ? <span className="rounded-full bg-cyan-soft px-2 py-0.5 text-xs font-bold text-cyan-ink">New</span> : null}
+        {c.hasPreview ? <span className="inline-flex items-center gap-1 rounded-full bg-mint-soft px-2 py-0.5 text-xs font-bold text-mint"><PlayCircle className="size-3.5" />Free preview</span> : null}
+      </p>
+      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-2">
+        <span className="inline-flex items-center gap-1.5"><Clock className="size-4 text-muted" />{hours(c.totalDurationSec)}</span>
         {c.lectureCount ? <span>{plural(c.lectureCount, "lecture")}</span> : null}
-        <span className="inline-flex items-center gap-1"><BarChart3 className="size-3.5" />{levelLabel[c.level]}</span>
-        {c.studentCount ? <span className="inline-flex items-center gap-1"><Users className="size-3.5" />{compact(c.studentCount)} {c.studentCount === 1 ? "student" : "students"}</span> : null}
+        <span className="inline-flex items-center gap-1.5"><BarChart3 className="size-4 text-muted" />{levelLabel[c.level]}</span>
+        {c.studentCount >= MIN_STUDENTS_SHOWN ? <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-muted" />{compact(c.studentCount)} students</span> : null}
       </p>
     </Link>
   );

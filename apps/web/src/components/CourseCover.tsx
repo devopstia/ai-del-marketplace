@@ -64,10 +64,23 @@ function Pattern({ seed, a, b }: { seed: number; a: string; b: string }) {
   );
 }
 
+/** Cover seeds for a grid, read left to right: a cover never repeats the pattern or ground of the one before it or
+ *  two before it (the one above in a two-column grid). Unchanged covers keep their usual look. */
+export function coverSeeds(slugs: string[]): number[] {
+  const out: number[] = [];
+  slugs.forEach((slug, i) => {
+    let s = hash(slug);
+    const clash = (x: number) => [out[i - 1], out[i - 2]].some((o) => o !== undefined && (o % 4 === x % 4 || o % grounds.length === x % grounds.length));
+    for (let n = 0; n < 24 && clash(s); n++) s++;
+    out.push(s);
+  });
+  return out;
+}
+
 export function CourseCover({
-  slug, title, category, thumbnailUrl, size = "md", className = "",
-}: { slug: string; title: string; category?: string | null; thumbnailUrl?: string | null; size?: "sm" | "md" | "lg"; className?: string }) {
-  const seed = hash(slug || title);
+  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = true,
+}: { slug: string; title: string; category?: string | null; thumbnailUrl?: string | null; size?: "sm" | "md" | "lg"; className?: string; seed?: number; showTitle?: boolean }) {
+  const seed = seedOverride ?? hash(slug || title);
   const g = grounds[seed % grounds.length]!;
   const titleCls = size === "lg" ? "text-[clamp(1.4rem,3vw,2.1rem)]" : size === "sm" ? "text-[0.78rem]" : "text-[1.02rem]";
   return (
@@ -85,7 +98,7 @@ export function CourseCover({
             {size !== "sm" && category ? (
               <span className="w-fit rounded-full bg-white/12 px-2 py-0.5 text-[0.7rem] font-bold text-white/85 backdrop-blur-sm">{category}</span>
             ) : <span />}
-            <span className={`max-w-[68%] font-display font-extrabold leading-[1.08] tracking-[-0.02em] text-white ${titleCls} line-clamp-3`}>{title}</span>
+            {showTitle ? <span className={`max-w-[68%] font-display font-extrabold leading-[1.08] tracking-[-0.02em] text-white ${titleCls} line-clamp-3`}>{title}</span> : null}
           </div>
         </>
       )}
