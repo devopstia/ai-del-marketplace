@@ -160,3 +160,19 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   14 palettes and 30 designs, drawn on the server in Schibsted Grotesk (OFL, `apps/api/assets/fonts`).
 - Every existing course got a topic-matched template; the import no longer uses the first lesson's video frame. Super admins
   manage templates at /admin/covers; instructors pick at Studio → course → Media. Permanent rule: AGENTS.md rule 17.
+
+## 2026-11-25: Features from the Insurance Knowledge Hub (owner: "start with 6 … move on with 8, 4, 10, 5, 11")
+- Research: docs/research/insurance-hub-reuse.md. Order: installable app (6), Support Center (8), content protection (4),
+  help videos + video engine (10), ⌘K search (5), terms acceptance (11). Each on its own branch; nothing merged without
+  the owner's approval.
+- 6 installable app: branch `feat/pwa`, rollback tag `checkpoint-2026-11-25-pwa`. docs/PWA.md, AGENTS.md rule 18.
+- 8 Support Center: branch `feat/support` (from `feat/pwa`). docs/SUPPORT.md. Tickets SUP-000123, plain text, private
+  attachments, staff queue with internal notes, auto-close after 7 days, reopen within 30, only super admins close directly.
+- 4 Content protection: branch `feat/content-protection` (from `feat/support`); rollback tag
+  `checkpoint-2026-11-25-content-protection` = `c31fa05`, branch `backup/before-content-protection`. Encrypted HLS
+  (ffmpeg copy, AES-128 per video, wrapped key), sessions bound to the learner, no visible watermark (owner:
+  no letters on videos), signed-MP4 fallback; `PROTECTED_PLAYBACK` switch. Also fixed: captions were on by default (rule 11). docs/CONTENT_PROTECTION.md.
+- 10 Help videos + video engine: branch `feat/help-videos` (from `feat/content-protection`); rollback tag
+  `checkpoint-2026-11-25-help-videos` = `a9f0fd1`, branch `backup/before-help-videos`. Public /help with chapters,
+  Admin › Help videos, `video-academy/` engine ported from the Hub (DEL dark brand, Kokoro voice, Whisper QA), publish
+  tool for the local site. AI voice accepted by the owner ("move on please" after the question). docs/HELP_VIDEOS.md.

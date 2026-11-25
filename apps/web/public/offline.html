@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0f22">
+<title>You're offline · DevOps Easy Learning</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    background: #0c0f22; color: #e8eaf7; font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
+  main { max-width: 26rem; }
+  h1 { font-size: 1.75rem; line-height: 1.15; margin: 20px 0 8px; letter-spacing: -.02em; }
+  p { color: #c9cce3; margin: 0; }
+  button { margin-top: 24px; min-height: 44px; padding: 0 22px; border: 0; border-radius: 10px; background: #9d8fff; color: #12103a; font: 700 1rem system-ui, sans-serif; cursor: pointer; }
+  button:focus-visible { outline: 3px solid #58c3f2; outline-offset: 3px; }
+  small { display: block; margin-top: 14px; color: #9599b8; }
+</style>
+</head>
+<body>
+<main>
+  <svg role="img" aria-label="DevOps Easy Learning" width="72" height="72" viewBox="0 0 120 120"><rect width="120" height="120" rx="26" fill="#1b1f45"/><g transform="translate(14 37) scale(.77)" fill="none" stroke-width="11" stroke-linecap="round"><path d="M60,30 C48,14 34,8 22,10 C10,12 4,22 4,30 C4,38 10,48 22,50 C34,52 48,46 60,30" stroke="#9d8fff"/><path d="M60,30 C72,46 86,52 98,50 C110,48 116,38 116,30 C116,22 110,12 98,10 C86,8 72,14 60,30" stroke="#58c3f2"/></g></svg>
+  <h1>You're offline</h1>
+  <p>DevOps Easy Learning needs a connection to load your courses. Your progress is saved on your account.</p>
+  <button type="button" onclick="location.reload()">Try again</button>
+  <small>This page reloads by itself when you're back online.</small>
+</main>
+<script>addEventListener("online", () => location.reload());</script>
+</body>
+</html>

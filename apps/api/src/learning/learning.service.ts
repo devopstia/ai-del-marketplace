@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { ProtectionService } from '../protection/protection.service';
 import { AuditService } from '../common/audit.service';
 import { AuthUser, isAdmin } from '../common/auth-context';
 import { badRequest, conflict, forbidden, notFound } from '../common/errors';
@@ -23,6 +24,7 @@ export class LearningService {
     private readonly media: MediaService,
     private readonly storage: StorageService,
     private readonly audit: AuditService,
+    @Optional() private readonly protection?: ProtectionService,
   ) {}
 
   /** Who may open the paid content of a course: an active enrolment, the course owner, or an admin. */
@@ -147,9 +149,16 @@ export class LearningService {
     };
   }
 
-  async playback(user: AuthUser, lectureId: string) {
-    const { lecture } = await this.requireLectureAccess(user, lectureId, { allowPreview: true });
+  async playback(user: AuthUser, lectureId: string, ctx: { ip?: string | null; userAgent?: string | null } = {}) {
+    const { lecture, access } = await this.requireLectureAccess(user, lectureId, { allowPreview: true });
     if (!lecture.videoAsset) throw badRequest('This lecture has no video', 'no_video');
+    if (lecture.videoAsset.status !== 'ready') throw badRequest('This video is still processing', 'video_not_ready');
+    // Paid content for enrolled learners, owners and admins: encrypted HLS through a session (content protection).
+    // Free previews and videos not packaged yet: the short-lived signed file, as before.
+    if (access) {
+      const p = await this.protection?.session(lecture.videoAsset, user, { lectureId, ...ctx });
+      if (p) return p;
+    }
     return this.media.playback(lecture.videoAsset, user.id);
   }
 

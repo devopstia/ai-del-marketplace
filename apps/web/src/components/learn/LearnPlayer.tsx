@@ -62,7 +62,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
     try {
       const r = obj(await api(`/lectures/${lectureId}/playback`, { method: "POST" }));
       const serverPos = r.positionSec != null ? Number(r.positionSec) : undefined;
-      setPlayback({ url: String(r.url), format: r.format === "hls" ? "hls" : "mp4", expiresAt: r.expiresAt as string, captionsUrl: (r.captionsUrl as string) ?? null, positionSec: resumeAt > 0 ? resumeAt : serverPos ?? 0 });
+      setPlayback({ url: String(r.url), format: r.format === "hls" ? "hls" : "mp4", expiresAt: r.expiresAt as string, captionsUrl: (r.captionsUrl as string) ?? null, protected: r.protected === true, positionSec: resumeAt > 0 ? resumeAt : serverPos ?? 0 });
     } catch (e) {
       setPlayErr(errMsg(e));
     }
@@ -204,6 +204,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
                     src={playback.url}
                     format={playback.format}
                     captionsUrl={playback.captionsUrl}
+                    protectedStream={playback.protected}
                     autoPlay
                     title={lecture.title}
                     startAt={playback.positionSec ?? 0}

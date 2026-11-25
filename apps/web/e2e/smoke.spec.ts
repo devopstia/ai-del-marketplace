@@ -307,3 +307,99 @@ test.describe.serial("standard course covers", () => {
   });
 });
 
+test.describe.serial("support center", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  let number = "";
+
+  test("a student opens a request", async ({ page }) => {
+    await login(page, USERS.student, PASSWORD, "/support/new");
+    await page.getByTestId("ticket-category").selectOption("technical");
+    await page.getByTestId("ticket-subject").fill(`E2E help ${Date.now()}`);
+    await page.getByTestId("composer-text").fill("The page does not load after I sign in.");
+    await page.getByTestId("composer-send").click();
+    await page.waitForURL(/\/support\/SUP-\d{6}$/);
+    number = page.url().split("/").pop()!;
+    await expect(page.getByTestId("ticket-thread")).toContainText("does not load");
+  });
+
+  test("support staff answer from the queue", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, `/admin/support/${number}`);
+    await page.getByRole("tab", { name: "Resolve" }).click();
+    await page.getByTestId("composer-text").fill("Fixed, please try again.");
+    await page.getByTestId("composer-send").click();
+    await expect(page.getByTestId("ticket-thread")).toContainText("Marked as resolved");
+  });
+
+  test("the student confirms it is solved", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.student, PASSWORD, `/support/${number}`);
+    await page.getByTestId("confirm-resolved").click();
+    await expect(page.getByText("Still having this problem?")).toBeVisible();
+  });
+});
+
+test.describe("content protection", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  test("an enrolled learner watches encrypted video with no file link and nothing written on it", async ({ page }) => {
+    const mp4: string[] = [];
+    page.on("request", (r) => { if (/\.mp4(\?|$)/.test(r.url())) mp4.push(r.url()); });
+    await login(page, USERS.student, PASSWORD, "/my-learning");
+    const href = await page.locator('a[href^="/learn/"]').first().getAttribute("href");
+    const key = page.waitForResponse((r) => r.url().endsWith("/key") && r.status() === 200);
+    await page.goto(href!);
+    const player = page.getByTestId("video-player");
+    await expect(player).toHaveAttribute("data-protected", "true");
+    await expect(page.getByTestId("video-watermark")).toHaveCount(0);
+    await key;
+    await expect.poll(() => page.evaluate(() => document.querySelector<HTMLVideoElement>("[data-testid=video-player] video")!.readyState), { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+    expect(mp4).toEqual([]);
+    // Captions stay off until the learner turns them on (rule 11).
+    await expect(page.getByRole("button", { name: "Captions" })).toHaveAttribute("aria-pressed", "false");
+  });
+});
+
+test.describe.serial("help videos", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  const title = `E2E help video ${Date.now()}`;
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+  test("an admin uploads and publishes a help video", async ({ page }) => {
+    const video = tinyVideo();
+    test.skip(!video, "ffmpeg is needed to make a test video");
+    await login(page, USERS.admin, PASSWORD, "/admin/help");
+    await page.getByTestId("new-help-video").click();
+    const form = page.getByTestId("help-editor");
+    await form.getByLabel("Title").fill(title);
+    await form.getByLabel("Summary").fill("A short test of the help videos page.");
+    await form.locator('input[type="file"]').first().setInputFiles(video!);
+    await page.getByTestId("help-save").click();
+    const row = page.getByTestId("help-admin-list").locator("li").filter({ hasText: title });
+    await expect(row).toBeVisible();
+    // The worker probes the file; reload until it is ready, then publish.
+    await expect.poll(async () => {
+      await page.reload();
+      await row.waitFor();
+      return row.getByTestId("help-publish").count();
+    }, { timeout: 60_000, intervals: [2000] }).toBe(1);
+    await row.getByTestId("help-publish").click();
+    await expect(row).toContainText("Published");
+  });
+
+  test("anyone can watch it from /help, captions off", async ({ page }) => {
+    await page.goto("/help");
+    await page.getByTestId("help-row").filter({ hasText: title }).click();
+    await expect(page).toHaveURL(new RegExp(`/help/${slug}$`));
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await expect(page.getByTestId("video-player")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Contact support" })).toHaveAttribute("href", /\/support\/new\?category=other/);
+  });
+
+  test("the admin removes it", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/help");
+    page.once("dialog", (d) => void d.accept());
+    await page.getByRole("button", { name: `Delete ${title}` }).click();
+    await expect(page.getByText(title)).toHaveCount(0);
+  });
+});
+

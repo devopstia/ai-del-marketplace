@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ToastProvider } from "@/components/Toast";
 import { themeScript } from "@/components/ThemeToggle";
+import { PwaRegister } from "@/components/pwa/PwaRegister";
 
 const display = Schibsted_Grotesk({ subsets: ["latin"], variable: "--font-schibsted", weight: ["500", "600", "700", "800"], display: "swap" });
 const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-atkinson", weight: ["400", "500", "700"], display: "swap" });
@@ -12,11 +13,22 @@ export const metadata: Metadata = {
   title: { default: "DevOps Easy Learning: AI and DevOps courses", template: "%s · DevOps Easy Learning" },
   description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs, real cloud demos, lifetime access.",
   metadataBase: new URL(process.env.WEB_URL || "http://127.0.0.1:3000"),
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
+  manifest: "/manifest.webmanifest",
+  // Installed on an iPhone or iPad: the home-screen name and a dark status bar.
+  appleWebApp: { capable: true, title: "DEL", statusBarStyle: "black" },
+  applicationName: "DevOps Easy Learning",
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0c0f22",
+  width: "device-width",
+  initialScale: 1,
+  // Content can use the whole screen in the installed app; fixed elements keep clear with env(safe-area-inset-*).
+  viewportFit: "cover",
+  // The on-screen keyboard shrinks the page instead of covering forms (Android).
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-dvh">
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
+          <PwaRegister />
         </AuthProvider>
       </body>
     </html>

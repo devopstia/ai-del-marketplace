@@ -16,6 +16,8 @@ export interface Playback {
   format: 'mp4' | 'hls';
   /** WebVTT; the player shows captions OFF by default, the learner can turn them on */
   captionsUrl?: string;
+  /** Content protection: encrypted HLS through a playback session (no file link to the original). */
+  protected?: boolean;
 }
 
 /** The only surface the rest of the app uses for video. Swap providers without touching callers. */

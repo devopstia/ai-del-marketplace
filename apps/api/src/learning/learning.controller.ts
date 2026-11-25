@@ -1,4 +1,5 @@
-import { Controller, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
+import type { Request } from 'express';
+import { Controller, Get, HttpCode, Param, Post, Put, Req } from '@nestjs/common';
 import { z } from 'zod';
 import { CurrentUser, type AuthUser } from '../common/auth-context';
 import { ZBody } from '../common/zod';
@@ -29,8 +30,8 @@ export class LearningController {
 
   @HttpCode(200)
   @Post('lectures/:id/playback')
-  playback(@Param('id') id: string, @CurrentUser() u: AuthUser) {
-    return this.svc.playback(u, id);
+  playback(@Param('id') id: string, @CurrentUser() u: AuthUser, @Req() req: Request) {
+    return this.svc.playback(u, id, { ip: req.ip ?? null, userAgent: req.headers['user-agent'] ?? null });
   }
 
   @Put('lectures/:id/progress')

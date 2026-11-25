@@ -22,6 +22,10 @@ import { PayoutsService } from '../src/commerce/payouts.service';
 import { RefundsService } from '../src/commerce/refunds.service';
 import { simulatedStripeFee, splitLine, splitOrder } from '../src/commerce/money';
 import { AuditService } from '../src/common/audit.service';
+import { StorageService } from '../src/common/storage.service';
+import { packageHls } from '../src/protection/hls-packager';
+import { createDecipheriv } from 'node:crypto';
+import { tmpdir } from 'node:os';
 
 const API_DIR = join(__dirname, '..');
 const ROOT_ENV = join(API_DIR, '..', '..', '.env');
@@ -621,5 +625,175 @@ describe('e2e: buy and learn', () => {
     await boss.send('patch', `/api/admin/cover-templates/${other.id}`, { active: true }).expect(200);
     const actions = (await prisma.auditLog.findMany({ where: { action: { in: ['course.cover_changed', 'cover_template.created', 'cover_template.updated'] } }, select: { action: true } })).map((x) => x.action);
     for (const a of ['course.cover_changed', 'cover_template.created', 'cover_template.updated']) expect(actions).toContain(a);
+  });
+
+  it('support center: open a ticket, staff reply, statuses, internal notes, confirm, reopen, rules', async () => {
+    if (!available) return;
+    const sam = await userAgent('sp2-student@e2e.example', ['student']);
+    const other = await userAgent('sp2-other@e2e.example', ['student']);
+    const admin = await userAgent('sp2-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('sp2-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    jobs.sendEmail.mockClear();
+
+    // Validation and attachments: types, sizes and keys tied to the uploader.
+    expect((await sam.send('post', '/api/support/tickets', { subject: 'Hi', category: 'technical', description: 'short' }).expect(400)).body.error.code).toBe('subject');
+    expect((await sam.send('post', '/api/support/uploads', { name: 'x.exe', contentType: 'application/x-msdownload', sizeBytes: 10 }).expect(400)).body.error.code).toBe('attachment_type');
+    const up = await sam.send('post', '/api/support/uploads', { name: 'shot.png', contentType: 'image/png', sizeBytes: 1200 }).expect(200);
+    expect(up.body.key).toMatch(new RegExp(`^support/${sam.user.id}/`));
+    const stolen = { key: `support/${other.user.id}/x.png`, name: 'x.png', mime: 'image/png', sizeBytes: 10 };
+    expect((await sam.send('post', '/api/support/tickets', { subject: 'Video stops at 2:10', category: 'video_playback', description: 'The lecture stops playing after two minutes.', attachments: [stolen] }).expect(400)).body.error.code).toBe('attachment_key');
+
+    // Open: number SUP-xxxxxx, status new, the requester sees it, nobody else does.
+    const created = await sam.send('post', '/api/support/tickets', { subject: 'Video stops at 2:10', category: 'video_playback', description: 'The lecture stops playing <b>after</b> two minutes.', context: { browser: 'Chrome', os: 'Windows', page: '/learn/x' } }).expect(201);
+    const no = created.body.number;
+    expect(no).toMatch(/^SUP-\d{6}$/);
+    const t0 = (await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body;
+    expect(t0).toMatchObject({ status: 'new', awaiting: 'staff', subject: 'Video stops at 2:10' });
+    expect(t0.messages[0].body).toBe('The lecture stops playing <b>after</b> two minutes.'); // stored as plain text
+    expect(t0.context).toBeUndefined(); // browser details are for staff
+    await other.agent.get(`/api/support/tickets/${no}`).expect(404);
+    await other.agent.get('/api/admin/support/tickets').expect(403);
+    expect((await sam.agent.get('/api/support/tickets').expect(200)).body.items.map((x: any) => x.number)).toContain(no);
+
+    // Staff: queue, an internal note the requester never sees, a reply (open + email), a request for information.
+    const q = await admin.agent.get(`/api/admin/support/tickets?q=${no}`).expect(200);
+    expect(q.body.items[0]).toMatchObject({ number: no, status: 'new' });
+    expect((await admin.agent.get('/api/admin/support/summary').expect(200)).body.awaitingStaff).toBeGreaterThanOrEqual(1);
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'note', body: 'Probably the CDN; check logs.' }).expect(201);
+    const r1 = await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'reply', body: 'Thanks, we are looking into it.' }).expect(201);
+    expect(r1.body).toMatchObject({ status: 'open', assignedTo: { id: admin.user.id } });
+    const seen = (await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body;
+    expect(seen.messages.map((m: any) => m.body)).not.toContain('Probably the CDN; check logs.');
+    expect(seen.messages.find((m: any) => m.staff).author.name).toBe('DEL Support');
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'request_info', body: 'Which browser version?' }).expect(201);
+    expect((await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body).toMatchObject({ status: 'waiting_user', awaiting: 'requester' });
+    await sam.send('post', `/api/support/tickets/${no}/messages`, { body: 'Chrome 131.' }).expect(201);
+    expect((await sam.agent.get(`/api/support/tickets/${no}`).expect(200)).body.status).toBe('open');
+
+    // Resolve → still need help → resolve → confirm (closed). Only a super admin may close directly.
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'resolve', body: 'Fixed on our side.' }).expect(201);
+    expect((await sam.send('post', `/api/support/tickets/${no}/still-need-help`).expect(200)).body.status).toBe('open');
+    await admin.send('post', `/api/admin/support/tickets/${no}/messages`, { kind: 'resolve', body: 'Fixed again.' }).expect(201);
+    expect((await sam.send('post', `/api/support/tickets/${no}/resolved`).expect(200)).body.status).toBe('closed');
+    expect((await sam.send('post', `/api/support/tickets/${no}/messages`, { body: 'One more thing' }).expect(409)).body.error.code).toBe('ticket_closed');
+    const re = await sam.send('post', `/api/support/tickets/${no}/reopen`, { note: 'It happens again on Firefox.' }).expect(200);
+    expect(re.body.status).toBe('open');
+    expect((await admin.send('patch', `/api/admin/support/tickets/${no}`, { status: 'closed' }).expect(409)).body.error.code).toBe('close_not_allowed');
+    await admin.send('patch', `/api/admin/support/tickets/${no}`, { priority: 'urgent', assignedToId: sam.user.id }).expect(400);
+    expect((await boss.send('patch', `/api/admin/support/tickets/${no}`, { status: 'closed' }).expect(200)).body.status).toBe('closed');
+
+    // Emails went to the requester for reply, request for information and both resolves; resolved tickets auto-close.
+    const templates = jobs.sendEmail.mock.calls.map((c: any[]) => c[0].template);
+    expect(templates).toEqual(expect.arrayContaining(['support-reply', 'support-info-requested', 'support-resolved']));
+    expect(jobs.sendEmail.mock.calls.every((c: any[]) => c[0].to === 'sp2-student@e2e.example')).toBe(true);
+    const old = await sam.send('post', '/api/support/tickets', { subject: 'Certificate name is wrong', category: 'certificates', description: 'My certificate shows an old name.' }).expect(201);
+    await admin.send('post', `/api/admin/support/tickets/${old.body.number}/messages`, { kind: 'resolve', body: 'Updated.' }).expect(201);
+    await prisma.supportTicket.update({ where: { number: Number(old.body.number.slice(4)) }, data: { resolvedAt: new Date(Date.now() - 8 * 86400000) } });
+    expect((await sam.agent.get(`/api/support/tickets/${old.body.number}`).expect(200)).body.status).toBe('closed');
+
+    // Rate limit: at most five new tickets an hour.
+    for (let i = 0; i < 3; i++) await sam.send('post', '/api/support/tickets', { subject: `Question number ${i}`, category: 'other', description: 'A question about the platform.' }).expect(201);
+    expect((await sam.send('post', '/api/support/tickets', { subject: 'One too many', category: 'other', description: 'A question about the platform.' }).expect(429)).body.error.code).toBe('too_many_tickets');
+    expect(await prisma.auditLog.count({ where: { action: { in: ['support.ticket_opened', 'support.reply', 'support.resolve', 'support.ticket_updated'] } } })).toBeGreaterThan(4);
+  });
+
+  it('content protection: encrypted HLS through a session bound to the learner, key and playlist refused to others', async () => {
+    if (!available) return;
+    let ffmpeg = true;
+    try { execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); } catch { ffmpeg = false; }
+    if (!ffmpeg) return console.warn('[e2e] content protection skipped: ffmpeg not installed');
+    const teacher = await userAgent('cp-teacher@e2e.example', ['student', 'instructor'], {});
+    const buyer = await userAgent('cp-buyer@e2e.example', ['student']);
+    const other = await userAgent('cp-other@e2e.example', ['student']);
+    const { course, lecture } = await publishedCourse(teacher.user.id, 'cp-course', 1999);
+    await prisma.enrollment.create({ data: { userId: buyer.user.id, courseId: course.id, source: 'free' } });
+
+    // A real 6-second H.264/AAC video, packaged exactly as the worker does it.
+    const file = join(tmpdir(), `cp-${Date.now()}.mp4`);
+    execFileSync('ffmpeg', ['-v', 'error', '-f', 'lavfi', '-i', 'testsrc=size=320x180:rate=25', '-f', 'lavfi', '-i', 'sine=frequency=440', '-t', '6', '-c:v', 'libx264', '-g', '50', '-c:a', 'aac', '-shortest', '-y', file]);
+    const storage = app.get(StorageService);
+    const assetRow = await prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id }, select: { videoAssetId: true } });
+    const key = `videos/cp-${Date.now()}/source.mp4`;
+    await storage.put(key, readFileSync(file), 'video/mp4');
+    await prisma.videoAsset.update({ where: { id: assetRow.videoAssetId! }, data: { storageKey: key, durationSec: 6 } });
+    const p = await packageHls(await storage.presignInternalGet(key, 600), (k, body) => storage.put(k, body, 'video/mp2t'));
+    expect(p.segments).toBeGreaterThanOrEqual(2);
+    await prisma.videoAsset.update({ where: { id: assetRow.videoAssetId! }, data: { hlsStatus: 'ready', hlsPrefix: p.prefix, hlsPlaylist: p.playlist, hlsKey: p.keyWrapped, hlsIv: p.ivHex } });
+    expect(p.playlist).not.toContain(p.prefix); // the storage prefix never reaches the browser
+
+    // The enrolled learner gets a session, not a file link.
+    const pb = await buyer.send('post', `/api/lectures/${lecture.id}/playback`).expect(200);
+    expect(pb.body).toMatchObject({ format: 'hls', protected: true });
+    expect(pb.body.watermark).toBeUndefined();
+    expect(pb.body.url).toMatch(/\/api\/playback\/[0-9a-f-]{36}\/index\.m3u8$/);
+    const path = new URL(pb.body.url).pathname;
+    const sid = path.split('/')[3];
+
+    // Playlist: only for its owner; key URI on the API; segments are signed links that never expose the original.
+    await request(app.getHttpServer()).get(path).expect(401);
+    await other.agent.get(path).expect(404);
+    const m = await buyer.agent.get(path).expect(200);
+    expect(m.headers['content-type']).toContain('application/vnd.apple.mpegurl');
+    expect(m.headers['cache-control']).toContain('no-store');
+    expect(m.text).toContain(`#EXT-X-KEY:METHOD=AES-128,URI="http://127.0.0.1:4000/api/playback/${sid}/key",IV=0x${p.ivHex}`);
+    const seg = m.text.split('\n').find((l) => l.startsWith('http'))!;
+    expect(seg).toContain('X-Amz-Signature=');
+    expect(seg).not.toContain('source.mp4');
+
+    // Key: 16 bytes for the owner only; it decrypts a real MPEG-TS segment (sync byte 0x47), which is unreadable without it.
+    await other.agent.get(`/api/playback/${sid}/key`).expect(404);
+    const k = await buyer.agent.get(`/api/playback/${sid}/key`).buffer(true).parse((res, cb) => { const chunks: Buffer[] = []; res.on('data', (c: Buffer) => chunks.push(c)); res.on('end', () => cb(null, Buffer.concat(chunks))); }).expect(200);
+    expect((k.body as Buffer).length).toBe(16);
+    const enc = Buffer.from(await (await fetch(seg)).arrayBuffer());
+    expect(enc[0]).not.toBe(0x47);
+    const d = createDecipheriv('aes-128-cbc', k.body as Buffer, Buffer.from(p.ivHex, 'hex'));
+    expect(Buffer.concat([d.update(enc), d.final()])[0]).toBe(0x47);
+
+    // An expired session stops working; previews and not-yet-packaged videos keep the signed MP4.
+    await prisma.playbackSession.update({ where: { id: sid }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    await buyer.agent.get(path).expect(404);
+    await buyer.agent.get(`/api/playback/${sid}/key`).expect(404);
+  });
+
+  it('help videos: admins upload and publish; everyone can watch published ones; others cannot manage', async () => {
+    if (!available) return;
+    const admin = await userAgent('help-admin@e2e.example', ['student', 'admin']);
+    const student = await userAgent('help-student@e2e.example', ['student']);
+    const anon = request(app.getHttpServer());
+    const body = { title: 'Find a course', summary: 'Browse, filter and preview courses.', audience: 'students', category: 'getting-started', sort: 1 };
+
+    await student.send('put', '/api/admin/help/videos/find-a-course').send(body).expect(403);
+    await admin.send('put', '/api/admin/help/videos/Bad Slug').send(body).expect(400);
+
+    // Upload through the studio pipeline, owned by the admin; another admin's asset or cover is refused.
+    const up = await admin.send('post', '/api/admin/help/uploads/video').send({ filename: 'find.mp4', contentType: 'video/mp4' }).expect(201);
+    const assetId = up.body.assetId as string;
+    const other = await prisma.videoAsset.create({ data: { ownerId: student.user.id, provider: 'local', status: 'ready', storageKey: 'videos/x/source.mp4', durationSec: 10 } });
+    await admin.send('put', '/api/admin/help/videos/find-a-course').send({ ...body, videoAssetId: other.id }).expect(400);
+    await admin.send('put', '/api/admin/help/videos/find-a-course').send({ ...body, coverKey: `images/${student.user.id}/x.png` }).expect(400);
+
+    const saved = await admin.send('put', '/api/admin/help/videos/find-a-course').send({ ...body, videoAssetId: assetId, chapters: [{ t: 0, title: 'Introduction' }, { t: 12.5, title: 'Step by step' }] }).expect(200);
+    expect(saved.body).toMatchObject({ slug: 'find-a-course', published: false });
+    // Not ready yet: can't publish, not public.
+    await admin.send('post', '/api/admin/help/videos/find-a-course/publish').send({ published: true }).expect(400);
+    await prisma.videoAsset.update({ where: { id: assetId }, data: { status: 'ready', storageKey: `videos/${assetId}/source.mp4`, durationSec: 95, captionsKey: `videos/${assetId}/captions.vtt` } });
+    expect((await anon.get('/api/help/videos').expect(200)).body.total).toBe(0);
+    await anon.get('/api/help/videos/find-a-course').expect(404);
+    const pv = await admin.agent.get('/api/admin/help/videos/find-a-course/preview').expect(200);
+    expect(pv.body.url).toContain('X-Amz-Signature=');
+
+    await admin.send('post', '/api/admin/help/videos/find-a-course/publish').send({ published: true }).expect(200);
+    const list = await anon.get('/api/help/videos').expect(200);
+    expect(list.body).toMatchObject({ total: 1, categories: [{ key: 'getting-started', items: [{ slug: 'find-a-course', durationSec: 95, hasCaptions: true }] }] });
+    const one = await anon.get('/api/help/videos/find-a-course').expect(200);
+    expect(one.body).toMatchObject({ title: 'Find a course', categoryName: 'Getting started', chapters: [{ t: 0, title: 'Introduction' }, { t: 12.5, title: 'Step by step' }], playback: { format: 'mp4' } });
+    expect(one.body.playback.url).toContain(`videos/${assetId}/source.mp4`);
+    expect(one.body.playback.captionsUrl).toContain('captions.vtt');
+
+    await admin.send('post', '/api/admin/help/videos/find-a-course/publish').send({ published: false }).expect(200);
+    await anon.get('/api/help/videos/find-a-course').expect(404);
+    await admin.send('delete', '/api/admin/help/videos/find-a-course').expect(200);
+    expect(await prisma.auditLog.count({ where: { action: { startsWith: 'help.' } } })).toBeGreaterThanOrEqual(4);
   });
 });
