@@ -15,7 +15,7 @@ import { CourseCover } from "./CourseCover";
 import { PreviewButton } from "./PreviewContext";
 
 export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail; firstPreviewId?: string }) {
-  const { me, refreshCart } = useAuth();
+  const { me, loading: authLoading, refreshCart } = useAuth();
   const toast = useToast();
   const router = useRouter();
   const [enrolled, setEnrolled] = useState(!!course.enrolled);
@@ -87,7 +87,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
             <Link href={`/learn/${course.slug}`} className="btn btn-primary mt-4 w-full" data-testid="go-to-course">Go to course</Link>
             {course.access?.canRenew ? (
               inCart ? <Link href="/cart" className="btn btn-outline mt-2.5 w-full"><ShoppingCart className="size-4" />Renewal in your cart</Link> : (
-                <button type="button" className="btn btn-outline mt-2.5 w-full" disabled={!!busy} data-testid="renew"
+                <button type="button" className="btn btn-outline mt-2.5 w-full" disabled={!!busy || authLoading} data-testid="renew"
                   onClick={async () => { setBusy("cart"); if (await add()) router.push(me ? "/checkout" : "/cart"); else setBusy(null); }}>
                   {busy === "cart" ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}Renew for 12 more months · <Price cents={course.priceCents} currency={course.currency} className="!text-sm" />
                 </button>
@@ -107,12 +107,12 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
               {inCart ? (
                 <Link href="/cart" className="btn btn-primary w-full"><ShoppingCart className="size-4" />Go to cart</Link>
               ) : (
-                <button type="button" className="btn btn-primary w-full" disabled={!!busy} data-testid="add-to-cart"
+                <button type="button" className="btn btn-primary w-full" disabled={!!busy || authLoading} data-testid="add-to-cart"
                   onClick={async () => { setBusy("cart"); if (await add()) toast("ok", "Added to your cart."); setBusy(null); }}>
                   {busy === "cart" ? <Loader2 className="size-4 animate-spin" /> : <ShoppingCart className="size-4" />}{free ? "Add free course to cart" : course.access?.state === "expired" ? "Renew access" : "Add to cart"}
                 </button>
               )}
-              <button type="button" className="btn btn-outline w-full" disabled={!!busy} data-testid="buy-now"
+              <button type="button" className="btn btn-outline w-full" disabled={!!busy || authLoading} data-testid="buy-now"
                 onClick={async () => { setBusy("buy"); if (await add()) router.push(me ? "/checkout" : "/cart"); else setBusy(null); }}>
                 {busy === "buy" ? <Loader2 className="size-4 animate-spin" /> : null}{free ? "Enrol now" : "Buy now"}
               </button>
