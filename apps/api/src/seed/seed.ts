@@ -69,7 +69,7 @@ function vtt(durationSec: number): string {
 /** Local demo accounts get the authenticator seed from SEED_MFA_SECRET, so tests and demos can sign in (docs/AUTH.md). */
 function demoMfa() {
   const secret = env().SEED_MFA_SECRET.trim().toUpperCase();
-  if (!secret || env().NODE_ENV === 'production') return {};
+  if (!secret || (env().NODE_ENV === 'production' && env().DEPLOY_ENV !== 'staging')) return {};
   if (!/^[A-Z2-7]{16,64}$/.test(secret)) throw new Error('SEED_MFA_SECRET must be base32 (A-Z, 2-7), 16+ characters');
   return { mfaSecret: seal('mfa', secret), mfaEnabledAt: new Date(), mfaLastStep: null };
 }

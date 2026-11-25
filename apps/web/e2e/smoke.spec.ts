@@ -39,12 +39,16 @@ test.describe("public catalogue", () => {
   });
 
   test("the home page search finds courses (no popular-search chips, owner 2026-11-25)", async ({ page }) => {
+    // a word from a real course title, so this works on any catalogue (local demo or staging)
+    await page.goto("/courses");
+    const title = (await page.getByTestId("course-row").first().innerText()).split("\n").find((l) => l.trim().length > 12) ?? "";
+    const word = title.split(/\s+/).find((w) => /^[A-Za-z]{5,}$/.test(w)) ?? "DevOps";
     await page.goto("/");
     await expect(page.getByText("Popular:")).toHaveCount(0);
     const hero = page.locator("main").getByRole("search");
-    await hero.getByLabel("Search courses").fill("Kubernetes");
+    await hero.getByLabel("Search courses").fill(word);
     await hero.getByRole("button", { name: "Search" }).click();
-    await expect(page).toHaveURL(/\/courses\?q=Kubernetes/);
+    await expect(page).toHaveURL(new RegExp(`/courses\\?q=${word}`));
     await expect(page.getByTestId("course-row").first()).toBeVisible();
   });
 
