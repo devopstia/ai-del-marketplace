@@ -119,3 +119,13 @@ export const BUILT_IN_TEMPLATES: TemplateDef[] = [
 
 /** Used when a course has no template yet or its template was deactivated. */
 export const FALLBACK_TEMPLATE_KEY = 'loop-midnight';
+
+/** How the picker and the admin page group templates. */
+export type TemplateGroup = 'generic' | 'ai' | 'it' | 'devops';
+const GROUPS: Record<Motif, TemplateGroup> = {
+  waves: 'generic', blueprint: 'generic', stripes: 'generic', shapes: 'generic', arcs: 'generic', dotgrid: 'generic', blocks: 'generic', minimal: 'generic',
+  neural: 'ai', chip: 'ai', chat: 'ai', embedding: 'ai', attention: 'ai', agent: 'ai', circuit: 'ai', matrix: 'ai',
+  server: 'it', database: 'it', network: 'it', api: 'it', container: 'it', terminal: 'it', hexgrid: 'it', cloud: 'it', shield: 'it',
+  loop: 'devops', pipeline: 'devops', gitbranch: 'devops', graph: 'devops', orbit: 'devops',
+};
+export const groupOf = (m: Motif): TemplateGroup => GROUPS[m];

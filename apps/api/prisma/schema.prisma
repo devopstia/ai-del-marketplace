@@ -220,6 +220,12 @@ model Course {
   lastVerifiedAt    DateTime?
   /// The instructor left this course out of marketplace-wide promotions (DEL's own courses are always included).
   promoOptOut       Boolean      @default(false)
+  /// Standard cover (owner 2026-11-25): every course uses a platform template; the image is generated on the server.
+  coverTemplateId   String?
+  coverTemplate     CoverTemplate? @relation(fields: [coverTemplateId], references: [id])
+  /// Storage key of the generated cover (images/covers/<courseId>-<hash>.png); the hash changes with title, topic or template.
+  coverKey          String?
+  coverHash         String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
@@ -616,4 +622,27 @@ model Promotion {
 
   @@index([startsAt, endsAt])
   @@map("promotions")
+}
+
+/// A course cover template: one layout, palette and design drawn by the cover renderer (apps/api/src/covers). The built-in
+/// collection is inserted on start-up; a super admin can edit, reorder, deactivate or add templates.
+model CoverTemplate {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  layout    String
+  motif     String
+  /// { bg: [from, to], ink, a, b, tone: dark|light }
+  palette   Json
+  topics    String[] @default([])
+  group     String   @default("generic")
+  active    Boolean  @default(true)
+  sort      Int      @default(0)
+  builtIn   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  courses   Course[]
+
+  @@index([active, sort])
+  @@map("cover_templates")
 }
