@@ -247,6 +247,103 @@ function motifSvg(m: Motif, b: Box, p: Palette): string {
       }
       return out;
     }
+    // ---------- Generic ----------
+    case 'waves': {
+      let out = '';
+      const n = 6;
+      for (let i = 0; i < n; i++) {
+        const amp = b.h * (0.07 + i * 0.012);
+        const y0 = b.y + b.h * (0.2 + i * 0.12);
+        const w = b.w * 1.02;
+        const x0 = b.x + b.w * 0.06;
+        const seg = w / 4;
+        let d = `M${x0} ${y0}`;
+        for (let k = 0; k < 4; k++) d += ` q${seg / 2} ${(k % 2 ? 1 : -1) * amp * 2} ${seg} 0`;
+        out += `<path d="${d}" fill="none" stroke="${i % 2 ? c : a}" stroke-opacity="${0.85 - i * 0.11}" stroke-width="${u * (0.026 - i * 0.002)}" stroke-linecap="round" transform="translate(${(i % 3) * b.w * 0.04} 0)"/>`;
+      }
+      return `<g clip-path="url(#motifclip)">${out}</g>`;
+    }
+    case 'blueprint': {
+      const step = u * 0.08;
+      let out = '';
+      for (let x = b.x; x <= b.x + b.w + 1; x += step) out += `<line x1="${x}" y1="${b.y}" x2="${x}" y2="${b.y + b.h}" stroke="${a}" stroke-opacity="${Math.round((x - b.x) / step) % 4 ? 0.12 : 0.3}" stroke-width="1.5"/>`;
+      for (let y = b.y; y <= b.y + b.h + 1; y += step) out += `<line x1="${b.x}" y1="${y}" x2="${b.x + b.w}" y2="${y}" stroke="${a}" stroke-opacity="${Math.round((y - b.y) / step) % 4 ? 0.12 : 0.3}" stroke-width="1.5"/>`;
+      // construction drawing: circle, square, diagonal and dimension ticks
+      out += `<circle cx="${cx - u * 0.06}" cy="${cy}" r="${u * 0.26}" fill="none" stroke="${c}" stroke-width="${u * 0.012}"/>`;
+      out += `<rect x="${cx - u * 0.02}" y="${cy - u * 0.3}" width="${u * 0.34}" height="${u * 0.34}" fill="${a}" fill-opacity="0.14" stroke="${a}" stroke-width="${u * 0.01}"/>`;
+      out += `<line x1="${cx - u * 0.32}" y1="${cy + u * 0.26}" x2="${cx + u * 0.32}" y2="${cy - u * 0.3}" stroke="${c}" stroke-opacity="0.7" stroke-width="${u * 0.006}" stroke-dasharray="${u * 0.02} ${u * 0.014}"/>`;
+      out += `<line x1="${cx - u * 0.02}" y1="${cy + u * 0.1}" x2="${cx + u * 0.32}" y2="${cy + u * 0.1}" stroke="${a}" stroke-width="${u * 0.006}"/><line x1="${cx - u * 0.02}" y1="${cy + u * 0.08}" x2="${cx - u * 0.02}" y2="${cy + u * 0.12}" stroke="${a}" stroke-width="${u * 0.006}"/><line x1="${cx + u * 0.32}" y1="${cy + u * 0.08}" x2="${cx + u * 0.32}" y2="${cy + u * 0.12}" stroke="${a}" stroke-width="${u * 0.006}"/>`;
+      out += `<circle cx="${cx - u * 0.06}" cy="${cy}" r="${u * 0.018}" fill="${c}"/>`;
+      return `<g clip-path="url(#motifclip)">${out}</g>`;
+    }
+    case 'stripes': {
+      let out = '';
+      const w = u * 0.1;
+      const span = b.w + b.h;
+      for (let i = 0, x = b.x - b.h; x < b.x + b.w; i++, x += w * 1.6) {
+        out += `<path d="M${x} ${b.y + b.h} L${x + b.h} ${b.y} L${x + b.h + w} ${b.y} L${x + w} ${b.y + b.h} Z" fill="${i % 3 === 2 ? c : a}" fill-opacity="${i % 3 === 2 ? 0.9 : 0.16 + (i % 3) * 0.14}"/>`;
+      }
+      void span;
+      return `<g clip-path="url(#motifclip)">${out}</g>`;
+    }
+    case 'shapes': {
+      const s = u * 0.3;
+      let out = `<circle cx="${cx - s * 0.45}" cy="${cy - s * 0.35}" r="${s * 0.9}" fill="${a}" fill-opacity="0.9"/>`;
+      out += `<rect x="${cx + s * 0.05}" y="${cy - s * 0.05}" width="${s * 1.1}" height="${s * 1.1}" fill="${c}" fill-opacity="0.92"/>`;
+      out += `<path d="M${cx - s * 1.25} ${cy + s * 1.05} L${cx - s * 0.35} ${cy + s * 1.05} L${cx - s * 0.8} ${cy + s * 0.2} Z" fill="${p.ink}" fill-opacity="${p.tone === 'dark' ? 0.85 : 0.9}"/>`;
+      // half disc resting on the square
+      out += `<path d="M${cx + s * 0.05} ${cy - s * 0.05} A${s * 0.55} ${s * 0.55} 0 0 1 ${cx + s * 1.15} ${cy - s * 0.05} Z" fill="${p.ink}" fill-opacity="${p.tone === 'dark' ? 0.18 : 0.12}"/>`;
+      out += `<circle cx="${cx + s * 0.6}" cy="${cy + s * 0.5}" r="${s * 0.22}" fill="${p.bg[0]}"/>`;
+      return out;
+    }
+    case 'arcs': {
+      let out = '';
+      const ox = b.x + b.w;
+      const oy = b.y + b.h;
+      for (let i = 0; i < 7; i++) {
+        const r = u * (0.18 + i * 0.13);
+        out += `<path d="M${ox - r} ${oy} A${r} ${r} 0 0 1 ${ox} ${oy - r}" fill="none" stroke="${i % 2 ? c : a}" stroke-opacity="${0.95 - i * 0.1}" stroke-width="${u * 0.05}" stroke-linecap="butt"/>`;
+      }
+      return `<g clip-path="url(#motifclip)">${out}</g>`;
+    }
+    case 'dotgrid': {
+      const cols = 11;
+      const rows = 8;
+      const gx = b.w / cols;
+      const gy = b.h / rows;
+      let out = '';
+      for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+        const t = (i + (rows - j)) / (cols + rows);
+        const hot = i - j === 3 || i - j === 4;
+        out += `<circle cx="${b.x + gx * (i + 0.5)}" cy="${b.y + gy * (j + 0.5)}" r="${Math.min(gx, gy) * (hot ? 0.26 : 0.12)}" fill="${hot ? c : a}" fill-opacity="${hot ? 0.95 : 0.15 + t * 0.6}"/>`;
+      }
+      return out;
+    }
+    case 'blocks': {
+      const n = 4;
+      const s = Math.min(b.w, b.h) * 0.84 / n;
+      const x0 = cx - (s * n) / 2;
+      const y0 = cy - (s * n) / 2;
+      const rand = rng(71);
+      let out = '';
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        const v = rand();
+        const x = x0 + i * s;
+        const y = y0 + j * s;
+        const g = s * 0.08;
+        if (v < 0.25) out += `<path d="M${x + g} ${y + s - g} A${s - 2 * g} ${s - 2 * g} 0 0 1 ${x + s - g} ${y + g} L${x + s - g} ${y + s - g} Z" fill="${c}" fill-opacity="0.9"/>`;
+        else if (v < 0.5) out += `<rect x="${x + g}" y="${y + g}" width="${s - 2 * g}" height="${s - 2 * g}" rx="${s * 0.12}" fill="${a}" fill-opacity="${0.3 + v}"/>`;
+        else if (v < 0.75) out += `<circle cx="${x + s / 2}" cy="${y + s / 2}" r="${s / 2 - g}" fill="none" stroke="${a}" stroke-width="${s * 0.1}"/>`;
+        else out += `<rect x="${x + g}" y="${y + g}" width="${s - 2 * g}" height="${s - 2 * g}" rx="${s * 0.12}" fill="none" stroke="${c}" stroke-opacity="0.6" stroke-width="${s * 0.05}"/>`;
+      }
+      return out;
+    }
+    case 'minimal': {
+      // Type-led: a bold accent rule and corner marks; the title carries the cover.
+      let out = `<rect x="${b.x + b.w - u * 0.5}" y="${b.y + b.h - u * 0.06}" width="${u * 0.5}" height="${u * 0.035}" rx="${u * 0.017}" fill="url(#acc)"/>`;
+      out += `<text x="${b.x + b.w}" y="${b.y + b.h - u * 0.13}" text-anchor="end" font-family="${FAMILY}" font-weight="800" font-size="${u * 0.36}" fill="${a}" fill-opacity="0.12">DEL</text>`;
+      return out;
+    }
     // ---------- AI ----------
     case 'chip': {
       const s = u * 0.5;

@@ -14,6 +14,8 @@ export const MOTIFS = [
   'chip', 'circuit', 'chat', 'embedding', 'attention', 'agent',
   // IT
   'server', 'database', 'network', 'gitbranch', 'api', 'container',
+  // Generic: abstract designs that suit any course
+  'waves', 'blueprint', 'stripes', 'shapes', 'arcs', 'dotgrid', 'blocks', 'minimal',
 ] as const;
 export type Motif = (typeof MOTIFS)[number];
 
@@ -39,6 +41,11 @@ export const PALETTES = {
   ice: { bg: ['#eaf4fb', '#d8e8f6'], ink: '#141833', a: '#4f3fb0', b: '#1279b8', tone: 'light' },
   lilac: { bg: ['#f5f3ff', '#e6e1fb'], ink: '#141833', a: '#4f3fb0', b: '#c23a6e', tone: 'light' },
   sand: { bg: ['#fbf6ec', '#f1e6cf'], ink: '#24180a', a: '#8a5a06', b: '#4f3fb0', tone: 'light' },
+  cobalt: { bg: ['#0b1a4a', '#1a3a9c'], ink: '#f2f6ff', a: '#8fb4ff', b: '#58c3f2', tone: 'dark' },
+  graphite: { bg: ['#111216', '#25262e'], ink: '#f4f4f6', a: '#b7adff', b: '#3fcf92', tone: 'dark' },
+  teal: { bg: ['#05282a', '#0b4a4b'], ink: '#effffd', a: '#5eead4', b: '#f2b53c', tone: 'dark' },
+  white: { bg: ['#ffffff', '#eef0f6'], ink: '#141833', a: '#141833', b: '#4f3fb0', tone: 'light' },
+  rose: { bg: ['#fff4f6', '#fbe3e9'], ink: '#2a0c16', a: '#ad2c45', b: '#4f3fb0', tone: 'light' },
 } as const satisfies Record<string, Palette>;
 export type PaletteKey = keyof typeof PALETTES;
 
@@ -91,6 +98,23 @@ export const BUILT_IN_TEMPLATES: TemplateDef[] = [
   { key: 'circuit-ice', name: 'Circuit light', layout: 'band', palette: 'ice', motif: 'circuit', topics: ['infrastructure', 'programming'] },
   { key: 'network-sand', name: 'Network light', layout: 'split', palette: 'sand', motif: 'network', topics: ['networking', 'infrastructure'] },
   { key: 'database-lilac', name: 'Data light', layout: 'statement', palette: 'lilac', motif: 'database', topics: ['data', 'databases'] },
+  // ---- Generic: fit any course ----
+  { key: 'waves-midnight', name: 'Waves', layout: 'statement', palette: 'midnight', motif: 'waves', topics: ['general'] },
+  { key: 'waves-ice', name: 'Waves light', layout: 'band', palette: 'ice', motif: 'waves', topics: ['general'] },
+  { key: 'blueprint-cobalt', name: 'Blueprint', layout: 'split', palette: 'cobalt', motif: 'blueprint', topics: ['general', 'architecture'] },
+  { key: 'blueprint-steel', name: 'Blueprint frame', layout: 'frame', palette: 'steel', motif: 'blueprint', topics: ['general', 'architecture'] },
+  { key: 'stripes-ember', name: 'Stripes', layout: 'column', palette: 'ember', motif: 'stripes', topics: ['general'] },
+  { key: 'stripes-white', name: 'Stripes light', layout: 'band', palette: 'white', motif: 'stripes', topics: ['general'] },
+  { key: 'shapes-aurora', name: 'Shapes', layout: 'statement', palette: 'aurora', motif: 'shapes', topics: ['general'] },
+  { key: 'shapes-sand', name: 'Shapes light', layout: 'split', palette: 'sand', motif: 'shapes', topics: ['general'] },
+  { key: 'arcs-teal', name: 'Arcs', layout: 'statement', palette: 'teal', motif: 'arcs', topics: ['general'] },
+  { key: 'arcs-graphite', name: 'Arcs graphite', layout: 'split', palette: 'graphite', motif: 'arcs', topics: ['general'] },
+  { key: 'dotgrid-ocean', name: 'Dot grid', layout: 'frame', palette: 'ocean', motif: 'dotgrid', topics: ['general'] },
+  { key: 'dotgrid-rose', name: 'Dot grid light', layout: 'band', palette: 'rose', motif: 'dotgrid', topics: ['general'] },
+  { key: 'blocks-cobalt', name: 'Blocks', layout: 'column', palette: 'cobalt', motif: 'blocks', topics: ['general'] },
+  { key: 'blocks-graphite', name: 'Blocks graphite', layout: 'band', palette: 'graphite', motif: 'blocks', topics: ['general'] },
+  { key: 'minimal-graphite', name: 'Minimal', layout: 'frame', palette: 'graphite', motif: 'minimal', topics: ['general'] },
+  { key: 'minimal-white', name: 'Minimal light', layout: 'frame', palette: 'white', motif: 'minimal', topics: ['general'] },
 ];
 
 /** Used when a course has no template yet or its template was deactivated. */
