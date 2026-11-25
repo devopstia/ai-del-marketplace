@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+/*
+  DevOps Easy Learning — design tokens.
+  Palette is drawn from the DEL infinity mark: Loop Violet + Pipeline Cyan on cool paper, with deep navy ink.
+  Light is the default; dark applies by OS preference unless the reader picked a theme (class on <html>).
+*/
+@custom-variant dark {
+  &:where(.dark, .dark *) { @slot; }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) { @slot; }
+  }
+}
+
+:root {
+  --paper: #f4f5fa;
+  --surface: #ffffff;
+  --surface-2: #eceef6;
+  --sunken: #e4e7f2;
+  --line: #d9dceb;
+  --line-strong: #bfc4da;
+  --ink: #141833;
+  --ink-2: #2d3252;
+  --muted: #5a6079;
+  --violet: #4f3fb0;
+  --violet-strong: #3f3196;
+  --violet-soft: #e9e6fb;
+  --cyan: #1e9bd7;
+  --cyan-ink: #0b6d9e;
+  --cyan-soft: #def1fb;
+  --amber: #c98a0c;
+  --amber-soft: #fdf1d6;
+  --mint: #138a5b;
+  --mint-soft: #ddf4e9;
+  --rose: #c23a52;
+  --rose-soft: #fbe4e8;
+  --on-violet: #ffffff;
+  --focus: #1e9bd7;
+  --shadow-color: 228 30% 25%;
+  --stage: #141833; /* the dark "screen" surface used for players and covers, in both themes */
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --paper: #0c0f22;
+    --surface: #141834;
+    --surface-2: #1b2042;
+    --sunken: #0a0d1d;
+    --line: #262c52;
+    --line-strong: #363d6b;
+    --ink: #e8eaf7;
+    --ink-2: #c9cce3;
+    --muted: #9599b8;
+    --violet: #9d8fff;
+    --violet-strong: #b7adff;
+    --violet-soft: #241f55;
+    --cyan: #58c3f2;
+    --cyan-ink: #7fd2f6;
+    --cyan-soft: #0f2b44;
+    --amber: #f2b53c;
+    --amber-soft: #3a2c0c;
+    --mint: #3fcf92;
+    --mint-soft: #0f3326;
+    --rose: #ff7d93;
+    --rose-soft: #40151f;
+    --on-violet: #12103a;
+    --shadow-color: 232 60% 3%;
+    --stage: #070918;
+    color-scheme: dark;
+  }
+}
+
+:root.dark {
+  --paper: #0c0f22;
+  --surface: #141834;
+  --surface-2: #1b2042;
+  --sunken: #0a0d1d;
+  --line: #262c52;
+  --line-strong: #363d6b;
+  --ink: #e8eaf7;
+  --ink-2: #c9cce3;
+  --muted: #9599b8;
+  --violet: #9d8fff;
+  --violet-strong: #b7adff;
+  --violet-soft: #241f55;
+  --cyan: #58c3f2;
+  --cyan-ink: #7fd2f6;
+  --cyan-soft: #0f2b44;
+  --amber: #f2b53c;
+  --amber-soft: #3a2c0c;
+  --mint: #3fcf92;
+  --mint-soft: #0f3326;
+  --rose: #ff7d93;
+  --rose-soft: #40151f;
+  --on-violet: #12103a;
+  --shadow-color: 232 60% 3%;
+  --stage: #070918;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-violet: var(--violet);
+  --color-violet-strong: var(--violet-strong);
+  --color-violet-soft: var(--violet-soft);
+  --color-cyan: var(--cyan);
+  --color-cyan-ink: var(--cyan-ink);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-on-violet: var(--on-violet);
+  --color-stage: var(--stage);
+  --font-display: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --radius-panel: 22px;
+  --radius-tile: 14px;
+  --radius-control: 10px;
+  --shadow-lift: 0 1px 2px hsl(var(--shadow-color) / 0.06), 0 8px 24px -12px hsl(var(--shadow-color) / 0.22);
+  --shadow-float: 0 2px 4px hsl(var(--shadow-color) / 0.06), 0 24px 48px -20px hsl(var(--shadow-color) / 0.35);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-wrap-style: balance;
+}
+
+p { text-wrap-style: pretty; }
+
+:focus-visible {
+  outline: 2.5px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection { background: var(--violet-soft); color: var(--ink); }
+
+@layer components {
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    min-height: 2.75rem; padding: 0 1.15rem; border-radius: var(--radius-control);
+    font-weight: 700; font-size: 0.95rem; line-height: 1; white-space: nowrap;
+    transition: background-color .15s, color .15s, border-color .15s, transform .1s;
+    cursor: pointer;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--violet); color: var(--on-violet); }
+  .btn-primary:hover:not(:disabled) { background: var(--violet-strong); }
+  .btn-cyan { background: var(--cyan); color: #04253a; }
+  .btn-cyan:hover:not(:disabled) { filter: brightness(1.06); }
+  .btn-outline { border: 1.5px solid var(--line-strong); color: var(--ink); background: var(--surface); }
+  .btn-outline:hover:not(:disabled) { border-color: var(--ink); }
+  .btn-ghost { color: var(--ink-2); }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-2); }
+  .btn-danger { background: var(--rose); color: #fff; }
+  .btn-sm { min-height: 2.25rem; padding: 0 .8rem; font-size: .875rem; }
+
+  .field {
+    width: 100%; min-height: 2.75rem; padding: .55rem .85rem; border-radius: var(--radius-control);
+    background: var(--surface); border: 1.5px solid var(--line); color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field:hover { border-color: var(--line-strong); }
+  .field:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px color-mix(in oklab, var(--violet) 22%, transparent); }
+  textarea.field { min-height: 7rem; line-height: 1.5; }
+  .label { display: block; font-weight: 700; font-size: .875rem; margin-bottom: .35rem; color: var(--ink-2); }
+  .hint { font-size: .8125rem; color: var(--muted); margin-top: .3rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); }
+  .chip {
+    display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem; border-radius: 999px;
+    font-size: .8125rem; font-weight: 700; background: var(--surface-2); color: var(--ink-2);
+  }
+  .link { color: var(--violet); font-weight: 700; text-underline-offset: 3px; }
+  .link:hover { text-decoration: underline; }
+  .container-x { width: 100%; max-width: 1320px; margin-inline: auto; padding-inline: 1rem; }
+  @media (min-width: 640px) { .container-x { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .container-x { padding-inline: 2rem; } }
+
+  .prose-del { max-width: 70ch; color: var(--ink-2); }
+  .prose-del p { margin-block: .8em; }
+  .prose-del h2, .prose-del h3 { color: var(--ink); margin-top: 1.4em; margin-bottom: .4em; font-size: 1.2rem; }
+  .prose-del ul { list-style: disc; padding-left: 1.3em; margin-block: .6em; }
+  .prose-del code { background: var(--surface-2); padding: .1em .35em; border-radius: 5px; font-size: .9em; }
+
+  .scroll-rail { scrollbar-width: thin; scroll-snap-type: x mandatory; }
+  .scroll-rail > * { scroll-snap-align: start; }
+}
+
+/* The one orchestrated motion: tokens travelling the loop in the hero. */
+@keyframes loop-travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes loop-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.loop-token { offset-rotate: 0deg; animation: loop-travel 18s linear infinite; }
+.loop-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: loop-draw 1.6s cubic-bezier(.6,.1,.2,1) forwards; }
+
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+.pop-in { animation: pop-in .18s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .loop-token { animation: none; }
+  .loop-draw { stroke-dashoffset: 0; }
+}
+
+/* Schibsted's tabular figures give the decimal point a full figure width ("$49 . 99"); keep display numerals proportional. */
+.font-display.tabular-nums { font-variant-numeric: normal; }

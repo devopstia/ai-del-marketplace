@@ -1,0 +1,222 @@
+import { test } from "@playwright/test";
+import { expect, login, logout, PASSWORD, tinyVideo, USERS, visible } from "./helpers";
+
+const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-for-devops";
+
+test.describe("public catalogue", () => {
+  test("home shows the hero and the catalogue", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Learn AI and DevOps");
+    // Small catalogue: one course shown as a route; larger catalogue: categories and course rails.
+    const route = page.getByTestId("course-path");
+    if (await route.count()) {
+      await expect(route.getByRole("list", { name: "Course route" })).toBeVisible();
+      await route.getByTestId("path-view-course").click();
+      await expect(page).toHaveURL(/\/courses\//);
+    } else {
+      await expect(page.getByRole("navigation", { name: "Categories" })).toBeVisible();
+      await expect(page.getByTestId("course-tile").first()).toBeVisible();
+    }
+  });
+
+  test("home: a free lesson plays without signing in", async ({ page }) => {
+    await page.goto("/");
+    const route = page.getByTestId("course-path");
+    test.skip(!(await route.count()), "only when the home page shows a single course route");
+    await route.getByRole("button", { name: "Watch a free lesson" }).click();
+    await expect(page.getByRole("dialog").getByTestId("video-player")).toBeVisible();
+  });
+
+  test("course page shows the purchase card, curriculum and a free preview", async ({ page }) => {
+    await page.goto(`/courses/${PAID_COURSE}`);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(visible(page, "purchase-card")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Course content" })).toBeVisible();
+    await page.getByTestId("preview-button").filter({ visible: true }).first().click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByTestId("video-player")).toBeVisible();
+    await expect.poll(() => dialog.locator("video").getAttribute("src")).toContain("http");
+  });
+
+  test("every popular search on the home page finds a course", async ({ page }) => {
+    await page.goto("/");
+    const chips = await page.locator('a[href^="/courses?q="]').evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
+    expect(chips.length).toBeGreaterThan(0);
+    for (const href of chips) {
+      await page.goto(href);
+      await expect(page.getByTestId("course-row").first(), href).toBeVisible();
+    }
+  });
+
+  test("search filters the catalogue", async ({ page }) => {
+    await page.goto("/courses?q=MCP");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("MCP");
+    await expect(page.getByTestId("course-row").first()).toBeVisible();
+  });
+
+  test("protected pages send signed-out visitors to log in", async ({ page }) => {
+    await page.goto("/my-learning");
+    await expect(page).toHaveURL(/\/login\?next=%2Fmy-learning/);
+  });
+});
+
+test.describe.serial("learner buys and studies a course", () => {
+  const email = `e2e-${Date.now()}@example.com`;
+  const password = "e2e-password-123";
+
+  test("register", async ({ page }) => {
+    await page.goto("/register");
+    await page.getByLabel("Full name").fill("E2E Learner");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByTestId("auth-submit").click();
+    await expect(page).toHaveURL(/\/my-learning/);
+    await expect(page.getByRole("heading", { name: "My learning" })).toBeVisible();
+  });
+
+  test("buy with the local test payment and land in My learning", async ({ page }) => {
+    await login(page, email, password, `/courses/${PAID_COURSE}`);
+    await expect(page).toHaveURL(new RegExp(`/courses/${PAID_COURSE}`));
+    await visible(page, "buy-now").click();
+    await expect(page).toHaveURL(/\/checkout$/);
+    await page.getByTestId("consent").check();
+    await page.getByTestId("pay").click();
+    // Without Stripe keys the API returns the dev test-payment page
+    await expect(page).toHaveURL(/\/checkout\/test|checkout\.stripe\.com/);
+    test.skip(page.url().includes("stripe.com"), "Stripe test mode is configured; card entry is out of scope for the smoke test");
+    await page.getByTestId("complete-test-payment").click();
+    await expect(page.getByTestId("checkout-success")).toHaveText("You’re enrolled");
+    await page.goto("/my-learning");
+    await expect(page.getByTestId("learning-item").first()).toBeVisible();
+  });
+
+  test("play a lecture with a signed URL", async ({ page }) => {
+    await login(page, email, password, `/learn/${PAID_COURSE}`);
+    await expect(page).toHaveURL(new RegExp(`/learn/${PAID_COURSE}/[\\w-]+`));
+    await expect(page.getByTestId("video-player")).toBeVisible();
+    await expect.poll(() => page.locator("video").getAttribute("src")).toContain("http");
+    await expect(page.getByRole("navigation", { name: "Course content" }).first()).toBeAttached();
+  });
+  test("refund from the receipt (within 14 days, little watched)", async ({ page }) => {
+    await login(page, email, password, "/orders");
+    // sign-in finishes with a full page load of /orders: wait for it before moving on
+    await page.waitForURL(/\/orders$/);
+    const receipt = page.getByRole("link", { name: "Receipt" }).first();
+    await expect(receipt).toBeVisible();
+    await page.goto((await receipt.getAttribute("href"))!);
+    await expect(page.getByRole("heading", { name: "Receipt" })).toBeVisible();
+    const panel = page.getByTestId("refund-panel");
+    await expect(panel).toContainText("within 14 days");
+    await panel.getByRole("checkbox").first().check();
+    await panel.getByTestId("request-refund").click();
+    await page.getByTestId("confirm-learner-refund").click();
+    await expect(page.getByText(/Refund issued/)).toBeVisible();
+  });
+});
+
+test.describe.serial("instructor publishes, admin approves", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run instructor/admin flows");
+  const title = `E2E course ${Date.now()}`;
+
+  test("instructor creates a course and submits it for review", async ({ page }) => {
+    const video = tinyVideo();
+    test.skip(!video, "ffmpeg is needed to generate a test video");
+    await login(page, USERS.instructor, PASSWORD, "/studio/courses");
+    await page.getByTestId("new-course").click();
+    await page.getByLabel("Working title").fill(title);
+    await page.getByLabel("Category").selectOption({ index: 1 });
+    await page.getByTestId("create-course").click();
+    await expect(page).toHaveURL(/\/studio\/courses\/[\w-]+$/);
+
+    await page.getByLabel("Subtitle").fill("A smoke-test course created by Playwright");
+    await page.getByLabel("Description").fill("This course is created automatically by the end-to-end smoke test. It has one section and one short video lecture.");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Details saved.")).toBeVisible();
+
+    await page.getByRole("link", { name: /Curriculum/ }).click();
+    await page.getByLabel("New section title").fill("Getting started");
+    await page.getByTestId("add-section").click();
+    await expect(page.getByLabel("Section 1 title")).toHaveValue("Getting started");
+    await page.getByLabel("New lecture title").fill("Welcome");
+    await page.getByTestId("add-lecture").click();
+    await page.getByRole("button", { name: /^Welcome/ }).click();
+    await page.getByLabel("Upload video").setInputFiles(video!);
+    await expect(page.getByText(/Video uploaded/)).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText("Ready", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
+
+    await page.getByRole("link", { name: /Review and submit/ }).click();
+    await page.getByTestId("submit-review").click();
+    await expect(page.getByText("In review", { exact: true }).first()).toBeVisible();
+  });
+
+  test("admin approves the course", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/review");
+    await page.getByRole("button", { name: new RegExp(title) }).click();
+    await page.getByTestId("admin-approve").click();
+    await expect(page.getByText("Course approved and published.")).toBeVisible();
+    await page.goto(`/courses?q=${encodeURIComponent(title)}`);
+    await expect(page.getByTestId("course-row").first()).toContainText(title);
+  });
+
+  const subtitle = `Updated by Playwright ${Date.now()}`;
+
+  test("instructor edits the live course and submits the changes", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.instructor, PASSWORD, "/studio/courses");
+    await page.getByRole("link", { name: title }).first().click();
+    await expect(page.getByText("This course is live.")).toBeVisible();
+    await page.getByLabel("Subtitle").fill(subtitle);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByText("Details saved.").first()).toBeVisible();
+    await expect(page.getByText(/You have unsubmitted changes/)).toBeVisible();
+    // Learners still see the live version.
+    const slug = await page.getByRole("link", { name: "View live page" }).getAttribute("href");
+    await page.getByRole("link", { name: /Review and submit/ }).first().click();
+    await expect(page.getByTestId("revision-changes")).toContainText("Subtitle");
+    await page.getByTestId("submit-review").click();
+    await expect(page.getByText(/Editing is paused while an admin reviews your changes/)).toBeVisible();
+    await page.goto(slug!);
+    await expect(page.getByText(subtitle)).toHaveCount(0);
+  });
+
+  test("admin reviews the changes and approves them", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/review");
+    await page.getByRole("button", { name: new RegExp(title) }).click();
+    await expect(page.getByText("Changes to a live course")).toBeVisible();
+    await expect(page.getByTestId("review-changes")).toContainText("Subtitle");
+    await page.getByTestId("admin-approve").click();
+    await expect(page.getByText("Changes approved. They are live now.")).toBeVisible();
+    await page.goto(`/courses?q=${encodeURIComponent(title)}`);
+    await page.getByTestId("course-row").first().click();
+    await expect(page.getByText(subtitle).first()).toBeVisible();
+  });
+
+  test("admin Money page reconciles and DEL Studio switch works", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/finance");
+    await expect(page.getByRole("heading", { name: "Money" })).toBeVisible();
+    await expect(page.getByText(/paid orders add up/)).toBeVisible();
+    await page.getByTestId("open-del-studio").first().click();
+    await expect(page.getByTestId("acting-banner")).toContainText("DevOps Easy Learning");
+    await page.goto("/studio/sales");
+    await expect(page.getByTestId("terms-note")).toContainText("DEL");
+    await page.getByTestId("back-to-admin").first().click();
+    await expect(page).toHaveURL(/\/admin$/);
+  });
+
+  test("admin role changes ask for confirmation", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/users");
+    await page.getByLabel("Search users").fill("nadia");
+    const roles = page.getByRole("group", { name: /Roles of Nadia/ });
+    const adminChip = roles.getByRole("button", { name: "admin", exact: true });
+    await expect(adminChip).toHaveAttribute("aria-pressed", "false");
+    await adminChip.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Give the admin role");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(adminChip).toHaveAttribute("aria-pressed", "false");
+  });
+});

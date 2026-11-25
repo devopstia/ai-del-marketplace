@@ -1,0 +1,142 @@
+import { Controller, Delete, Get, HttpCode, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import type { Response } from 'express';
+import { z } from 'zod';
+import { ActorCtx, type Actor, type AppRequest, Public, Roles } from '../common/auth-context';
+import { ACT_AS_COOKIE, ACT_AS_PLATFORM } from '../common/acting';
+import { AuditService } from '../common/audit.service';
+import { badRequest } from '../common/errors';
+import { CSRF_COOKIE, SESSION_COOKIE, sessionCookieOptions } from '../common/cookies';
+import { ZBody } from '../common/zod';
+import { env } from '../config/env';
+import { CommerceService } from '../commerce/commerce.service';
+import { AuthService } from './auth.service';
+
+const email = z.string().trim().toLowerCase().email().max(254);
+const password = z.string().min(10, 'Password must be at least 10 characters').max(200);
+/** Optional guest cart to merge right after sign-in (same rules as POST /cart/merge). */
+const cartCourseIds = z.array(z.string().uuid()).max(50).optional();
+const registerSchema = z.object({ email, password, name: z.string().trim().min(1).max(100), cartCourseIds });
+const loginSchema = z.object({ email, password: z.string().min(1).max(200), cartCourseIds });
+const profileSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  avatarUrl: z.string().url().max(500).nullable().optional(),
+});
+const passwordSchema = z.object({ currentPassword: z.string().min(1).max(200), newPassword: password });
+
+const authLimit = { default: { limit: () => env().AUTH_RATE_LIMIT, ttl: 60_000 } };
+
+const actAsSchema = z.object({ mode: z.enum(['del', 'self']) });
+
+@Controller()
+export class AuthController {
+  constructor(
+    private readonly auth: AuthService,
+    private readonly commerce: CommerceService,
+    private readonly audit: AuditService,
+  ) {}
+
+  private async mergeGuestCart(userId: string, ids?: string[]) {
+    if (!ids?.length) return undefined;
+    const cart = await this.commerce.mergeCart(userId, ids);
+    return { count: cart.count, added: cart.merge.added, skipped: cart.merge.skipped };
+  }
+
+  private ctx(req: AppRequest) {
+    return { ip: req.ip ?? null, userAgent: req.headers['user-agent'] ?? null };
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle(authLimit)
+  @Post('auth/register')
+  async register(@ZBody(registerSchema) body: z.infer<typeof registerSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    const { cartCourseIds, ...input } = body;
+    const { user, token } = await this.auth.register(input, this.ctx(req));
+    res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
+    const cart = await this.mergeGuestCart(user.id, cartCourseIds);
+    return { user: await this.auth.me(user.id), csrf: req.cookies[CSRF_COOKIE], ...(cart ? { cart } : {}) };
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle(authLimit)
+  @HttpCode(200)
+  @Post('auth/login')
+  async login(@ZBody(loginSchema) body: z.infer<typeof loginSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    if (req.sessionId) await this.auth.revokeSession(req.sessionId); // no session fixation
+    const { cartCourseIds, ...input } = body;
+    const { user, token } = await this.auth.login(input, this.ctx(req));
+    res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
+    const cart = await this.mergeGuestCart(user.id, cartCourseIds);
+    return { user: await this.auth.me(user.id), csrf: req.cookies[CSRF_COOKIE], ...(cart ? { cart } : {}) };
+  }
+
+  @Public()
+  @HttpCode(200)
+  @Post('auth/logout')
+  async logout(@Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    if (req.sessionId) await this.auth.revokeSession(req.sessionId);
+    const { maxAge: _m, ...opts } = sessionCookieOptions();
+    res.clearCookie(SESSION_COOKIE, opts);
+    res.clearCookie(ACT_AS_COOKIE, opts);
+    return { ok: true };
+  }
+
+  /** Public: returns { user: null, csrf } when signed out, so the web app can bootstrap its CSRF token. */
+  @Public()
+  @Get('auth/me')
+  async me(@Req() req: AppRequest) {
+    const actingAs = req.user?.roles.includes('super_admin') && req.cookies?.[ACT_AS_COOKIE] === ACT_AS_PLATFORM ? await this.auth.platformInstructor() : null;
+    return { user: req.user ? { ...(await this.auth.me(req.user.id)), actingAs } : null, csrf: req.cookies[CSRF_COOKIE] };
+  }
+
+  /** Super admin: switch the instructor studio between DEL's account ("del") and their own ("self"). Audited. */
+  @Roles('super_admin')
+  @HttpCode(200)
+  @Post('auth/act-as')
+  async actAs(@ZBody(actAsSchema) b: z.infer<typeof actAsSchema>, @ActorCtx() a: Actor, @Res({ passthrough: true }) res: Response) {
+    if (b.mode === 'del') {
+      const del = await this.auth.platformInstructor();
+      if (!del) throw badRequest('No DEL instructor account exists', 'no_platform_instructor');
+      res.cookie(ACT_AS_COOKIE, ACT_AS_PLATFORM, { ...sessionCookieOptions(), maxAge: 12 * 60 * 60 * 1000 });
+      await this.audit.log({ actorId: a.user.id, action: 'auth.act_as_started', targetType: 'user', targetId: del.id, ip: a.ip });
+      return { actingAs: del };
+    }
+    const { maxAge: _m, ...opts } = sessionCookieOptions();
+    res.clearCookie(ACT_AS_COOKIE, opts);
+    await this.audit.log({ actorId: a.user.id, action: 'auth.act_as_ended', targetType: 'user', targetId: a.user.id, ip: a.ip });
+    return { actingAs: null };
+  }
+
+  @Public()
+  @Get('auth/csrf')
+  csrf(@Req() req: AppRequest) {
+    return { csrf: req.cookies[CSRF_COOKIE] };
+  }
+
+  @Get('auth/sessions')
+  sessions(@Req() req: AppRequest) {
+    return this.auth.listSessions(req.user!.id, req.sessionId).then((items) => ({ items }));
+  }
+
+  @Delete('auth/sessions/:id')
+  async revoke(@Param('id') id: string, @ActorCtx() a: Actor) {
+    await this.auth.revokeOwnSession(a.user.id, id, a.ip);
+    return { ok: true };
+  }
+
+  @Patch('me/profile')
+  async profile(@ZBody(profileSchema) body: z.infer<typeof profileSchema>, @ActorCtx() a: Actor) {
+    return { user: await this.auth.updateProfile(a.user.id, body) };
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Throttle(authLimit)
+  @HttpCode(200)
+  @Post('auth/password')
+  async password(@ZBody(passwordSchema) body: z.infer<typeof passwordSchema>, @Req() req: AppRequest) {
+    await this.auth.changePassword(req.user!.id, body.currentPassword, body.newPassword, req.sessionId, req.ip ?? null);
+    return { ok: true };
+  }
+}

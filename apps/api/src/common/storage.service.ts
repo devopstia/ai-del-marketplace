@@ -1,0 +1,97 @@
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Injectable } from '@nestjs/common';
+import { createReadStream, statSync } from 'node:fs';
+import type { Readable } from 'node:stream';
+import { env } from '../config/env';
+
+/**
+ * Private object storage (MinIO locally, S3 in the cloud). Nothing is public: browsers only ever get short-lived
+ * presigned URLs, signed against S3_PUBLIC_ENDPOINT so they work from outside the Docker network.
+ */
+@Injectable()
+export class StorageService {
+  private readonly internal: S3Client;
+  private readonly publicSigner: S3Client;
+  readonly bucket: string;
+
+  constructor() {
+    const e = env();
+    const base = {
+      region: e.S3_REGION,
+      forcePathStyle: true,
+      credentials: { accessKeyId: e.S3_ACCESS_KEY, secretAccessKey: e.S3_SECRET_KEY },
+    };
+    this.internal = new S3Client({ ...base, endpoint: e.S3_ENDPOINT });
+    this.publicSigner = new S3Client({ ...base, endpoint: e.S3_PUBLIC_ENDPOINT });
+    this.bucket = e.S3_BUCKET;
+  }
+
+  /** Presigned PUT for a browser upload. */
+  presignPut(key: string, contentType: string, expiresIn = 3600) {
+    return getSignedUrl(this.publicSigner, new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }), {
+      expiresIn,
+    });
+  }
+
+  /** Presigned GET for a browser (playback, download). */
+  presignGet(key: string, expiresIn = 300, opts: { downloadName?: string } = {}) {
+    return getSignedUrl(
+      this.publicSigner,
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ResponseContentDisposition: opts.downloadName
+          ? `attachment; filename="${opts.downloadName.replace(/[^\w.\- ]/g, '_')}"`
+          : undefined,
+      }),
+      { expiresIn },
+    );
+  }
+
+  /** Presigned GET reachable from inside the Docker network (worker → ffprobe). */
+  presignInternalGet(key: string, expiresIn = 600) {
+    return getSignedUrl(this.internal, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn });
+  }
+
+  async head(key: string): Promise<{ size: number; contentType: string } | null> {
+    try {
+      const r = await this.internal.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
+      return { size: Number(r.ContentLength ?? 0), contentType: r.ContentType ?? 'application/octet-stream' };
+    } catch (e: any) {
+      if (e?.$metadata?.httpStatusCode === 404 || e?.name === 'NotFound') return null;
+      throw e;
+    }
+  }
+
+  async put(key: string, body: Buffer | Uint8Array | string, contentType: string) {
+    await this.internal.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
+  }
+
+  /** Streams a local file (large videos) into the bucket. */
+  async putFile(key: string, path: string, contentType: string) {
+    const size = statSync(path).size;
+    await this.internal.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: createReadStream(path), ContentLength: size, ContentType: contentType }));
+    return size;
+  }
+
+  async getStream(key: string): Promise<{ body: Readable; contentType: string; size: number } | null> {
+    try {
+      const r = await this.internal.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+      return { body: r.Body as Readable, contentType: r.ContentType ?? 'application/octet-stream', size: Number(r.ContentLength ?? 0) };
+    } catch (e: any) {
+      if (e?.$metadata?.httpStatusCode === 404 || e?.name === 'NoSuchKey') return null;
+      throw e;
+    }
+  }
+
+  async delete(key: string) {
+    await this.internal.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+}

@@ -1,0 +1,14 @@
+# Catalogue import override: mounts the finished DEL videos READ-ONLY into a one-off api container.
+#   ./scripts/import-del.sh      (= docker compose -f docker-compose.yml -f docker-compose.import.yml run --rm --no-deps api npm run import:del)
+# DEL_SOURCE_DIR (host path, optional in .env) defaults to the sibling ai-videos checkout.
+services:
+  api:
+    environment:
+      DEL_SOURCE_DIR: /import/ai-devops
+    volumes:
+      - type: bind
+        source: ${DEL_SOURCE_DIR:-../ai-videos/projects/ai-devops}
+        target: /import/ai-devops
+        read_only: true
+        bind:
+          create_host_path: false
