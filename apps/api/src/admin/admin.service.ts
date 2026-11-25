@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { CoversService } from '../covers/covers.service';
 import type { Prisma } from '../generated/prisma/client';
 import type { CourseStatus, OrderStatus, Role, UserStatus } from '../generated/prisma/enums';
 import { AuditService } from '../common/audit.service';
@@ -33,6 +34,7 @@ export class AdminService {
     private readonly refunds: RefundsService,
     private readonly media: MediaService,
     private readonly revisions: RevisionsService,
+    @Optional() private readonly covers?: CoversService,
   ) {}
 
   async stats() {
@@ -133,7 +135,7 @@ export class AdminService {
     // POST /lectures/:id/playback only once live; draft videos are listed with their asset status).
     const rev = c.status === 'published' ? await this.revisions.open(id) : null;
     const revision = rev ? { ...(await this.revisions.summary(rev)), draft: rev.snapshot } : null;
-    return { ...c, thumbnailUrl: this.media.imageUrl(c.thumbnailKey), history: audit, revision };
+    return { ...c, thumbnailUrl: this.media.imageUrl(c.coverKey), history: audit, revision };
   }
 
   async videoPlayback(a: Actor, assetId: string) {
@@ -157,6 +159,8 @@ export class AdminService {
           decision === 'approve'
             ? await this.revisions.approve(a, courseId, note)
             : await this.revisions.decide(a, courseId, decision === 'reject' ? 'rejected' : 'changes_requested', note!);
+        // An approved revision may change the live title or topic: the cover follows.
+        if (decision === 'approve') await this.covers?.ensureCover(courseId);
         const fresh = await this.prisma.course.findUniqueOrThrow({ where: { id: courseId } });
         return { id: fresh.id, status: fresh.status, reviewNote: note?.trim() || null, publishedAt: fresh.publishedAt, revision: { id: r.revisionId, status: decision === 'approve' ? 'approved' : r.status } };
       }
@@ -285,6 +289,8 @@ export class AdminService {
       if (other && other.id !== id) throw conflict('A category with this slug exists', 'slug_taken');
     }
     const c = await this.prisma.category.update({ where: { id }, data: input });
+    // Covers print the topic name: regenerate the topic's covers when it is renamed.
+    if (input.name !== undefined) for (const x of await this.prisma.course.findMany({ where: { categoryId: id }, select: { id: true } })) await this.covers?.ensureCover(x.id);
     await this.audit.log({ actorId: a.user.id, action: 'category.updated', targetType: 'category', targetId: id, ip: a.ip, meta: input });
     return c;
   }

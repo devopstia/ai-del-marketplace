@@ -568,4 +568,58 @@ describe('e2e: buy and learn', () => {
     const actions = (await prisma.auditLog.findMany({ where: { action: { in: ['course_sale.created', 'course_sale.updated', 'course_sale.canceled', 'promotion.created', 'promotion.canceled', 'course.promo_opt_out'] } }, select: { action: true } })).map((x) => x.action);
     for (const a of ['course_sale.created', 'course_sale.updated', 'course_sale.canceled', 'promotion.created', 'promotion.canceled', 'course.promo_opt_out']) expect(actions).toContain(a);
   });
+
+  it('standard covers: generated on create, picker and preview, change any time, admin templates', async () => {
+    if (!available) return;
+    const teacher = await userAgent('cv-teacher@e2e.example', ['student', 'instructor'], {});
+    const rival = await userAgent('cv-rival@e2e.example', ['student', 'instructor'], {});
+    const admin = await userAgent('cv-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('cv-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const created = await teacher.send('post', '/api/instructor/courses', { title: 'Cover test course', priceCents: 1999 }).expect(201);
+    const id = created.body.id;
+    const row = async () => prisma.course.findUniqueOrThrow({ where: { id }, select: { coverKey: true, coverTemplateId: true } });
+    const first = await row();
+    expect(first.coverKey).toMatch(new RegExp(`^images/covers/${id}-[0-9a-f]{12}\\.png$`));
+    expect(first.coverTemplateId).toBeTruthy();
+    expect(created.body.thumbnailUrl).toContain('/api/media/images/covers/');
+    const img = await request(app.getHttpServer()).get(`/api/media/${first.coverKey}`).expect(200);
+    expect(img.headers['content-type']).toBe('image/png');
+
+    // Picker: every active template, the course's own title; previews are real images; other instructors get 404.
+    const pick = await teacher.agent.get(`/api/instructor/courses/${id}/cover`).expect(200);
+    expect(pick.body.templates.length).toBeGreaterThanOrEqual(52);
+    expect(pick.body.course).toMatchObject({ title: 'Cover test course', coverTemplateId: first.coverTemplateId });
+    const other = pick.body.templates.find((t: any) => t.id !== first.coverTemplateId);
+    const pv = await teacher.agent.get(`/api/instructor/courses/${id}/cover-preview/${other.id}?w=320`).expect(200);
+    expect(pv.headers['content-type']).toBe('image/png');
+    await rival.agent.get(`/api/instructor/courses/${id}/cover`).expect(404);
+    await rival.send('put', `/api/instructor/courses/${id}/cover`, { templateId: other.id }).expect(404);
+
+    // Change the template: new image at once; the title change regenerates it too.
+    const set = await teacher.send('put', `/api/instructor/courses/${id}/cover`, { templateId: other.id }).expect(200);
+    const second = await row();
+    expect(second).toMatchObject({ coverTemplateId: other.id });
+    expect(second.coverKey).not.toBe(first.coverKey);
+    expect(set.body.coverUrl).toContain(second.coverKey);
+    await teacher.send('patch', `/api/instructor/courses/${id}`, { title: 'Cover test course, renamed' }).expect(200);
+    expect((await row()).coverKey).not.toBe(second.coverKey);
+
+    // Admin templates: admins read; only a super admin changes; bad colours refused.
+    const list = await admin.agent.get('/api/admin/cover-templates').expect(200);
+    expect(list.body.items.find((t: any) => t.id === other.id).courseCount).toBeGreaterThanOrEqual(1);
+    await admin.send('patch', `/api/admin/cover-templates/${other.id}`, { active: false }).expect(403);
+    const bad = { name: 'Bad', layout: 'split', motif: 'loop', palette: { bg: ['#000000', 'red'], ink: '#ffffff', a: '#9d8fff', b: '#58c3f2', tone: 'dark' } };
+    await boss.send('post', '/api/admin/cover-templates', bad).expect(400);
+    const made = await boss.send('post', '/api/admin/cover-templates', { ...bad, palette: { ...bad.palette, bg: ['#000000', '#111111'] }, topics: ['general'] }).expect(201);
+    expect(made.body).toMatchObject({ name: 'Bad', active: true, builtIn: false });
+    // An inactive template can't be chosen; deactivating one moves its courses to another template.
+    await boss.send('patch', `/api/admin/cover-templates/${made.body.id}`, { active: false }).expect(200);
+    expect((await teacher.send('put', `/api/instructor/courses/${id}/cover`, { templateId: made.body.id }).expect(400)).body.error.code).toBe('cover_template');
+    const off = await boss.send('patch', `/api/admin/cover-templates/${other.id}`, { active: false }).expect(200);
+    expect(off.body.coursesMoved).toBeGreaterThanOrEqual(1);
+    expect((await row()).coverTemplateId).not.toBe(other.id);
+    await boss.send('patch', `/api/admin/cover-templates/${other.id}`, { active: true }).expect(200);
+    const actions = (await prisma.auditLog.findMany({ where: { action: { in: ['course.cover_changed', 'cover_template.created', 'cover_template.updated'] } }, select: { action: true } })).map((x) => x.action);
+    for (const a of ['course.cover_changed', 'cover_template.created', 'cover_template.updated']) expect(actions).toContain(a);
+  });
 });

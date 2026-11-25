@@ -152,3 +152,11 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - 2026-11-25 (owner: "the default theme should be dark for everything"): light choices saved by browsers before dark became the
   default are dropped (old key `del-theme`); only a choice made with the toggle since then (`del-theme-v2`) is kept. Verified:
   fresh browsers and browsers with an old saved "light" open every area in dark. Branch `fix/dark-default`.
+
+## 2026-11-25: Standard course covers (owner brief; designs approved: "good")
+- Branch `feat/course-covers`, rollback tag `checkpoint-2026-11-25-covers`, backup `backup/main-2026-11-25-covers`.
+- Owner decisions: templates only (no custom uploads, DEL included); cover changes go live at once (no review); a cover shows
+  the title, a topic label and the DEL mark. 52 built-in templates (16 generic, 13 AI, 15 IT, 8 DevOps) over 6 layouts,
+  14 palettes and 30 designs, drawn on the server in Schibsted Grotesk (OFL, `apps/api/assets/fonts`).
+- Every existing course got a topic-matched template; the import no longer uses the first lesson's video frame. Super admins
+  manage templates at /admin/covers; instructors pick at Studio → course → Media. Permanent rule: AGENTS.md rule 17.

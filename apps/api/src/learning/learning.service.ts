@@ -59,7 +59,7 @@ export class LearningService {
     const enrolments = await this.prisma.enrollment.findMany({
       where: { userId, revokedAt: null },
       orderBy: { createdAt: 'desc' },
-      include: { course: { select: { id: true, slug: true, title: true, thumbnailKey: true, instructor: { select: { name: true } } } } },
+      include: { course: { select: { id: true, slug: true, title: true, coverKey: true, instructor: { select: { name: true } } } } },
     });
     const items = [];
     for (const e of enrolments) {
@@ -71,7 +71,7 @@ export class LearningService {
       });
       const cert = await this.prisma.certificate.findUnique({ where: { userId_courseId: { userId, courseId: e.courseId } }, select: { code: true } });
       items.push({
-        course: { id: e.course.id, slug: e.course.slug, title: e.course.title, thumbnailUrl: this.media.imageUrl(e.course.thumbnailKey), instructor: e.course.instructor },
+        course: { id: e.course.id, slug: e.course.slug, title: e.course.title, thumbnailUrl: this.media.imageUrl(e.course.coverKey), instructor: e.course.instructor },
         enrolledAt: e.createdAt,
         progress,
         lastLecture: last ? { id: last.lecture.id, title: last.lecture.title, positionSec: last.positionSec, at: last.updatedAt } : null,
@@ -120,7 +120,7 @@ export class LearningService {
       title: c.title,
       subtitle: c.subtitle,
       instructor: c.instructor,
-      thumbnailUrl: this.media.imageUrl(c.thumbnailKey),
+      thumbnailUrl: this.media.imageUrl(c.coverKey),
       access,
       progress: { total: lectureIds.length, completed: done, percent: lectureIds.length ? Math.round((done / lectureIds.length) * 100) : 0 },
       lastLectureId: last?.lectureId ?? null,

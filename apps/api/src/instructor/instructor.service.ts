@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { CoversService } from '../covers/covers.service';
 import type { Prisma } from '../generated/prisma/client';
 import type { LectureType } from '../generated/prisma/enums';
 import { AuditService } from '../common/audit.service';
@@ -62,6 +63,7 @@ export class InstructorService {
     private readonly media: MediaService,
     private readonly storage: StorageService,
     private readonly revisions: RevisionsService,
+    @Optional() private readonly covers?: CoversService,
   ) {}
 
   // ---------- profile ----------
@@ -124,7 +126,7 @@ export class InstructorService {
         reviewNote: c.reviewNote,
         priceCents: c.priceCents,
         category: c.category,
-        thumbnailUrl: this.media.imageUrl(c.thumbnailKey),
+        thumbnailUrl: this.media.imageUrl(c.coverKey),
         students: _count.enrollments,
         ratingAvg: c.ratingAvg,
         ratingCount: c.ratingCount,
@@ -160,6 +162,8 @@ export class InstructorService {
       data: { ...input, slug: await this.uniqueSlug(input.title), instructorId: a.user.id, status: 'draft' },
     });
     await this.audit.log({ actorId: a.user.id, action: 'course.created', targetType: 'course', targetId: course.id, ip: a.ip });
+    // Every new course gets a standard cover straight away (template picked for its topic; changeable in the studio).
+    await this.covers?.ensureCover(course.id);
     return this.courseDetail(a.user.id, course.id);
   }
 
@@ -215,7 +219,8 @@ export class InstructorService {
       updatedAt: row.updatedAt,
       ...c,
       category,
-      thumbnailUrl: this.media.imageUrl(c.thumbnailKey),
+      thumbnailUrl: this.media.imageUrl(row.coverKey),
+      coverTemplateId: row.coverTemplateId,
       promoVideo: videoView(c.promoVideoAssetId),
       version,
       revision,
@@ -254,6 +259,7 @@ export class InstructorService {
       return this.courseDetail(a.user.id, courseId);
     }
     await this.prisma.course.update({ where: { id: courseId }, data: input });
+    if (input.title !== undefined || input.categoryId !== undefined) await this.covers?.ensureCover(courseId);
     if (input.priceCents !== undefined) {
       await this.audit.log({ actorId: a.user.id, action: 'course.price_changed', targetType: 'course', targetId: courseId, ip: a.ip, meta: { priceCents: input.priceCents } });
     }

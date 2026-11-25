@@ -279,3 +279,31 @@ test.describe.serial("sales and promotions", () => {
   });
 });
 
+test.describe.serial("standard course covers", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run instructor/admin flows");
+
+  test("instructor picks a new cover in the studio and it is saved", async ({ page }) => {
+    await login(page, USERS.instructor, PASSWORD, "/studio/courses");
+    await page.locator('a[href^="/studio/courses/"]').filter({ hasNot: page.locator('[href="/studio/courses/new"]') }).first().click();
+    await page.waitForURL(/\/studio\/courses\/[0-9a-f-]{36}/);
+    await page.goto(page.url().split("?")[0] + "?step=media");
+    const picker = page.getByTestId("cover-picker");
+    await expect(picker).toBeVisible();
+    const before = await page.getByTestId("cover-preview").getAttribute("src");
+    await picker.getByRole("tab", { name: "Generic", exact: true }).click();
+    const option = picker.getByTestId("cover-option").filter({ hasNot: page.getByText("Current") }).first();
+    await option.click();
+    await page.getByTestId("save-cover").click();
+    await expect(page.getByTestId("save-cover")).toHaveCount(0);
+    await expect.poll(async () => page.getByTestId("cover-preview").getAttribute("src")).not.toBe(before);
+    expect(await page.getByTestId("cover-preview").evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  });
+
+  test("admin sees every cover template", async ({ page }) => {
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/covers");
+    await expect(page.getByTestId("template-card").first()).toBeVisible();
+    expect(await page.getByTestId("template-card").count()).toBeGreaterThanOrEqual(52);
+  });
+});
+

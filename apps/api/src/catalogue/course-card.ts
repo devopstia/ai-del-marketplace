@@ -21,7 +21,8 @@ export function toCard(c: CardRow, imageUrl: (k: string | null) => string | null
     slug: c.slug,
     title: c.title,
     subtitle: c.subtitle,
-    thumbnailUrl: imageUrl(c.thumbnailKey),
+    // The generated standard cover (custom uploads are not used: owner 2026-11-25).
+    thumbnailUrl: imageUrl(c.coverKey),
     instructor: { id: c.instructor.id, name: c.instructor.name },
     category: c.category,
     priceCents: price?.priceCents ?? c.priceCents,
