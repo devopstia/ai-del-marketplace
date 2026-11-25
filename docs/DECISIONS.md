@@ -105,3 +105,8 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Fixed in Step A: captions were ON by default (rule 11 never implemented); footer links that led to empty results.
 - Isolated preview stack: `./scripts/preview.sh up|seed|demo|down|destroy` → http://localhost:3100 (own DB/Redis/MinIO/API).
 - Screenshots: `docs/design/premium-redesign-2026-11-24/` (before/after, 390/1440/1920, dark, both hero slides).
+- 2026-11-24, owner: "please deploy" → Step A deployed to the main local stack (http://127.0.0.1:3000), web container only,
+  built from `feature/premium-marketplace-redesign` (`ac1d6b3`). **Not merged into `main`.** Previous web image kept as
+  `ai-del-marketplace-web:rollback-main-bd57c5d`. Instant rollback:
+  `docker tag ai-del-marketplace-web:rollback-main-bd57c5d ai-del-marketplace-web && docker compose up -d --no-build web`
+  (or `git switch main && docker compose up -d --build web`).
