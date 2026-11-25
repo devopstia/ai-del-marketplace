@@ -3,11 +3,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap } from "lucide-react";
+import { Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "./AuthProvider";
 import { Avatar } from "./Avatar";
+import { usePwa } from "@/lib/pwa";
 
 function SearchBox({ className = "", onDone }: { className?: string; onDone?: () => void }) {
   const router = useRouter();
@@ -36,6 +37,7 @@ function SearchBox({ className = "", onDone }: { className?: string; onDone?: ()
 }
 
 function UserMenu() {
+  const { installed } = usePwa();
   const { me, logout, has } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -70,6 +72,7 @@ function UserMenu() {
             {has("admin") ? <Link role="menuitem" className={item} href="/admin"><Shield className="size-4" />Admin</Link> : null}
             <Link role="menuitem" className={item} href="/orders"><Receipt className="size-4" />Orders and receipts</Link>
             <Link role="menuitem" className={item} href="/account"><User className="size-4" />Account</Link>
+            {!installed ? <Link role="menuitem" className={item} href="/install"><Download className="size-4" />Install the app</Link> : null}
           </div>
           <button
             role="menuitem"
@@ -92,6 +95,7 @@ function UserMenu() {
 
 /** `dealsCount`: courses on sale right now; the Deals link only exists while there are some. */
 export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
+  const { installed } = usePwa();
   const { me, loading, cartCount, has } = useAuth();
   const [mobile, setMobile] = useState(false);
   const pathname = usePathname();
@@ -152,6 +156,7 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
               [teachHref, has("instructor") ? "Instructor studio" : "Teach on DEL", LayoutDashboard],
               ...(me ? [["/my-learning", "My learning", BookOpen], ["/orders", "Orders and receipts", Receipt], ["/account", "Account", User]] : []),
               ...(has("admin") ? [["/admin", "Admin", Shield]] : []),
+              ...(!installed ? [["/install", "Install the app", Download]] : []),
             ].map(([href, label, Icon]) => {
               const I = Icon as typeof BookOpen;
               return (

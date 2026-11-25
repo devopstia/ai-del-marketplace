@@ -88,6 +88,11 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     - keep covers regenerating when the title, topic or template changes; bump `RENDER_VERSION` in `covers.service.ts`
       after changing the drawing code so existing covers are redrawn.
 
+18. **Installable app (PWA)** (owner, 2026-11-25): the site must stay installable on phones and computers (docs/PWA.md).
+    The service worker only shows the offline page and must never cache pages, API responses or videos. New pages work in
+    the installed app: no reliance on browser chrome, fixed elements respect `env(safe-area-inset-*)`, phone inputs stay
+    16 px. `apps/web/e2e/pwa.spec.ts` must stay green (Chrome's installability check reports no errors).
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a

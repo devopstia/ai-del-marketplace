@@ -5,6 +5,7 @@ import { Award, BookOpen, Loader2, PlayCircle } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { list, obj, paged, toCourseCard, toLearningItem } from "@/lib/normalize";
 import { useApi } from "@/lib/useApi";
+import { InstallHint } from "@/components/pwa/InstallHint";
 import { CourseResultRow, CourseTile } from "@/components/CourseViews";
 import { date, hours } from "@/lib/format";
 import type { LearningItem } from "@/lib/types";
@@ -144,6 +145,7 @@ export default function MyLearning() {
             : <div className="mt-4 divide-y divide-line border-y border-line">{suggestions.map((c) => <CourseResultRow key={c.slug} c={c} />)}</div>}
         </section>
       ) : null}
+      <InstallHint />
     </div>
   );
 }

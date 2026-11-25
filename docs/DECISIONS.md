@@ -160,3 +160,9 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   14 palettes and 30 designs, drawn on the server in Schibsted Grotesk (OFL, `apps/api/assets/fonts`).
 - Every existing course got a topic-matched template; the import no longer uses the first lesson's video frame. Super admins
   manage templates at /admin/covers; instructors pick at Studio → course → Media. Permanent rule: AGENTS.md rule 17.
+
+## 2026-11-25: Features from the Insurance Knowledge Hub (owner: "start with 6 … move on with 8, 4, 10, 5, 11")
+- Research: docs/research/insurance-hub-reuse.md. Order: installable app (6), Support Center (8), content protection (4),
+  help videos + video engine (10), ⌘K search (5), terms acceptance (11). Each on its own branch; nothing merged without
+  the owner's approval.
+- 6 installable app: branch `feat/pwa`, rollback tag `checkpoint-2026-11-25-pwa`. docs/PWA.md, AGENTS.md rule 18.
