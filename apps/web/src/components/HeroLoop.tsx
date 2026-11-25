@@ -30,7 +30,7 @@ export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: str
   const reduced = useReducedMotion();
   return (
     <div className="relative mx-auto flex w-full max-w-[640px] flex-col gap-3 px-5 sm:px-0 lg:h-full lg:justify-center">
-      <svg viewBox="-16 -4 152 70" className="w-full overflow-visible" role="img" aria-label="The DevOps loop: plan, code, build, test, release, deploy, operate, monitor, and back again.">
+      <svg viewBox="-16 -4 152 70" className="w-full overflow-visible" role="img" aria-label="The DevOps loop with AI at its centre: plan, code, build, test, release, deploy, operate, monitor, and back again, with AI assisting every stage.">
         <defs>
           <linearGradient id="hero-grad" x1="0" x2="120" y1="0" y2="0" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="var(--violet)" />
@@ -40,6 +40,10 @@ export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: str
             <feGaussianBlur stdDeviation="1.6" />
           </filter>
         </defs>
+        {/* AI reaches every stage */}
+        <g stroke="var(--violet)" strokeWidth="0.45" strokeDasharray="0.9 1.6" opacity="0.45" fill="none">
+          {stations.map((st) => <line key={st.label} x1="60" y1="30" x2={st.x} y2={st.y} />)}
+        </g>
         {/* track */}
         <path d={LOOP_FULL} stroke="var(--line)" strokeWidth="7" fill="none" strokeLinecap="round" />
         <path d={LOOP_LEFT} pathLength={1} className="loop-draw" stroke="var(--violet)" strokeWidth="3.2" fill="none" strokeLinecap="round" />
@@ -68,6 +72,17 @@ export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: str
             <circle cx="111.5" cy="42.25" r="1.9" fill="var(--cyan)" />
           </g>
         ) : null}
+        {/* AI hub where the two lobes cross */}
+        <g>
+          {reduced ? null : (
+            <circle cx="60" cy="30" r="7" fill="none" stroke="var(--violet)" strokeWidth="0.5">
+              <animate attributeName="r" values="7;11;7" dur="4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.6;0;0.6" dur="4s" repeatCount="indefinite" />
+            </circle>
+          )}
+          <circle cx="60" cy="30" r="7" fill="url(#hero-grad)" stroke="var(--surface)" strokeWidth="1.2" />
+          <text x="60" y="30.4" textAnchor="middle" dominantBaseline="middle" className="font-display" fill="#fff" style={{ fontSize: 5, fontWeight: 800, letterSpacing: "-0.02em" }}>AI</text>
+        </g>
       </svg>
       {spotlight ? (
         <Link href={spotlight.href} className="ml-auto hidden w-full max-w-md items-center gap-4 self-end rounded-tile border border-line bg-surface p-3 shadow-float transition-colors hover:border-violet sm:flex">
