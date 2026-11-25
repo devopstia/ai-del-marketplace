@@ -136,3 +136,12 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Prices are computed at request time (no job, nothing written to the course), so sales stop by themselves. The commission
   split uses the amount actually paid; order lines keep the regular price and which sale applied. See docs/API.md.
 - Owner, mid-build: **dark is the default theme for the whole site**; a visitor's saved choice of light (toggle) is kept.
+
+## 2026-11-25: Dark-mode QA pass (owner: "dark mode … must be treated as our primary design experience")
+- Branch `feat/dark-qa` (from `feat/promotions`), rollback tag `checkpoint-2026-11-25-dark-qa`, backup `backup/promotions-2026-11-25`.
+- Permanent rule: AGENTS.md rule 16 (dark first, contrast, browser QA with `scripts/qa-dark.mjs`, 390/768/1440/1920, fix before review).
+- Found and fixed: white text on light accents in dark (violet tabs, rose danger buttons via new `--on-rose`, amber badge,
+  mint/cyan step markers), border-coloured icons invisible in dark (lock, empty stars, checklist), rank numbers; homepage and
+  orders scrolling sideways (screen-reader labels escaping scroll boxes); phone site menu trapped in the 64px header (now a
+  portal); cramped titles printed on small covers (covers show topic + pattern only); select wider than phones; light-theme
+  accents darkened to pass AA. Final scan: every page, every role, 390/768/1440/1920 in dark, no failures; light spot-check clean.

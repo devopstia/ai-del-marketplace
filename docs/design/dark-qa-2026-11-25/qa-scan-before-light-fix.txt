@@ -1,0 +1,198 @@
+ok    / @390
+ok    /courses @390
+ok    /deals @390
+ok    /courses/ai-for-devops @390
+ok    /courses/sample-mcp-servers-and-agents @390
+ok    /teach @390
+ok    /login @390
+ok    /register @390
+ok    /courses?onSale=1 @390
+ok    /instructors/184e27e0-155f-4038-a308-d228547f3dd2 @390
+ok    /nope @390
+ok    / @768
+ok    /courses @768
+ok    /deals @768
+ok    /courses/ai-for-devops @768
+ok    /courses/sample-mcp-servers-and-agents @768
+ok    /teach @768
+ok    /login @768
+ok    /register @768
+ok    /courses?onSale=1 @768
+ok    /instructors/184e27e0-155f-4038-a308-d228547f3dd2 @768
+ok    /nope @768
+ok    / @1440
+ok    /courses @1440
+ok    /deals @1440
+ok    /courses/ai-for-devops @1440
+ok    /courses/sample-mcp-servers-and-agents @1440
+ok    /teach @1440
+ok    /login @1440
+ok    /register @1440
+ok    /courses?onSale=1 @1440
+ok    /instructors/184e27e0-155f-4038-a308-d228547f3dd2 @1440
+ok    /nope @1440
+ok    / @1920
+ok    /courses @1920
+ok    /deals @1920
+ok    /courses/ai-for-devops @1920
+ok    /courses/sample-mcp-servers-and-agents @1920
+ok    /teach @1920
+ok    /login @1920
+ok    /register @1920
+ok    /courses?onSale=1 @1920
+ok    /instructors/184e27e0-155f-4038-a308-d228547f3dd2 @1920
+ok    /nope @1920
+ok    /my-learning @390 as student
+ok    /account @390 as student
+ok    /orders @390 as student
+ok    /orders/000ffa9d-aa5f-4ea8-890a-11c16aeb5f47 @390 as student
+ok    /cart @390 as student
+ok    /checkout @390 as student
+ok    /learn/sample-mcp-servers-and-agents @390 as student
+ok    /learn/ai-for-devops @390 as student
+ok    /my-learning @768 as student
+ok    /account @768 as student
+ok    /orders @768 as student
+ok    /orders/000ffa9d-aa5f-4ea8-890a-11c16aeb5f47 @768 as student
+ok    /cart @768 as student
+ok    /checkout @768 as student
+ok    /learn/sample-mcp-servers-and-agents @768 as student
+ok    /learn/ai-for-devops @768 as student
+ok    /my-learning @1440 as student
+ok    /account @1440 as student
+ok    /orders @1440 as student
+ok    /orders/000ffa9d-aa5f-4ea8-890a-11c16aeb5f47 @1440 as student
+ok    /cart @1440 as student
+ok    /checkout @1440 as student
+ok    /learn/sample-mcp-servers-and-agents @1440 as student
+ok    /learn/ai-for-devops @1440 as student
+ok    /my-learning @1920 as student
+ok    /account @1920 as student
+ok    /orders @1920 as student
+ok    /orders/000ffa9d-aa5f-4ea8-890a-11c16aeb5f47 @1920 as student
+ok    /cart @1920 as student
+ok    /checkout @1920 as student
+ok    /learn/sample-mcp-servers-and-agents @1920 as student
+ok    /learn/ai-for-devops @1920 as student
+ok    /studio @390 as instructor
+ok    /studio/courses @390 as instructor
+ok    /studio/courses/eb3920f9-f13a-4498-9ea0-ed5c16f21f2e @390 as instructor
+ok    /studio/sales @390 as instructor
+ok    /studio/promotions @390 as instructor
+ok    /studio/students @390 as instructor
+ok    /studio/reviews @390 as instructor
+ok    /studio/payouts @390 as instructor
+ok    /studio/profile @390 as instructor
+ok    /studio @768 as instructor
+ok    /studio/courses @768 as instructor
+ok    /studio/courses/eb3920f9-f13a-4498-9ea0-ed5c16f21f2e @768 as instructor
+ok    /studio/sales @768 as instructor
+ok    /studio/promotions @768 as instructor
+ok    /studio/students @768 as instructor
+ok    /studio/reviews @768 as instructor
+ok    /studio/payouts @768 as instructor
+ok    /studio/profile @768 as instructor
+ok    /studio @1440 as instructor
+ok    /studio/courses @1440 as instructor
+ok    /studio/courses/eb3920f9-f13a-4498-9ea0-ed5c16f21f2e @1440 as instructor
+ok    /studio/sales @1440 as instructor
+ok    /studio/promotions @1440 as instructor
+ok    /studio/students @1440 as instructor
+ok    /studio/reviews @1440 as instructor
+ok    /studio/payouts @1440 as instructor
+ok    /studio/profile @1440 as instructor
+ok    /studio @1920 as instructor
+ok    /studio/courses @1920 as instructor
+ok    /studio/courses/eb3920f9-f13a-4498-9ea0-ed5c16f21f2e @1920 as instructor
+ok    /studio/sales @1920 as instructor
+ok    /studio/promotions @1920 as instructor
+ok    /studio/students @1920 as instructor
+ok    /studio/reviews @1920 as instructor
+ok    /studio/payouts @1920 as instructor
+ok    /studio/profile @1920 as instructor
+ok    /admin @390 as admin
+ok    /admin/review @390 as admin
+ok    /admin/courses @390 as admin
+ok    /admin/instructors @390 as admin
+ok    /admin/users @390 as admin
+ok    /admin/orders @390 as admin
+ok    /admin/finance @390 as admin
+ok    /admin/promotions @390 as admin
+ok    /admin/categories @390 as admin
+ok    /admin/settings @390 as admin
+ok    /admin/audit @390 as admin
+ok    /admin @768 as admin
+ok    /admin/review @768 as admin
+ok    /admin/courses @768 as admin
+ok    /admin/instructors @768 as admin
+ok    /admin/users @768 as admin
+ok    /admin/orders @768 as admin
+ok    /admin/finance @768 as admin
+ok    /admin/promotions @768 as admin
+ok    /admin/categories @768 as admin
+ok    /admin/settings @768 as admin
+ok    /admin/audit @768 as admin
+ok    /admin @1440 as admin
+ok    /admin/review @1440 as admin
+ok    /admin/courses @1440 as admin
+ok    /admin/instructors @1440 as admin
+ok    /admin/users @1440 as admin
+ok    /admin/orders @1440 as admin
+ok    /admin/finance @1440 as admin
+ok    /admin/promotions @1440 as admin
+ok    /admin/categories @1440 as admin
+ok    /admin/settings @1440 as admin
+ok    /admin/audit @1440 as admin
+ok    /admin @1920 as admin
+ok    /admin/review @1920 as admin
+ok    /admin/courses @1920 as admin
+ok    /admin/instructors @1920 as admin
+ok    /admin/users @1920 as admin
+ok    /admin/orders @1920 as admin
+ok    /admin/finance @1920 as admin
+ok    /admin/promotions @1920 as admin
+ok    /admin/categories @1920 as admin
+ok    /admin/settings @1920 as admin
+ok    /admin/audit @1920 as admin
+FAIL  / @390 (light)
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      2.71:1 < 4.5  "5.0"  rgb(201, 138, 12)  14px  <span.font-bold.text-amber.tabular-nums>
+      3.78:1 < 4.5  "Free preview"  rgb(19, 138, 91)  12px  <span.inline-flex.items-center.gap-1.rounded-full>
+      4.01:1 < 4.5  "Free"  rgb(19, 138, 91)  16.8px  <span.font-display.font-extrabold.text-mint.text-[1.05rem]>
+FAIL  /courses @390 (light)
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      2.71:1 < 4.5  "5.0"  rgb(201, 138, 12)  14px  <span.font-bold.text-amber.tabular-nums>
+      3.78:1 < 4.5  "Free preview"  rgb(19, 138, 91)  12px  <span.inline-flex.items-center.gap-1.rounded-full>
+FAIL  /deals @390 (light)
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      3.78:1 < 4.5  "Free preview"  rgb(19, 138, 91)  12px  <span.inline-flex.items-center.gap-1.rounded-full>
+      2.71:1 < 4.5  "5.0"  rgb(201, 138, 12)  14px  <span.font-bold.text-amber.tabular-nums>
+FAIL  /courses/ai-for-devops @390 (light)
+      1:1 < 4.5  "Preview this course"  rgb(255, 255, 255)  14px  <span.rounded-full.bg-black/75.px-3.py-1>
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      2.71:1 < 3  "5.0"  rgb(201, 138, 12)  60px  <p.font-display.text-6xl.font-extrabold.leading-none>
+ok    /teach @390 (light)
+FAIL  / @1440 (light)
+      4.32:1 < 4.5  "5"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-1.5.text-xs>
+      4.36:1 < 4.5  "Free preview available"  rgb(19, 138, 91)  12px  <p.flex.items-center.gap-1.5.text-xs>
+      2.71:1 < 4.5  "5.0"  rgb(201, 138, 12)  14px  <span.font-bold.text-amber.tabular-nums>
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      3.78:1 < 4.5  "Free preview"  rgb(19, 138, 91)  12px  <span.inline-flex.items-center.gap-1.rounded-full>
+      4.01:1 < 4.5  "Free"  rgb(19, 138, 91)  16.8px  <span.font-display.font-extrabold.text-mint.text-[1.05rem]>
+FAIL  /courses @1440 (light)
+      4.32:1 < 4.5  "5"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-1.5.text-xs>
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      2.71:1 < 4.5  "5.0"  rgb(201, 138, 12)  14px  <span.font-bold.text-amber.tabular-nums>
+      3.78:1 < 4.5  "Free preview"  rgb(19, 138, 91)  12px  <span.inline-flex.items-center.gap-1.rounded-full>
+FAIL  /deals @1440 (light)
+      4.32:1 < 4.5  "5"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-1.5.text-xs>
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+      3.78:1 < 4.5  "Free preview"  rgb(19, 138, 91)  12px  <span.inline-flex.items-center.gap-1.rounded-full>
+      2.71:1 < 4.5  "5.0"  rgb(201, 138, 12)  14px  <span.font-bold.text-amber.tabular-nums>
+FAIL  /courses/ai-for-devops @1440 (light)
+      4.32:1 < 4.5  "5"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-1.5.text-xs>
+      2.71:1 < 3  "5.0"  rgb(201, 138, 12)  60px  <p.font-display.text-6xl.font-extrabold.leading-none>
+      1:1 < 4.5  "Preview this course"  rgb(255, 255, 255)  14px  <span.rounded-full.bg-black/75.px-3.py-1>
+      4.32:1 < 4.5  "−"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-2.py-0.5>
+FAIL  /teach @1440 (light)
+      4.32:1 < 4.5  "5"  rgb(194, 58, 82)  12px  <span.rounded-full.bg-rose-soft.px-1.5.text-xs>

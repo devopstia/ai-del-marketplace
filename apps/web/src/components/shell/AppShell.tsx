@@ -26,7 +26,7 @@ export function AppShell({ area, nav, children, footer }: { area: string; nav: N
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.93rem] font-bold ${a ? "bg-violet-soft text-violet" : "text-ink-2 hover:bg-surface-2 hover:text-ink"}`}>
               <n.icon className="size-[18px]" aria-hidden="true" />
               <span className="flex-1">{n.label}</span>
-              {n.badge ? <span className="rounded-full bg-amber px-1.5 text-xs leading-5 text-white tabular-nums">{n.badge}</span> : null}
+              {n.badge ? <span className="rounded-full bg-amber px-1.5 text-xs font-bold leading-5 text-[#1f1500] tabular-nums">{n.badge}</span> : null}
             </Link>
           </li>
         );
@@ -75,7 +75,7 @@ export function PageHead({ title, sub, actions }: { title: string; sub?: string;
         <h1 className="font-display text-[clamp(1.7rem,3vw,2.3rem)] font-extrabold leading-tight">{title}</h1>
         {sub ? <p className="mt-1 max-w-2xl text-ink-2">{sub}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="flex max-w-full min-w-0 flex-wrap gap-2">{actions}</div> : null}
     </div>
   );
 }

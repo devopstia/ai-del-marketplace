@@ -34,7 +34,7 @@ function Stop({ s, n, lab }: { s: SectionOutline; n: number; lab: boolean }) {
   const title = stripped.charAt(0).toUpperCase() + stripped.slice(1);
   return (
     <li className="relative grid grid-cols-[2rem_1fr] gap-x-3 py-2.5">
-      <span className={`relative z-10 grid size-8 place-items-center rounded-full text-sm font-bold tabular-nums ${lab ? "bg-cyan text-white" : "border-[1.5px] border-line-strong bg-paper text-ink-2"}`}>{n}</span>
+      <span className={`relative z-10 grid size-8 place-items-center rounded-full text-sm font-bold tabular-nums ${lab ? "bg-cyan text-[#04253a]" : "border-[1.5px] border-line-strong bg-paper text-ink-2"}`}>{n}</span>
       <span className="min-w-0 pt-1">
         <span className="block font-bold leading-snug text-ink">
           {lab ? <span className="sr-only">Lab: </span> : null}{title}

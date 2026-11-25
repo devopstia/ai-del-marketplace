@@ -81,7 +81,7 @@ export function coverSeeds(slugs: string[], avoid: number[] = [1, 2]): number[] 
 }
 
 export function CourseCover({
-  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = true,
+  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = false,
 }: { slug: string; title: string; category?: string | null; thumbnailUrl?: string | null; size?: "sm" | "md" | "lg"; className?: string; seed?: number; showTitle?: boolean }) {
   const seed = seedOverride ?? hash(slug || title);
   const g = grounds[seed % grounds.length]!;

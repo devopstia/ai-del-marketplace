@@ -196,7 +196,7 @@ export default function AdminPromotions() {
                     <span className="inline-flex gap-2">
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => setForm(p)} disabled={busy}>Edit</button>
                       {confirm === p.id ? (
-                        <button type="button" className="btn btn-sm bg-rose text-white" onClick={() => cancelPromo(p.id)} disabled={busy}>{busy ? <Loader2 className="size-4 animate-spin" /> : null}Yes, cancel</button>
+                        <button type="button" className="btn btn-sm btn-danger" onClick={() => cancelPromo(p.id)} disabled={busy}>{busy ? <Loader2 className="size-4 animate-spin" /> : null}Yes, cancel</button>
                       ) : <button type="button" className="btn btn-ghost btn-sm text-rose" onClick={() => setConfirm(p.id)} disabled={busy}>Cancel</button>}
                     </span>
                   ) : null}
@@ -210,7 +210,7 @@ export default function AdminPromotions() {
       <div className="mb-3 mt-10 flex flex-wrap items-end justify-between gap-3">
         <h2 className="font-display text-lg font-bold">Instructor sales</h2>
         <div className="flex gap-1 rounded-full border border-line bg-surface p-1 text-xs font-bold" role="group" aria-label="Which sales">
-          {(["open", "all"] as const).map((s) => <button key={s} type="button" aria-pressed={salesStatus === s} onClick={() => setSalesStatus(s)} className={`rounded-full px-3 py-1 ${salesStatus === s ? "bg-violet text-white" : "text-ink-2"}`}>{s === "open" ? "Running and scheduled" : "All"}</button>)}
+          {(["open", "all"] as const).map((s) => <button key={s} type="button" aria-pressed={salesStatus === s} onClick={() => setSalesStatus(s)} className={`rounded-full px-3 py-1 ${salesStatus === s ? "bg-violet text-on-violet" : "text-ink-2"}`}>{s === "open" ? "Running and scheduled" : "All"}</button>)}
         </div>
       </div>
       {!sales.data ? <Skeleton className="h-40" /> : (
@@ -228,7 +228,7 @@ export default function AdminPromotions() {
                   {canEdit && open ? (confirm === s.id ? (
                     <span className="inline-flex flex-wrap items-center justify-end gap-2">
                       <input className="field !min-h-9 !w-56 !py-1 text-sm" placeholder="Reason (shown in the audit log)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Reason for cancelling" />
-                      <button type="button" className="btn btn-sm bg-rose text-white" disabled={busy || note.trim().length < 5} onClick={() => cancelSale(s.id)}>Cancel sale</button>
+                      <button type="button" className="btn btn-sm btn-danger" disabled={busy || note.trim().length < 5} onClick={() => cancelSale(s.id)}>Cancel sale</button>
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirm(null)}>Keep</button>
                     </span>
                   ) : <button type="button" className="btn btn-ghost btn-sm text-rose" onClick={() => { setConfirm(s.id); setNote(""); }}>Cancel…</button>) : null}

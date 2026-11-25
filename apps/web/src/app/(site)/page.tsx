@@ -52,7 +52,7 @@ function RankedRow({ c, rank }: { c: CourseCard; rank?: number }) {
   return (
     <li>
       <Link href={`/courses/${c.slug}`} className={`group grid items-center gap-4 py-4 ${rank ? "grid-cols-[2.2rem_88px_1fr_auto]" : "grid-cols-[88px_1fr_auto]"}`}>
-        {rank ? <span className="font-display text-3xl font-extrabold tabular-nums text-line-strong group-hover:text-violet">{rank}</span> : null}
+        {rank ? <span className="font-display text-3xl font-extrabold tabular-nums text-muted group-hover:text-violet">{rank}</span> : null}
         <CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" showTitle={false} className="!rounded-lg" />
         <span className="min-w-0">
           <span className="line-clamp-2 font-display font-bold leading-snug text-ink group-hover:text-violet">{c.title}</span>

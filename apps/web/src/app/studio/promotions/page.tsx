@@ -89,7 +89,7 @@ function CourseRow({ c, rules, share, isPlatform, promos, reload }: { c: Row; ru
               <span className="ml-auto flex gap-2">
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => setForm(s)} disabled={busy}>Edit</button>
                 {confirm === s.id ? (
-                  <button type="button" className="btn btn-sm bg-rose text-white" onClick={() => cancel(s.id!)} disabled={busy} data-testid="confirm-cancel-sale">{busy ? <Loader2 className="size-4 animate-spin" /> : null}Yes, cancel sale</button>
+                  <button type="button" className="btn btn-sm btn-danger" onClick={() => cancel(s.id!)} disabled={busy} data-testid="confirm-cancel-sale">{busy ? <Loader2 className="size-4 animate-spin" /> : null}Yes, cancel sale</button>
                 ) : (
                   <button type="button" className="btn btn-ghost btn-sm text-rose" onClick={() => setConfirm(s.id!)} disabled={busy}>Cancel sale</button>
                 )}

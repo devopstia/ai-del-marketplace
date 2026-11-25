@@ -28,7 +28,7 @@ export function Price({ cents, currency, className = "", listCents }: { cents: n
   const onSale = !!listCents && listCents > cents;
   if (!onSale) return <span className={`font-display font-extrabold ${cents ? "text-ink" : "text-mint"} ${className}`}>{money(cents, currency)}</span>;
   return (
-    <span className="inline-flex flex-wrap items-baseline gap-x-2">
+    <span className="relative inline-flex flex-wrap items-baseline gap-x-2">
       <span className={`font-display font-extrabold text-ink ${className}`}><span className="sr-only">Sale price </span>{money(cents, currency)}</span>
       <s className="text-[0.85em] font-normal text-muted decoration-1"><span className="sr-only">Regular price </span>{money(listCents!, currency)}</s>
     </span>

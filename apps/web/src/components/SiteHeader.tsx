@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -135,7 +136,8 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
           </button>
         </div>
       </div>
-      {mobile ? (
+      {/* Rendered on <body>: the header's backdrop blur would otherwise trap a fixed panel inside the 64px bar. */}
+      {mobile ? createPortal(
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close menu" onClick={() => setMobile(false)} />
           <div className="pop-in absolute inset-y-0 right-0 flex w-[min(22rem,88vw)] flex-col gap-1 overflow-y-auto bg-surface p-4 shadow-float">
@@ -165,7 +167,8 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
               </div>
             ) : null}
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </header>
   );

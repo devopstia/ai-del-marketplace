@@ -44,7 +44,7 @@ export function Curriculum({ sections }: { sections: SectionOutline[] }) {
                       <li key={l.id} className="flex items-center gap-3 px-4 py-2 text-[0.95rem]">
                         <Icon className="size-4 shrink-0 text-muted" aria-hidden="true" />
                         <span className={`flex-1 ${l.isPreview ? "text-ink" : "text-ink-2"}`}>{l.title}</span>
-                        {l.isPreview && l.type === "video" ? <PreviewButton lectureId={l.id} /> : <Lock className="size-3.5 text-line-strong" aria-label="Unlocks after purchase" />}
+                        {l.isPreview && l.type === "video" ? <PreviewButton lectureId={l.id} /> : <Lock className="size-3.5 text-muted" aria-label="Unlocks after purchase" />}
                         <span className="w-12 text-right text-sm tabular-nums text-muted">{l.durationSec ? clock(l.durationSec) : ""}</span>
                       </li>
                     );

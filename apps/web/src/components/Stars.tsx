@@ -7,7 +7,7 @@ export function Stars({ value, size = 14, className = "" }: { value: number; siz
         const fill = Math.max(0, Math.min(1, value - (i - 1)));
         return (
           <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
-            <Star size={size} className="absolute inset-0 text-line-strong" strokeWidth={0} fill="currentColor" />
+            <Star size={size} className="absolute inset-0 text-muted/45" strokeWidth={0} fill="currentColor" />
             <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
               <Star size={size} className="text-amber" strokeWidth={0} fill="currentColor" />
             </span>

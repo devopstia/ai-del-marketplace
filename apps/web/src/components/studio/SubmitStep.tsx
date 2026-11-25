@@ -68,7 +68,7 @@ export function SubmitStep({ course, reload, locked }: EditorCtx) {
         <ul className="mt-2 divide-y divide-line rounded-tile border border-line bg-surface">
           {items.filter((i) => i.required === req).map((i) => (
             <li key={i.label} className="flex items-center gap-3 px-4 py-3">
-              {i.ok ? <CheckCircle2 className="size-5 shrink-0 text-mint" /> : <Circle className="size-5 shrink-0 text-line-strong" />}
+              {i.ok ? <CheckCircle2 className="size-5 shrink-0 text-mint" /> : <Circle className="size-5 shrink-0 text-muted" />}
               <span className={`flex-1 ${i.ok ? "text-ink-2" : "font-bold"}`}>{i.label}</span>
               {!i.ok ? <Link href={`?step=${i.step}`} className="link text-sm">Fix</Link> : null}
             </li>

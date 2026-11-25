@@ -183,7 +183,7 @@ export function HeroLoop({ spotlight }: { spotlight?: { slug: string; title: str
               aria-selected={i === active}
               aria-controls={`hero-slide-${sl.id}`}
               onClick={() => { setActive(i); setPaused(true); }}
-              className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${i === active ? "bg-violet text-white" : "text-ink-2 hover:text-violet"}`}
+              className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${i === active ? "bg-violet text-on-violet" : "text-ink-2 hover:text-violet"}`}
             >
               {sl.label}
             </button>

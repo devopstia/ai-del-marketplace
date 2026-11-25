@@ -28,13 +28,14 @@
   --cyan: #1e9bd7;
   --cyan-ink: #0b6d9e;
   --cyan-soft: #def1fb;
-  --amber: #c98a0c;
+  --amber: #94650a;
   --amber-soft: #fdf1d6;
-  --mint: #138a5b;
+  --mint: #0b6b45;
   --mint-soft: #ddf4e9;
-  --rose: #c23a52;
+  --rose: #ad2c45;
   --rose-soft: #fbe4e8;
   --on-violet: #ffffff;
+  --on-rose: #ffffff;
   --focus: #1e9bd7;
   --shadow-color: 228 30% 25%;
   --stage: #141833; /* the dark "screen" surface used for players and covers, in both themes */
@@ -65,6 +66,7 @@
     --rose: #ff7d93;
     --rose-soft: #40151f;
     --on-violet: #12103a;
+    --on-rose: #2a0711;
     --shadow-color: 232 60% 3%;
     --stage: #070918;
     color-scheme: dark;
@@ -94,6 +96,7 @@
   --rose: #ff7d93;
   --rose-soft: #40151f;
   --on-violet: #12103a;
+  --on-rose: #2a0711;
   --shadow-color: 232 60% 3%;
   --stage: #070918;
   color-scheme: dark;
@@ -122,6 +125,7 @@
   --color-rose: var(--rose);
   --color-rose-soft: var(--rose-soft);
   --color-on-violet: var(--on-violet);
+  --color-on-rose: var(--on-rose);
   --color-stage: var(--stage);
   --font-display: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
@@ -181,7 +185,8 @@ p { text-wrap-style: pretty; }
   .btn-outline:hover:not(:disabled) { border-color: var(--ink); }
   .btn-ghost { color: var(--ink-2); }
   .btn-ghost:hover:not(:disabled) { background: var(--surface-2); }
-  .btn-danger { background: var(--rose); color: #fff; }
+  .btn-danger { background: var(--rose); color: var(--on-rose); }
+  .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
   .btn-sm { min-height: 2.25rem; padding: 0 .8rem; font-size: .875rem; }
 
   .field {
@@ -212,6 +217,8 @@ p { text-wrap-style: pretty; }
   .prose-del ul { list-style: disc; padding-left: 1.3em; margin-block: .6em; }
   .prose-del code { background: var(--surface-2); padding: .1em .35em; border-radius: 5px; font-size: .9em; }
 
+  /* Screen-reader-only text is position:absolute; keep it inside scrolling boxes so it never widens the page. */
+  .overflow-x-auto, .overflow-auto, .scroll-rail { position: relative; }
   .scroll-rail { scrollbar-width: thin; scroll-snap-type: x mandatory; }
   .scroll-rail > * { scroll-snap-align: start; }
 }

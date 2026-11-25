@@ -58,7 +58,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
   const readings = lectures.filter((l) => l.type === "article").length;
   return (
     <div className="overflow-hidden rounded-panel border border-line bg-surface shadow-float" data-testid="purchase-card">
-      <div className="relative">
+      <div className="relative" data-qa-on-media>
         <CourseCover slug={course.slug} title={course.title} category={course.category?.name} thumbnailUrl={course.thumbnailUrl} className="!rounded-none" />
         {firstPreviewId ? (
           <PreviewButton lectureId={firstPreviewId} className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/45 font-bold text-white transition-colors hover:bg-black/55">
