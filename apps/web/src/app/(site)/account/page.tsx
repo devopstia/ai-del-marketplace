@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { SecuritySection } from "@/components/auth/SecuritySection";
 import { Laptop, Loader2, Smartphone } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { list, obj } from "@/lib/normalize";
@@ -32,25 +33,6 @@ function ProfileForm() {
     }}>
       <div className="min-w-0 flex-1"><label className="label" htmlFor="acc-name">Display name</label><input id="acc-name" className="field" maxLength={100} required value={value} onChange={(e) => setName(e.target.value)} /></div>
       <button className="btn btn-outline" disabled={busy || value.trim() === me?.name}>{busy ? <Loader2 className="size-4 animate-spin" /> : null}Save name</button>
-    </form>
-  );
-}
-
-function PasswordForm() {
-  const toast = useToast();
-  const [cur, setCur] = useState("");
-  const [next, setNext] = useState("");
-  const [busy, setBusy] = useState(false);
-  return (
-    <form className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onSubmit={async (e) => {
-      e.preventDefault();
-      setBusy(true);
-      try { await api("/auth/password", { method: "POST", body: { currentPassword: cur, newPassword: next } }); setCur(""); setNext(""); toast("ok", "Password changed. Other devices were signed out."); }
-      catch (err) { toast("error", errMsg(err)); } finally { setBusy(false); }
-    }}>
-      <div><label className="label" htmlFor="pw-cur">Current password</label><input id="pw-cur" type="password" autoComplete="current-password" className="field" required value={cur} onChange={(e) => setCur(e.target.value)} /></div>
-      <div><label className="label" htmlFor="pw-new">New password</label><input id="pw-new" type="password" autoComplete="new-password" minLength={10} className="field" required value={next} onChange={(e) => setNext(e.target.value)} /></div>
-      <button className="btn btn-outline" disabled={busy}>{busy ? <Loader2 className="size-4 animate-spin" /> : null}Change password</button>
     </form>
   );
 }
@@ -90,13 +72,11 @@ export default function AccountPage() {
         </dl>
       </section>
 
-      <section className="mt-6 grid gap-8 rounded-panel border border-line bg-surface p-6 sm:p-8">
+      <section className="mt-6 rounded-panel border border-line bg-surface p-6 sm:p-8">
         <ProfileForm />
-        <div className="border-t border-line pt-6">
-          <h2 className="mb-3 font-display text-lg font-bold">Password</h2>
-          <PasswordForm />
-        </div>
       </section>
+
+      <Suspense><SecuritySection /></Suspense>
 
       <section className="mt-10">
         <h2 className="font-display text-2xl font-extrabold">Where you’re signed in</h2>

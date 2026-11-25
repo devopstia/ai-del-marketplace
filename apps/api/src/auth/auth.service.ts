@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import type { Response } from 'express';
 import { AuditService } from '../common/audit.service';
-import { hashSessionToken } from '../common/auth.guard';
-import { SESSION_TTL_MS } from '../common/cookies';
+import type { AppRequest } from '../common/auth-context';
 import { AppError, conflict, notFound, unauthorized } from '../common/errors';
+import { JobsService } from '../common/jobs';
 import { PrismaService } from '../common/prisma.service';
+import { sha256 } from '../common/seal';
 import { randomToken } from '../common/util';
+import { env } from '../config/env';
+import { checkPassword, passwordMessage } from './password-policy';
+import { type Ctx, SignInService } from './signin.service';
 
 export const ARGON2_OPTS = { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
+const RESET_TTL_MS = 60 * 60_000;
 
 const publicUser = { id: true, email: true, name: true, avatarUrl: true, roles: true, status: true, createdAt: true } as const;
-
-interface Ctx {
-  ip: string | null;
-  userAgent: string | null;
-}
 
 @Injectable()
 export class AuthService {
@@ -23,57 +24,48 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly signIn: SignInService,
+    private readonly jobs: JobsService,
   ) {}
 
   hashPassword(pw: string) {
     return argon2.hash(pw, ARGON2_OPTS);
   }
 
-  async register(input: { email: string; password: string; name: string }, ctx: Ctx) {
-    const email = input.email.trim().toLowerCase();
-    const exists = await this.prisma.user.findUnique({ where: { email }, select: { id: true } });
-    if (exists) throw conflict('An account with this email already exists', 'email_taken');
-    const user = await this.prisma.user.create({
-      data: { email, name: input.name.trim(), passwordHash: await this.hashPassword(input.password), roles: ['student'] },
-      select: publicUser,
-    });
-    await this.audit.log({ actorId: user.id, action: 'auth.register', targetType: 'user', targetId: user.id, ip: ctx.ip });
-    const token = await this.createSession(user.id, ctx);
-    return { user, token };
+  /** The strength rules plus the breach check; throws a message listing every problem at once. */
+  async assertStrong(pw: string, who: { email?: string; name?: string }) {
+    const c = await checkPassword(pw, who);
+    if (!c.ok) throw new AppError(400, c.breached ? 'password_breached' : 'weak_password', passwordMessage(c), { problems: c.problems });
   }
 
-  async login(input: { email: string; password: string }, ctx: Ctx) {
+  /** Email and password sign-up: the account exists now, but the session comes only after Google Authenticator is set up. */
+  async register(input: { email: string; password: string; name: string; cartCourseIds?: string[]; next?: string }, req: AppRequest, res: Response, ctx: Ctx) {
+    const email = input.email.trim().toLowerCase();
+    await this.assertStrong(input.password, { email, name: input.name });
+    const exists = await this.prisma.user.findUnique({ where: { email }, select: { id: true } });
+    if (exists) throw conflict('An account with this email already exists. Log in instead, or reset your password.', 'email_taken');
+    const user = await this.prisma.user.create({ data: { email, name: input.name.trim(), passwordHash: await this.hashPassword(input.password), passwordChangedAt: new Date(), roles: ['student'] } });
+    await this.audit.log({ actorId: user.id, action: 'auth.register', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method: 'password' } });
+    return this.signIn.begin(user, 'password', req, res, ctx, { cartCourseIds: input.cartCourseIds, next: input.next });
+  }
+
+  /** First step with a password. Wrong passwords count toward the account lockout; a locked account refuses the right one too. */
+  async login(input: { email: string; password: string; cartCourseIds?: string[]; next?: string }, req: AppRequest, res: Response, ctx: Ctx) {
     const email = input.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({ where: { email } });
-    // Verify against a dummy hash when the user doesn't exist, so timing doesn't reveal which emails are registered.
+    // Verify against a dummy hash when there is no password, so timing doesn't reveal which emails are registered.
     this.dummyHash ??= this.hashPassword(randomToken(16));
+    if (user) this.signIn.assertNotLocked(user);
     const ok = await argon2.verify(user?.passwordHash ?? (await this.dummyHash), input.password).catch(() => false);
-    if (!user || !ok) {
+    if (!user || !user.passwordHash || !ok) {
+      if (user) await this.signIn.recordFailure(user.id, ctx.ip, 'password');
       await this.audit.log({ actorId: user?.id ?? null, action: 'auth.login_failed', targetType: 'user', targetId: user?.id, ip: ctx.ip, meta: { email } });
       throw unauthorized('Email or password is incorrect', 'invalid_credentials');
     }
-    if (user.status !== 'active') throw new AppError(403, 'account_suspended', 'This account is suspended');
     if (argon2.needsRehash(user.passwordHash, ARGON2_OPTS)) {
       await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: await this.hashPassword(input.password) } });
     }
-    await this.audit.log({ actorId: user.id, action: 'auth.login', targetType: 'user', targetId: user.id, ip: ctx.ip });
-    const token = await this.createSession(user.id, ctx);
-    const { passwordHash: _p, ...safe } = user;
-    return { user: safe, token };
-  }
-
-  async createSession(userId: string, ctx: Ctx): Promise<string> {
-    const token = randomToken(32);
-    await this.prisma.session.create({
-      data: {
-        id: hashSessionToken(token),
-        userId,
-        expiresAt: new Date(Date.now() + SESSION_TTL_MS),
-        ip: ctx.ip,
-        userAgent: ctx.userAgent?.slice(0, 300) ?? null,
-      },
-    });
-    return token;
+    return this.signIn.begin(user, 'password', req, res, ctx, { cartCourseIds: input.cartCourseIds, next: input.next });
   }
 
   async revokeSession(sessionId: string) {
@@ -115,17 +107,83 @@ export class AuthService {
     return this.prisma.user.update({ where: { id: userId }, data, select: publicUser });
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string, keepSessionId: string | undefined, ip: string | null) {
+  /** What Account › Security shows. */
+  async security(userId: string) {
+    const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { passwordHash: true, passwordChangedAt: true, mfaEnabledAt: true } });
+    const [codesLeft, devices] = await Promise.all([
+      this.prisma.mfaRecoveryCode.count({ where: { userId, usedAt: null } }),
+      this.prisma.trustedDevice.count({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } } }),
+    ]);
+    return { hasPassword: !!u.passwordHash, passwordChangedAt: u.passwordChangedAt, mfa: { enabledAt: u.mfaEnabledAt, recoveryCodesLeft: codesLeft }, trustedDevices: devices };
+  }
+
+  /**
+   * Change the password (needs the current one) or set a first one on an account that signs in with Google and the like
+   * (needs a code from the authenticator). Every other device is signed out and trusted devices are forgotten.
+   */
+  async setPassword(userId: string, input: { currentPassword?: string; newPassword: string; code?: string }, keepSessionId: string | undefined, ip: string | null) {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    if (!(await argon2.verify(user.passwordHash, currentPassword).catch(() => false))) {
-      throw unauthorized('Current password is incorrect', 'invalid_credentials');
+    if (user.passwordHash) {
+      if (!input.currentPassword || !(await argon2.verify(user.passwordHash, input.currentPassword).catch(() => false))) {
+        throw unauthorized('Current password is incorrect', 'invalid_credentials');
+      }
+    } else {
+      await this.signIn.checkCode(userId, input.code, ip);
     }
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await this.hashPassword(newPassword) } });
-    // Sign out every other device.
-    await this.prisma.session.updateMany({
-      where: { userId, revokedAt: null, NOT: keepSessionId ? { id: keepSessionId } : undefined },
-      data: { revokedAt: new Date() },
-    });
-    await this.audit.log({ actorId: userId, action: 'auth.password_changed', targetType: 'user', targetId: userId, ip });
+    await this.assertStrong(input.newPassword, { email: user.email, name: user.name });
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await this.hashPassword(input.newPassword), passwordChangedAt: new Date() } });
+    await this.prisma.session.updateMany({ where: { userId, revokedAt: null, NOT: keepSessionId ? { id: keepSessionId } : undefined }, data: { revokedAt: new Date() } });
+    await this.signIn.forgetDevices(userId);
+    await this.audit.log({ actorId: userId, action: user.passwordHash ? 'auth.password_changed' : 'auth.password_set', targetType: 'user', targetId: userId, ip });
+    await this.jobs.sendEmail({ to: user.email, template: 'security-password-changed', data: { name: user.name } });
+  }
+
+  /** Always the same answer, whether or not the address has an account (no account oracle). */
+  async forgotPassword(emailRaw: string, ip: string | null) {
+    const email = emailRaw.trim().toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email }, select: { id: true, name: true, status: true } });
+    if (user && user.status === 'active') {
+      const recent = await this.prisma.passwordReset.count({ where: { userId: user.id, createdAt: { gt: new Date(Date.now() - 3600_000) } } });
+      if (recent < 3) {
+        const raw = randomToken(32);
+        await this.prisma.passwordReset.updateMany({ where: { userId: user.id, usedAt: null }, data: { usedAt: new Date() } });
+        await this.prisma.passwordReset.create({ data: { id: sha256(raw), userId: user.id, expiresAt: new Date(Date.now() + RESET_TTL_MS), ip } });
+        await this.jobs.sendEmail({ to: email, template: 'password-reset', data: { name: user.name, link: `${env().WEB_URL}/reset-password?token=${raw}` } });
+        await this.audit.log({ actorId: user.id, action: 'auth.password_reset_requested', targetType: 'user', targetId: user.id, ip });
+      }
+    }
+    return { ok: true };
+  }
+
+  /** A reset ends every session and trusted device and clears the lockout; Google Authenticator is still asked at sign-in. */
+  async resetPassword(raw: string, password: string, ip: string | null) {
+    const r = await this.prisma.passwordReset.findUnique({ where: { id: sha256(raw) }, include: { user: true } });
+    if (!r || r.usedAt || r.expiresAt < new Date() || r.user.status !== 'active') throw new AppError(400, 'reset_link_invalid', 'This link has expired or was already used. Ask for a new one.');
+    await this.assertStrong(password, { email: r.user.email, name: r.user.name });
+    const used = await this.prisma.passwordReset.updateMany({ where: { id: r.id, usedAt: null }, data: { usedAt: new Date() } });
+    if (!used.count) throw new AppError(400, 'reset_link_invalid', 'This link has expired or was already used. Ask for a new one.');
+    await this.prisma.user.update({ where: { id: r.userId }, data: { passwordHash: await this.hashPassword(password), passwordChangedAt: new Date(), failedLogins: 0, lockedUntil: null } });
+    await this.prisma.session.updateMany({ where: { userId: r.userId, revokedAt: null }, data: { revokedAt: new Date() } });
+    await this.signIn.forgetDevices(r.userId);
+    await this.audit.log({ actorId: r.userId, action: 'auth.password_reset', targetType: 'user', targetId: r.userId, ip });
+    await this.jobs.sendEmail({ to: r.user.email, template: 'security-password-changed', data: { name: r.user.name } });
+    return { ok: true };
+  }
+
+  /** Super Admin: remove someone's authenticator (lost phone, no recovery code). Never their own account. */
+  async resetMfa(actorId: string, targetId: string, ip: string | null) {
+    if (actorId === targetId) throw new AppError(403, 'own_account', 'You can’t reset your own two-step sign-in. Use a recovery code, or ask another super admin.');
+    const t = await this.prisma.user.findUnique({ where: { id: targetId }, select: { id: true, email: true, name: true } });
+    if (!t) throw notFound('User');
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: targetId }, data: { mfaSecret: null, mfaEnabledAt: null, mfaLastStep: null } }),
+      this.prisma.mfaRecoveryCode.deleteMany({ where: { userId: targetId } }),
+      this.prisma.session.updateMany({ where: { userId: targetId, revokedAt: null }, data: { revokedAt: new Date() } }),
+      this.prisma.authTicket.deleteMany({ where: { userId: targetId } }),
+    ]);
+    await this.signIn.forgetDevices(targetId);
+    await this.audit.log({ actorId, action: 'auth.mfa_reset_by_admin', targetType: 'user', targetId, ip });
+    await this.jobs.sendEmail({ to: t.email, template: 'security-mfa-reset', data: { name: t.name } });
+    return { ok: true };
   }
 }

@@ -7,6 +7,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 API="${API:-http://127.0.0.1:4000}/api"
 SEED_PASSWORD="$(grep -E '^SEED_PASSWORD=' .env | cut -d= -f2-)"
+SEED_MFA="$(grep -E '^SEED_MFA_SECRET=' .env | cut -d= -f2-)"
+PW="Quiet-river-stone-58"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 pass=0; fail=0
 ok()   { pass=$((pass+1)); printf '  \033[32mPASS\033[0m %s\n' "$1"; }
@@ -23,7 +25,12 @@ req() {
   code="$(curl "${args[@]}" "$API$path")"
 }
 j() { jq -r "$1" "$TMP/body"; }
-login() { req "$1" GET /auth/csrf; req "$1" POST /auth/login "{\"email\":\"$2\",\"password\":\"$SEED_PASSWORD\"}"; check "login $2" "$code" 200; }
+# Two-step sign-in (docs/AUTH.md): a code works once per account, so a retry waits for the next 30-second step.
+mfa() { local i; for i in 1 2 3; do req "$1" POST /auth/mfa/complete "{\"code\":\"$(node scripts/totp.mjs "$2")\"}"; [ "$code" = 200 ] && return 0; [ "$(j .error.code)" = invalid_code ] || return 0; sleep $((31 - $(date +%s) % 30)); done; }
+login() { req "$1" GET /auth/csrf; req "$1" POST /auth/login "{\"email\":\"$2\",\"password\":\"${3:-$SEED_PASSWORD}\"}"; check "login $2: password step asks for a code" "$(j .mfa)" verify; mfa "$1" "${4:-$SEED_MFA}"; check "login $2: code step" "$code" 200; }
+# signup <jar> <email> <name> [extra json] → sets up the authenticator; its seed is kept in $TMP/<jar>.seed
+signup() { req "$1" POST /auth/register "{\"email\":\"$2\",\"password\":\"$PW\",\"name\":\"$3\"${4:-}}"; check "register $3: no session before the code" "$code $(j .mfa)" "201 enroll"
+  req "$1" POST /auth/mfa/enroll; j .secret > "$TMP/$1.seed"; mfa "$1" "$(cat "$TMP/$1.seed")"; check "register $3: authenticator set up" "$(j '.recoveryCodes|length')" 10; }
 fetch() { curl -s -o "${2:-/dev/null}" -w '%{http_code}' "$1"; }
 
 # Catalogue (owner, 2026-11-24): ONE DEL course "AI for DevOps" (import) + the seeded demo instructor's courses (multi-instructor checks).
@@ -75,12 +82,13 @@ check "guest cart total" "$(j .totalCents)" "$(jq "[.items[]|select(.id==\"$PAID
 check "guest cart flags unknown ids" "$(j '.unavailableIds|length')" 1
 EMAIL="smoke-$(date +%s)-$RANDOM@example.com"
 req stu GET /auth/me; check "me (signed out) returns csrf" "$(j '.user == null and (.csrf|length) > 20')" true
-req stu POST /auth/register "{\"email\":\"$EMAIL\",\"password\":\"Correct-Horse-9\",\"name\":\"Smoke Tester\",\"cartCourseIds\":[\"$PAID_ID\"]}"; check "register" "$code" 201
+signup stu "$EMAIL" "Smoke Tester" ",\"cartCourseIds\":[\"$PAID_ID\"]"
 check "register merges the guest cart" "$(j .cart.count)" 1
 grep -q $'\tsid\t' "$TMP/stu.jar" && ok "sid cookie set" || bad "sid cookie missing"
 grep -q '#HttpOnly_' "$TMP/stu.jar" && ok "sid is HttpOnly" || bad "sid not HttpOnly"
 req stu GET /auth/me; check "me (signed in)" "$(j .user.email)" "$EMAIL"
-req stu POST /auth/register "{\"email\":\"$EMAIL\",\"password\":\"Correct-Horse-9\",\"name\":\"Dup\"}"; check "duplicate email → 409" "$code" 409
+req stu POST /auth/register "{\"email\":\"$EMAIL\",\"password\":\"$PW\",\"name\":\"Dup\"}"; check "duplicate email → 409" "$code" 409
+req stu POST /auth/register "{\"email\":\"weak-$EMAIL\",\"password\":\"short\",\"name\":\"Weak\"}"; check "weak password refused, every rule listed" "$(j .error.code)" weak_password
 req stu POST /cart '{"courseId":"not-a-uuid"}'; check "validation error shape" "$(j '.error.code + " " + .error.details[0].field')" "validation_failed courseId"
 req stu POST /courses/$NADIA_SLUG/reviews '{"rating":1,"body":"not enrolled"}'; check "review without enrolment → 403" "$code" 403
 req stu POST /cart/merge "{\"courseIds\":[\"$NADIA_ID\",\"$PAID_ID\"]}"; check "merge adds new courses" "$(j '.merge.added|length')" 1
@@ -96,8 +104,17 @@ req stu GET "/orders/$ORDER"; check "order paid" "$(j .status)" paid
 req stu GET /cart; check "cart cleared" "$(j .count)" 0
 req stu GET /me/learning; check "enrolled (My Learning)" "$(j "[.items[].course.slug]|index(\"$PAID_SLUG\") != null")" true
 req stu POST "/lectures/$LOCKED_LECTURE/playback"; check "playback URL (enrolled)" "$code" 200
-check "imported MP4 plays for the student" "$(fetch "$(j .url)")" 200
-check "video content-type" "$(curl -s -r 0-1023 -o /dev/null -w '%{content_type}' "$(j .url)")" video/mp4
+# Content protection (docs/CONTENT_PROTECTION.md): an encrypted HLS session when the video is packaged, else a signed MP4.
+if [ "$(j .format)" = hls ]; then
+  check "paid lesson streams encrypted (no file link)" "$(j '.protected')" true
+  PL="$(j .url)"; check "playlist only with the student's session" "$(curl -s -o /dev/null -w '%{http_code}' "$PL")" 401
+  check "playlist for the student" "$(curl -s -b "$TMP/stu.jar" -o "$TMP/pl.m3u8" -w '%{http_code}' "$PL")" 200
+  check "playlist is encrypted HLS" "$(grep -c 'METHOD=AES-128' "$TMP/pl.m3u8")" 1
+  check "key for the student only" "$(curl -s -o /dev/null -w '%{http_code}' "${PL%/index.m3u8}/key")" 401
+else
+  check "imported MP4 plays for the student" "$(fetch "$(j .url)")" 200
+  check "video content-type" "$(curl -s -r 0-1023 -o /dev/null -w '%{content_type}' "$(j .url)")" video/mp4
+fi
 req stu PUT "/lectures/$LOCKED_LECTURE/progress" '{"positionSec":7}'; check "save progress" "$(j .positionSec)" 7
 req stu GET "/me/courses/$PAID_SLUG"; check "resume position" "$(j "[.sections[].lectures[]|select(.id==\"$LOCKED_LECTURE\")][0].progress.positionSec")" 7
 check "imported lectures have quizzes" "$(j '[.sections[].lectures[]|select(.hasQuiz)]|length > 0')" true
@@ -167,18 +184,18 @@ check "draft shows the change list" "$(j '[.revision.changes[].message]|map(sele
 req nadia POST "/instructor/courses/$NEW_ID/sections" '{"title":"Bonus"}'; BONUS="$(j .id)"
 V2="$(upload_video)"
 req nadia POST "/instructor/courses/$NEW_ID/sections/$BONUS/lectures" "{\"title\":\"New lesson\",\"videoAssetId\":\"$V2\"}"; check "add a lecture to the draft" "$code" 201
-req anon GET "/courses/$NEW_SLUG"; check "live course unchanged while editing" "$(j '"\(.title)|\(.priceCents)|\(.totals.lectures)"')" "$LIVE_TITLE|1999|1"
+req anon GET "/courses/$NEW_SLUG"; check "live course unchanged while editing" "$(j '"\(.title)|\(.listPriceCents)|\(.totals.lectures)"')" "$LIVE_TITLE|1999|1"
 req nadia GET "/instructor/courses/$NEW_ID?version=live"; check "studio can show the live version" "$(j '"\(.version)|\(.title)"')" "live|$LIVE_TITLE"
 req nadia POST "/instructor/courses/$NEW_ID/submit"; check "submit changes" "$(j .revision.status)" in_review
 req nadia PATCH "/instructor/courses/$NEW_ID" '{"title":"Sneaky"}'; check "draft is locked in review → 409" "$code $(j .error.code)" "409 course_locked"
 req admin GET /admin/review-queue; check "revision in the review queue" "$(j "[.items[]|select(.id==\"$NEW_ID\")][0].kind")" revision
 check "queue lists what changed" "$(j "[.items[]|select(.id==\"$NEW_ID\")][0].changes|length > 2")" true
 req admin POST "/admin/courses/$NEW_ID/request-changes" '{"note":"Please keep the old price"}'; check "admin requests changes" "$(j .revision.status)" changes_requested
-req anon GET "/courses/$NEW_SLUG"; check "live course unchanged after request-changes" "$(j .priceCents)" 1999
+req anon GET "/courses/$NEW_SLUG"; check "live course unchanged after request-changes" "$(j .listPriceCents)" 1999
 req nadia PATCH "/instructor/courses/$NEW_ID" '{"priceCents":1999}'; check "editable again after request-changes" "$code" 200
 req nadia POST "/instructor/courses/$NEW_ID/submit"; check "resubmit" "$(j .revision.status)" in_review
 req admin POST "/admin/courses/$NEW_ID/approve" '{"note":"Approved"}'; check "admin approves the revision" "$(j .revision.status)" approved
-req anon GET "/courses/$NEW_SLUG"; check "approved changes are live together" "$(j '"\(.title)|\(.priceCents)|\(.totals.lectures)"')" "Smoke Course (revised)|1999|2"
+req anon GET "/courses/$NEW_SLUG"; check "approved changes are live together" "$(j '"\(.title)|\(.listPriceCents)|\(.totals.lectures)"')" "Smoke Course (revised)|1999|2"
 req nadia PATCH "/instructor/courses/$NEW_ID" '{"title":"Rejected title"}'; req nadia POST "/instructor/courses/$NEW_ID/submit"
 req admin POST "/admin/courses/$NEW_ID/reject" '{"note":"No"}'; check "admin rejects a revision" "$(j .revision.status)" rejected
 req anon GET "/courses/$NEW_SLUG"; check "rejected revision leaves the live course" "$(j .title)" "Smoke Course (revised)"
@@ -198,14 +215,14 @@ check "independent line: 20% commission" "$(j ".lines[]|select(.course.id==\"$NA
 req admin POST "/admin/orders/$ORDER/refund" '{"lineIds":["00000000-0000-4000-8000-000000000000"]}'; check "refund of a foreign line → 400" "$(j .error.code)" invalid_line
 req admin POST "/admin/orders/$ORDER/refund" "{\"lineIds\":[\"$DEL_LINE\"],\"reason\":\"smoke partial\"}"; check "partial refund" "$(j .status)" partially_refunded
 check "only that line is refunded" "$(j '[.lines[]|select(.refundedAt != null)]|length')" 1
-req stu2 GET /auth/csrf; req stu2 POST /auth/login "{\"email\":\"$EMAIL\",\"password\":\"Correct-Horse-9\"}"
+login stu2 "$EMAIL" "$PW" "$(cat "$TMP/stu.seed")"
 req stu2 POST "/lectures/$LOCKED_LECTURE/playback"; check "refunded course locked again → 403" "$code" 403
 req stu2 POST "/lectures/$NADIA_LOCKED/playback"; check "other course of the order still plays" "$code" 200
 req admin POST "/admin/orders/$ORDER/refund" '{"reason":"smoke rest"}'; check "refund the rest" "$(j .status)" refunded
 
 echo "== instructor application → admin approval"
 APP_EMAIL="applicant-$(date +%s)-$RANDOM@example.com"
-req appl GET /auth/csrf; req appl POST /auth/register "{\"email\":\"$APP_EMAIL\",\"password\":\"Correct-Horse-9\",\"name\":\"Applicant\"}"
+req appl GET /auth/csrf; signup appl "$APP_EMAIL" "Applicant"
 req appl GET /instructor/courses; check "student cannot use the studio → 403" "$code" 403
 req appl POST /instructor/apply '{"headline":"Kubernetes trainer","bio":"I have taught Kubernetes to platform teams for six years."}'; check "apply as instructor" "$(j .status)" pending
 APP_ID="$(j .userId)"

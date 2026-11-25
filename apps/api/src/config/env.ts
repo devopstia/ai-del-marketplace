@@ -36,6 +36,23 @@ const schema = z.object({
   DEV_TEST_PAYMENTS: bool,
   SEED_PASSWORD: z.string().default(''),
   AUTH_RATE_LIMIT: z.coerce.number().int().positive().default(20),
+  /** Sign in with Google, GitHub, Facebook, LinkedIn (docs/AUTH.md). A provider's button appears only when both values are set. */
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+  GITHUB_CLIENT_ID: z.string().default(''),
+  GITHUB_CLIENT_SECRET: z.string().default(''),
+  FACEBOOK_CLIENT_ID: z.string().default(''),
+  FACEBOOK_CLIENT_SECRET: z.string().default(''),
+  LINKEDIN_CLIENT_ID: z.string().default(''),
+  LINKEDIN_CLIENT_SECRET: z.string().default(''),
+  /** Development only: a built-in "Test provider" to exercise social sign-in end to end without real keys. Refused in production. */
+  OAUTH_TEST_PROVIDER: bool,
+  /** Compromised-password check against Have I Been Pwned (k-anonymity: only 5 hex characters of a SHA-1 hash leave the server). */
+  PASSWORD_BREACH_CHECK: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
+  /** The name shown in Google Authenticator. */
+  MFA_ISSUER: z.string().default('DevOps Easy Learning'),
+  /** Local demo accounts only: the authenticator seed the seed script gives them (base32), so tests and demos can sign in. */
+  SEED_MFA_SECRET: z.string().default(''),
 });
 
 export type Env = z.infer<typeof schema>;

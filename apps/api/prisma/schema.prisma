@@ -119,7 +119,8 @@ enum RevisionStatus {
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
-  passwordHash String
+  /// Null for accounts that only use Google, GitHub, Facebook or LinkedIn (no marketplace password).
+  passwordHash String?
   name         String
   avatarUrl    String?
   roles        Role[]     @default([student])
@@ -147,6 +148,20 @@ model User {
   assignedTickets   SupportTicket[]  @relation("TicketAssignee")
   supportMessages   SupportMessage[] @relation("TicketMessageAuthor")
   playbackSessions  PlaybackSession[]
+  /// Two-step sign-in (Google Authenticator, RFC 6238). The seed is sealed with a key derived from SESSION_SECRET.
+  mfaSecret         String?
+  mfaEnabledAt      DateTime?
+  /// The last accepted 30-second step: a code is never accepted twice.
+  mfaLastStep       Int?
+  /// Lockout after repeated failed passwords or codes.
+  failedLogins      Int       @default(0)
+  lockedUntil       DateTime?
+  passwordChangedAt DateTime?
+  identities        AuthIdentity[]
+  recoveryCodes     MfaRecoveryCode[]
+  authTickets       AuthTicket[]
+  trustedDevices    TrustedDevice[]
+  passwordResets    PasswordReset[]
 }
 
 model Session {
@@ -783,4 +798,85 @@ model HelpVideo {
 
   @@index([published, category, sort])
   @@map("help_videos")
+}
+
+/// A Google, GitHub, Facebook or LinkedIn account linked to a user (owner 2026-11-25). Never merged by email alone.
+model AuthIdentity {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// google | github | facebook | linkedin | test (development only)
+  provider   String
+  /// The provider's stable account id (OIDC `sub`, GitHub/Facebook numeric id).
+  subject    String
+  email      String?
+  name       String?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@unique([provider, subject])
+  @@index([userId])
+  @@map("auth_identities")
+}
+
+/// Ten single-use recovery codes, stored as SHA-256 hashes, shown once.
+model MfaRecoveryCode {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("mfa_recovery_codes")
+}
+
+/// "The first step passed, a code is still owed": bound to one account, short-lived, single use, burnt after 5 wrong codes.
+/// The raw token lives only in an httpOnly cookie; the id is its SHA-256.
+model AuthTicket {
+  id        String    @id
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// verify (has an authenticator) | enroll (sets one up now)
+  stage     String
+  /// How the first step was passed (password, google, github, ...), the sealed new seed during enrolment, the guest cart.
+  data      Json
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("auth_tickets")
+}
+
+/// "Trust this device for 30 days": skips the code on this browser for this account. Ended by a password change or reset,
+/// an MFA reset, "Forget trusted devices", or signing out everywhere.
+model TrustedDevice {
+  id        String    @id
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@map("trusted_devices")
+}
+
+/// Password reset links: SHA-256 at rest, one hour, single use; a new link burns the old ones.
+model PasswordReset {
+  id        String    @id
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  ip        String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_resets")
 }

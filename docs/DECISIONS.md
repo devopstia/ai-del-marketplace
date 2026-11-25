@@ -176,3 +176,8 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   `checkpoint-2026-11-25-help-videos` = `a9f0fd1`, branch `backup/before-help-videos`. Public /help with chapters,
   Admin › Help videos, `video-academy/` engine ported from the Hub (DEL dark brand, Kokoro voice, Whisper QA), publish
   tool for the local site. AI voice accepted by the owner ("move on please" after the question). docs/HELP_VIDEOS.md.
+- Sign-in security: branch `feat/auth-security` (from `main` `dae13ba`); rollback tag
+  `checkpoint-2026-11-25-auth-security`, branch `backup/before-auth-security`. Owner decisions: Google Authenticator at
+  every sign-in for everyone with an optional "Trust this device for 30 days"; all four providers built, buttons only
+  with keys, tested with a local test provider; Have I Been Pwned for breached passwords. Hub review: no Google
+  sign-in there (MFA, recovery codes, lockout ported). Migration ends all sessions. docs/AUTH.md, AGENTS.md rule 19.

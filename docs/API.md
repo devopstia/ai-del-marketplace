@@ -379,6 +379,22 @@ Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
 | POST | `/admin/help/videos/:slug/publish` | admin | `{ published }`; needs a ready video |
 | POST | `/admin/help/uploads/video` (+ `/:assetId/complete`, `/:assetId/captions`), `/admin/help/uploads/image` · GET `/admin/help/uploads/video/:assetId` | admin | studio upload pipeline |
 
+## Sign-in, two-step sign-in, passwords (2026-11-25, docs/AUTH.md)
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| POST | `/auth/register`, `/auth/login` | public | `{ mfa: 'enroll' \| 'verify' }` (ticket cookie), or `{ user }` on a trusted device |
+| GET | `/auth/mfa/pending` | ticket | stage, method, masked email |
+| POST | `/auth/mfa/enroll` · `/auth/mfa/complete` · `/auth/mfa/cancel` | ticket | seed + otpauth URL · `{ code \| recoveryCode, trustDevice }` → session (+ `recoveryCodes` after set-up) |
+| GET | `/auth/providers` · `/auth/password-policy` | public | enabled providers, rules |
+| GET | `/auth/oauth/:provider/start?mode=login\|link&next=` · `/auth/oauth/:provider/callback` | public / provider | redirects; `link` needs a session |
+| POST | `/auth/password/forgot` · `/auth/password/reset` | public | same answer for every address · `{ token, password }` |
+| GET | `/auth/security` | signed in | password, MFA, trusted devices, identities, providers |
+| POST | `/auth/password` | signed in | change (`currentPassword`) or set first one (`code`) |
+| POST | `/auth/mfa/recovery-codes`, `/auth/mfa/replace/start`, `/auth/mfa/replace/confirm` | signed in | need a code |
+| DELETE | `/auth/trusted-devices` | signed in | forget all |
+| POST | `/auth/identities/:id/unlink` | signed in | needs a code; not the last way in |
+| POST | `/admin/users/:id/mfa/reset` | super_admin | never one's own; audited |
+
 ## Webhooks (server to server; no cookies/CSRF)
 
 - `POST /webhooks/stripe`: raw body, `Stripe-Signature` verified with `STRIPE_WEBHOOK_SECRET`; event ids stored for idempotency.

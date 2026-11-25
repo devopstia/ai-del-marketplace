@@ -80,6 +80,16 @@ export async function storageFor(key, password) {
   const csrf = (await (await rq.get(`${app.api}/auth/csrf`)).json()).csrf;
   const r = await rq.post(`${app.api}/auth/login`, { data: { email: accounts[key].email, password }, headers: { "X-CSRF-Token": csrf } });
   if (!r.ok()) throw new Error(`sign-in failed for ${key}: ${r.status()} ${(await r.text()).slice(0, 120)}`);
+  // Two-step sign-in: demo accounts use SEED_MFA_SECRET from .env (a code works once, so a retry waits for the next step).
+  const { freshCode, seedSecret } = await import(path.join(REPO, "scripts/totp.mjs"));
+  const needsCode = !!(await r.json().catch(() => ({}))).mfa;
+  let last;
+  for (let i = 0; needsCode && i < 3; i++) {
+    const { code, step } = await freshCode(seedSecret(), last); last = step;
+    const m = await rq.post(`${app.api}/auth/mfa/complete`, { data: { code }, headers: { "X-CSRF-Token": csrf } });
+    if (m.ok()) break;
+    if (i === 2) throw new Error(`two-step sign-in failed for ${key}: ${m.status()}`);
+  }
   const st = await rq.storageState();
   await rq.dispose();
   return (sessions[key] = { state: { cookies: st.cookies, origins }, token: null });
