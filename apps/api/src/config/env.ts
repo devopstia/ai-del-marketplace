@@ -61,7 +61,7 @@ const schema = z.object({
    * Ignored in production (the code is always required there). docs/AUTH.md.
    */
   /** console (log only) | smtp (local Mailpit or any SMTP server) | resend (production, HTTPS API). */
-  EMAIL_PROVIDER: z.enum(['console', 'smtp', 'resend']).default('console'),
+  EMAIL_PROVIDER: z.enum(['console', 'smtp', 'resend', 'ses']).default('console'),
   SMTP_URL: z.string().default(''),
   EMAIL_FROM: z.string().default('DevOps Easy Learning <no-reply@devopseasylearning.com>'),
   EMAIL_REPLY_TO: z.string().default('support@devopseasylearning.com'),

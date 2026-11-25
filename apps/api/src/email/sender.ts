@@ -1,11 +1,13 @@
 import { Logger } from '@nestjs/common';
 import nodemailer from 'nodemailer';
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { env } from '../config/env';
 
 export interface OutMail { to: string; subject: string; html: string; text: string; replyTo?: string; attachments?: { filename: string; content: Buffer; contentType: string }[] }
 
 const mask = (to: string) => to.replace(/^(.).*(@.*)$/, '$1***$2');
-let transport: nodemailer.Transporter | null = null;
+let transport: ReturnType<typeof nodemailer.createTransport> | null = null;
+let ses: SESv2Client | null = null;
 
 /**
  * Provider choice follows Insurance Hub (Resend in production, SMTP or console otherwise). Bodies, codes and links are
@@ -23,6 +25,16 @@ export async function sendMail(m: OutMail, template: string, log = new Logger('E
     const r = await transport.sendMail({ from: e.EMAIL_FROM, to: m.to, replyTo: m.replyTo ?? e.EMAIL_REPLY_TO, subject: m.subject, html: m.html, text: m.text, attachments: m.attachments });
     log.log(`[smtp] "${template}" to ${mask(m.to)}`);
     return { provider: 'smtp', id: r.messageId };
+  }
+  if (e.EMAIL_PROVIDER === 'ses') {
+    // Amazon SES with the server's IAM role (no keys); raw MIME so attachments (contact screenshots) work.
+    ses ??= new SESv2Client({ region: e.S3_REGION });
+    transport ??= nodemailer.createTransport({ streamTransport: true, buffer: true, newline: 'unix' });
+    const built = await transport.sendMail({ from: e.EMAIL_FROM, to: m.to, replyTo: m.replyTo ?? e.EMAIL_REPLY_TO, subject: m.subject, html: m.html, text: m.text, attachments: m.attachments });
+    const raw = (built as unknown as { message: Buffer }).message;
+    const r = await ses.send(new SendEmailCommand({ Content: { Raw: { Data: raw } } }));
+    log.log(`[ses] "${template}" to ${mask(m.to)}`);
+    return { provider: 'ses', id: r.MessageId };
   }
   if (!e.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not set');
   const res = await fetch('https://api.resend.com/emails', {
