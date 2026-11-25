@@ -5,7 +5,9 @@ import { badRequest, conflict, forbidden, notFound, unavailable } from '../commo
 import { PrismaService } from '../common/prisma.service';
 import { SettingsService } from '../common/settings.service';
 import { devPaymentsEnabled, env } from '../config/env';
-import { cardInclude, toCard } from '../catalogue/course-card';
+import { cardInclude, cardPriceInput, toCard } from '../catalogue/course-card';
+import { SalePricingService } from '../common/sale-pricing';
+import { usd } from '../common/pricing';
 import { MediaService } from '../media/media.service';
 import { FulfilmentService } from './fulfilment.service';
 import { splitLine } from './money';
@@ -20,6 +22,7 @@ export class CommerceService {
     private readonly stripe: StripeService,
     private readonly fulfilment: FulfilmentService,
     private readonly media: MediaService,
+    private readonly pricing: SalePricingService,
   ) {}
 
   // ---------- cart ----------
@@ -29,7 +32,8 @@ export class CommerceService {
       orderBy: { createdAt: 'asc' },
       include: { course: { include: cardInclude } },
     });
-    const items = rows.map((r) => ({ ...toCard(r.course, (k) => this.media.imageUrl(k)), available: r.course.status === 'published', addedAt: r.createdAt }));
+    const prices = await this.pricing.prices(rows.map((r) => cardPriceInput(r.course)));
+    const items = rows.map((r) => ({ ...toCard(r.course, (k) => this.media.imageUrl(k), prices.get(r.course.id)), available: r.course.status === 'published', addedAt: r.createdAt }));
     const payable = items.filter((i) => i.available);
     return { items, count: items.length, totalCents: payable.reduce((n, i) => n + i.priceCents, 0), currency: 'usd' };
   }
@@ -52,7 +56,8 @@ export class CommerceService {
     const ids = [...new Set(courseIds)];
     const rows = await this.prisma.course.findMany({ where: { id: { in: ids }, status: 'published' }, include: cardInclude });
     const byId = new Map(rows.map((r) => [r.id, r]));
-    const items = ids.filter((id) => byId.has(id)).map((id) => ({ ...toCard(byId.get(id)!, (k) => this.media.imageUrl(k)), available: true }));
+    const prices = await this.pricing.prices(rows.map(cardPriceInput));
+    const items = ids.filter((id) => byId.has(id)).map((id) => ({ ...toCard(byId.get(id)!, (k) => this.media.imageUrl(k), prices.get(id)), available: true }));
     return { items, count: items.length, totalCents: items.reduce((n, i) => n + i.priceCents, 0), currency: 'usd', unavailableIds: ids.filter((id) => !byId.has(id)) };
   }
 
@@ -113,7 +118,10 @@ export class CommerceService {
     const buy = items.filter((i) => !stale.includes(i));
     if (!buy.length) throw badRequest('Your cart is empty', 'cart_empty');
 
-    const totalCents = buy.reduce((n, i) => n + i.course.priceCents, 0);
+    // The price is fixed here, when the order is created: a sale that is running now applies, one that ended does not.
+    const prices = await this.pricing.pricesForIds(buy.map((i) => i.courseId));
+    const priceOf = (courseId: string, list: number) => prices.get(courseId) ?? { listPriceCents: list, priceCents: list, sale: null };
+    const totalCents = buy.reduce((n, i) => n + priceOf(i.courseId, i.course.priceCents).priceCents, 0);
     const mode: 'free' | 'stripe' | 'test' = totalCents === 0 ? 'free' : this.stripe.configured ? 'stripe' : devPaymentsEnabled() ? 'test' : (null as never);
     if (!mode) throw unavailable('Payments are not configured', 'payments_unavailable');
 
@@ -141,13 +149,18 @@ export class CommerceService {
             // DEL's own courses: everything to the platform. Others: the instructor's agreed rate, else the default.
             const bps = p?.isPlatform ? 10000 : (p?.commissionBps ?? defaultBps);
             const payee = p?.isPlatform ? ('platform' as const) : p?.payToPlatform ? ('del_agreement' as const) : ('instructor' as const);
-            // Provisional split before the Stripe fee is known (fee 0); settled on the real fee right after payment.
-            const s = splitLine(i.course.priceCents, 0, bps);
+            // The split uses what the learner actually pays (the sale price when a sale applies).
+            // Provisional before the Stripe fee is known (fee 0); settled on the real fee right after payment.
+            const price = priceOf(i.courseId, i.course.priceCents);
+            const s = splitLine(price.priceCents, 0, bps);
             const share = payee === 'platform' ? 0 : s.instructorShareCents;
             return {
               courseId: i.courseId,
               instructorId: i.course.instructorId,
-              priceCents: i.course.priceCents,
+              priceCents: price.priceCents,
+              listPriceCents: i.course.priceCents,
+              saleKind: price.sale?.kind ?? null,
+              saleId: price.sale?.id ?? null,
               commissionBps: bps,
               netCents: s.netCents,
               instructorShareCents: share,
@@ -159,7 +172,7 @@ export class CommerceService {
       },
       include: { lines: true },
     });
-    await this.audit.log({ actorId: userId, action: 'order.created', targetType: 'order', targetId: order.id, ip: a.ip, meta: { totalCents, mode, lines: order.lines.length } });
+    await this.audit.log({ actorId: userId, action: 'order.created', targetType: 'order', targetId: order.id, ip: a.ip, meta: { totalCents, mode, lines: order.lines.length, discountCents: order.lines.reduce((n, l) => n + ((l.listPriceCents ?? l.priceCents) - l.priceCents), 0) } });
 
     const web = env().WEB_URL;
     if (mode === 'free') {
@@ -175,9 +188,14 @@ export class CommerceService {
         mode: 'payment',
         customer_email: user.email,
         client_reference_id: userId,
-        line_items: buy
-          .filter((i) => i.course.priceCents > 0)
-          .map((i) => ({ quantity: 1, price_data: { currency: 'usd', unit_amount: i.course.priceCents, product_data: { name: i.course.title, metadata: { courseId: i.courseId } } } })),
+        // Stripe charges exactly the order lines (sale prices included).
+        line_items: order.lines
+          .filter((l) => l.priceCents > 0)
+          .map((l) => {
+            const title = buy.find((i) => i.courseId === l.courseId)!.course.title;
+            const was = l.listPriceCents && l.listPriceCents > l.priceCents ? `Sale price (regular ${usd(l.listPriceCents)})` : undefined;
+            return { quantity: 1, price_data: { currency: 'usd', unit_amount: l.priceCents, product_data: { name: title, ...(was ? { description: was } : {}), metadata: { courseId: l.courseId } } } };
+          }),
         metadata: { orderId: order.id },
         payment_intent_data: { transfer_group: order.id, metadata: { orderId: order.id } },
         success_url: `${web}/checkout/success?order=${order.id}&session_id={CHECKOUT_SESSION_ID}`,
@@ -218,7 +236,7 @@ export class CommerceService {
 
   private orderView(o: {
     id: string; status: string; totalCents: number; currency: string; provider: string; paidAt: Date | null; createdAt: Date;
-    lines: { id: string; courseId: string; priceCents: number; refundedAt: Date | null; course: { slug: string; title: string } }[];
+    lines: { id: string; courseId: string; priceCents: number; listPriceCents: number | null; saleKind: string | null; refundedAt: Date | null; course: { slug: string; title: string } }[];
   }) {
     return {
       id: o.id,
@@ -228,7 +246,7 @@ export class CommerceService {
       provider: o.provider,
       paidAt: o.paidAt,
       createdAt: o.createdAt,
-      lines: o.lines.map((l) => ({ id: l.id, courseId: l.courseId, slug: l.course.slug, title: l.course.title, priceCents: l.priceCents, refundedAt: l.refundedAt })),
+      lines: o.lines.map((l) => ({ id: l.id, courseId: l.courseId, slug: l.course.slug, title: l.course.title, priceCents: l.priceCents, listPriceCents: l.listPriceCents ?? l.priceCents, saleKind: l.saleKind, refundedAt: l.refundedAt })),
     };
   }
 }

@@ -218,6 +218,8 @@ model Course {
   studentCount      Int          @default(0)
   /// When the content was last checked against the current tools/services (imported catalogue: the video file date).
   lastVerifiedAt    DateTime?
+  /// The instructor left this course out of marketplace-wide promotions (DEL's own courses are always included).
+  promoOptOut       Boolean      @default(false)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
@@ -228,6 +230,7 @@ model Course {
   enrollments  Enrollment[]
   reviews      Review[]
   certificates Certificate[]
+  sales        CourseSale[]
 
   @@index([status, publishedAt])
   @@index([instructorId])
@@ -396,7 +399,13 @@ model OrderLine {
   course               Course         @relation(fields: [courseId], references: [id])
   instructorId         String
   instructor           User           @relation("LineInstructor", fields: [instructorId], references: [id])
+  /// What the learner paid for this course (the sale price when a sale applied). The split is calculated on it.
   priceCents           Int
+  /// The course's regular price at purchase; equals priceCents when no sale applied.
+  listPriceCents       Int?
+  /// The sale that set priceCents: "course_sale" (instructor) or "promotion" (marketplace-wide), with its id.
+  saleKind             String?
+  saleId               String?
   /// Platform share of the net in basis points, snapshotted at purchase (10000 = DEL's own course).
   commissionBps        Int
   feeCents             Int            @default(0)
@@ -558,4 +567,53 @@ model RefundRequest {
 
   @@index([status, createdAt])
   @@map("refund_requests")
+}
+
+/// An instructor's own sale on one course: a fixed sale price between startsAt and endsAt (UTC). Never stored on the
+/// course itself, so the regular price returns by itself when the sale ends. At most one non-cancelled sale per course
+/// overlaps any moment (service layer).
+model CourseSale {
+  id             String    @id @default(uuid())
+  courseId       String
+  course         Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  salePriceCents Int
+  startsAt       DateTime
+  endsAt         DateTime
+  canceledAt     DateTime?
+  canceledById   String?
+  cancelNote     String?
+  createdById    String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([courseId, endsAt])
+  @@index([startsAt, endsAt])
+  @@map("course_sales")
+}
+
+enum PromotionScope {
+  all
+  categories
+  courses
+}
+
+/// A marketplace-wide promotion run by a super admin: percentOff on every paid course in scope between startsAt and
+/// endsAt (UTC). Courses whose instructor opted out are skipped (DEL's own courses never are). Lowest price wins
+/// against an instructor sale; discounts never stack.
+model Promotion {
+  id           String         @id @default(uuid())
+  name         String
+  percentOff   Int
+  startsAt     DateTime
+  endsAt       DateTime
+  scope        PromotionScope @default(all)
+  categoryIds  String[]       @default([])
+  courseIds    String[]       @default([])
+  canceledAt   DateTime?
+  createdById  String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([startsAt, endsAt])
+  @@map("promotions")
 }

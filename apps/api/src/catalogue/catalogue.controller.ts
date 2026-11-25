@@ -16,7 +16,8 @@ const listSchema = z.object({
     }),
   level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
   price: z.enum(['free', 'paid']).optional(),
-  sort: z.enum(['popular', 'newest', 'rating', 'price_asc', 'price_desc']).default('popular'),
+  sort: z.enum(['popular', 'newest', 'rating', 'price_asc', 'price_desc', 'discount']).default('popular'),
+  onSale: z.enum(['1', 'true']).optional().transform((v) => !!v),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   pageSize: z.coerce.number().int().min(1).max(48).default(12),
 });
@@ -41,6 +42,11 @@ export class CatalogueController {
   @Get('courses')
   courses(@ZQuery(listSchema) q: z.infer<typeof listSchema>) {
     return this.svc.listCourses(q);
+  }
+
+  @Get('deals')
+  deals() {
+    return this.svc.dealsSummary();
   }
 
   @Get('courses/:slug')

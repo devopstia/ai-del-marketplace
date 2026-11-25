@@ -7,19 +7,22 @@ import { CURRENCY, PRICE_MAX_CENTS, PRICE_MIN_CENTS } from '../common/pricing';
 import { SettingsService } from '../common/settings.service';
 import { MediaService } from '../media/media.service';
 import { cardInclude, toCard } from './course-card';
+import { priceSelect, SalePricingService, toPriceInput } from '../common/sale-pricing';
 
 export interface CourseQuery {
   q?: string;
   category?: string[];
   level?: 'beginner' | 'intermediate' | 'advanced';
   price?: 'free' | 'paid';
-  sort: 'popular' | 'newest' | 'rating' | 'price_asc' | 'price_desc';
+  sort: 'popular' | 'newest' | 'rating' | 'price_asc' | 'price_desc' | 'discount';
+  /** Only courses on sale right now. */
+  onSale?: boolean;
   page: number;
   pageSize: number;
   instructorId?: string;
 }
 
-const ORDER: Record<CourseQuery['sort'], Prisma.CourseOrderByWithRelationInput[]> = {
+const ORDER: Record<Exclude<CourseQuery['sort'], 'discount'>, Prisma.CourseOrderByWithRelationInput[]> = {
   popular: [{ studentCount: 'desc' }, { ratingAvg: 'desc' }],
   newest: [{ publishedAt: 'desc' }],
   rating: [{ ratingAvg: 'desc' }, { ratingCount: 'desc' }],
@@ -33,6 +36,7 @@ export class CatalogueService {
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
     private readonly settings: SettingsService,
+    private readonly pricing: SalePricingService,
   ) {}
 
   /** Public marketplace terms (pricing rules + revenue share) so the web never hard-codes them. */
@@ -59,40 +63,80 @@ export class CatalogueService {
     const base: Prisma.CourseWhereInput = { status: 'published' };
     if (q.q) Object.assign(base, searchWhere(q.q));
     if (q.instructorId) base.instructorId = q.instructorId;
+    // Current prices of every course matching the search (one light query): sales and promotions are worked out at
+    // request time, so a sale stops applying the moment it ends.
+    const candidates = await this.prisma.course.findMany({ where: base, select: priceSelect });
+    const prices = await this.pricing.prices(candidates.map(toPriceInput));
+    const onSaleIds = candidates.filter((c) => prices.get(c.id)?.sale).map((c) => c.id);
     const byCategory: Prisma.CourseWhereInput = q.category?.length ? { category: { slug: { in: q.category } } } : {};
     const byLevel: Prisma.CourseWhereInput = q.level ? { level: q.level } : {};
     const byPrice: Prisma.CourseWhereInput = q.price === 'free' ? { priceCents: 0 } : q.price === 'paid' ? { priceCents: { gt: 0 } } : {};
+    const saleOnly: Prisma.CourseWhereInput = { id: { in: onSaleIds } };
+    const bySale: Prisma.CourseWhereInput = q.onSale ? saleOnly : {};
     const all = (...parts: Prisma.CourseWhereInput[]): Prisma.CourseWhereInput => ({ AND: [base, ...parts] });
-    const where = all(byCategory, byLevel, byPrice);
-    const [total, rows, catGroups, levelGroups, free, paid] = await Promise.all([
-      this.prisma.course.count({ where }),
-      this.prisma.course.findMany({
-        where,
-        include: cardInclude,
-        orderBy: [...ORDER[q.sort], { id: 'asc' }],
-        skip: (q.page - 1) * q.pageSize,
-        take: q.pageSize,
-      }),
+    const where = all(byCategory, byLevel, byPrice, bySale);
+
+    // Price and discount orders use the current price, so they are sorted here rather than in SQL.
+    const skip = (q.page - 1) * q.pageSize;
+    const page = async () => {
+      if (q.sort !== 'price_asc' && q.sort !== 'price_desc' && q.sort !== 'discount') {
+        const [total, rows] = await Promise.all([
+          this.prisma.course.count({ where }),
+          this.prisma.course.findMany({ where, include: cardInclude, orderBy: [...ORDER[q.sort], { id: 'asc' }], skip, take: q.pageSize }),
+        ]);
+        return { total, rows };
+      }
+      const ids = (await this.prisma.course.findMany({ where, select: { id: true } })).map((r) => r.id);
+      const now = (id: string) => prices.get(id)?.priceCents ?? 0;
+      const off = (id: string) => prices.get(id)?.sale?.percentOff ?? 0;
+      const cmp = q.sort === 'price_asc' ? (a: string, b: string) => now(a) - now(b) : q.sort === 'price_desc' ? (a: string, b: string) => now(b) - now(a) : (a: string, b: string) => off(b) - off(a);
+      ids.sort((a, b) => cmp(a, b) || a.localeCompare(b));
+      const pageIds = ids.slice(skip, skip + q.pageSize);
+      const got = new Map((await this.prisma.course.findMany({ where: { id: { in: pageIds } }, include: cardInclude })).map((r) => [r.id, r]));
+      return { total: ids.length, rows: pageIds.map((id) => got.get(id)).filter((r): r is NonNullable<typeof r> => !!r) };
+    };
+    const [{ total, rows }, catGroups, levelGroups, free, paid, onSale] = await Promise.all([
+      page(),
       // Facets: how many courses each option would show, given the other active filters.
-      this.prisma.course.groupBy({ by: ['categoryId'], where: all(byLevel, byPrice), _count: { _all: true } }),
-      this.prisma.course.groupBy({ by: ['level'], where: all(byCategory, byPrice), _count: { _all: true } }),
-      this.prisma.course.count({ where: all(byCategory, byLevel, { priceCents: 0 }) }),
-      this.prisma.course.count({ where: all(byCategory, byLevel, { priceCents: { gt: 0 } }) }),
+      this.prisma.course.groupBy({ by: ['categoryId'], where: all(byLevel, byPrice, bySale), _count: { _all: true } }),
+      this.prisma.course.groupBy({ by: ['level'], where: all(byCategory, byPrice, bySale), _count: { _all: true } }),
+      this.prisma.course.count({ where: all(byCategory, byLevel, bySale, { priceCents: 0 }) }),
+      this.prisma.course.count({ where: all(byCategory, byLevel, bySale, { priceCents: { gt: 0 } }) }),
+      this.prisma.course.count({ where: all(byCategory, byLevel, byPrice, saleOnly) }),
     ]);
     const catIds = catGroups.map((g) => g.categoryId).filter((id): id is string => !!id);
     const cats = catIds.length ? await this.prisma.category.findMany({ where: { id: { in: catIds } }, select: { id: true, slug: true } }) : [];
     const slugOf = new Map(cats.map((c) => [c.id, c.slug]));
     return {
-      items: rows.map((r) => toCard(r, (k) => this.media.imageUrl(k))),
+      items: rows.map((r) => toCard(r, (k) => this.media.imageUrl(k), prices.get(r.id))),
       facets: {
         category: Object.fromEntries(catGroups.filter((g) => g.categoryId && slugOf.has(g.categoryId)).map((g) => [slugOf.get(g.categoryId!)!, g._count._all])),
         level: Object.fromEntries(levelGroups.map((g) => [g.level, g._count._all])),
         price: { free, paid },
+        onSale,
       },
       page: q.page,
       pageSize: q.pageSize,
       total,
       totalPages: Math.ceil(total / q.pageSize),
+    };
+  }
+
+  /** What is on sale right now, for the site banner, the Deals link and /deals. */
+  async dealsSummary() {
+    const now = new Date();
+    const [promotions, candidates] = await Promise.all([
+      this.pricing.activePromotions(now),
+      this.prisma.course.findMany({ where: { status: 'published', priceCents: { gt: 0 } }, select: priceSelect }),
+    ]);
+    const prices = await this.pricing.prices(candidates.map(toPriceInput), now);
+    const onSale = [...prices.values()].filter((p) => p.sale);
+    return {
+      onSaleCount: onSale.length,
+      maxPercentOff: onSale.reduce((m, p) => Math.max(m, p.sale!.percentOff), 0),
+      promotions: promotions
+        .sort((a, b) => b.percentOff - a.percentOff)
+        .map((p) => ({ id: p.id, name: p.name, percentOff: p.percentOff, endsAt: p.endsAt, scope: p.scope })),
     };
   }
 
@@ -143,8 +187,9 @@ export class CatalogueService {
     }
 
     const card = toCard(
-      { ...c, instructor: { id: c.instructor.id, name: c.instructor.name }, sections: c.sections.map((s) => ({ lectures: s.lectures })) },
+      { ...c, instructor: { id: c.instructor.id, name: c.instructor.name, instructorProfile: null }, sections: c.sections.map((s) => ({ lectures: s.lectures })) },
       (k) => this.media.imageUrl(k),
+      (await this.pricing.pricesForIds([c.id])).get(c.id),
     );
     const lectures = c.sections.flatMap((s) => s.lectures);
     const labFiles = c.sections.flatMap((s) => s.lectures.flatMap((l) => l.resources.map((r) => ({ title: r.title, sizeBytes: r.sizeBytes, mime: r.mime, lectureId: l.id, lectureTitle: l.title }))));
