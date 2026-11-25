@@ -22,7 +22,7 @@ export const img = (x: unknown): string | null => {
   const i = u.indexOf("/media/images/");
   return i >= 0 ? u.slice(i) : u;
 };
-const strs = (x: unknown): string[] => arr(x).map((v) => str(v)).filter(Boolean);
+export const strs = (x: unknown): string[] => arr(x).map((v) => str(v)).filter(Boolean);
 
 /** Pull the list out of `[...]`, `{items}`, `{data}` or `{<key>}`. */
 export function list(x: unknown, ...keys: string[]): unknown[] {
@@ -63,6 +63,10 @@ export function toMe(x: unknown): Me | null {
     instructorStatus: (str(u.instructorStatus ?? ip.status ?? o.instructorStatus) || null) as Me["instructorStatus"],
     createdAt: str(u.createdAt) || undefined,
     actingAs: obj(u.actingAs).id ? { id: str(obj(u.actingAs).id), name: str(obj(u.actingAs).name) } : null,
+    adminPermissions: strs(u.adminPermissions),
+    emailVerified: !!u.emailVerifiedAt,
+    mfaEnabled: u.mfaEnabled === true,
+    signupMethod: str(u.signupMethod) || undefined,
   };
 }
 

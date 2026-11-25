@@ -26,6 +26,10 @@ enum InstructorStatus {
   pending
   approved
   rejected
+  /// A super admin or admin has started reviewing the application.
+  under_review
+  /// The reviewer asked the applicant for more information (they can update and resubmit).
+  needs_info
 }
 
 enum CourseLevel {
@@ -165,6 +169,27 @@ model User {
   authTickets       AuthTicket[]
   trustedDevices    TrustedDevice[]
   passwordResets    PasswordReset[]
+  /// Admin role only: the operational permissions a super admin granted (src/common/permissions.ts). Super admins have all.
+  adminPermissions  String[]  @default([])
+  /// How the account was created: email | google | github | facebook | linkedin | invitation | seed.
+  signupMethod      String    @default("email")
+  /// When the person proved they own the email address (link or code, or a provider that verified it).
+  emailVerifiedAt   DateTime?
+  emailVerifications EmailVerification[]
+}
+
+/// Email ownership: a single-use link (or six-digit code for invitations), stored hashed.
+model EmailVerification {
+  id        String    @id // sha256 of the token or "code:<userId>:<code>"
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("email_verifications")
 }
 
 model Session {
@@ -199,6 +224,14 @@ model InstructorProfile {
   termsNote       String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  /// Instructor application (owner 2026-11-25): what the applicant told DEL.
+  expertise       String[]         @default([])
+  experience      String           @default("")
+  plannedCourses  String           @default("")
+  extraInfo       String           @default("")
+  submittedAt     DateTime?
+  reviewedById    String?
+  reviewedAt      DateTime?
 
   @@map("instructor_profiles")
 }
@@ -916,4 +949,26 @@ model AccessPeriod {
 
   @@index([userId, courseId])
   @@map("access_periods")
+}
+
+/// Contact page (owner 2026-11-25): a message to DEL support, optionally with screenshots. Emailed to CONTACT_EMAIL.
+model ContactMessage {
+  id          String    @id @default(uuid())
+  /// Short reference shown to the sender (C-1001).
+  number      Int       @unique @default(autoincrement())
+  name        String
+  email       String
+  topic       String
+  subject     String
+  body        String
+  userId      String?
+  /// [{ key, name, mime, sizeBytes }] in private storage (contact/<id>/...).
+  attachments Json      @default("[]")
+  status      String    @default("new") // new | handled
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+  @@map("contact_messages")
 }

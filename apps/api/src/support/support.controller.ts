@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { z } from 'zod';
-import { ActorCtx, type Actor, CurrentUser, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, CurrentUser, Perm } from '../common/auth-context';
 import type { AuthUser } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { CATEGORIES, SupportService } from './support.service';
@@ -67,9 +67,9 @@ export class SupportController {
   }
 
   // ---------- staff ----------
-  @Roles('admin') @Get('admin/support/tickets') queue(@ZQuery(queueQuery) q: z.infer<typeof queueQuery>, @ActorCtx() a: Actor) { return this.svc.queue(q, a.user.id); }
-  @Roles('admin') @Get('admin/support/summary') summary() { return this.svc.awaitingStaff(); }
-  @Roles('admin') @Get('admin/support/staff') staff() { return this.svc.staffList(); }
-  @Roles('admin') @Post('admin/support/tickets/:number/messages') staffMessage(@Param('number') n: string, @ZBody(staffMessage) b: z.infer<typeof staffMessage>, @ActorCtx() a: Actor) { return this.svc.staffMessage(a, n, b); }
-  @Roles('admin') @Patch('admin/support/tickets/:number') update(@Param('number') n: string, @ZBody(updateSchema) b: z.infer<typeof updateSchema>, @ActorCtx() a: Actor) { return this.svc.update(a, n, b); }
+  @Perm('support.manage') @Get('admin/support/tickets') queue(@ZQuery(queueQuery) q: z.infer<typeof queueQuery>, @ActorCtx() a: Actor) { return this.svc.queue(q, a.user.id); }
+  @Perm('support.manage') @Get('admin/support/summary') summary() { return this.svc.awaitingStaff(); }
+  @Perm('support.manage') @Get('admin/support/staff') staff() { return this.svc.staffList(); }
+  @Perm('support.manage') @Post('admin/support/tickets/:number/messages') staffMessage(@Param('number') n: string, @ZBody(staffMessage) b: z.infer<typeof staffMessage>, @ActorCtx() a: Actor) { return this.svc.staffMessage(a, n, b); }
+  @Perm('support.manage') @Patch('admin/support/tickets/:number') update(@Param('number') n: string, @ZBody(updateSchema) b: z.infer<typeof updateSchema>, @ActorCtx() a: Actor) { return this.svc.update(a, n, b); }
 }

@@ -1,42 +1,55 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
-import { AppShell } from "@/components/shell/AppShell";
+import { AppShell, type NavItem } from "@/components/shell/AppShell";
+import { canDo } from "@/lib/studios";
 import { useAuth } from "@/components/AuthProvider";
 import { Skeleton } from "@/components/Empty";
-import { ConsoleSwitch } from "@/components/shell/ConsoleSwitch";
 
-const nav = [
-  { href: "/admin", label: "Overview", icon: Gauge, exact: true },
-  { href: "/admin/review", label: "Review queue", icon: ClipboardCheck },
-  { href: "/admin/courses", label: "Courses", icon: BookOpen },
-  { href: "/admin/instructors", label: "Instructors", icon: GraduationCap },
-  { href: "/admin/support", label: "Support", icon: LifeBuoy },
-  { href: "/admin/help", label: "Help videos", icon: MonitorPlay },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/orders", label: "Orders", icon: Receipt },
-  { href: "/admin/finance", label: "Money", icon: Landmark },
-  { href: "/admin/refunds", label: "Refunds", icon: RotateCcw },
-  { href: "/admin/promotions", label: "Promotions", icon: Tag },
-  { href: "/admin/covers", label: "Cover templates", icon: ImageIcon },
-  { href: "/admin/protection", label: "Video protection", icon: ShieldCheck },
-  { href: "/admin/categories", label: "Categories", icon: FolderTree },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-  { href: "/admin/audit", label: "Audit log", icon: ScrollText },
+type Item = NavItem & { perm?: string; superOnly?: boolean };
+const groups: { label?: string; items: Item[] }[] = [
+  { items: [{ href: "/admin", label: "Overview", icon: Gauge, exact: true }] },
+  { label: "Marketplace", items: [
+    { href: "/admin/review", label: "Review queue", icon: ClipboardCheck, perm: "courses.review" },
+    { href: "/admin/courses", label: "Courses", icon: BookOpen, perm: "courses.review" },
+  ] },
+  { label: "People", items: [
+    { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
+    { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
+  ] },
+  { label: "Money", items: [
+    { href: "/admin/orders", label: "Orders", icon: Receipt, perm: "orders.view" },
+    { href: "/admin/finance", label: "Money", icon: Landmark, perm: "finance.view" },
+    { href: "/admin/refunds", label: "Refunds", icon: RotateCcw, perm: "finance.view" },
+    { href: "/admin/promotions", label: "Promotions", icon: Tag, perm: "promotions.view" },
+  ] },
+  { label: "Support", items: [
+    { href: "/admin/support", label: "Support requests", icon: LifeBuoy, perm: "support.manage" },
+    { href: "/admin/contact", label: "Contact messages", icon: Mail, perm: "support.manage" },
+    { href: "/admin/help", label: "Help videos", icon: MonitorPlay, perm: "content.manage" },
+  ] },
+  { label: "Platform", items: [
+    { href: "/admin/categories", label: "Categories", icon: FolderTree, perm: "content.manage" },
+    { href: "/admin/covers", label: "Cover templates", icon: ImageIcon, perm: "content.manage" },
+    { href: "/admin/protection", label: "Video protection", icon: ShieldCheck, perm: "content.manage" },
+    { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },
+    { href: "/admin/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
+  ] },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { loading, has } = useAuth();
+  const { me, loading, has } = useAuth();
   const isAdmin = has("admin");
   // Badge on Money: refund requests and open disputes that need a person.
   const count = (r: unknown) => (Array.isArray(obj(r).items) ? (obj(r).items as unknown[]) : []);
-  const requests = useApi(isAdmin ? "/admin/refund-requests?status=needs_action" : null, (r) => Number(obj(obj(r).counts).needs_action ?? 0));
-  const disputes = useApi(isAdmin ? "/admin/disputes" : null, (r) => count(r).filter((d) => obj(d).status === "open").length);
+  const contact = useApi(canDo(me, "support.manage") ? "/admin/contact?status=new&pageSize=1" : null, (r) => Number(obj(r).newCount ?? 0));
+  const requests = useApi(canDo(me, "finance.view") ? "/admin/refund-requests?status=needs_action" : null, (r) => Number(obj(obj(r).counts).needs_action ?? 0));
+  const disputes = useApi(canDo(me, "finance.view") ? "/admin/disputes" : null, (r) => count(r).filter((d) => obj(d).status === "open").length);
   const attention = disputes.data ?? 0;
   // Badge on Support: requests waiting for staff.
-  const support = useApi(isAdmin ? "/admin/support/summary" : null, (r) => Number(obj(r).awaitingStaff ?? 0));
+  const support = useApi(canDo(me, "support.manage") ? "/admin/support/summary" : null, (r) => Number(obj(r).awaitingStaff ?? 0));
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
   if (!has("admin")) {
     return (
@@ -49,6 +62,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  const items = nav.map((n) => (n.href === "/admin/finance" && attention ? { ...n, badge: attention } : n.href === "/admin/refunds" && requests.data ? { ...n, badge: requests.data } : n.href === "/admin/support" && support.data ? { ...n, badge: support.data } : n));
-  return <AppShell area="Admin console" nav={items} footer={<ConsoleSwitch to="del" />}>{children}</AppShell>;
+  const badge: Record<string, number | undefined> = { "/admin/finance": attention || undefined, "/admin/refunds": requests.data || undefined, "/admin/support": support.data || undefined, "/admin/contact": contact.data || undefined };
+  const nav = groups
+    .map((g) => ({ label: g.label, items: g.items.filter((n) => (n.superOnly ? has("super_admin") : !n.perm || canDo(me, n.perm))).map(({ perm: _p, superOnly: _s, ...n }) => ({ ...n, badge: badge[n.href] })) }))
+    .filter((g) => g.items.length);
+  return <AppShell studio="admin" nav={nav}>{children}</AppShell>;
 }

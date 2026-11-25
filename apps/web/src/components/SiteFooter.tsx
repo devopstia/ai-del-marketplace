@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { LoopMark } from "./Logo";
 import { DEL_PROGRAM, programLink } from "@/lib/del-program";
+import { SocialLinks } from "./SocialLinks";
 
 const cols: [string, [string, string][]][] = [
   ["Learn", [["Browse courses", "/courses"], ["AI for DevOps", "/courses?category=ai-for-devops"], ["MCP & Agents", "/courses?category=mcp-agents"], ["Free courses", "/courses?price=free"], ["Full training program ↗", programLink(DEL_PROGRAM.aboutUrl, "footer")], ["DevOps Easy Learning ↗", programLink("https://www.devopseasylearning.com/", "footer")]]],
   ["Teach", [["Become an instructor", "/teach"], ["Instructor studio", "/studio"], ["Payouts with Stripe", "/teach#payouts"]]],
-  ["Your account", [["My learning", "/my-learning"], ["Orders and receipts", "/orders"], ["Verify a certificate", "/certificates/verify"], ["Help videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
+  ["Your account", [["Student Studio", "/student"], ["My courses", "/student/courses"], ["Purchase history", "/student/purchases"], ["Contact us", "/contact"], ["Verify a certificate", "/certificates/verify"], ["Help videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
 ];
 
 export function SiteFooter() {
@@ -18,6 +19,7 @@ export function SiteFooter() {
             <span className="font-display text-lg font-extrabold tracking-tight">DevOps Easy Learning</span>
           </div>
           <p className="mt-4 text-sm text-muted">Hands-on AI and DevOps courses from engineers who run these systems in production. Every lesson ships with a lab you can run yourself.</p>
+          <SocialLinks className="-ml-2 mt-4" />
         </div>
         {cols.map(([title, links]) => (
           <div key={title}>

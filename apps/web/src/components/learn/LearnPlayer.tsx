@@ -37,6 +37,12 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [playErr, setPlayErr] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
+  // ?tab=review (from Student Studio › Course reviews) opens the review tab
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (t === "review" || t === "notes" || t === "content") setTab(t as Tab);
+  }, []);
   const [sidebar, setSidebar] = useState(true);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -165,7 +171,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
           <p className="mt-1 text-sm text-muted">{loadErr}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Link href={`/courses/${slug}`} className="btn btn-primary" data-testid="renew-from-player">Renew or view the course</Link>
-            <Link href="/my-learning" className="btn btn-outline">My learning</Link>
+            <Link href="/student/courses" className="btn btn-outline">My courses</Link>
           </div>
         </div>
       </div>
@@ -226,7 +232,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-surface px-3 sm:px-4">
-        <Link href="/my-learning" className="btn btn-ghost btn-sm !px-2" aria-label="Back to My learning"><ArrowLeft className="size-5" /></Link>
+        <Link href="/student/courses" className="btn btn-ghost btn-sm !px-2" aria-label="Back to My courses"><ArrowLeft className="size-5" /></Link>
         <Link href="/" aria-label="DevOps Easy Learning home" className="hidden sm:block"><LoopMark className="h-5 w-10" /></Link>
         <span className="hidden h-6 w-px bg-line sm:block" />
         <p className="min-w-0 flex-1 truncate font-display font-bold">{course?.title ?? "Loading course…"}</p>
@@ -358,7 +364,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   ) : null}
                   {lecture?.hasResources ? <p className="mt-4 text-sm text-ink-2">This lesson has lab files: open <button type="button" className="link" onClick={() => setTab("resources")}>Lab files</button> to download them.</p> : null}
                   <p className="mt-6 hidden text-sm text-muted sm:block">Keyboard: Space or K to play and pause, J and L to skip 10 seconds, F for full screen, C for captions.</p>
-                  {pct >= 100 ? <Link href="/my-learning" className="btn btn-primary mt-6">Get your certificate</Link> : null}
+                  {pct >= 100 ? <Link href="/student/progress" className="btn btn-primary mt-6">Get your certificate</Link> : null}
                 </div>
               ) : null}
               {tab === "content" ? <div className="-mx-4 border-t border-line lg:hidden">{outline}</div> : null}

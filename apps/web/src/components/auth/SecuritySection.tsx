@@ -155,7 +155,7 @@ export function SecuritySection() {
               </div>
               {linked.length ? linked.map((i) => (
                 <button key={i.id} type="button" className="btn btn-outline btn-sm" disabled={methods <= 1} title={methods <= 1 ? "Set a password or link another account first" : undefined} onClick={() => setOpen(open === `unlink-${i.id}` ? null : `unlink-${i.id}`)} data-testid={`unlink-${k}`}>Unlink</button>
-              )) : enabled ? <a href={startUrl(k, "link", "/account")} className="btn btn-outline btn-sm" data-testid={`link-${k}`}><Link2 className="size-4" />Link</a> : null}
+              )) : enabled ? <a href={startUrl(k, "link", "/student/account")} className="btn btn-outline btn-sm" data-testid={`link-${k}`}><Link2 className="size-4" />Link</a> : null}
               {linked.map((i) => open === `unlink-${i.id}` ? (
                 <div key={i.id} className="w-full"><Confirm label={`Unlink ${LABEL[k] ?? k}`} busy={busy} onCancel={() => setOpen(null)} onConfirm={(code) => void run(async () => { await api(`/auth/identities/${i.id}/unlink`, { method: "POST", body: { code } }); toast("ok", `${LABEL[k] ?? k} is unlinked.`); setOpen(null); load(); })} /></div>
               ) : null)}

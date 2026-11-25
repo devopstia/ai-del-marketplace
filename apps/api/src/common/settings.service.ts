@@ -15,11 +15,22 @@ export class SettingsService {
     return Number.isInteger(v) && v >= 0 && v <= 10000 ? v : DEFAULT_SETTINGS.commission_bps;
   }
 
-  async all() {
-    return { commission_bps: await this.commissionBps() };
+  /** Optional staff emails: new registrations (off by default) and instructor applications (on by default). */
+  async flag(key: 'notify_new_registrations' | 'notify_instructor_applications') {
+    const row = await this.prisma.platformSetting.findUnique({ where: { key } });
+    if (!row) return key === 'notify_instructor_applications';
+    return row.value === true || row.value === 'true';
   }
 
-  async set(key: 'commission_bps', value: number) {
+  async all() {
+    return {
+      commission_bps: await this.commissionBps(),
+      notify_new_registrations: await this.flag('notify_new_registrations'),
+      notify_instructor_applications: await this.flag('notify_instructor_applications'),
+    };
+  }
+
+  async set(key: 'commission_bps' | 'notify_new_registrations' | 'notify_instructor_applications', value: number | boolean) {
     await this.prisma.platformSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
   }
 }

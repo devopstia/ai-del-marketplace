@@ -224,7 +224,7 @@ echo "== instructor application → admin approval"
 APP_EMAIL="applicant-$(date +%s)-$RANDOM@example.com"
 req appl GET /auth/csrf; signup appl "$APP_EMAIL" "Applicant"
 req appl GET /instructor/courses; check "student cannot use the studio → 403" "$code" 403
-req appl POST /instructor/apply '{"headline":"Kubernetes trainer","bio":"I have taught Kubernetes to platform teams for six years."}'; check "apply as instructor" "$(j .status)" pending
+req appl POST /instructor/apply '{"headline":"Kubernetes trainer","bio":"I have taught Kubernetes to platform teams for six years.","expertise":["Kubernetes","Helm"],"experience":"Six years teaching platform teams in workshops and bootcamps.","plannedCourses":"Kubernetes for developers, Helm in practice"}'; check "apply as instructor" "$(j .status)" pending
 APP_ID="$(j .userId)"
 req admin GET '/admin/instructors?status=pending&pageSize=100'; check "application in admin list" "$(j "[.items[].userId]|index(\"$APP_ID\") != null")" true
 req admin POST "/admin/instructors/$APP_ID/approve" '{}'; check "admin approves instructor" "$(j .status)" approved

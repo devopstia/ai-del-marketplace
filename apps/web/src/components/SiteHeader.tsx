@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
-import { DEL_PROGRAM, programLink } from "@/lib/del-program";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap, Users } from "lucide-react";
+import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap, Mail } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "./AuthProvider";
@@ -68,11 +67,14 @@ function UserMenu() {
             <p className="truncate text-sm text-muted">{me.email}</p>
           </div>
           <div className="flex flex-col py-1" onClick={() => setOpen(false)}>
-            <Link role="menuitem" className={item} href="/my-learning"><BookOpen className="size-4" />My learning</Link>
-            {has("instructor") ? <Link role="menuitem" className={item} href="/studio"><LayoutDashboard className="size-4" />Instructor studio</Link> : null}
-            {has("admin") ? <Link role="menuitem" className={item} href="/admin"><Shield className="size-4" />Admin</Link> : null}
-            <Link role="menuitem" className={item} href="/orders"><Receipt className="size-4" />Orders and receipts</Link>
-            <Link role="menuitem" className={item} href="/account"><User className="size-4" />Account</Link>
+            <p className="px-3 pb-1 pt-1.5 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-muted">Your studios</p>
+            <Link role="menuitem" className={item} href="/student" data-testid="menu-student-studio"><BookOpen className="size-4" />Student Studio</Link>
+            {has("instructor") ? <Link role="menuitem" className={item} href="/studio"><LayoutDashboard className="size-4" />Instructor Studio</Link> : null}
+            {has("admin") ? <Link role="menuitem" className={item} href="/admin"><Shield className="size-4" />{has("super_admin") ? "Super Admin Studio" : "Admin Studio"}</Link> : null}
+            <div className="my-1 border-t border-line" />
+            <Link role="menuitem" className={item} href="/student/courses"><GraduationCap className="size-4" />My courses</Link>
+            <Link role="menuitem" className={item} href="/student/purchases"><Receipt className="size-4" />Purchase history</Link>
+            <Link role="menuitem" className={item} href="/student/account"><User className="size-4" />Account settings</Link>
             <Link role="menuitem" className={item} href="/support"><LifeBuoy className="size-4" />Help and support</Link>
             {!installed ? <Link role="menuitem" className={item} href="/install"><Download className="size-4" />Install the app</Link> : null}
           </div>
@@ -112,14 +114,13 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
         <nav className="ml-2 hidden items-center lg:flex" aria-label="Main">
           <Link href="/courses" className={`${nav} ${active("/courses")}`}>Browse courses</Link>
           {dealsCount > 0 ? <Link href="/deals" className={`${nav} ${active("/deals")} inline-flex items-center gap-1.5`}>Deals<span className="rounded-full bg-rose-soft px-1.5 text-xs font-extrabold tabular-nums text-rose">{dealsCount}</span></Link> : null}
-          <a href={programLink(DEL_PROGRAM.aboutUrl, "header")} target="_blank" rel="noopener" className={nav} data-testid="nav-full-program" title={`${DEL_PROGRAM.name} on devopseasylearning.com`}>Full program</a>
         </nav>
         <SearchBox className="mx-2 hidden max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">
           <nav className="hidden items-center lg:flex" aria-label="Account">
             <Link href={teachHref} className={nav}>{has("instructor") ? "Studio" : "Teach on DEL"}</Link>
-            {has("admin") ? <Link href="/admin" className={nav}>Admin</Link> : null}
-            {me ? <Link href="/my-learning" className={`${nav} ${active("/my-learning")}`}>My learning</Link> : null}
+            {has("admin") ? <Link href="/admin" className={nav}>{has("super_admin") ? "Super Admin" : "Admin"}</Link> : null}
+            {me ? <Link href="/student" className={`${nav} ${active("/student")}`} data-testid="nav-my-learning">My learning</Link> : null}
           </nav>
           <ThemeToggle className="hidden sm:inline-flex" />
           <Link href="/cart" className="btn btn-ghost btn-sm relative !px-2.5" aria-label={`Cart, ${cartCount} items`}>
@@ -157,8 +158,9 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
               ["/courses", "Browse courses", GraduationCap],
               ...(dealsCount > 0 ? [["/deals", `Deals (${dealsCount})`, Tag]] : []),
               [teachHref, has("instructor") ? "Instructor studio" : "Teach on DEL", LayoutDashboard],
-              ...(me ? [["/my-learning", "My learning", BookOpen], ["/orders", "Orders and receipts", Receipt], ["/account", "Account", User], ["/support", "Help and support", LifeBuoy]] : []),
-              ...(has("admin") ? [["/admin", "Admin", Shield]] : []),
+              ...(me ? [["/student", "Student Studio", BookOpen], ["/student/purchases", "Purchase history", Receipt], ["/student/account", "Account settings", User], ["/support", "Help and support", LifeBuoy]] : []),
+              ...(has("admin") ? [["/admin", has("super_admin") ? "Super Admin Studio" : "Admin Studio", Shield]] : []),
+              ["/contact", "Contact us", Mail],
               ...(!installed ? [["/install", "Install the app", Download]] : []),
             ].map(([href, label, Icon]) => {
               const I = Icon as typeof BookOpen;
@@ -168,9 +170,6 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
                 </Link>
               );
             })}
-            <a href={programLink(DEL_PROGRAM.aboutUrl, "mobile-menu")} target="_blank" rel="noopener" className="flex items-center gap-3 rounded-lg px-3 py-3 font-bold text-ink hover:bg-surface-2">
-              <Users className="size-5 text-muted" />Full training program<span className="ml-auto text-xs font-normal text-muted">devopseasylearning.com</span>
-            </a>
             {!me ? (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Link href="/login" onClick={() => setMobile(false)} className="btn btn-outline">Log in</Link>

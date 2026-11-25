@@ -1,3 +1,5 @@
+import { env } from '../config/env';
+import { JobsService } from '../common/jobs';
 import { Injectable, Optional } from '@nestjs/common';
 import { CoversService } from '../covers/covers.service';
 import type { Prisma } from '../generated/prisma/client';
@@ -64,19 +66,38 @@ export class InstructorService {
     private readonly storage: StorageService,
     private readonly revisions: RevisionsService,
     @Optional() private readonly covers?: CoversService,
+    @Optional() private readonly jobs?: JobsService,
   ) {}
 
   // ---------- profile ----------
-  async apply(a: Actor, input: { headline: string; bio: string; website?: string | null }) {
+  /**
+   * Any signed-in student applies; DEL (a super admin, or an admin with instructors.review) decides. One open application
+   * at a time; after "needs more information" or a rejection the applicant updates it and sends it again.
+   */
+  async apply(a: Actor, input: { headline: string; bio: string; website?: string | null; expertise: string[]; experience: string; plannedCourses: string; extraInfo?: string }) {
     const existing = await this.prisma.instructorProfile.findUnique({ where: { userId: a.user.id } });
     if (existing?.status === 'approved') throw conflict('You are already an instructor', 'already_instructor');
-    if (existing?.status === 'pending') throw conflict('Your application is already under review', 'already_applied');
+    if (existing?.status === 'pending' || existing?.status === 'under_review') throw conflict('Your application is already under review', 'already_applied');
+    const data = {
+      headline: input.headline, bio: input.bio, website: input.website ?? null,
+      expertise: Array.from(new Set(input.expertise.map((x) => x.trim()))), experience: input.experience, plannedCourses: input.plannedCourses, extraInfo: input.extraInfo ?? '',
+      status: 'pending' as const, submittedAt: new Date(),
+    };
     const profile = await this.prisma.instructorProfile.upsert({
       where: { userId: a.user.id },
-      create: { userId: a.user.id, headline: input.headline, bio: input.bio, website: input.website ?? null, status: 'pending' },
-      update: { headline: input.headline, bio: input.bio, website: input.website ?? null, status: 'pending', reviewNote: null },
+      create: { userId: a.user.id, ...data },
+      update: { ...data, reviewedById: null, reviewedAt: null },
     });
-    await this.audit.log({ actorId: a.user.id, action: 'instructor.applied', targetType: 'instructor', targetId: a.user.id, ip: a.ip });
+    await this.audit.log({ actorId: a.user.id, action: 'instructor.applied', targetType: 'instructor', targetId: a.user.id, ip: a.ip, meta: { resubmitted: !!existing } });
+    if (this.jobs) {
+      const web = env().WEB_URL;
+      await this.jobs.sendEmail({ to: a.user.email, template: 'instructor-application-received', data: { name: a.user.name, link: `${web}/student/teach` } });
+      const setting = await this.prisma.platformSetting.findUnique({ where: { key: 'notify_instructor_applications' } });
+      if (!setting || setting.value === true || setting.value === 'true') {
+        const staff = await this.prisma.user.findMany({ where: { roles: { has: 'super_admin' }, status: 'active' }, select: { email: true, name: true } });
+        for (const s of staff) await this.jobs.sendEmail({ to: s.email, template: 'staff-instructor-application', data: { staffName: s.name, name: a.user.name, headline: input.headline, link: `${web}/admin/instructors` } });
+      }
+    }
     return profile;
   }
 

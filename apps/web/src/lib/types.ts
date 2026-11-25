@@ -12,8 +12,13 @@ export interface Me {
   avatarUrl?: string | null;
   roles: Role[];
   status?: string;
-  instructorStatus?: "pending" | "approved" | "rejected" | null;
+  instructorStatus?: "pending" | "under_review" | "needs_info" | "approved" | "rejected" | null;
   createdAt?: string;
+  /** Admin permissions (all of them for a super admin; empty for everyone else). */
+  adminPermissions?: string[];
+  emailVerified?: boolean;
+  mfaEnabled?: boolean;
+  signupMethod?: string;
   /** Super admin working in the studio as DEL ("DEL Studio"); null otherwise. */
   actingAs?: { id: string; name: string } | null;
 }

@@ -33,6 +33,14 @@ export class OAuthService {
     private readonly jobs: JobsService,
   ) {}
 
+  /** Same optional staff notice as email sign-ups (Super Admin › Settings › Notifications). */
+  private async notifyRegistration(name: string, method: string) {
+    const setting = await this.prisma.platformSetting.findUnique({ where: { key: 'notify_new_registrations' } });
+    if (!(setting?.value === true || setting?.value === 'true')) return;
+    const staff = await this.prisma.user.findMany({ where: { roles: { has: 'super_admin' }, status: 'active' }, select: { email: true, name: true } });
+    for (const s of staff) await this.jobs.sendEmail({ to: s.email, template: 'staff-new-registration', data: { staffName: s.name, name, method, link: `${env().WEB_URL}/admin/users` } });
+  }
+
   providers() {
     return enabledProviders().map((k) => ({ key: k, label: PROVIDERS[k].label }));
   }
@@ -104,12 +112,13 @@ export class OAuthService {
       if (taken) return fail('email_exists');
       user = await this.prisma.user.create({
         data: {
-          email: profile.email, name: (profile.name ?? profile.email.split('@')[0]).slice(0, 100), passwordHash: null, roles: ['student'],
+          email: profile.email, name: (profile.name ?? profile.email.split('@')[0]).slice(0, 100), passwordHash: null, roles: ['student'], signupMethod: p, emailVerifiedAt: new Date(),
           avatarUrl: profile.avatarUrl?.startsWith('https://') ? profile.avatarUrl.slice(0, 500) : null,
           identities: { create: { provider: p, subject: profile.subject, email: profile.email, name: profile.name, lastUsedAt: new Date() } },
         },
       });
       await this.audit.log({ actorId: user.id, action: 'auth.register', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method: p } });
+      await this.notifyRegistration(user.name, p);
     }
     try {
       const r = await this.signIn.begin(user!, p, req, res, ctx, { next: st.next });

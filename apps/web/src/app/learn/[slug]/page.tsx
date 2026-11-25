@@ -30,7 +30,7 @@ export default function LearnIndex({ params }: { params: Promise<{ slug: string 
           <p className="mt-1 text-sm text-muted">{err}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Link href={`/courses/${slug}`} className="btn btn-primary" data-testid="renew-from-player">Renew or view the course</Link>
-            <Link href="/my-learning" className="btn btn-outline">My learning</Link>
+            <Link href="/student/courses" className="btn btn-outline">My courses</Link>
           </div>
         </div>
       ) : <Loader2 className="size-8 animate-spin text-violet" aria-label="Opening course" />}

@@ -194,28 +194,6 @@ export class AdminService {
     return paged(items, total, q);
   }
 
-  async updateUser(a: Actor, userId: string, input: { status?: UserStatus; roles?: Role[] }) {
-    if (userId === a.user.id) throw forbidden('You cannot change your own status or roles', 'self_change');
-    const target = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!target) throw notFound('User');
-    const actorIsSuper = hasRole(a.user, 'super_admin');
-    if (input.roles && !actorIsSuper) throw forbidden('Only a super admin can change roles', 'super_admin_required');
-    if (!actorIsSuper && (target.roles.includes('admin') || target.roles.includes('super_admin'))) {
-      throw forbidden('Only a super admin can change another admin', 'super_admin_required');
-    }
-    const roles = input.roles ? Array.from(new Set<Role>(['student', ...input.roles])) : undefined;
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { status: input.status, roles },
-      select: { id: true, email: true, name: true, roles: true, status: true },
-    });
-    if (input.status === 'suspended' || input.roles) {
-      await this.prisma.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
-    }
-    await this.audit.log({ actorId: a.user.id, action: 'user.updated', targetType: 'user', targetId: userId, ip: a.ip, meta: { before: { status: target.status, roles: target.roles }, after: { status: user.status, roles: user.roles } } });
-    return user;
-  }
-
   // ---------- instructors ----------
   async instructors(q: { status?: 'pending' | 'approved' | 'rejected'; q?: string; page: number; pageSize: number }) {
     const where: Prisma.InstructorProfileWhereInput = {
@@ -252,19 +230,6 @@ export class AdminService {
       total,
       q,
     );
-  }
-
-  async decideInstructor(a: Actor, userId: string, approve: boolean, note?: string) {
-    const p = await this.prisma.instructorProfile.findUnique({ where: { userId }, include: { user: true } });
-    if (!p) throw notFound('Instructor application');
-    if (!approve && !note?.trim()) throw badRequest('A note is required when rejecting', 'note_required');
-    await this.prisma.$transaction(async (tx) => {
-      await tx.instructorProfile.update({ where: { userId }, data: { status: approve ? 'approved' : 'rejected', reviewNote: note?.trim() || null } });
-      const roles = approve ? Array.from(new Set<Role>([...p.user.roles, 'instructor'])) : p.user.roles.filter((r) => r !== 'instructor');
-      await tx.user.update({ where: { id: userId }, data: { roles } });
-    });
-    await this.audit.log({ actorId: a.user.id, action: approve ? 'instructor.approved' : 'instructor.rejected', targetType: 'instructor', targetId: userId, ip: a.ip, meta: { note: note ?? null } });
-    return { userId, status: approve ? 'approved' : 'rejected' };
   }
 
   // ---------- categories ----------
@@ -309,11 +274,15 @@ export class AdminService {
     return this.settings.all();
   }
 
-  async putSettings(a: Actor, input: { commission_bps: number }) {
-    if (!hasRole(a.user, 'super_admin')) throw forbidden('Only a super admin can change the commission', 'super_admin_required');
+  async putSettings(a: Actor, input: { commission_bps?: number; notify_new_registrations?: boolean; notify_instructor_applications?: boolean }) {
+    if (!hasRole(a.user, 'super_admin')) throw forbidden('Only a super admin can change marketplace settings', 'super_admin_required');
     const before = await this.settings.all();
-    await this.settings.set('commission_bps', input.commission_bps);
-    await this.audit.log({ actorId: a.user.id, action: 'settings.updated', targetType: 'settings', targetId: 'commission_bps', ip: a.ip, meta: { before: before.commission_bps, after: input.commission_bps } });
+    for (const k of ['commission_bps', 'notify_new_registrations', 'notify_instructor_applications'] as const) {
+      const v = input[k];
+      if (v === undefined || v === before[k]) continue;
+      await this.settings.set(k, v);
+      await this.audit.log({ actorId: a.user.id, action: 'settings.updated', targetType: 'settings', targetId: k, ip: a.ip, meta: { before: before[k], after: v } });
+    }
     return this.settings.all();
   }
 

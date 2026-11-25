@@ -17,6 +17,7 @@ import { ARGON2_OPTS } from '../src/auth/auth.service';
 import { configureApp } from '../src/bootstrap';
 import { JobsService } from '../src/common/jobs';
 import { seal } from '../src/common/seal';
+import { ALL_ADMIN_PERMISSIONS } from '../src/common/permissions';
 import { sendAccessReminders } from '../src/access/reminders';
 import { codeAt, newSecret, stepAt } from '../src/auth/totp';
 import { PrismaService } from '../src/common/prisma.service';
@@ -243,8 +244,8 @@ describe('e2e: buy and learn', () => {
   // ---------- Phase 1 ----------
   const PW = 'Long-enough-pw1';
   const MFA_SEED = newSecret();
-  async function userAgent(email: string, roles: any[], profile?: { isPlatform?: boolean }) {
-    const user = await prisma.user.create({ data: { email, name: email.split('@')[0], passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles, mfaSecret: seal('mfa', MFA_SEED), mfaEnabledAt: new Date() } });
+  async function userAgent(email: string, roles: any[], profile?: { isPlatform?: boolean }, adminPermissions: string[] = ALL_ADMIN_PERMISSIONS) {
+    const user = await prisma.user.create({ data: { email, name: email.split('@')[0], passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles, adminPermissions: roles.includes('admin') ? adminPermissions : [], mfaSecret: seal('mfa', MFA_SEED), mfaEnabledAt: new Date() } });
     if (profile) await prisma.instructorProfile.create({ data: { userId: user.id, status: 'approved', isPlatform: !!profile.isPlatform } });
     const agent = request.agent(app.getHttpServer());
     const csrf: string = (await agent.get('/api/auth/me')).body.csrf;
@@ -1179,5 +1180,131 @@ describe('e2e: buy and learn', () => {
       await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 22 * DAY)); // never twice
       expect(mine().map((m: any) => [m.template, m.data.daysLeft])).toEqual([['access-expiring', 20], ['access-expiring', 6], ['access-expired', 0]]);
     });
+  });
+
+  describe('four roles and instructor applications (owner 2026-11-25)', () => {
+    const app_ = () => request.agent(app.getHttpServer());
+    const apply = {
+      headline: 'Terraform trainer', bio: 'I have taught Terraform to platform teams for years.', expertise: ['Terraform', 'AWS'],
+      experience: 'Five years of workshops for platform teams.', plannedCourses: 'Terraform modules in practice',
+    };
+
+    it('every public sign-up is a student; a sign-up that sends roles is refused', async () => {
+      if (!available) return;
+      const a = app_();
+      const csrf: string = (await a.get('/api/auth/me')).body.csrf;
+      const bad = await a.post('/api/auth/register').set('X-CSRF-Token', csrf).send({ email: 'sneaky@e2e.example', password: 'Quiet-river-stone-58', name: 'Sneaky', roles: ['admin'] }).expect(400);
+      expect(bad.body.error.code).toBe('validation_failed');
+      expect(await prisma.user.findUnique({ where: { email: 'sneaky@e2e.example' } })).toBeNull();
+      await a.post('/api/auth/register').set('X-CSRF-Token', csrf).send({ email: 'plain@e2e.example', password: 'Quiet-river-stone-58', name: 'Plain' }).expect(201);
+      const u = await prisma.user.findUniqueOrThrow({ where: { email: 'plain@e2e.example' } });
+      expect(u).toMatchObject({ roles: ['student'], signupMethod: 'email', emailVerifiedAt: null, adminPermissions: [] });
+      // the verification link proves ownership once
+      const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+      const call = jobs.sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === 'verify-email' && j.to === 'plain@e2e.example');
+      const token = new URL(call.data.link).searchParams.get('token');
+      await a.post('/api/auth/verify-email').set('X-CSRF-Token', csrf).send({ token }).expect(200);
+      expect((await a.post('/api/auth/verify-email').set('X-CSRF-Token', csrf).send({ token }).expect(400)).body.error.code).toBe('verify_link_invalid');
+      const verified = await prisma.user.findUniqueOrThrow({ where: { email: 'plain@e2e.example' } });
+      expect(verified.emailVerifiedAt).not.toBeNull();
+    });
+
+    it('apply → under review → needs info → resubmit → approved keeps student; rejected stays student; no duplicates', async () => {
+      if (!available) return;
+      const boss = await userAgent('rbac-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const stu = await userAgent('rbac-applicant@e2e.example', ['student']);
+      await stu.agent.get('/api/instructor/courses').expect(403);
+      await stu.send('post', '/api/instructor/apply', { headline: 'x', bio: 'too short' }).expect(400);
+      await stu.send('post', '/api/instructor/apply', apply).expect(201);
+      expect((await stu.send('post', '/api/instructor/apply', apply).expect(409)).body.error.code).toBe('already_applied');
+      const list = (await boss.agent.get('/api/admin/people/applications?status=open').expect(200)).body;
+      expect(list.items.find((x: any) => x.email === 'rbac-applicant@e2e.example')).toMatchObject({ status: 'pending', expertise: ['Terraform', 'AWS'] });
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'under_review' }).expect(200);
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'needs_info' }).expect(400);
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'needs_info', note: 'Please add a sample lesson link.' }).expect(200);
+      await stu.send('post', '/api/instructor/apply', { ...apply, extraInfo: 'Sample: https://example.com/lesson' }).expect(201);
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'approved' }).expect(200);
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: stu.user.id } })).roles.sort()).toEqual(['instructor', 'student']);
+      await stu.agent.get('/api/instructor/courses').expect(200); // role applies to the open session at once
+      await stu.agent.get('/api/me/learning').expect(200); // and student access stays
+
+      const other = await userAgent('rbac-rejected@e2e.example', ['student']);
+      await other.send('post', '/api/instructor/apply', apply).expect(201);
+      await boss.send('post', `/api/admin/people/applications/${other.user.id}/decision`, { decision: 'rejected', note: 'Not a fit right now.' }).expect(200);
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: other.user.id } })).roles).toEqual(['student']);
+    });
+
+    it('admin permissions, step-up for privileged roles, no self-promotion, last super admin, revocation applies at once', async () => {
+      if (!available) return;
+      const boss = await userAgent('rbac-super@e2e.example', ['student', 'admin', 'super_admin']);
+      const helper = await userAgent('rbac-admin@e2e.example', ['student', 'admin'], undefined, ['users.view', 'support.manage']);
+      const target = await userAgent('rbac-target@e2e.example', ['student']);
+      // explicit permissions: users.view yes, courses.review / finance / audit no
+      await helper.agent.get('/api/admin/people/users').expect(200);
+      expect((await helper.agent.get('/api/admin/review-queue').expect(403)).body.error.code).toBe('permission_required');
+      await helper.agent.get('/api/admin/finance').expect(403);
+      await helper.agent.get('/api/admin/audit').expect(403);
+      // an admin can't change roles at all, nor promote themselves (old and new endpoints)
+      await helper.send('put', `/api/admin/people/users/${helper.user.id}/access`, { roles: ['admin', 'super_admin'] }).expect(403);
+      await helper.send('patch', `/api/admin/users/${helper.user.id}`, { roles: ['admin', 'super_admin'] }).expect(403);
+      // a super admin can't change their own roles
+      expect((await boss.send('put', `/api/admin/people/users/${boss.user.id}/access`, { roles: ['student'] }).expect(403)).body.error.code).toBe('self_change');
+      // granting admin needs a fresh authenticator code
+      expect((await boss.send('put', `/api/admin/people/users/${target.user.id}/access`, { roles: ['admin'], adminPermissions: ['users.view'] }).expect(400)).body.error.code).toBe('step_up_required');
+      await boss.send('put', `/api/admin/people/users/${target.user.id}/access`, { roles: ['admin'], adminPermissions: ['users.view', 'not.a.permission'], code: '000000' }).expect(401);
+      const ok = await boss.send('put', `/api/admin/people/users/${target.user.id}/access`, { roles: ['admin'], adminPermissions: ['users.view', 'not.a.permission'], code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+      expect(ok.body).toMatchObject({ roles: ['student', 'admin'], adminPermissions: ['users.view'] });
+      await target.agent.get('/api/admin/people/users').expect(200); // a new role applies to the open session at once
+      await target.agent.get('/api/admin/orders').expect(403);
+      // instructor without an application needs a reason (DEL verified them another way)
+      const plain = await userAgent('rbac-plain@e2e.example', ['student']);
+      expect((await boss.send('put', `/api/admin/people/users/${plain.user.id}/access`, { roles: ['instructor'] }).expect(400)).body.error.code).toBe('reason_required');
+      await boss.send('put', `/api/admin/people/users/${plain.user.id}/access`, { roles: ['instructor'], reason: 'Contacted DEL, portfolio checked' }).expect(200);
+      await plain.agent.get('/api/instructor/courses').expect(200);
+      // revocation applies to open sessions at once
+      await boss.send('put', `/api/admin/people/users/${plain.user.id}/access`, { roles: [] }).expect(200);
+      await plain.agent.get('/api/instructor/courses').expect(403);
+      // another super admin removes one; nobody suspends themselves; an admin can't suspend a super admin
+      const second = await userAgent('rbac-super2@e2e.example', ['student', 'admin', 'super_admin']);
+      await second.send('put', `/api/admin/people/users/${boss.user.id}/access`, { roles: ['student'], code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+      expect((await boss.agent.get('/api/admin/people/users')).status).toBe(401); // removed privileged role ended the session
+      const lone = await second.send('post', `/api/admin/people/users/${second.user.id}/status`, { status: 'suspended', reason: 'test' }).expect(403);
+      expect(lone.body.error.code).toBe('self_change');
+      const third = await userAgent('rbac-admin3@e2e.example', ['student', 'admin'], undefined, ['users.manage', 'users.view']);
+      expect((await third.send('post', `/api/admin/people/users/${second.user.id}/status`, { status: 'suspended', reason: 'x' }).expect(403)).body.error.code).toBe('super_admin_required');
+      await third.send('post', `/api/admin/people/users/${target.user.id}/status`, { status: 'suspended' }).expect(403); // target is an admin now
+      await third.send('post', `/api/admin/people/users/${plain.user.id}/status`, { status: 'suspended' }).expect(400); // reason required
+      await third.send('post', `/api/admin/people/users/${plain.user.id}/status`, { status: 'suspended', reason: 'Chargeback fraud' }).expect(200);
+      await plain.agent.get('/api/me/learning').expect(401);
+      const hist = (await second.agent.get(`/api/admin/people/users/${target.user.id}`).expect(200)).body.history;
+      expect(hist[0]).toMatchObject({ action: 'user.access_changed', actor: { id: boss.user.id } });
+    });
+  });
+
+  it('contact page: message with screenshots reaches DEL support by email; only images, honeypot, staff only', async () => {
+    if (!available) return;
+    const a = request.agent(app.getHttpServer());
+    const csrf: string = (await a.get('/api/auth/me')).body.csrf;
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4c50000000049454e44ae426082', 'hex');
+    const post = () => a.post('/api/contact').set('X-CSRF-Token', csrf).field('name', 'Ama Mensah').field('email', 'ama@e2e.example').field('topic', 'payment').field('subject', 'Card declined').field('body', 'My card from Ghana was declined at checkout.');
+    const ok = await post().attach('images', png, { filename: 'screen.png', contentType: 'image/png' }).expect(200);
+    expect(ok.body.ref).toMatch(/^C-\d+$/);
+    const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const mail = jobs.sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === 'contact-message');
+    expect(mail).toMatchObject({ to: 'support@devopseasylearning.com', replyTo: 'ama@e2e.example', attachments: [{ name: 'screen.png', mime: 'image/png' }] });
+    expect(jobs.sendEmail.mock.calls.map((c) => c[0]).some((j) => j.template === 'contact-received' && j.to === 'ama@e2e.example')).toBe(true);
+    // a renamed non-image is refused; the honeypot is refused
+    expect((await post().attach('images', Buffer.from('<?php echo 1;'), { filename: 'x.png', contentType: 'image/png' }).expect(400)).body.error.code).toBe('attachment_type');
+    await post().field('website', 'http://spam.example').expect(400);
+    // staff with support.manage only
+    const stu = await userAgent('contact-stu@e2e.example', ['student']);
+    await stu.agent.get('/api/admin/contact').expect(403);
+    const staff = await userAgent('contact-staff@e2e.example', ['student', 'admin'], undefined, ['support.manage']);
+    const list = (await staff.agent.get('/api/admin/contact?status=new').expect(200)).body;
+    const m = list.items.find((x: any) => x.ref === ok.body.ref);
+    expect(m.attachments).toHaveLength(1);
+    const img = await staff.agent.get(`/api${m.attachments[0].url}`).expect(200);
+    expect(img.headers['content-type']).toBe('image/png');
+    await staff.send('patch', `/api/admin/contact/${m.id}`, { status: 'handled' }).expect(200);
   });
 });

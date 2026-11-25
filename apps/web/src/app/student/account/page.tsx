@@ -10,6 +10,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { Avatar } from "@/components/Avatar";
 import { Skeleton } from "@/components/Empty";
+import { PageHead } from "@/components/shell/AppShell";
 
 function device(ua?: string | null) {
   if (!ua) return "Unknown device";
@@ -60,8 +61,8 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container-x max-w-4xl pt-10">
-      <h1 className="font-display text-[2.4rem] font-extrabold">Account</h1>
+    <div className="max-w-4xl">
+      <PageHead title="Account settings" sub="Your profile, password, two-step sign-in and where you are signed in." />
       <section className="mt-8 grid gap-6 rounded-panel border border-line bg-surface p-6 sm:grid-cols-[auto_1fr] sm:p-8">
         {me ? <Avatar name={me.name} src={me.avatarUrl} size={80} /> : <Skeleton className="size-20 !rounded-full" />}
         <dl className="grid gap-4 text-sm sm:grid-cols-2">

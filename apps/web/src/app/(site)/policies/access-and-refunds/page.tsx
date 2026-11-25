@@ -32,7 +32,7 @@ export default function AccessAndRefundsPolicy() {
         <div>
           <h2 id="how" className="font-display text-xl font-bold">How a refund request is decided</h2>
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-ink-2">
-            <li>Open the receipt under <Link href="/orders" className="link">Orders</Link> and choose <span className="font-bold text-ink">Request a refund</span>.</li>
+            <li>Open the receipt under <Link href="/student/purchases" className="link">Student Studio › Purchase history</Link> and choose <span className="font-bold text-ink">Request a refund</span>.</li>
             <li>We check the purchase date and the video you’ve watched, from our playback records.</li>
             <li>If both rules are met, the refund is issued straight away to your card (up to 3 a year; after that a person approves it).</li>
             <li>If not, you get an email with the numbers we used. You can ask for a human review from the receipt.</li>

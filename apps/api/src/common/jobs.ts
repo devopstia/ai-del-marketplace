@@ -14,6 +14,10 @@ export interface EmailJob {
   to: string;
   template: string;
   data?: Record<string, unknown>;
+  /** Reply-To (e.g. the sender of a contact message). */
+  replyTo?: string;
+  /** Private storage objects attached to the email (fetched by the worker at send time). */
+  attachments?: { key: string; name: string; mime: string }[];
 }
 
 /** Thin wrapper over BullMQ so services (and tests) don't depend on queue internals. */

@@ -60,6 +60,22 @@ export class LearningService {
     return { total: lectures.length, completed: done, percent: lectures.length ? Math.round((done / lectures.length) * 100) : 0 };
   }
 
+  async myReviews(userId: string) {
+    const [reviews, enrolled] = await Promise.all([
+      this.prisma.review.findMany({
+        where: { userId }, orderBy: { updatedAt: 'desc' },
+        include: { course: { select: { id: true, slug: true, title: true, coverKey: true, ratingAvg: true, ratingCount: true } } },
+      }),
+      this.prisma.enrollment.findMany({ where: { userId, revokedAt: null }, select: { course: { select: { id: true, slug: true, title: true, coverKey: true, instructorId: true } } } }),
+    ]);
+    const reviewed = new Set(reviews.map((r) => r.courseId));
+    const card = (c: { id: string; slug: string; title: string; coverKey: string | null }) => ({ id: c.id, slug: c.slug, title: c.title, thumbnailUrl: this.media.imageUrl(c.coverKey) });
+    return {
+      items: reviews.map((r) => ({ id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt, updatedAt: r.updatedAt, course: { ...card(r.course), ratingAvg: r.course.ratingAvg, ratingCount: r.course.ratingCount } })),
+      toReview: enrolled.filter((e) => !reviewed.has(e.course.id) && e.course.instructorId !== userId).map((e) => card(e.course)),
+    };
+  }
+
   async myLearning(userId: string) {
     const enrolments = await this.prisma.enrollment.findMany({
       where: { userId, revokedAt: null },

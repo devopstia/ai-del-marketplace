@@ -22,8 +22,8 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
     api(`/orders/${id}`).then((r) => setO(toOrder(r))).catch((e) => setErr(errMsg(e)));
   }, [id, n]);
   return (
-    <div className="container-x max-w-3xl pt-10">
-      <Link href="/orders" className="link text-sm print:hidden">All orders</Link>
+    <div className="max-w-3xl">
+      
       {err ? <p className="mt-6 text-rose">{err}</p> : null}
       {!o && !err ? <Skeleton className="mt-6 h-72" /> : null}
       {o ? (
@@ -51,7 +51,7 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
         </article>
       ) : null}
       {o && (o.status === "paid" || o.status === "partially_refunded" || o.status === "refunded") ? <RefundPanel orderId={o.id} onRefunded={() => setN((x) => x + 1)} /> : null}
-      {o ? <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden"><PrintButton /><Link href={`/support/new?order=${o.id}&from=${encodeURIComponent(`/orders/${o.id}`)}`} className="btn btn-ghost">Get help with this order</Link></div> : null}
+      {o ? <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden"><PrintButton /><Link href={`/support/new?order=${o.id}&from=${encodeURIComponent(`/student/purchases/${o.id}`)}`} className="btn btn-ghost">Get help with this order</Link></div> : null}
     </div>
   );
 }

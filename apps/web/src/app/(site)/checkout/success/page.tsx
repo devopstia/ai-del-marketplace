@@ -55,8 +55,8 @@ function Success() {
         </ul>
       ) : null}
       <div className="mt-8 flex justify-center gap-3">
-        <Link href="/my-learning" className="btn btn-primary">Go to My learning</Link>
-        <Link href="/orders" className="btn btn-outline">View receipt</Link>
+        <Link href="/student/courses" className="btn btn-primary">Go to My courses</Link>
+        <Link href="/student/purchases" className="btn btn-outline">View receipt</Link>
       </div>
     </div>
   );

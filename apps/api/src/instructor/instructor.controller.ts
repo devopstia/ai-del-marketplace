@@ -5,12 +5,19 @@ import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
 import { InstructorService } from './instructor.service';
 
-const applySchema = z.object({
+const baseProfile = z.object({
   headline: z.string().trim().min(3).max(120),
   bio: z.string().trim().min(20).max(5000),
   website: z.string().url().max(300).nullable().optional(),
 });
-const profileSchema = applySchema.partial();
+/** Instructor application: what DEL needs to decide (owner 2026-11-25). */
+const applySchema = baseProfile.extend({
+  expertise: z.array(z.string().trim().min(2).max(60)).min(1).max(12),
+  experience: z.string().trim().min(20).max(3000),
+  plannedCourses: z.string().trim().min(10).max(3000),
+  extraInfo: z.string().trim().max(3000).optional(),
+}).strict();
+const profileSchema = baseProfile.partial();
 const str = (max: number) => z.string().trim().max(max);
 const courseFields = z.object({
   title: str(120).min(3),

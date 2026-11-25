@@ -21,7 +21,9 @@ const next = z.string().max(300).optional();
 const code = z.string().trim().max(20).optional();
 /** Optional guest cart to merge right after sign-in (same rules as POST /cart/merge). */
 const cartCourseIds = z.array(z.string().uuid()).max(50).optional();
-const registerSchema = z.object({ email, password, name: z.string().trim().min(1).max(100), cartCourseIds, next });
+// .strict(): a sign-up that tries to send roles, permissions or anything else is refused (every sign-up is a student).
+const registerSchema = z.object({ email, password, name: z.string().trim().min(1).max(100), cartCourseIds, next }).strict();
+const verifySchema = z.object({ token: z.string().min(20).max(200) });
 const loginSchema = z.object({ email, password: z.string().min(1).max(200), cartCourseIds, next });
 const profileSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
@@ -72,6 +74,18 @@ export class AuthController {
   async register(@ZBody(registerSchema) body: z.infer<typeof registerSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
     return this.afterFirstStep(await this.auth.register(body, req, res, this.ctx(req)), req);
   }
+
+  /** Email ownership: resend the link (signed in), or open it (public). */
+  @HttpCode(200)
+  @Post('auth/verify-email/send')
+  sendVerification(@Req() req: AppRequest) { return this.auth.sendVerification(req.user!.id, req.ip ?? null); }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle(authLimit)
+  @HttpCode(200)
+  @Post('auth/verify-email')
+  verifyEmail(@ZBody(verifySchema) b: z.infer<typeof verifySchema>, @Req() req: AppRequest) { return this.auth.verifyEmail(b.token, req.ip ?? null); }
 
   @Public()
   @UseGuards(ThrottlerGuard)

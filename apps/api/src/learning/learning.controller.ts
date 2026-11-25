@@ -24,6 +24,12 @@ export class LearningController {
     return this.svc.courseForLearner(u, slug);
   }
 
+  /** Student Studio › Reviews: my reviews, and enrolled courses still waiting for one. */
+  @Get('me/reviews')
+  myReviews(@CurrentUser() u: AuthUser) {
+    return this.svc.myReviews(u.id);
+  }
+
   @Get('me/certificates')
   certificates(@CurrentUser() u: AuthUser) {
     return this.svc.myCertificates(u.id);

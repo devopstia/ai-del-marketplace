@@ -1,16 +1,17 @@
 import { Controller, Delete, Get, HttpCode, Param, Patch, Post, Put } from '@nestjs/common';
 import { z } from 'zod';
-import { ActorCtx, type Actor, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, Perm, Roles } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { AdminService } from './admin.service';
 import { FinanceService } from './finance.service';
+import { PeopleService } from './people.service';
 
 const paging = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 const noteSchema = z.object({ note: z.string().trim().max(4000).optional() });
 const coursesQuery = z.object({ status: z.enum(['draft', 'in_review', 'changes_requested', 'published', 'unpublished', 'rejected']).optional(), q: z.string().max(100).optional(), ...paging });
 const usersQuery = z.object({ q: z.string().max(100).optional(), role: z.enum(['student', 'instructor', 'admin', 'super_admin']).optional(), status: z.enum(['active', 'suspended']).optional(), ...paging });
 const userPatch = z
-  .object({ status: z.enum(['active', 'suspended']).optional(), roles: z.array(z.enum(['student', 'instructor', 'admin', 'super_admin'])).max(4).optional() })
+  .object({ status: z.enum(['active', 'suspended']).optional(), roles: z.array(z.enum(['student', 'instructor', 'admin', 'super_admin'])).max(4).optional(), code: z.string().trim().max(12).optional(), reason: z.string().trim().max(500).optional() })
   .refine((v) => v.status || v.roles, 'Nothing to change');
 const instructorsQuery = z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional(), q: z.string().max(100).optional(), ...paging });
 const categorySchema = z.object({
@@ -19,7 +20,7 @@ const categorySchema = z.object({
   icon: z.string().max(40).optional(),
   sort: z.number().int().min(0).max(1000).optional(),
 });
-const settingsSchema = z.object({ commission_bps: z.number().int().min(0).max(10000) });
+const settingsSchema = z.object({ commission_bps: z.number().int().min(0).max(10000).optional(), notify_new_registrations: z.boolean().optional(), notify_instructor_applications: z.boolean().optional() }).strict();
 const ordersQuery = z.object({ status: z.enum(['pending', 'paid', 'failed', 'refunded', 'partially_refunded']).optional(), q: z.string().max(100).optional(), ...paging });
 const refundSchema = z.object({ lineIds: z.array(z.string().uuid()).max(100).optional(), reason: z.string().max(500).optional() });
 const auditQuery = z.object({
@@ -43,70 +44,75 @@ export class AdminController {
   constructor(
     private readonly svc: AdminService,
     private readonly finance: FinanceService,
+    private readonly people: PeopleService,
   ) {}
 
   @Get('stats') stats() { return this.svc.stats(); }
-  @Get('review-queue') queue() { return this.svc.reviewQueue(); }
-  @Get('courses') courses(@ZQuery(coursesQuery) q: z.infer<typeof coursesQuery>) { return this.svc.courses(q); }
-  @Get('courses/:id') course(@Param('id') id: string) { return this.svc.course(id); }
+  @Perm('courses.review') @Get('review-queue') queue() { return this.svc.reviewQueue(); }
+  @Perm('courses.review') @Get('courses') courses(@ZQuery(coursesQuery) q: z.infer<typeof coursesQuery>) { return this.svc.courses(q); }
+  @Perm('courses.review') @Get('courses/:id') course(@Param('id') id: string) { return this.svc.course(id); }
 
   /** Reviewers watch any video asset (e.g. a new video in a revision that is not live yet). Audited. */
-  @HttpCode(200) @Post('videos/:assetId/playback')
+  @Perm('courses.review') @HttpCode(200) @Post('videos/:assetId/playback')
   videoPlayback(@Param('assetId') assetId: string, @ActorCtx() a: Actor) { return this.svc.videoPlayback(a, assetId); }
 
-  @HttpCode(200) @Post('courses/:id/approve')
+  @Perm('courses.review') @HttpCode(200) @Post('courses/:id/approve')
   approve(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decide(a, id, 'approve', b.note); }
-  @HttpCode(200) @Post('courses/:id/request-changes')
+  @Perm('courses.review') @HttpCode(200) @Post('courses/:id/request-changes')
   changes(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decide(a, id, 'request-changes', b.note); }
-  @HttpCode(200) @Post('courses/:id/reject')
+  @Perm('courses.review') @HttpCode(200) @Post('courses/:id/reject')
   reject(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decide(a, id, 'reject', b.note); }
-  @HttpCode(200) @Post('courses/:id/unpublish')
+  @Perm('courses.review') @HttpCode(200) @Post('courses/:id/unpublish')
   unpublish(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decide(a, id, 'unpublish', b.note); }
 
-  @Get('users') users(@ZQuery(usersQuery) q: z.infer<typeof usersQuery>) { return this.svc.users(q); }
-  @Patch('users/:id')
-  updateUser(@Param('id') id: string, @ZBody(userPatch) b: z.infer<typeof userPatch>, @ActorCtx() a: Actor) { return this.svc.updateUser(a, id, b); }
+  @Perm('users.view') @Get('users') users(@ZQuery(usersQuery) q: z.infer<typeof usersQuery>) { return this.svc.users(q); }
+  @Perm('users.manage') @Patch('users/:id')
+  async updateUser(@Param('id') id: string, @ZBody(userPatch) b: z.infer<typeof userPatch>, @ActorCtx() a: Actor) {
+    // Kept for older clients: the same rules as Users & roles (step-up code, last super admin, audit).
+    if (b.roles) await this.people.setAccess(a, id, { roles: b.roles, code: b.code, reason: b.reason });
+    return b.status ? this.people.setStatus(a, id, b.status, b.reason) : this.people.detail(id);
+  }
 
-  @Get('instructors') instructors(@ZQuery(instructorsQuery) q: z.infer<typeof instructorsQuery>) { return this.svc.instructors(q); }
-  @HttpCode(200) @Post('instructors/:id/approve')
-  approveInstructor(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decideInstructor(a, id, true, b.note); }
-  @HttpCode(200) @Post('instructors/:id/reject')
-  rejectInstructor(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.svc.decideInstructor(a, id, false, b.note); }
+  @Perm('users.view') @Get('instructors') instructors(@ZQuery(instructorsQuery) q: z.infer<typeof instructorsQuery>) { return this.svc.instructors(q); }
+  @Perm('instructors.review') @HttpCode(200) @Post('instructors/:id/approve')
+  approveInstructor(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.people.decide(a, id, 'approved', b.note); }
+  @Perm('instructors.review') @HttpCode(200) @Post('instructors/:id/reject')
+  rejectInstructor(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.people.decide(a, id, 'rejected', b.note); }
 
-  @Get('categories') categories() { return this.svc.categories(); }
-  @Post('categories')
+  @Perm('content.manage') @Get('categories') categories() { return this.svc.categories(); }
+  @Perm('content.manage') @Post('categories')
   createCategory(@ZBody(categorySchema) b: z.infer<typeof categorySchema>, @ActorCtx() a: Actor) { return this.svc.createCategory(a, b); }
-  @Patch('categories/:id')
+  @Perm('content.manage') @Patch('categories/:id')
   updateCategory(@Param('id') id: string, @ZBody(categorySchema.partial()) b: Partial<z.infer<typeof categorySchema>>, @ActorCtx() a: Actor) { return this.svc.updateCategory(a, id, b); }
-  @Delete('categories/:id')
+  @Perm('content.manage') @Delete('categories/:id')
   deleteCategory(@Param('id') id: string, @ActorCtx() a: Actor) { return this.svc.deleteCategory(a, id); }
 
   // ---------- money ----------
-  @Get('finance') finance_() { return this.finance.overview(); }
-  @Get('finance/waiting-for-onboarding') waiting() { return this.finance.waitingForOnboarding(); }
-  @HttpCode(200) @Post('finance/release-transfers') release(@ActorCtx() a: Actor) { return this.finance.releaseNow(a); }
-  @Get('disputes') disputes() { return this.finance.disputes(); }
-  @Get('refund-requests') refundRequests(@ZQuery(refundReqQuery) q: z.infer<typeof refundReqQuery>) { return this.finance.refundRequests(q.status); }
-  @HttpCode(200) @Post('refund-requests/:id/approve')
+  @Perm('finance.view') @Get('finance') finance_() { return this.finance.overview(); }
+  @Perm('finance.view') @Get('finance/waiting-for-onboarding') waiting() { return this.finance.waitingForOnboarding(); }
+  @Roles('super_admin') @HttpCode(200) @Post('finance/release-transfers') release(@ActorCtx() a: Actor) { return this.finance.releaseNow(a); }
+  @Perm('finance.view') @Get('disputes') disputes() { return this.finance.disputes(); }
+  @Perm('finance.view') @Get('refund-requests') refundRequests(@ZQuery(refundReqQuery) q: z.infer<typeof refundReqQuery>) { return this.finance.refundRequests(q.status); }
+  @Perm('refunds.decide') @HttpCode(200) @Post('refund-requests/:id/approve')
   approveRefund(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.finance.decideRefundRequest(a, id, true, b.note); }
-  @HttpCode(200) @Post('refund-requests/:id/decline')
+  @Perm('refunds.decide') @HttpCode(200) @Post('refund-requests/:id/decline')
   declineRefund(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.finance.decideRefundRequest(a, id, false, b.note); }
-  @Get('instructors/:id/terms') instructorTerms(@Param('id') id: string) { return this.finance.terms(id); }
+  @Perm('finance.view') @Get('instructors/:id/terms') instructorTerms(@Param('id') id: string) { return this.finance.terms(id); }
   /** Super admin only (checked in the service): per-instructor rate and the "pay to DEL" agreement. Audited. */
-  @Put('instructors/:id/terms')
+  @Roles('super_admin') @Put('instructors/:id/terms')
   setTerms(@Param('id') id: string, @ZBody(termsSchema) b: z.infer<typeof termsSchema>, @ActorCtx() a: Actor) { return this.finance.setInstructorTerms(a, id, b); }
 
   @Get('settings') settings() { return this.svc.getSettings(); }
-  @Put('settings')
+  @Roles('super_admin') @Put('settings')
   putSettings(@ZBody(settingsSchema) b: z.infer<typeof settingsSchema>, @ActorCtx() a: Actor) { return this.svc.putSettings(a, b); }
 
-  @Get('orders') orders(@ZQuery(ordersQuery) q: z.infer<typeof ordersQuery>) { return this.svc.orders(q); }
-  @Get('orders/:id') order(@Param('id') id: string) { return this.svc.order(id); }
-  @HttpCode(200) @Post('orders/:id/refund')
+  @Perm('orders.view') @Get('orders') orders(@ZQuery(ordersQuery) q: z.infer<typeof ordersQuery>) { return this.svc.orders(q); }
+  @Perm('orders.view') @Get('orders/:id') order(@Param('id') id: string) { return this.svc.order(id); }
+  @Perm('refunds.decide') @HttpCode(200) @Post('orders/:id/refund')
   refund(@Param('id') id: string, @ZBody(refundSchema) b: z.infer<typeof refundSchema>, @ActorCtx() a: Actor) { return this.svc.refund(a, id, b); }
 
-  @Patch('reviews/:id')
+  @Perm('reviews.moderate') @Patch('reviews/:id')
   review(@Param('id') id: string, @ZBody(reviewPatch) b: z.infer<typeof reviewPatch>, @ActorCtx() a: Actor) { return this.svc.setReviewStatus(a, id, b.status); }
 
-  @Get('audit') audit(@ZQuery(auditQuery) q: z.infer<typeof auditQuery>) { return this.svc.auditLog(q); }
+  @Perm('audit.view') @Get('audit') audit(@ZQuery(auditQuery) q: z.infer<typeof auditQuery>) { return this.svc.auditLog(q); }
 }

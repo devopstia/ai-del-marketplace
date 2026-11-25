@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { obj } from "@/lib/normalize";
 
 export function safeNext(n: string | null | undefined): string {
-  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/my-learning";
+  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/student";
 }
 
 export interface Provider { key: string; label: string }
@@ -23,7 +23,7 @@ export function useProviders() {
   return data;
 }
 
-export const startUrl = (key: string, mode: "login" | "link", next = "/my-learning") => `${API_URL}/auth/oauth/${key}/start?mode=${mode}&next=${encodeURIComponent(next)}`;
+export const startUrl = (key: string, mode: "login" | "link", next = "/student") => `${API_URL}/auth/oauth/${key}/start?mode=${mode}&next=${encodeURIComponent(next)}`;
 
 /** Messages for ?error= after a provider round trip. */
 export const OAUTH_ERRORS: Record<string, string> = {

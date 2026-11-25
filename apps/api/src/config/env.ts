@@ -56,6 +56,8 @@ const schema = z.object({
    * Local development only: `false` skips the Google Authenticator step so the owner can sign in quickly while testing.
    * Ignored in production (the code is always required there). docs/AUTH.md.
    */
+  /** Where Contact page messages go (DEL support inbox). */
+  CONTACT_EMAIL: z.string().email().default('support@devopseasylearning.com'),
   MFA_REQUIRED: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
   /** The name shown in Google Authenticator. */
   MFA_ISSUER: z.string().default('DevOps Easy Learning'),

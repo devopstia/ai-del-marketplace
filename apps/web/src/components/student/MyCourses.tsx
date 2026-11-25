@@ -15,17 +15,18 @@ import { LoopMeter } from "@/components/LoopMeter";
 import { Empty, Skeleton } from "@/components/Empty";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { PageHead } from "@/components/shell/AppShell";
 
 const mapPopular = (r: unknown) => paged(r, toCourseCard).items;
 
 const tabs = [["all", "All courses"], ["progress", "In progress"], ["done", "Completed"]] as const;
 
-function resumeHref(i: LearningItem) {
+export function resumeHref(i: LearningItem) {
   return i.lastLectureId ? `/learn/${i.course.slug}/${i.lastLectureId}` : `/learn/${i.course.slug}`;
 }
 
 /** Days left, recomputed every minute so the countdown moves on an open page. */
-function useNow(ms = 60_000) {
+export function useNow(ms = 60_000) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), ms); return () => clearInterval(id); }, [ms]);
   return now;
@@ -33,7 +34,7 @@ function useNow(ms = 60_000) {
 const DAY = 86_400_000;
 
 /** Bought / access until / days left, and Renew in the last 30 days (one-year access, owner 2026-11-25). */
-function AccessLine({ item, now }: { item: LearningItem; now: number }) {
+export function AccessLine({ item, now }: { item: LearningItem; now: number }) {
   const a = item.access;
   if (!a?.expiresAt) return null;
   const left = Math.max(0, Math.ceil((new Date(a.expiresAt).getTime() - now) / DAY));
@@ -46,7 +47,7 @@ function AccessLine({ item, now }: { item: LearningItem; now: number }) {
   );
 }
 
-function CertificateAction({ item, onIssued }: { item: LearningItem; onIssued: (code: string) => void }) {
+export function CertificateAction({ item, onIssued }: { item: LearningItem; onIssued: (code: string) => void }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   if (item.certificateCode) return <Link href={`/certificates/${item.certificateCode}`} className="link inline-flex items-center gap-1 text-sm"><Award className="size-4" />View certificate</Link>;
@@ -64,7 +65,7 @@ function CertificateAction({ item, onIssued }: { item: LearningItem; onIssued: (
   );
 }
 
-export default function MyLearning() {
+export function MyCourses() {
   const { me } = useAuth();
   const [items, setItems] = useState<LearningItem[] | null>(null);
   const [expired, setExpired] = useState<LearningItem[]>([]);
@@ -97,9 +98,8 @@ export default function MyLearning() {
   const issue = (slug: string) => (code: string) => setItems((xs) => xs?.map((x) => (x.course.slug === slug ? { ...x, certificateCode: code } : x)) ?? null);
 
   return (
-    <div className="container-x pt-10">
-      <h1 className="font-display text-[clamp(2rem,4vw,2.8rem)] font-extrabold">My learning</h1>
-      {me ? <p className="mt-1 text-ink-2">Welcome back, {me.name.split(" ")[0]}.</p> : null}
+    <div>
+      <PageHead title="My courses" sub={me ? `Everything you are enrolled in, ${me.name.split(" ")[0]}. Pick up where you left off.` : undefined} />
       {err ? <p className="mt-6 text-rose">{err}</p> : null}
       {!items && !err ? <div className="mt-8 grid gap-6 md:grid-cols-2"><Skeleton className="h-64" /><Skeleton className="h-64" /></div> : null}
       {items && !items.length ? (
@@ -107,7 +107,7 @@ export default function MyLearning() {
       ) : null}
 
       {current ? (
-        <section aria-labelledby="continue-h" className="mt-8 overflow-hidden rounded-panel bg-stage text-white">
+        <section aria-labelledby="continue-h" className="overflow-hidden rounded-panel bg-stage text-white">
           <div className="grid items-center gap-6 p-4 sm:p-6 md:grid-cols-[minmax(0,420px)_1fr] md:gap-10 md:p-8">
             <Link href={resumeHref(current)} className="group relative block">
               <CourseCover slug={current.course.slug} title={current.course.title} category={current.course.category?.name} thumbnailUrl={current.course.thumbnailUrl} />
