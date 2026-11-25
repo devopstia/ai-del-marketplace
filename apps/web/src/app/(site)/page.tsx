@@ -13,8 +13,6 @@ import type { CourseCard } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-// Topics the catalogue really covers; e2e checks that each one returns at least one course.
-const searches = ["Kubernetes", "MCP", "Amazon Bedrock", "RAG", "Terraform", "n8n"];
 
 function SectionHead({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {
   return (
@@ -114,12 +112,6 @@ export default async function Home() {
               <input name="q" type="search" aria-label="Search courses" placeholder="What do you want to build?" className="h-11 min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-muted focus:outline-none" />
               <button className="btn btn-primary !rounded-full">Search</button>
             </form>
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted">Popular:</span>
-              {searches.map((s) => (
-                <Link key={s} href={`/courses?q=${encodeURIComponent(s)}`} className="rounded-full border border-line px-3 py-1 font-bold text-ink-2 hover:border-violet hover:text-violet">{s}</Link>
-              ))}
-            </div>
           </div>
           <HeroLoop spotlight={featured ? { slug: featured.slug, thumbnailUrl: featured.thumbnailUrl, ratingAvg: featured.ratingAvg, ratingCount: featured.ratingCount, priceCents: featured.priceCents, listPriceCents: featured.listPriceCents, currency: featured.currency, title: featured.title, href: `/courses/${featured.slug}`, meta: `${featured.instructor.name}, ${hours(featured.totalDurationSec)}` } : null} />
         </div>
@@ -179,12 +171,18 @@ export default async function Home() {
       {!flagship && enrolled.length >= 3 ? (
         <section className="container-x pt-20">
           <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr]">
-            <div>
+            <div className="flex flex-col">
               <SectionHead title="Most enrolled" sub="What DevOps teams are learning right now, ranked by enrolments." />
-              <Link href="/courses?sort=popular" className="btn btn-outline">Browse all popular courses</Link>
+              {/* the number one course fills the column beside the ranking */}
+              <Link href={`/courses/${enrolled[0]!.slug}`} className="group block rounded-panel border border-line bg-surface p-3 transition-colors hover:border-violet">
+                <CourseCover slug={enrolled[0]!.slug} title={enrolled[0]!.title} category={enrolled[0]!.category?.name} thumbnailUrl={enrolled[0]!.thumbnailUrl} showTitle={false} />
+                <span className="mt-3 flex items-baseline gap-3 px-1"><span className="font-display text-3xl font-extrabold text-violet">1</span><span className="min-w-0 font-display font-bold leading-snug text-ink group-hover:text-violet">{enrolled[0]!.title}</span></span>
+                <span className="mt-1 block px-1 pb-1 text-sm text-muted">{enrolled[0]!.instructor.name}{enrolled[0]!.studentCount >= MIN_STUDENTS_SHOWN ? ` · ${plural(enrolled[0]!.studentCount, "learner")}` : ""}</span>
+              </Link>
+              <Link href="/courses?sort=popular" className="btn btn-outline mt-5 self-start">Browse all popular courses</Link>
             </div>
-            <ol className="divide-y divide-line border-y border-line">
-              {enrolled.slice(0, 5).map((c, i) => <RankedRow key={c.slug} c={c} rank={i + 1} />)}
+            <ol className="divide-y divide-line border-y border-line lg:self-center">
+              {enrolled.slice(1, 6).map((c, i) => <RankedRow key={c.slug} c={c} rank={i + 2} />)}
             </ol>
           </div>
         </section>

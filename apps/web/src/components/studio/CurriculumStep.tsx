@@ -60,9 +60,11 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
   const [q, setQ] = useState("");
   const before = useRef<StudioSection[] | null>(null);
   if (synced !== course.sections) {
-    // Server copy changed (after a save or reload): adopt it.
+    // Server copy changed (after a save or reload): adopt it, and open any section that just appeared.
+    const fresh = course.sections.filter((x) => !synced.some((y) => y.id === x.id)).map((x) => x.id);
     setSynced(course.sections);
     setSections(course.sections);
+    if (fresh.length) setOpen((o) => new Set([...o, ...fresh]));
   }
 
   // Keep processing videos fresh until they're ready.

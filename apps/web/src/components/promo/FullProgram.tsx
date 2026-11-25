@@ -13,13 +13,16 @@ export function FullProgram() {
     <section className="container-x pt-20" aria-labelledby="full-program" data-testid="full-program">
       <div className="overflow-hidden rounded-panel border border-line bg-surface">
         <div className="grid lg:grid-cols-[1fr_1.35fr]">
-          <div className="border-b border-line p-6 sm:p-8 lg:border-b-0 lg:border-r">
+          <div className="flex flex-col border-b border-line bg-surface-2/40 p-6 sm:p-8 lg:border-b-0 lg:border-r">
             <p className="flex items-center gap-2 text-sm font-bold text-cyan-ink"><MonitorPlay className="size-4" aria-hidden="true" />On this marketplace</p>
-            <h3 className="mt-3 font-display text-xl font-extrabold text-ink">Individual courses</h3>
-            <p className="mt-2 text-ink-2">Pick one topic and learn it at your own pace: video lessons, lab files for every lesson and 12 months of access. You pay here, at checkout.</p>
-            <Link href="/courses" className="link mt-5 inline-flex items-center gap-1 text-sm">Browse courses<ArrowUpRight className="size-4" aria-hidden="true" /></Link>
+            <h3 className="mt-3 font-display text-[clamp(1.4rem,2.4vw,1.85rem)] font-extrabold leading-tight text-ink">Learn one topic at a time with individual courses.</h3>
+            <p className="mt-2 text-ink-2">Choose the skill you need now and learn it at your own pace.</p>
+            <ul className="mt-4 grid gap-y-2 text-sm text-ink-2">
+              {["Video lessons recorded on real systems", "Lab files for every lesson, plus the full course package", "12 months of access, quizzes and a certificate", "Pay here at checkout; refunds within 14 days"].map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden="true" />{f}</li>)}
+            </ul>
+            <div className="mt-6 lg:mt-auto lg:pt-6"><Link href="/courses" className="btn btn-outline">Browse courses<ArrowUpRight className="size-4" aria-hidden="true" /></Link></div>
           </div>
-          <div className="p-6 sm:p-8">
+          <div className="flex flex-col p-6 sm:p-8">
             <p className="flex items-center gap-2 text-sm font-bold text-violet"><Users className="size-4" aria-hidden="true" />DevOps Easy Learning</p>
             <h2 id="full-program" className="mt-3 font-display text-[clamp(1.4rem,2.4vw,1.85rem)] font-extrabold leading-tight text-ink">
               Want the whole path? Join the full training program.
@@ -28,7 +31,7 @@ export function FullProgram() {
             <ul className="mt-4 grid gap-x-6 gap-y-2 text-sm text-ink-2 sm:grid-cols-2">
               {DEL_PROGRAM.facts.map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden="true" />{f}</li>)}
             </ul>
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-2 lg:mt-auto lg:pt-6">
               <a {...ext} href={programLink(DEL_PROGRAM.enrollUrl, "home")} className="btn btn-primary" data-testid="program-enroll">Enroll in the full training program<ArrowUpRight className="size-4" aria-hidden="true" /></a>
               <a {...ext} href={programLink(DEL_PROGRAM.aboutUrl, "home")} className="btn btn-outline">Explore the program</a>
             </div>

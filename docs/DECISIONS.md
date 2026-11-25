@@ -191,3 +191,19 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   `checkpoint-2026-11-25-one-year-access` = `525a82c`). Access periods, server-enforced expiry, renewal (last 30 days or
   after expiry), reminders, unique-seconds consumption, automatic refund decisions with review, Admin › Refunds, Claude
   summaries (hidden without key), policy page, "lifetime" removed everywhere. docs/ACCESS_AND_REFUNDS.md, AGENTS rule 20.
+- Batch 2 (prompts.md tasks 3–9 plus owner requests, 2026-11-25; owner: "work on all of those, deploy local and push into
+  main… go with recommendation"): rollback tag `checkpoint-2026-11-25-before-batch2` = `10d92d2`, branch
+  `backup/before-batch2-2026-11-25`; work on `feat/player-and-promo`. Decisions taken on the owner's behalf
+  (recommended options): YouTube-style player with in-place lesson changes (full screen survives Next); full program
+  promoted with `www.devopseasylearning.com` (bare domain has a certificate error), removed from the menu bar at the
+  owner's request; four roles with explicit admin permissions, existing admins keep all operational permissions,
+  step-up authenticator code for privileged role changes; Student Studio at `/student` with old links redirected; one
+  `AppShell` for every studio; curriculum drag and drop with dnd-kit (keyboard and touch), course package as a separate
+  table that applies immediately; manual enrollment with super-admin-only payment verification, allocation per course,
+  80/20 of the net, hashed 7-day invitations where every new link replaces the old one and an emailed code proves the
+  address; email through the Hub's layout with DEL branding, Resend in production and a local Mailpit inbox; CI on
+  GitHub Actions, images/release workflows gated by `PRODUCTION_ENABLED` (no AWS resources created), secrets in SSM
+  instead of the Hub's committed secrets file, SSM Run Command instead of SSH, no geographic rules; contact page
+  emails screenshots to support@devopseasylearning.com; social links from the DEL website; /install and /help
+  ("Platform videos", two columns) redesigned. Tests run on an isolated `del-test` stack (ports 3100/4100) so the
+  owner's local site (MFA_REQUIRED=false) is never touched.

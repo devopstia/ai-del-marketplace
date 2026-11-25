@@ -47,7 +47,7 @@ export async function passMfa(page: Page, email: string) {
   if (c) trusted.set(email, c);
 }
 
-export async function login(page: Page, email: string, password = PASSWORD, next = "/my-learning") {
+export async function login(page: Page, email: string, password = PASSWORD, next = "/student") {
   const t = trusted.get(email);
   if (t) await page.context().addCookies([t]);
   await page.goto(`/login?next=${encodeURIComponent(next)}`);

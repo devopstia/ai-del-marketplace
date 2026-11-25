@@ -4,7 +4,7 @@ import { devices, expect, test } from "@playwright/test";
 test.describe("installable app", () => {
   test("manifest, icons and service worker are served", async ({ request }) => {
     const m = await (await request.get("/manifest.webmanifest")).json();
-    expect(m).toMatchObject({ name: "DevOps Easy Learning", short_name: "DEL", display: "standalone", start_url: "/my-learning?source=pwa" });
+    expect(m).toMatchObject({ name: "DevOps Easy Learning", short_name: "DEL", display: "standalone", start_url: "/student?source=pwa" });
     expect(m.icons.map((i: { sizes: string; purpose: string }) => `${i.sizes}:${i.purpose}`)).toEqual(expect.arrayContaining(["192x192:any", "512x512:any", "512x512:maskable"]));
     for (const i of m.icons) expect((await request.get(i.src)).headers()["content-type"]).toBe("image/png");
     expect((await request.get("/sw.js")).ok()).toBe(true);
@@ -32,7 +32,7 @@ test.describe("installable app", () => {
     const ctx = await browser.newContext({ ...devices["iPhone 14"] });
     const page = await ctx.newPage();
     await page.goto("/install");
-    await expect(page.locator("#this-device")).toHaveText("On this iPhone or iPad");
+    await expect(page.getByTestId("install-this-device")).toContainText("On this iPhone or iPad");
     await expect(page.getByTestId("install-steps")).toContainText("Add to Home Screen");
     await expect(page.getByTestId("install-qr")).toHaveCount(0);
     await ctx.close();

@@ -38,14 +38,13 @@ test.describe("public catalogue", () => {
     await expect.poll(() => dialog.locator("video").getAttribute("src")).toContain("http");
   });
 
-  test("every popular search on the home page finds a course", async ({ page }) => {
+  test("the home page search finds courses (no popular-search chips, owner 2026-11-25)", async ({ page }) => {
     await page.goto("/");
-    const chips = await page.locator('a[href^="/courses?q="]').evaluateAll((as) => as.map((a) => a.getAttribute("href")!));
-    expect(chips.length).toBeGreaterThan(0);
-    for (const href of chips) {
-      await page.goto(href);
-      await expect(page.getByTestId("course-row").first(), href).toBeVisible();
-    }
+    await expect(page.getByText("Popular:")).toHaveCount(0);
+    await page.getByRole("search").getByLabel("Search courses").fill("Kubernetes");
+    await page.getByRole("search").getByRole("button", { name: "Search" }).click();
+    await expect(page).toHaveURL(/\/courses\?q=Kubernetes/);
+    await expect(page.getByTestId("course-row").first()).toBeVisible();
   });
 
   test("search filters the catalogue", async ({ page }) => {
@@ -55,8 +54,11 @@ test.describe("public catalogue", () => {
   });
 
   test("protected pages send signed-out visitors to log in", async ({ page }) => {
+    await page.goto("/student");
+    await expect(page).toHaveURL(/\/login\?next=%2Fstudent/);
+    // old links still work: /my-learning moved into the Student Studio
     await page.goto("/my-learning");
-    await expect(page).toHaveURL(/\/login\?next=%2Fmy-learning/);
+    await expect(page).toHaveURL(/\/login\?next=%2Fstudent%2Fcourses/);
   });
 });
 
@@ -82,8 +84,8 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page.getByTestId("codes-continue")).toBeDisabled();
     await page.getByTestId("codes-saved").check();
     await page.getByTestId("codes-continue").click();
-    await expect(page).toHaveURL(/\/my-learning/);
-    await expect(page.getByRole("heading", { name: "My learning" })).toBeVisible();
+    await expect(page).toHaveURL(/\/student$/);
+    await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
   });
 
   test("buy with the local test payment and land in My learning", async ({ page }) => {
@@ -98,7 +100,7 @@ test.describe.serial("learner buys and studies a course", () => {
     test.skip(page.url().includes("stripe.com"), "Stripe test mode is configured; card entry is out of scope for the smoke test");
     await page.getByTestId("complete-test-payment").click();
     await expect(page.getByTestId("checkout-success")).toHaveText("You’re enrolled");
-    await page.goto("/my-learning");
+    await page.goto("/student/courses");
     await expect(page.getByTestId("learning-item").first()).toBeVisible();
   });
 
@@ -127,9 +129,9 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page.locator("#reviews")).toContainText("Labs worked first time");
   });
   test("refund from the receipt (within 14 days, little watched)", async ({ page }) => {
-    await login(page, email, password, "/orders");
-    // sign-in finishes with a full page load of /orders: wait for it before moving on
-    await page.waitForURL(/\/orders$/);
+    await login(page, email, password, "/student/purchases");
+    // sign-in finishes with a full page load: wait for it before moving on
+    await page.waitForURL(/\/student\/purchases$/);
     const receipt = page.getByRole("link", { name: "Receipt" }).first();
     await expect(receipt).toBeVisible();
     await page.goto((await receipt.getAttribute("href"))!);
@@ -166,12 +168,15 @@ test.describe.serial("instructor publishes, admin approves", () => {
     await page.getByLabel("New section title").fill("Getting started");
     await page.getByTestId("add-section").click();
     await expect(page.getByLabel("Section 1 title")).toHaveValue("Getting started");
-    await page.getByLabel("New lecture title").fill("Welcome");
+    await page.getByLabel("New lesson title").fill("Welcome");
     await page.getByTestId("add-lecture").click();
-    await page.getByRole("button", { name: /^Welcome/ }).click();
-    await page.getByLabel("Upload video").setInputFiles(video!);
-    await expect(page.getByText(/Video uploaded/)).toBeVisible({ timeout: 60_000 });
-    await expect(page.getByText("Ready", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
+    // The video goes in straight from the lesson's row (curriculum editor, owner 2026-11-25).
+    const row = page.getByTestId("lesson-row").filter({ hasText: "Welcome" });
+    await expect(row.getByText("No video yet")).toBeVisible();
+    await page.getByLabel("Video for Welcome").setInputFiles(video!);
+    await expect(page.getByText(/uploaded\. Processing has started/)).toBeVisible({ timeout: 60_000 });
+    // ready = the preview link appears and the status badge goes away
+    await expect(page.getByLabel("Preview Welcome")).toBeVisible({ timeout: 90_000 });
 
     await page.getByRole("link", { name: /Review and submit/ }).click();
     await page.getByTestId("submit-review").click();
@@ -227,26 +232,35 @@ test.describe.serial("instructor publishes, admin approves", () => {
     await login(page, USERS.admin, PASSWORD, "/admin/finance");
     await expect(page.getByRole("heading", { name: "Money" })).toBeVisible();
     await expect(page.getByText(/paid orders add up/)).toBeVisible();
-    await page.getByTestId("open-del-studio").first().click();
+    // the studio switcher lists only the studios this account may open
+    await visible(page, "studio-switcher").click();
+    await expect(page.getByTestId("switch-instructor")).toHaveCount(0);
+    await page.getByTestId("switch-del").click();
     await expect(page.getByTestId("acting-banner")).toContainText("DevOps Easy Learning");
     await page.goto("/studio/sales");
     await expect(page.getByTestId("terms-note")).toContainText("DEL");
-    await page.getByTestId("back-to-admin").first().click();
+    await expect(page.getByTestId("breadcrumbs")).toContainText("DEL Studio");
+    await visible(page, "studio-switcher").click();
+    await page.getByTestId("switch-admin").click();
     await expect(page).toHaveURL(/\/admin$/);
+    // never trapped: back to the marketplace from any studio
+    await visible(page, "back-to-marketplace").click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/");
   });
 
-  test("admin role changes ask for confirmation", async ({ page }) => {
+  test("role changes need the authenticator code and show what changes", async ({ page }) => {
     await logout(page);
     await login(page, USERS.admin, PASSWORD, "/admin/users");
+    await expect(page.getByTestId("user-stats")).toContainText("Registered users");
     await page.getByLabel("Search users").fill("nadia");
-    const roles = page.getByRole("group", { name: /Roles of Nadia/ });
-    const adminChip = roles.getByRole("button", { name: "admin", exact: true });
-    await expect(adminChip).toHaveAttribute("aria-pressed", "false");
-    await adminChip.click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText("Give the admin role");
-    await dialog.getByRole("button", { name: "Cancel" }).click();
-    await expect(adminChip).toHaveAttribute("aria-pressed", "false");
+    await page.getByTestId("user-row").filter({ hasText: "nadia@instructor.example" }).getByTestId("manage-user").click();
+    const dialog = page.getByTestId("manage-dialog");
+    await dialog.getByTestId("role-admin").check();
+    await expect(dialog.getByTestId("perm-users.view")).toBeVisible();
+    await expect(dialog.getByTestId("confirm-access")).toContainText("Adding Admin");
+    await expect(dialog.getByTestId("save-access")).toBeDisabled(); // needs the six-digit code
+    await expect(dialog.getByTestId("stepup-code")).toBeVisible();
+    await page.keyboard.press("Escape");
   });
 });
 
@@ -373,7 +387,7 @@ test.describe("content protection", () => {
   test("an enrolled learner watches encrypted video with no file link and nothing written on it", async ({ page }) => {
     const mp4: string[] = [];
     page.on("request", (r) => { if (/\.mp4(\?|$)/.test(r.url())) mp4.push(r.url()); });
-    await login(page, USERS.student, PASSWORD, "/my-learning");
+    await login(page, USERS.student, PASSWORD, "/student/courses");
     const href = await page.locator('a[href^="/learn/"]').first().getAttribute("href");
     const key = page.waitForResponse((r) => r.url().endsWith("/key") && r.status() === 200);
     await page.goto(href!);
@@ -442,3 +456,53 @@ test("12 months of access is disclosed before paying, never lifetime", async ({ 
   await expect(page.getByTestId("policy")).toContainText("25% or less");
 });
 
+
+test.describe("studios, contact and platform videos (owner 2026-11-25)", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+
+  test("Student Studio: real dashboard, collapsible sidebar, breadcrumbs, back to the marketplace", async ({ page }) => {
+    await login(page, USERS.student, PASSWORD, "/student");
+    await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
+    await expect(page.getByTestId("nav-platform-videos").first()).toHaveAttribute("href", "/help");
+    await visible(page, "nav-my-courses").click();
+    await expect(page).toHaveURL(/\/student\/courses$/);
+    await expect(page.getByTestId("breadcrumbs")).toContainText("Student Studio");
+    await expect(page.getByTestId("breadcrumbs")).toContainText("My courses");
+    await page.getByTestId("studio-back").click();
+    await expect(page).toHaveURL(/\/student$/);
+    await page.getByTestId("sidebar-toggle").click();
+    await expect(page.locator("[data-sidebar]")).toHaveAttribute("data-sidebar", "collapsed");
+    await page.getByTestId("sidebar-toggle").click();
+    await page.getByTestId("topbar-marketplace").click();
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/");
+  });
+
+  test("lesson player: previous and next live in the control bar", async ({ page }) => {
+    await login(page, USERS.student, PASSWORD, "/student/courses");
+    const href = await page.locator('a[href^="/learn/"]').first().getAttribute("href");
+    await page.goto(href!);
+    await expect(page.getByTestId("player-next")).toBeVisible();
+    await expect(page.getByTestId("player-prev")).toBeAttached();
+  });
+
+  test("contact page sends a message with a screenshot", async ({ page }) => {
+    await page.goto("/contact");
+    await expect(page.getByTestId("social-links").first()).toBeVisible();
+    await page.getByLabel("Your name").fill("E2E Visitor");
+    await page.locator("#c-email").fill(`e2e-contact-${Date.now()}@example.com`);
+    await page.getByLabel("Subject").fill("Mobile money payment");
+    await page.getByLabel("Message").fill("Can I pay for a course with mobile money from Cameroon?");
+    const png = Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4c50000000049454e44ae426082", "hex");
+    await page.getByTestId("contact-file").setInputFiles({ name: "screen.png", mimeType: "image/png", buffer: png });
+    await page.getByTestId("contact-submit").click();
+    await expect(page.getByTestId("contact-sent")).toContainText(/C-\d+/);
+  });
+
+  test("platform videos page and the DEL full program links", async ({ page }) => {
+    await page.goto("/help");
+    await expect(page.getByRole("heading", { name: "Platform videos", exact: true })).toBeVisible();
+    await page.goto("/");
+    await expect(page.getByTestId("program-enroll")).toHaveAttribute("href", /^https:\/\/www\.devopseasylearning\.com\/registration\//);
+    await expect(page.getByRole("navigation", { name: "Main" }).getByText("Full program")).toHaveCount(0);
+  });
+});

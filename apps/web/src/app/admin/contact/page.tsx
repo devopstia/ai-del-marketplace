@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
-import { Check, Mail, RotateCcw } from "lucide-react";
+import { Check, ImageOff, Mail, RotateCcw } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { qs } from "@/lib/qs";
 import { obj } from "@/lib/normalize";
-import { dateTime } from "@/lib/format";
+import { bytes, dateTime } from "@/lib/format";
 import { API_URL } from "@/lib/config";
 import { PageHead } from "@/components/shell/AppShell";
 import { Empty, Skeleton } from "@/components/Empty";
@@ -14,6 +14,25 @@ import { useToast } from "@/components/Toast";
 
 interface Msg { id: string; ref: string; name: string; email: string; topic: string; subject: string; body: string; status: "new" | "handled"; createdAt: string; userId: string | null; attachments: { name: string; mime: string; sizeBytes: number; url: string }[] }
 const TOPIC: Record<string, string> = { general: "General", courses: "Courses", payment: "Payment", account: "Account", instructor: "Teaching", full_program: "Full program", technical: "Technical" };
+
+/** Screenshot preview; a file that can't be shown as an image becomes a named file tile (still opens). */
+function Attachment({ href, name, size }: { href: string; name: string; size: number }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <a href={href} target="_blank" rel="noopener" title={name} className="group block w-36">
+      {broken ? (
+        <span className="flex h-24 flex-col items-center justify-center gap-1 rounded-lg border border-line bg-surface-2 px-2 text-center group-hover:border-violet">
+          <ImageOff className="size-5 text-muted" aria-hidden="true" />
+          <span className="w-full truncate text-xs font-bold text-ink">{name}</span>
+          <span className="text-[11px] text-muted">{bytes(size)} · open</span>
+        </span>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={href} alt={name} onError={() => setBroken(true)} className="h-24 w-36 rounded-lg border border-line object-cover group-hover:border-violet" />
+      )}
+    </a>
+  );
+}
 
 /** Contact page messages (also emailed to support@devopseasylearning.com, with the screenshots). */
 export default function ContactMessages() {
@@ -55,10 +74,7 @@ export default function ContactMessages() {
                   <ul className="mt-4 flex flex-wrap gap-3">
                     {m.attachments.map((a) => (
                       <li key={a.url}>
-                        <a href={`${API_URL}${a.url}`} target="_blank" rel="noopener" className="block" title={a.name}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={`${API_URL}${a.url}`} alt={a.name} className="h-24 w-36 rounded-lg border border-line object-cover hover:border-violet" />
-                        </a>
+                        <Attachment href={`${API_URL}${a.url}`} name={a.name} size={a.sizeBytes} />
                       </li>
                     ))}
                   </ul>
