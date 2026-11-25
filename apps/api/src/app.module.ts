@@ -1,3 +1,4 @@
+import { ReviewsModule } from './reviews/reviews.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ContactModule } from './contact/contact.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -23,6 +24,7 @@ import { MediaModule } from './media/media.module';
 @Module({
   imports: [
     ContactModule,
+    ReviewsModule,
     EnrollmentsModule,
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
     CommonModule,

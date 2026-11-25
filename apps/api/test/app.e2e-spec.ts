@@ -1378,7 +1378,9 @@ describe('e2e: buy and learn', () => {
       // approval needs a verified payment (or a complimentary reason)
       expect((await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(409)).body.error.code).toBe('payment_not_verified');
       // 65,000 XAF at 0.00165 USD = 107.25 USD, fee 2.25 USD, allocation must add up
-      const [ia, ib] = req.items;
+      // items come back in id order: pick them by course
+      const ia = req.items.find((i: any) => i.courseId === a.course.id);
+      const ib = req.items.find((i: any) => i.courseId === b.course.id);
       await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '65000', usdRate: '0.00165', feeUsdCents: 225, allocations: [{ itemId: ia.id, grossUsdCents: 4000 }, { itemId: ib.id, grossUsdCents: 6000 }] }).expect(400);
       const paid = (await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '65000', usdRate: '0.00165', feeUsdCents: 225, allocations: [{ itemId: ia.id, grossUsdCents: 4290 }, { itemId: ib.id, grossUsdCents: 6435 }] }).expect(201)).body;
       expect(paid.payments[0]).toMatchObject({ grossUsdCents: 10725, feeUsdCents: 225, netUsdCents: 10500, status: 'pending' });
@@ -1463,5 +1465,61 @@ describe('e2e: buy and learn', () => {
       const lst = (await t1.agent.get('/api/enrollments/manual').expect(200)).body;
       expect(lst.items.every((i: any) => i.requestedBy.id === t1.user.id)).toBe(true);
     });
+  });
+
+  it('review moderation: instructors report, admins hide/restore with a reason, only super admins delete; ratings recalculated', async () => {
+    if (!available) return;
+    const teacher = await userAgent('mod-teacher@e2e.example', ['student', 'instructor'], {});
+    const other = await userAgent('mod-other@e2e.example', ['student', 'instructor'], {});
+    const stu = await userAgent('mod-stu@e2e.example', ['student']);
+    const stu2 = await userAgent('mod-stu2@e2e.example', ['student']);
+    const helper = await userAgent('mod-admin@e2e.example', ['student', 'admin'], undefined, ['reviews.moderate']);
+    const boss = await userAgent('mod-boss@e2e.example', ['student', 'admin', 'super_admin']);
+    const { course } = await publishedCourse(teacher.user.id, 'mod-course', 1500);
+    for (const s of [stu, stu2]) await prisma.enrollment.create({ data: { userId: s.user.id, courseId: course.id, source: 'admin' } });
+    await stu.send('post', '/api/courses/mod-course/reviews', { rating: 1, body: 'BUY CHEAP FOLLOWERS at spam.example' }).expect(201);
+    await stu2.send('post', '/api/courses/mod-course/reviews', { rating: 2, body: 'Too fast for beginners, the labs need more explanation.' }).expect(201);
+    const reviews = await prisma.review.findMany({ where: { courseId: course.id } });
+    const spam = reviews.find((r) => r.rating === 1)!;
+    expect((await prisma.course.findUniqueOrThrow({ where: { id: course.id } })).ratingCount).toBe(2);
+    // reports: own course only, a reason with details, once
+    await other.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'This is an advert for followers.' }).expect(404);
+    await teacher.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'short' }).expect(400);
+    await teacher.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'This is an advert for buying followers, not a review.' }).expect(201);
+    await teacher.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'This is an advert for buying followers, not a review.' }).expect(409);
+    await teacher.send('delete', `/api/admin/reviews/${spam.id}`, { reason: 'trying to delete' }).expect(403); // instructors never delete
+    // admin with reviews.moderate sees reported ones, hides with a reason → rating recalculated, report actioned
+    const listed = (await helper.agent.get('/api/admin/reviews?reported=true').expect(200)).body;
+    expect(listed.items.map((r: any) => r.id)).toEqual([spam.id]);
+    expect(listed.items[0].reports[0]).toMatchObject({ reason: 'spam', status: 'open', reporter: 'mod-teacher' });
+    await helper.send('post', `/api/admin/reviews/${spam.id}/status`, { status: 'hidden' }).expect(400);
+    await helper.send('post', `/api/admin/reviews/${spam.id}/status`, { status: 'hidden', reason: 'Advertising, not a course review' }).expect(200);
+    expect(await prisma.course.findUniqueOrThrow({ where: { id: course.id } })).toMatchObject({ ratingCount: 1, ratingAvg: 2 });
+    expect((await prisma.reviewReport.findFirstOrThrow({ where: { reviewId: spam.id } })).status).toBe('actioned');
+    // the genuine low rating stays; an admin can't delete, a super admin can (with a reason)
+    await helper.send('delete', `/api/admin/reviews/${spam.id}`, { reason: 'Advertising spam' }).expect(403);
+    await boss.send('delete', `/api/admin/reviews/${spam.id}`, { reason: 'Advertising spam' }).expect(200);
+    expect(await prisma.review.findUnique({ where: { id: spam.id } })).toBeNull();
+    const log = await prisma.auditLog.findFirstOrThrow({ where: { action: 'review.deleted', targetId: spam.id } });
+    expect(log.meta).toMatchObject({ reason: 'Advertising spam', snapshot: { rating: 1 } });
+    // a report can be dismissed when nothing breaks the policy
+    const genuine = reviews.find((r) => r.rating === 2)!;
+    const rep = (await teacher.send('post', `/api/instructor/reviews/${genuine.id}/report`, { reason: 'other', details: 'I disagree with this rating of my course.' }).expect(201)).body;
+    await helper.send('post', `/api/admin/review-reports/${rep.id}/dismiss`, { note: 'Honest feedback, no policy violation' }).expect(200);
+    expect((await prisma.review.findUniqueOrThrow({ where: { id: genuine.id } })).status).toBe('visible');
+  });
+
+  it('storage layout: new uploads live under instructors/<id>/courses/<id>/…, never under another instructor', async () => {
+    if (!available) return;
+    const t = await userAgent('keys-teacher@e2e.example', ['student', 'instructor'], {});
+    const o = await userAgent('keys-other@e2e.example', ['student', 'instructor'], {});
+    const { course } = await publishedCourse(t.user.id, 'keys-course', 1000);
+    const v = (await t.send('post', '/api/instructor/uploads/video', { filename: 'a.mp4', contentType: 'video/mp4', courseId: course.id }).expect(201)).body;
+    expect((await prisma.videoAsset.findUniqueOrThrow({ where: { id: v.assetId } })).storageKey).toBe(`instructors/${t.user.id}/courses/${course.id}/videos/${v.assetId}/source.mp4`);
+    const r = (await t.send('post', '/api/instructor/uploads/resource', { filename: 'lab files.zip', contentType: 'application/zip', sizeBytes: 10, courseId: course.id }).expect(201)).body;
+    expect(r.storageKey).toMatch(new RegExp(`^instructors/${t.user.id}/courses/${course.id}/resources/[0-9a-f-]+/lab_files\\.zip$`));
+    // another instructor can't file things under this course
+    await o.send('post', '/api/instructor/uploads/video', { filename: 'a.mp4', contentType: 'video/mp4', courseId: course.id }).expect(400);
+    await o.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'x', storageKey: r.storageKey }).expect(404);
   });
 });

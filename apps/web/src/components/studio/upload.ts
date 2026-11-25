@@ -26,7 +26,7 @@ export async function uploadVideo(file: File, onProgress: (p: number) => void, e
 
 /** Resource: presigned PUT to storage, then attach the stored file to the lecture. */
 export async function uploadResource(file: File, courseId: string, lectureId: string, title: string, onProgress: (p: number) => void) {
-  const r = obj(await api(E.uploadResource, { method: "POST", body: { filename: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size } }));
+  const r = obj(await api(E.uploadResource, { method: "POST", body: { filename: file.name, contentType: file.type || "application/octet-stream", sizeBytes: file.size, courseId } }));
   const t = target(r);
   if (!t.url) throw new Error("The server didn’t return an upload address.");
   await uploadFile(t.url, file, onProgress, t.method, t.headers);

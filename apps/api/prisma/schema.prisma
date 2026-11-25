@@ -1121,3 +1121,24 @@ model Invitation {
   @@index([requestId])
   @@map("invitations")
 }
+
+/// An instructor flags a review on their own course (spam, abuse, fake, …); a super admin investigates (owner 2026-11-25).
+/// Instructors never delete reviews; low ratings alone are not a reason to remove one.
+model ReviewReport {
+  id           String    @id @default(uuid())
+  reviewId     String
+  reporterId   String
+  /// spam | abusive | fake | off_topic | personal_data | other
+  reason       String
+  details      String    @default("")
+  /// open | dismissed | actioned
+  status       String    @default("open")
+  resolvedById String?
+  resolvedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime  @default(now())
+
+  @@index([status])
+  @@index([reviewId])
+  @@map("review_reports")
+}

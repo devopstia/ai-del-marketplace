@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard, UserPlus } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard, UserPlus, MessageSquareText, CreditCard } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell, type NavItem } from "@/components/shell/AppShell";
@@ -14,6 +14,7 @@ const groups: { label?: string; items: Item[] }[] = [
   { label: "Marketplace", items: [
     { href: "/admin/review", label: "Review queue", icon: ClipboardCheck, perm: "courses.review" },
     { href: "/admin/courses", label: "Courses", icon: BookOpen, perm: "courses.review" },
+    { href: "/admin/course-reviews", label: "Course reviews", icon: MessageSquareText, perm: "reviews.moderate" },
   ] },
   { label: "People", items: [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
@@ -36,6 +37,7 @@ const groups: { label?: string; items: Item[] }[] = [
     { href: "/admin/categories", label: "Categories", icon: FolderTree, perm: "content.manage" },
     { href: "/admin/covers", label: "Cover templates", icon: ImageIcon, perm: "content.manage" },
     { href: "/admin/protection", label: "Video protection", icon: ShieldCheck, perm: "content.manage" },
+    { href: "/admin/payments", label: "Payments & Stripe", icon: CreditCard, superOnly: true },
     { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },
     { href: "/admin/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
   ] },
@@ -52,6 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const attention = disputes.data ?? 0;
   // Badge on Support: requests waiting for staff.
   const manual = useApi(canDo(me, "enrollments.manage") ? "/enrollments/manual?status=open&pageSize=1" : null, (r) => { const c = obj(obj(r).counts); return Number(c.pending ?? 0) + Number(c.needs_info ?? 0); });
+  const reported = useApi(canDo(me, "reviews.moderate") ? "/admin/reviews?reported=true&pageSize=1" : null, (r) => Number(obj(obj(r).counts).openReports ?? 0));
   const support = useApi(canDo(me, "support.manage") ? "/admin/support/summary" : null, (r) => Number(obj(r).awaitingStaff ?? 0));
   if (loading) return <div className="p-10"><Skeleton className="h-96" /></div>;
   if (!has("admin")) {
@@ -65,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </main>
     );
   }
-  const badge: Record<string, number | undefined> = { "/admin/finance": attention || undefined, "/admin/refunds": requests.data || undefined, "/admin/support": support.data || undefined, "/admin/contact": contact.data || undefined, "/admin/enrollments": manual.data || undefined };
+  const badge: Record<string, number | undefined> = { "/admin/finance": attention || undefined, "/admin/refunds": requests.data || undefined, "/admin/support": support.data || undefined, "/admin/contact": contact.data || undefined, "/admin/enrollments": manual.data || undefined, "/admin/course-reviews": reported.data || undefined };
   const nav = groups
     .map((g) => ({ label: g.label, items: g.items.filter((n) => (n.superOnly ? has("super_admin") : !n.perm || canDo(me, n.perm))).map(({ perm: _p, superOnly: _s, ...n }) => ({ ...n, badge: badge[n.href] })) }))
     .filter((g) => g.items.length);

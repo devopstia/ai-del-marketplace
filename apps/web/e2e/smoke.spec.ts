@@ -41,8 +41,9 @@ test.describe("public catalogue", () => {
   test("the home page search finds courses (no popular-search chips, owner 2026-11-25)", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByText("Popular:")).toHaveCount(0);
-    await page.getByRole("search").getByLabel("Search courses").fill("Kubernetes");
-    await page.getByRole("search").getByRole("button", { name: "Search" }).click();
+    const hero = page.locator("main").getByRole("search");
+    await hero.getByLabel("Search courses").fill("Kubernetes");
+    await hero.getByRole("button", { name: "Search" }).click();
     await expect(page).toHaveURL(/\/courses\?q=Kubernetes/);
     await expect(page.getByTestId("course-row").first()).toBeVisible();
   });
@@ -431,11 +432,16 @@ test.describe.serial("help videos", () => {
 
   test("anyone can watch it from /help, captions off", async ({ page }) => {
     await page.goto("/help");
+    // playlist + player on one page (owner chose option B): the video plays here, the link stays shareable
     await page.getByTestId("help-row").filter({ hasText: title }).click();
-    await expect(page).toHaveURL(new RegExp(`/help/${slug}$`));
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await expect(page).toHaveURL(new RegExp(`/help\\?v=${slug}$`));
+    await expect(page.getByTestId("help-watch").getByRole("heading", { level: 2 })).toHaveText(title);
     await expect(page.getByTestId("video-player")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Contact support" })).toHaveAttribute("href", /\/support\/new\?category=other/);
+    await expect(page.getByRole("button", { name: "Captions" })).toHaveCount(0); // no captions until a file exists, never on by default
+    await expect(page.getByRole("link", { name: "Ask support" })).toHaveAttribute("href", /\/support\/new\?category=other/);
+    // the single-video page still works for old links
+    await page.goto(`/help/${slug}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
   });
 
   test("the admin removes it", async ({ page }) => {
@@ -504,5 +510,56 @@ test.describe("studios, contact and platform videos (owner 2026-11-25)", () => {
     await page.goto("/");
     await expect(page.getByTestId("program-enroll")).toHaveAttribute("href", /^https:\/\/www\.devopseasylearning\.com\/registration\//);
     await expect(page.getByRole("navigation", { name: "Main" }).getByText("Full program")).toHaveCount(0);
+  });
+});
+
+test.describe.serial("guest cart: shop first, sign up only at checkout (owner 2026-11-25)", () => {
+  const email = `e2e-guest-${Date.now()}@example.com`;
+  test("a visitor adds courses, keeps them after a refresh, and signs up at checkout without losing them", async ({ page }) => {
+    await page.goto(`/courses/${PAID_COURSE}`);
+    await expect(page).not.toHaveURL(/\/login/);
+    await visible(page, "add-to-cart").click();
+    await expect(page).not.toHaveURL(/\/login/);
+    await page.goto("/cart");
+    await expect(page.getByTestId("cart-item")).toHaveCount(1);
+    await page.reload();
+    await expect(page.getByTestId("cart-item")).toHaveCount(1);
+    await page.getByTestId("checkout").click();
+    await expect(page).toHaveURL(/\/register\?next=%2Fcheckout/);
+    await page.getByLabel("Full name").fill("Guest Shopper");
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill("river-stone-meadow-4821");
+    await page.getByTestId("auth-submit").click();
+    await expect(page).toHaveURL(/\/login\/verify/);
+    rememberSeed(email, (await page.getByTestId("mfa-secret").innerText()).replace(/\s/g, ""));
+    await page.getByTestId("mfa-code").fill(await freshCode(email));
+    await page.getByTestId("mfa-submit").click();
+    await page.getByTestId("codes-saved").check();
+    await page.getByTestId("codes-continue").click();
+    await expect(page).toHaveURL(/\/checkout/);
+    await page.goto("/cart");
+    await expect(page.getByTestId("cart-item")).toHaveCount(1);
+  });
+  test("the cart icon opens the cart for visitors, with a friendly empty state", async ({ page }) => {
+    await logout(page);
+    await page.goto("/");
+    await page.getByRole("link", { name: /^Cart,/ }).click();
+    await expect(page).toHaveURL(/\/cart$/);
+    await expect(page.getByText("Your cart is empty. Explore our courses and start learning today!")).toBeVisible();
+  });
+});
+
+test.describe("review moderation screens", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  test("super admin sees the moderation page with reported, all and hidden reviews", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/course-reviews");
+    await expect(page.getByRole("heading", { name: "Course reviews", exact: true })).toBeVisible();
+    await page.getByRole("tab", { name: /^All/ }).click();
+    await expect(page.getByTestId("moderation-row").first()).toBeVisible();
+  });
+  test("payments page shows the Stripe mode and never shows a secret", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/payments");
+    await expect(page.getByTestId("stripe-mode")).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/sk_(test|live)_[A-Za-z0-9]{12,}/);
   });
 });

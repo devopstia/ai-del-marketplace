@@ -17,7 +17,7 @@ const nav: NavGroup[] = [
   { label: "Business", items: [
     { href: "/studio/sales", label: "Sales", icon: BadgeDollarSign },
     { href: "/studio/promotions", label: "Promotions", icon: Tag },
-    { href: "/studio/payouts", label: "Payouts", icon: Wallet },
+    { href: "/studio/payouts", label: "Payments & payouts", icon: Wallet },
   ] },
   { label: "Account", items: [
     { href: "/studio/profile", label: "Profile", icon: UserRound },

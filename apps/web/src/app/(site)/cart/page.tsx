@@ -4,7 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
-import { toCart } from "@/lib/normalize";
+import { obj, toCart, toCourseCard } from "@/lib/normalize";
+import { guestCart, removeGuest } from "@/lib/guest-cart";
 import { moneyExact, hours } from "@/lib/format";
 import type { Cart } from "@/lib/types";
 import { Price, SaleTag } from "@/components/CourseViews";
@@ -13,6 +14,7 @@ import { RatingInline } from "@/components/Stars";
 import { Empty, Skeleton } from "@/components/Empty";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { TestModeNotice } from "@/components/TestModeNotice";
 
 function CanceledNotice() {
   const canceled = useSearchParams().get("canceled");
@@ -20,18 +22,31 @@ function CanceledNotice() {
 }
 
 export default function CartPage() {
-  const { refreshCart } = useAuth();
+  const { me, loading, refreshCart } = useAuth();
   const toast = useToast();
   const [cart, setCart] = useState<Cart | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  // Signed in: the account's cart. Guest: the course ids kept in this browser, priced by the API.
   useEffect(() => {
-    api("/cart").then((c) => setCart(toCart(c))).catch((e) => setErr(errMsg(e)));
-  }, []);
+    if (loading) return;
+    if (me) { api("/cart").then((c) => setCart(toCart(c))).catch((e) => setErr(errMsg(e))); return; }
+    const ids = guestCart();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- an empty guest cart needs no request
+    if (!ids.length) { setCart({ items: [], totalCents: 0, currency: "usd" }); return; }
+    api("/cart/preview", { method: "POST", body: { courseIds: ids } }).then((r) => {
+      const o = obj(r);
+      const items = (Array.isArray(o.items) ? o.items : []).map((x) => { const c = toCourseCard(x); return { courseId: c.id, course: c }; });
+      // forget courses that are no longer sold
+      for (const id of (o.unavailableIds as string[]) ?? []) removeGuest(id);
+      setCart({ items, totalCents: Number(o.totalCents ?? 0), currency: String(o.currency ?? "usd") });
+    }).catch((e) => setErr(errMsg(e)));
+  }, [me, loading]);
 
   async function remove(courseId: string) {
     try {
-      await api(`/cart/${courseId}`, { method: "DELETE" });
+      if (!me) removeGuest(courseId);
+      else await api(`/cart/${courseId}`, { method: "DELETE" });
       setCart((c) => (c ? { ...c, items: c.items.filter((i) => i.courseId !== courseId), totalCents: c.totalCents - (c.items.find((i) => i.courseId === courseId)?.course.priceCents ?? 0) } : c));
       void refreshCart();
     } catch (e) {
@@ -45,10 +60,11 @@ export default function CartPage() {
     <div className="container-x max-w-6xl pt-10">
       <h1 className="font-display text-[2.4rem] font-extrabold">Shopping cart</h1>
       <Suspense><CanceledNotice /></Suspense>
+      <TestModeNotice className="mt-4" />
       {err ? <p className="mt-6 text-rose">{err}</p> : null}
       {!cart && !err ? <div className="mt-8 space-y-4"><Skeleton className="h-28" /><Skeleton className="h-28" /></div> : null}
       {cart && !cart.items.length ? (
-        <div className="mt-8"><Empty icon={ShoppingCart} title="Your cart is empty" body="Find a course that matches what you’re building next. Every course has free previews." href="/courses" cta="Browse courses" /></div>
+        <div className="mt-8"><Empty icon={ShoppingCart} title="Your cart is empty" body="Your cart is empty. Explore our courses and start learning today!" href="/courses" cta="Browse courses" /></div>
       ) : null}
       {cart && cart.items.length ? (
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
@@ -82,7 +98,12 @@ export default function CartPage() {
             {saved > 0 ? (
               <p className="mt-1 text-sm"><s className="text-muted">{moneyExact(cart.totalCents + saved, cart.currency)}</s> <span className="font-bold text-rose">You save {moneyExact(saved, cart.currency)}</span></p>
             ) : null}
-            <Link href="/checkout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Check out</Link>
+            {me ? <Link href="/checkout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Proceed to checkout</Link> : (
+              <>
+                <Link href="/register?next=%2Fcheckout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Proceed to checkout</Link>
+                <p className="mt-2 text-center text-sm text-ink-2">New here? Create a free account in a minute. <Link href="/login?next=%2Fcheckout" className="link">I already have an account</Link></p>
+              </>
+            )}
             <p className="mt-3 text-xs text-muted">You’ll confirm and pay on the next step. Card details are entered on Stripe, never on this site.</p>
             <p className="mt-2 text-xs text-muted">Each course includes <span className="font-bold text-ink-2">12 months of access</span> from purchase (not lifetime). <Link href="/policies/access-and-refunds" className="link">Access and refunds</Link></p>
           </aside>

@@ -6,7 +6,8 @@ import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { money } from "@/lib/format";
 import type { StripeStatus } from "@/lib/types";
-import { PageHead } from "@/components/shell/AppShell";
+import Link from "next/link";
+import { Kpis, PageHead } from "@/components/shell/AppShell";
 import { Skeleton } from "@/components/Empty";
 import { useToast } from "@/components/Toast";
 import { TermsNote } from "@/components/studio/TermsNote";
@@ -27,6 +28,10 @@ const map = (r: unknown): StripeStatus => {
 export default function PayoutsPage() {
   const toast = useToast();
   const { data, error } = useApi("/instructor/stripe/status", map);
+  const sales = useApi("/instructor/sales", (r) => obj(obj(r).totals) as Record<string, number>);
+  const manual = useApi("/enrollments/earnings", (r) => obj(obj(r).totals) as Record<string, number>);
+  const t = sales.data;
+  const earn = t ? { earningsCents: Number(t.earningsCents ?? 0), paidOutCents: Number(t.paidOutCents ?? 0), pendingPayoutCents: Number(t.pendingPayoutCents ?? 0), heldCents: Number(t.heldCents ?? 0), sales: Number(t.sales ?? 0), manualCents: Number(manual.data?.instructorCents ?? 0), manualPaidCents: Number(manual.data?.paidOutCents ?? 0) } : null;
   const [busy, setBusy] = useState(false);
   async function onboard() {
     setBusy(true);
@@ -38,7 +43,15 @@ export default function PayoutsPage() {
   const state = !data ? null : data.isPlatform ? "platform" : !data.stripeConfigured ? "unavailable" : data.payoutsEnabled ? "ready" : data.connected ? "incomplete" : "none";
   return (
     <>
-      <PageHead title="Payouts" sub="Your share of each sale is transferred to your own Stripe account. Stripe handles identity checks and bank payouts." />
+      <PageHead title="Payments & payouts" sub="Your share of each sale is transferred to your own Stripe account. Stripe handles identity checks and bank payouts; nobody at DEL ever sees your bank details." />
+      {earn ? (
+        <div className="mb-8 max-w-4xl"><Kpis items={[
+          { label: "Earned (card sales)", value: money(earn.earningsCents), note: `${earn.sales} sale${earn.sales === 1 ? "" : "s"}, after fees and commission` },
+          { label: "Paid out", value: money(earn.paidOutCents), note: "Confirmed by Stripe" },
+          { label: "Pending", value: money(earn.pendingPayoutCents + earn.heldCents), note: "Inside the 14-day refund window or waiting for your Stripe setup" },
+          { label: "Manual enrollments", value: money(earn.manualCents), note: earn.manualPaidCents ? `${money(earn.manualPaidCents)} paid out by DEL` : "Recorded by DEL, paid outside Stripe" },
+        ]} /><p className="mt-2 text-sm text-muted">Every sale and transfer is listed in <Link href="/studio/sales" className="link">Sales</Link>.</p></div>
+      ) : null}
       {error ? <p className="text-rose">{error}</p> : null}
       {!data && !error ? <Skeleton className="h-56" /> : null}
       {state ? (

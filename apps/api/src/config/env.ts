@@ -7,6 +7,8 @@ const bool = z
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  /** Which deployment this is: production, staging (cloud test copy) or local. Only staging may use simulated payments in a production build. */
+  DEPLOY_ENV: z.enum(['local', 'staging', 'production']).default('local'),
   PORT: z.coerce.number().int().default(4000),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
@@ -34,6 +36,7 @@ const schema = z.object({
   MUX_WEBHOOK_SECRET: z.string().default(''),
   STRIPE_SECRET_KEY: z.string().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().default(''),
+  STRIPE_PUBLISHABLE_KEY: z.string().default(''),
   DEV_TEST_PAYMENTS: bool,
   SEED_PASSWORD: z.string().default(''),
   AUTH_RATE_LIMIT: z.coerce.number().int().positive().default(20),
@@ -97,4 +100,4 @@ export function resetEnvCache(): void {
 export const isProd = () => env().NODE_ENV === 'production';
 
 /** Dev test payments are allowed only when explicitly enabled AND never in production. */
-export const devPaymentsEnabled = () => env().DEV_TEST_PAYMENTS && env().NODE_ENV !== 'production';
+export const devPaymentsEnabled = () => env().DEV_TEST_PAYMENTS && (env().NODE_ENV !== 'production' || env().DEPLOY_ENV === 'staging');

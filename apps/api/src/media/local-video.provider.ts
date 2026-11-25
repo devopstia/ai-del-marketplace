@@ -1,3 +1,4 @@
+import { videoKey } from '../common/storage-keys';
 import { Injectable } from '@nestjs/common';
 import type { VideoAsset } from '../generated/prisma/client';
 import { badRequest } from '../common/errors';
@@ -18,11 +19,11 @@ export class LocalVideoProvider implements VideoProvider {
     private readonly jobs: JobsService,
   ) {}
 
-  async createUpload(ownerId: string, opts: { filename: string; contentType: string }): Promise<UploadTarget> {
+  async createUpload(ownerId: string, opts: { filename: string; contentType: string; courseId?: string | null }): Promise<UploadTarget> {
     const ext = EXT[opts.contentType];
     if (!ext) throw badRequest('Video must be MP4, WebM or MOV', 'unsupported_type');
     const asset = await this.prisma.videoAsset.create({ data: { ownerId, provider: 'local', status: 'uploading' } });
-    const storageKey = `videos/${asset.id}/source.${ext}`;
+    const storageKey = videoKey(ownerId, asset.id, ext, opts.courseId);
     await this.prisma.videoAsset.update({ where: { id: asset.id }, data: { storageKey } });
     const ttl = 3600;
     return {

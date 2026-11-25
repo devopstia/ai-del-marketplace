@@ -1,3 +1,4 @@
+import { ownsResourceKey } from '../common/storage-keys';
 import { env } from '../config/env';
 import { JobsService } from '../common/jobs';
 import { Injectable, Optional } from '@nestjs/common';
@@ -510,7 +511,7 @@ export class InstructorService {
 
   async addPackageFile(a: Actor, courseId: string, input: { title: string; storageKey: string }) {
     await this.editableCourse(a.user.id, courseId);
-    if (!input.storageKey.startsWith(`resources/${a.user.id}/`) || input.storageKey.includes('..')) throw badRequest('Invalid storage key', 'invalid_key');
+    if (!ownsResourceKey(a.user.id, input.storageKey)) throw badRequest('Invalid storage key', 'invalid_key');
     const head = await this.storage.head(input.storageKey);
     if (!head) throw badRequest('Upload the file first', 'upload_missing');
     const count = await this.prisma.courseResource.count({ where: { courseId } });
@@ -565,7 +566,7 @@ export class InstructorService {
   /** Step 2 of a resource upload: the file must already be in storage under the caller's prefix. */
   async addResource(a: Actor, courseId: string, lectureId: string, input: { title: string; storageKey: string }) {
     const c = await this.editableCourse(a.user.id, courseId);
-    if (!input.storageKey.startsWith(`resources/${a.user.id}/`) || input.storageKey.includes('..')) throw badRequest('Invalid storage key', 'invalid_key');
+    if (!ownsResourceKey(a.user.id, input.storageKey)) throw badRequest('Invalid storage key', 'invalid_key');
     const head = await this.storage.head(input.storageKey);
     if (!head) throw badRequest('Upload the file first', 'upload_missing');
     if (c.status === 'published') {

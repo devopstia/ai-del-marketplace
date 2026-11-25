@@ -47,10 +47,10 @@ function Spread({ c }: { c: CourseCard }) {
   );
 }
 
-function RankedRow({ c, rank }: { c: CourseCard; rank?: number }) {
+function RankedRow({ c, rank, fill = false }: { c: CourseCard; rank?: number; fill?: boolean }) {
   return (
-    <li>
-      <Link href={`/courses/${c.slug}`} className={`group grid items-center gap-4 py-4 ${rank ? "grid-cols-[2.2rem_88px_1fr_auto]" : "grid-cols-[88px_1fr_auto]"}`}>
+    <li className={fill ? "flex flex-1 items-center" : undefined}>
+      <Link href={`/courses/${c.slug}`} className={`group grid w-full items-center gap-4 py-4 ${rank ? "grid-cols-[2.2rem_88px_1fr_auto]" : "grid-cols-[88px_1fr_auto]"}`}>
         {rank ? <span className="font-display text-3xl font-extrabold tabular-nums text-muted group-hover:text-violet">{rank}</span> : null}
         <CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" showTitle={false} className="!rounded-lg" />
         <span className="min-w-0">
@@ -181,8 +181,9 @@ export default async function Home() {
               </Link>
               <Link href="/courses?sort=popular" className="btn btn-outline mt-5 self-start">Browse all popular courses</Link>
             </div>
-            <ol className="divide-y divide-line border-y border-line lg:self-center">
-              {enrolled.slice(1, 6).map((c, i) => <RankedRow key={c.slug} c={c} rank={i + 2} />)}
+            {/* the ranking spans the full height of the #1 card beside it: no empty space under the list */}
+            <ol className="flex flex-col divide-y divide-line border-y border-line lg:mt-[5.5rem]">
+              {enrolled.slice(1, 6).map((c, i) => <RankedRow key={c.slug} c={c} rank={i + 2} fill />)}
             </ol>
           </div>
         </section>

@@ -7,11 +7,12 @@ import { StorageService } from '../common/storage.service';
 import { ZBody } from '../common/zod';
 import { MediaService } from './media.service';
 
-const videoSchema = z.object({ filename: z.string().min(1).max(200), contentType: z.string().min(1).max(100) });
+const videoSchema = z.object({ filename: z.string().min(1).max(200), contentType: z.string().min(1).max(100), courseId: z.string().uuid().optional() });
 const resourceSchema = z.object({
   filename: z.string().min(1).max(200),
   contentType: z.string().min(1).max(100),
   sizeBytes: z.number().int().positive(),
+  courseId: z.string().uuid().optional(),
 });
 const imageSchema = z.object({ contentType: z.string().min(1).max(100) });
 

@@ -19,6 +19,8 @@ services:
       API_URL: http://127.0.0.1:4100
       S3_PUBLIC_ENDPOINT: http://127.0.0.1:9100
       DEV_TEST_PAYMENTS: "true"
+      # the whole browser suite signs in ~40 times from one IP
+      AUTH_RATE_LIMIT: "300"
       OAUTH_TEST_PROVIDER: "true"
   worker:
     image: ai-del-marketplace-api:test

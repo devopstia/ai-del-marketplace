@@ -98,7 +98,7 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
   async function uploadLessonVideo(lectureId: string, f: File) {
     setUploads((u) => ({ ...u, [lectureId]: { name: f.name, pct: 0 } }));
     try {
-      const assetId = await uploadVideo(f, (p) => setUploads((u) => ({ ...u, [lectureId]: { name: f.name, pct: p } })));
+      const assetId = await uploadVideo(f, (p) => setUploads((u) => ({ ...u, [lectureId]: { name: f.name, pct: p } })), { courseId: course.id });
       await api(E.lecture(course.id, lectureId), { method: "PATCH", body: { videoAssetId: assetId } });
       setUploads((u) => { const n = { ...u }; delete n[lectureId]; return n; });
       await reload();
@@ -441,7 +441,7 @@ function CoursePackage({ courseId, locked }: { courseId: string; locked: boolean
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { void load(); }, [courseId]);
   async function addOne(f: File, p: (x: number) => void) {
-    const r = obj(await api(E.uploadResource, { method: "POST", body: { filename: f.name, contentType: f.type || "application/octet-stream", sizeBytes: f.size } }));
+    const r = obj(await api(E.uploadResource, { method: "POST", body: { filename: f.name, contentType: f.type || "application/octet-stream", sizeBytes: f.size, courseId } }));
     const { uploadFile } = await import("@/lib/api");
     await uploadFile(String(r.uploadUrl ?? r.url), f, p, "PUT", (obj(r.headers) as Record<string, string>) ?? {});
     await api(`${E.course(courseId)}/package`, { method: "POST", body: { title: f.name, storageKey: String(r.storageKey ?? r.key) } });

@@ -10,3 +10,9 @@ coverage/
 apps/web/test-results/
 apps/web/playwright-report/
 .work/
+
+# Terraform: providers and local backend config (state lives in the encrypted S3 backend)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan

@@ -1,4 +1,5 @@
 "use client";
+import { TestModeNotice } from "@/components/TestModeNotice";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader2, Lock, ShoppingCart } from "lucide-react";
@@ -38,6 +39,7 @@ export default function CheckoutPage() {
   return (
     <div className="container-x max-w-5xl pt-10">
       <h1 className="font-display text-[2.4rem] font-extrabold">Checkout</h1>
+      <TestModeNotice className="mt-3" />
       {!cart && !err ? <Skeleton className="mt-8 h-48" /> : null}
       {cart && !cart.items.length ? <div className="mt-8"><Empty icon={ShoppingCart} title="Nothing to check out" body="Your cart is empty. Add a course to continue." href="/courses" cta="Browse courses" /></div> : null}
       {cart && cart.items.length ? (

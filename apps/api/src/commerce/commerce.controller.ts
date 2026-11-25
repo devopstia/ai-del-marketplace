@@ -150,7 +150,7 @@ export class WebhooksController {
   @HttpCode(200)
   @Post('stripe')
   async stripeHook(@Req() req: AppRequest, @Headers('stripe-signature') sig?: string) {
-    if (!env().STRIPE_WEBHOOK_SECRET) throw unavailable('Stripe webhooks are not configured', 'stripe_not_configured');
+    if (!this.stripe.webhookSecret) throw unavailable('Stripe webhooks are not configured', 'stripe_not_configured');
     if (!req.rawBody || !sig) throw badRequest('Missing signature', 'invalid_signature');
     let event;
     try {

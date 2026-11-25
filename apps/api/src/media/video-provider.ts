@@ -23,7 +23,7 @@ export interface Playback {
 /** The only surface the rest of the app uses for video. Swap providers without touching callers. */
 export interface VideoProvider {
   readonly name: 'local' | 'mux';
-  createUpload(ownerId: string, opts: { filename: string; contentType: string }): Promise<UploadTarget>;
+  createUpload(ownerId: string, opts: { filename: string; contentType: string; courseId?: string | null }): Promise<UploadTarget>;
   /** Called when the browser says the upload finished. */
   onUploaded(asset: VideoAsset): Promise<void>;
   playbackUrl(asset: VideoAsset, userId: string | null): Promise<Playback>;
