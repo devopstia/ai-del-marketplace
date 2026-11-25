@@ -8,7 +8,13 @@
 export const LAYOUTS = ['statement', 'split', 'band', 'frame', 'spotlight', 'column'] as const;
 export type Layout = (typeof LAYOUTS)[number];
 
-export const MOTIFS = ['loop', 'pipeline', 'neural', 'cloud', 'hexgrid', 'terminal', 'shield', 'graph', 'orbit', 'matrix'] as const;
+export const MOTIFS = [
+  'loop', 'pipeline', 'neural', 'cloud', 'hexgrid', 'terminal', 'shield', 'graph', 'orbit', 'matrix',
+  // AI
+  'chip', 'circuit', 'chat', 'embedding', 'attention', 'agent',
+  // IT
+  'server', 'database', 'network', 'gitbranch', 'api', 'container',
+] as const;
 export type Motif = (typeof MOTIFS)[number];
 
 export interface Palette {
@@ -65,6 +71,26 @@ export const BUILT_IN_TEMPLATES: TemplateDef[] = [
   { key: 'shield-forest', name: 'Guardrails', layout: 'statement', palette: 'forest', motif: 'shield', topics: ['security', 'devsecops', 'ai-for-devops'] },
   { key: 'graph-sand', name: 'Metrics light', layout: 'band', palette: 'sand', motif: 'graph', topics: ['observability', 'data', 'sre'] },
   { key: 'matrix-ember', name: 'Data matrix', layout: 'spotlight', palette: 'ember', motif: 'matrix', topics: ['data', 'ai-foundations', 'mlops'] },
+  // ---- AI ----
+  { key: 'chip-midnight', name: 'AI chip', layout: 'statement', palette: 'midnight', motif: 'chip', topics: ['ai-foundations', 'mlops', 'ai-for-devops'] },
+  { key: 'chat-aurora', name: 'LLM chat', layout: 'split', palette: 'aurora', motif: 'chat', topics: ['ai-foundations', 'prompting', 'mcp-agents'] },
+  { key: 'embedding-ocean', name: 'Embeddings', layout: 'band', palette: 'ocean', motif: 'embedding', topics: ['cloud-ai', 'rag', 'data'] },
+  { key: 'attention-steel', name: 'Attention', layout: 'frame', palette: 'steel', motif: 'attention', topics: ['ai-foundations', 'mlops'] },
+  { key: 'agent-forest', name: 'AI agent', layout: 'split', palette: 'forest', motif: 'agent', topics: ['mcp-agents', 'automation-n8n', 'ai-for-devops'] },
+  { key: 'circuit-ember', name: 'Circuit', layout: 'column', palette: 'ember', motif: 'circuit', topics: ['mlops', 'ai-for-devops', 'programming'] },
+  { key: 'chat-lilac', name: 'Prompt light', layout: 'band', palette: 'lilac', motif: 'chat', topics: ['ai-foundations', 'prompting'] },
+  { key: 'embedding-ice', name: 'Vectors light', layout: 'split', palette: 'ice', motif: 'embedding', topics: ['cloud-ai', 'rag'] },
+  { key: 'agent-midnight', name: 'Agent hub', layout: 'spotlight', palette: 'midnight', motif: 'agent', topics: ['mcp-agents', 'ai-for-devops'] },
+  // ---- IT ----
+  { key: 'server-steel', name: 'Server rack', layout: 'split', palette: 'steel', motif: 'server', topics: ['linux', 'infrastructure', 'devops'] },
+  { key: 'database-ocean', name: 'Databases', layout: 'statement', palette: 'ocean', motif: 'database', topics: ['data', 'databases', 'cloud'] },
+  { key: 'network-midnight', name: 'Network', layout: 'band', palette: 'midnight', motif: 'network', topics: ['networking', 'kubernetes', 'cloud'] },
+  { key: 'gitbranch-forest', name: 'Branches', layout: 'column', palette: 'forest', motif: 'gitbranch', topics: ['cicd-gitops', 'programming'] },
+  { key: 'api-aurora', name: 'API', layout: 'frame', palette: 'aurora', motif: 'api', topics: ['programming', 'mcp-agents', 'automation-n8n'] },
+  { key: 'container-ocean', name: 'Containers', layout: 'split', palette: 'ocean', motif: 'container', topics: ['containers', 'kubernetes', 'devops'] },
+  { key: 'circuit-ice', name: 'Circuit light', layout: 'band', palette: 'ice', motif: 'circuit', topics: ['infrastructure', 'programming'] },
+  { key: 'network-sand', name: 'Network light', layout: 'split', palette: 'sand', motif: 'network', topics: ['networking', 'infrastructure'] },
+  { key: 'database-lilac', name: 'Data light', layout: 'statement', palette: 'lilac', motif: 'database', topics: ['data', 'databases'] },
 ];
 
 /** Used when a course has no template yet or its template was deactivated. */

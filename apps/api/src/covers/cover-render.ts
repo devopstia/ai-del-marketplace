@@ -97,7 +97,7 @@ function rng(seed: number) {
 
 function motifSvg(m: Motif, b: Box, p: Palette): string {
   const { a, b: c } = p;
-  const cx = b.x + b.w / 2;
+  let cx = b.x + b.w / 2;
   const cy = b.y + b.h / 2;
   const u = Math.min(b.w, b.h);
   switch (m) {
@@ -247,6 +247,240 @@ function motifSvg(m: Motif, b: Box, p: Palette): string {
       }
       return out;
     }
+    // ---------- AI ----------
+    case 'chip': {
+      const s = u * 0.5;
+      const x = cx - s / 2;
+      const y = cy - s / 2;
+      let out = '';
+      const pins = 6;
+      for (let i = 0; i < pins; i++) {
+        const t = x + s * (0.14 + (i * 0.72) / (pins - 1));
+        const l = u * 0.1;
+        const pw = u * 0.012;
+        out += `<line x1="${t}" y1="${y - l}" x2="${t}" y2="${y}" stroke="${a}" stroke-width="${pw}" stroke-linecap="round"/><line x1="${t}" y1="${y + s}" x2="${t}" y2="${y + s + l}" stroke="${a}" stroke-width="${pw}" stroke-linecap="round"/>`;
+        out += `<line x1="${x - l}" y1="${t - x + y}" x2="${x}" y2="${t - x + y}" stroke="${c}" stroke-width="${pw}" stroke-linecap="round"/><line x1="${x + s}" y1="${t - x + y}" x2="${x + s + l}" y2="${t - x + y}" stroke="${c}" stroke-width="${pw}" stroke-linecap="round"/>`;
+        out += `<circle cx="${t}" cy="${y - l}" r="${pw * 1.4}" fill="${a}"/><circle cx="${t}" cy="${y + s + l}" r="${pw * 1.4}" fill="${a}"/><circle cx="${x - l}" cy="${t - x + y}" r="${pw * 1.4}" fill="${c}"/><circle cx="${x + s + l}" cy="${t - x + y}" r="${pw * 1.4}" fill="${c}"/>`;
+      }
+      out += `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="${s * 0.1}" fill="${p.bg[0]}" stroke="url(#acc)" stroke-width="${u * 0.016}"/>`;
+      out += `<rect x="${x + s * 0.2}" y="${y + s * 0.2}" width="${s * 0.6}" height="${s * 0.6}" rx="${s * 0.06}" fill="url(#acc)" fill-opacity="0.9"/>`;
+      out += `<text x="${cx}" y="${cy + s * 0.11}" text-anchor="middle" font-family="${FAMILY}" font-weight="800" font-size="${s * 0.3}" fill="${p.bg[0]}">AI</text>`;
+      return out;
+    }
+    case 'circuit': {
+      const rand = rng(31);
+      let out = '';
+      const hub = { x: cx, y: cy };
+      const n = 12;
+      for (let i = 0; i < n; i++) {
+        const ang = (i / n) * Math.PI * 2 + 0.2;
+        const len = u * (0.28 + rand() * 0.2);
+        const mx = hub.x + Math.cos(ang) * len * 0.55;
+        const my = hub.y + Math.sin(ang) * len * 0.55;
+        // orthogonal elbow: out along x, then y
+        const ex = hub.x + Math.cos(ang) * len;
+        const ey = hub.y + Math.sin(ang) * len;
+        const col = i % 3 ? a : c;
+        out += `<path d="M${hub.x} ${hub.y} L${mx} ${hub.y} L${mx} ${my} L${ex} ${ey}" fill="none" stroke="${col}" stroke-opacity="0.75" stroke-width="${u * 0.012}" stroke-linejoin="round"/>`;
+        out += `<circle cx="${ex}" cy="${ey}" r="${u * 0.022}" fill="${p.bg[0]}" stroke="${col}" stroke-width="${u * 0.012}"/>`;
+      }
+      out += `<rect x="${hub.x - u * 0.1}" y="${hub.y - u * 0.1}" width="${u * 0.2}" height="${u * 0.2}" rx="${u * 0.03}" fill="url(#acc)"/>`;
+      return out;
+    }
+    case 'chat': {
+      const w = b.w * 0.78;
+      const bh = b.h * 0.2;
+      const x = cx - w / 2;
+      const rows: [number, number, string, number][] = [[0, 0.72, a, 0.9], [0.24, 0.62, c, 0.85], [0.06, 0.78, a, 0.9]];
+      let out = '';
+      rows.forEach(([off, ww, col, op], i) => {
+        const bx = x + (i % 2 ? w * (1 - ww) : 0) + (i === 2 ? 0 : w * off * 0);
+        const by = b.y + b.h * 0.1 + i * (bh + b.h * 0.08);
+        const bw = w * ww;
+        out += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${bh * 0.32}" fill="${col}" fill-opacity="${i % 2 ? 0.95 : 0.18}" stroke="${col}" stroke-opacity="${i % 2 ? 0 : 0.7}" stroke-width="${u * 0.008}"/>`;
+        const tail = i % 2 ? `M${bx + bw - bh * 0.5} ${by + bh} l${bh * 0.3} ${bh * 0.3} l${-bh * 0.05} ${-bh * 0.3}` : `M${bx + bh * 0.5} ${by + bh} l${-bh * 0.3} ${bh * 0.3} l${bh * 0.05} ${-bh * 0.3}`;
+        out += `<path d="${tail}" fill="${col}" fill-opacity="${i % 2 ? 0.95 : 0.6}"/>`;
+        const lines = i === 1 ? 1 : 2;
+        for (let k = 0; k < lines; k++) out += `<rect x="${bx + bh * 0.35}" y="${by + bh * (lines === 1 ? 0.42 : 0.28 + k * 0.3)}" width="${bw * (k ? 0.5 : 0.78) - bh * 0.35}" height="${bh * 0.16}" rx="${bh * 0.08}" fill="${i % 2 ? p.bg[0] : col}" fill-opacity="${i % 2 ? 0.75 : 0.85}"/>`;
+      });
+      // sparkle on the assistant reply
+      const sx = x + w * 0.9;
+      const sy = b.y + b.h * 0.06;
+      const k = u * 0.05;
+      out += `<path d="M${sx} ${sy - k} Q${sx} ${sy} ${sx + k} ${sy} Q${sx} ${sy} ${sx} ${sy + k} Q${sx} ${sy} ${sx - k} ${sy} Q${sx} ${sy} ${sx} ${sy - k} Z" fill="${c}"/>`;
+      return out;
+    }
+    case 'embedding': {
+      const rand = rng(41);
+      const u = Math.min(b.w * 0.62, b.h * 1.1);
+      const centers: [number, number, string][] = [[0.28, 0.35, a], [0.7, 0.3, c], [0.5, 0.74, a]];
+      let out = '';
+      for (const [fx, fy, col] of centers) {
+        const ccx = b.x + b.w * fx;
+        const ccy = b.y + b.h * fy;
+        out += `<circle cx="${ccx}" cy="${ccy}" r="${u * 0.2}" fill="${col}" fill-opacity="0.09"/>`;
+        for (let i = 0; i < 11; i++) {
+          const ang = rand() * Math.PI * 2;
+          const d = u * 0.16 * Math.sqrt(rand());
+          out += `<circle cx="${ccx + Math.cos(ang) * d}" cy="${ccy + Math.sin(ang) * d}" r="${u * 0.016}" fill="${col}" fill-opacity="${0.55 + rand() * 0.45}"/>`;
+        }
+      }
+      // the query vector and its nearest neighbours
+      const qx = b.x + b.w * 0.47;
+      const qy = b.y + b.h * 0.42;
+      const nn: [number, number][] = [[0.34, 0.33], [0.36, 0.42], [0.31, 0.45]];
+      for (const [fx, fy] of nn) out += `<line x1="${qx}" y1="${qy}" x2="${b.x + b.w * fx}" y2="${b.y + b.h * fy}" stroke="${c}" stroke-width="${u * 0.008}" stroke-dasharray="${u * 0.02} ${u * 0.015}"/>`;
+      out += `<circle cx="${qx}" cy="${qy}" r="${u * 0.04}" fill="${p.bg[0]}" stroke="${c}" stroke-width="${u * 0.014}"/><circle cx="${qx}" cy="${qy}" r="${u * 0.016}" fill="${c}"/>`;
+      return out;
+    }
+    case 'attention': {
+      const n = 8;
+      const s = u * 0.84;
+      const cell = s / n;
+      const x = cx - s / 2;
+      const y = cy - s / 2;
+      const rand = rng(53);
+      let out = '';
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        const diag = i === j ? 0.55 : j < i ? 0.18 : 0;
+        const v = Math.min(1, diag + rand() * 0.45);
+        if (j > i) continue; // causal mask: only the lower triangle attends
+        out += `<rect x="${x + j * cell + cell * 0.08}" y="${y + i * cell + cell * 0.08}" width="${cell * 0.84}" height="${cell * 0.84}" rx="${cell * 0.16}" fill="${v > 0.62 ? c : a}" fill-opacity="${0.18 + v * 0.8}"/>`;
+      }
+      return out;
+    }
+    case 'agent': {
+      const tools = 6;
+      const R = u * 0.36;
+      let out = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${a}" stroke-opacity="0.3" stroke-width="${u * 0.008}" stroke-dasharray="${u * 0.02} ${u * 0.02}"/>`;
+      for (let i = 0; i < tools; i++) {
+        const ang = (i / tools) * Math.PI * 2 - Math.PI / 2;
+        const tx = cx + Math.cos(ang) * R;
+        const ty = cy + Math.sin(ang) * R;
+        const col = i % 2 ? c : a;
+        const t = u * 0.11;
+        out += `<line x1="${cx}" y1="${cy}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-opacity="0.55" stroke-width="${u * 0.01}"/>`;
+        out += `<rect x="${tx - t / 2}" y="${ty - t / 2}" width="${t}" height="${t}" rx="${t * 0.26}" fill="${p.bg[0]}" stroke="${col}" stroke-width="${u * 0.012}"/>`;
+        // a tiny glyph per tool: search, database, gear-ish, code, cloud-ish, check
+        const g = t * 0.26;
+        const glyphs = [
+          `<circle cx="${tx - g * 0.2}" cy="${ty - g * 0.2}" r="${g * 0.7}" fill="none" stroke="${col}" stroke-width="${u * 0.009}"/><line x1="${tx + g * 0.3}" y1="${ty + g * 0.3}" x2="${tx + g}" y2="${ty + g}" stroke="${col}" stroke-width="${u * 0.009}" stroke-linecap="round"/>`,
+          `<ellipse cx="${tx}" cy="${ty - g * 0.6}" rx="${g}" ry="${g * 0.38}" fill="${col}"/><rect x="${tx - g}" y="${ty - g * 0.6}" width="${g * 2}" height="${g * 1.3}" fill="${col}"/><ellipse cx="${tx}" cy="${ty + g * 0.7}" rx="${g}" ry="${g * 0.38}" fill="${col}"/>`,
+          `<circle cx="${tx}" cy="${ty}" r="${g * 0.75}" fill="none" stroke="${col}" stroke-width="${u * 0.012}" stroke-dasharray="${g * 0.45} ${g * 0.25}"/><circle cx="${tx}" cy="${ty}" r="${g * 0.25}" fill="${col}"/>`,
+          `<path d="M${tx - g * 0.3} ${ty - g * 0.7} l${-g * 0.6} ${g * 0.7} l${g * 0.6} ${g * 0.7} M${tx + g * 0.3} ${ty - g * 0.7} l${g * 0.6} ${g * 0.7} l${-g * 0.6} ${g * 0.7}" fill="none" stroke="${col}" stroke-width="${u * 0.01}" stroke-linecap="round" stroke-linejoin="round"/>`,
+          `<rect x="${tx - g}" y="${ty - g * 0.55}" width="${g * 2}" height="${g * 1.1}" rx="${g * 0.55}" fill="${col}"/>`,
+          `<path d="M${tx - g * 0.8} ${ty} l${g * 0.55} ${g * 0.55} l${g} ${-g * 1.05}" fill="none" stroke="${col}" stroke-width="${u * 0.012}" stroke-linecap="round" stroke-linejoin="round"/>`,
+        ];
+        out += glyphs[i];
+      }
+      out += `<circle cx="${cx}" cy="${cy}" r="${u * 0.13}" fill="url(#acc)"/>`;
+      out += `<circle cx="${cx - u * 0.04}" cy="${cy - u * 0.01}" r="${u * 0.016}" fill="${p.bg[0]}"/><circle cx="${cx + u * 0.04}" cy="${cy - u * 0.01}" r="${u * 0.016}" fill="${p.bg[0]}"/><path d="M${cx - u * 0.045} ${cy + u * 0.045} q${u * 0.045} ${u * 0.03} ${u * 0.09} 0" fill="none" stroke="${p.bg[0]}" stroke-width="${u * 0.012}" stroke-linecap="round"/>`;
+      return out;
+    }
+    // ---------- IT ----------
+    case 'server': {
+      const w = b.w * 0.62;
+      const unitH = b.h * 0.16;
+      const x = cx - w / 2;
+      const n = 4;
+      const top = cy - (n * unitH + (n - 1) * b.h * 0.035) / 2;
+      let out = '';
+      for (let i = 0; i < n; i++) {
+        const y = top + i * (unitH + b.h * 0.035);
+        out += `<rect x="${x}" y="${y}" width="${w}" height="${unitH}" rx="${unitH * 0.18}" fill="${p.tone === 'dark' ? '#000' : '#fff'}" fill-opacity="${p.tone === 'dark' ? 0.3 : 0.7}" stroke="${i % 2 ? c : a}" stroke-opacity="0.7" stroke-width="${u * 0.009}"/>`;
+        for (let k = 0; k < 5; k++) out += `<rect x="${x + w * 0.08 + k * w * 0.075}" y="${y + unitH * 0.3}" width="${w * 0.04}" height="${unitH * 0.4}" rx="${w * 0.01}" fill="${a}" fill-opacity="0.4"/>`;
+        out += `<circle cx="${x + w * 0.84}" cy="${y + unitH / 2}" r="${unitH * 0.11}" fill="${i === 2 ? c : a}"/><circle cx="${x + w * 0.92}" cy="${y + unitH / 2}" r="${unitH * 0.11}" fill="${c}" fill-opacity="${i % 2 ? 1 : 0.35}"/>`;
+      }
+      return out;
+    }
+    case 'database': {
+      const w = u * 0.46;
+      cx -= u * 0.08;
+      const rx = w / 2;
+      const ry = w * 0.16;
+      const h = u * 0.16;
+      const top = cy - (3 * h) / 2;
+      let out = '';
+      for (let i = 2; i >= 0; i--) {
+        const y = top + i * h;
+        const col = i === 1 ? c : a;
+        out += `<path d="M${cx - rx} ${y} v${h * 0.82} a${rx} ${ry} 0 0 0 ${w} 0 v${-h * 0.82}" fill="${col}" fill-opacity="${0.75 - i * 0.12}"/>`;
+        out += `<ellipse cx="${cx}" cy="${y}" rx="${rx}" ry="${ry}" fill="${col}" stroke="${p.bg[0]}" stroke-opacity="0.35" stroke-width="${u * 0.006}"/>`;
+      }
+      // replica to the side, linked
+      const sx = cx + w * 0.78;
+      const sw = w * 0.34;
+      out += `<line x1="${cx + rx}" y1="${cy}" x2="${sx - sw / 2}" y2="${cy}" stroke="${c}" stroke-width="${u * 0.01}" stroke-dasharray="${u * 0.02} ${u * 0.015}"/>`;
+      out += `<path d="M${sx - sw / 2} ${cy - h * 0.6} v${h * 1.2} a${sw / 2} ${sw * 0.16} 0 0 0 ${sw} 0 v${-h * 1.2}" fill="${c}" fill-opacity="0.35"/><ellipse cx="${sx}" cy="${cy - h * 0.6}" rx="${sw / 2}" ry="${sw * 0.16}" fill="${c}"/>`;
+      return out;
+    }
+    case 'network': {
+      const rand = rng(61);
+      const nodes: [number, number][] = [];
+      for (let i = 0; i < 9; i++) nodes.push([b.x + b.w * (0.1 + (i % 3) * 0.4 + (rand() - 0.5) * 0.12), b.y + b.h * (0.14 + Math.floor(i / 3) * 0.36 + (rand() - 0.5) * 0.1)]);
+      const sw = { x: cx, y: cy };
+      let out = '';
+      nodes.forEach(([x, y], i) => {
+        out += `<line x1="${sw.x}" y1="${sw.y}" x2="${x}" y2="${y}" stroke="${i % 2 ? c : a}" stroke-opacity="0.5" stroke-width="${u * 0.01}"/>`;
+        const nb = nodes[(i + 1) % nodes.length]!;
+        if (i % 3 !== 2) out += `<line x1="${x}" y1="${y}" x2="${nb[0]}" y2="${nb[1]}" stroke="${a}" stroke-opacity="0.22" stroke-width="${u * 0.007}"/>`;
+      });
+      nodes.forEach(([x, y], i) => { out += `<circle cx="${x}" cy="${y}" r="${u * 0.035}" fill="${p.bg[0]}" stroke="${i % 2 ? c : a}" stroke-width="${u * 0.012}"/>`; });
+      out += `<rect x="${sw.x - u * 0.13}" y="${sw.y - u * 0.06}" width="${u * 0.26}" height="${u * 0.12}" rx="${u * 0.025}" fill="url(#acc)"/>`;
+      for (let k = 0; k < 4; k++) out += `<circle cx="${sw.x - u * 0.075 + k * u * 0.05}" cy="${sw.y}" r="${u * 0.012}" fill="${p.bg[0]}"/>`;
+      return out;
+    }
+    case 'gitbranch': {
+      const x0 = b.x + b.w * 0.12;
+      const x1 = b.x + b.w * 0.88;
+      const ym = b.y + b.h * 0.62;
+      const yb = b.y + b.h * 0.3;
+      const bx0 = x0 + (x1 - x0) * 0.22;
+      const bx1 = x0 + (x1 - x0) * 0.78;
+      let out = `<line x1="${x0}" y1="${ym}" x2="${x1}" y2="${ym}" stroke="${a}" stroke-width="${u * 0.024}" stroke-linecap="round"/>`;
+      const d = (bx1 - bx0) * 0.22;
+      out += `<path d="M${bx0} ${ym} C${bx0 + d * 0.6} ${ym}, ${bx0 + d * 0.4} ${yb}, ${bx0 + d} ${yb} L${bx1 - d} ${yb} C${bx1 - d * 0.4} ${yb}, ${bx1 - d * 0.6} ${ym}, ${bx1} ${ym}" fill="none" stroke="${c}" stroke-width="${u * 0.024}" stroke-linecap="round"/>`;
+      const commits = [0, 0.22, 0.5, 0.78, 1].map((t) => x0 + (x1 - x0) * t);
+      commits.forEach((x, i) => { out += `<circle cx="${x}" cy="${ym}" r="${u * (i === 4 ? 0.05 : 0.036)}" fill="${p.bg[0]}" stroke="${a}" stroke-width="${u * 0.018}"/>`; });
+      [0.42, 0.58].forEach((t) => { out += `<circle cx="${bx0 + (bx1 - bx0) * t}" cy="${yb}" r="${u * 0.036}" fill="${p.bg[0]}" stroke="${c}" stroke-width="${u * 0.018}"/>`; });
+      out += `<circle cx="${x1}" cy="${ym}" r="${u * 0.02}" fill="${a}"/>`;
+      return out;
+    }
+    case 'api': {
+      const h = u * 0.62;
+      const w = h * 0.3;
+      const gap = u * 0.5;
+      const lx = cx - gap / 2;
+      const rx = cx + gap / 2;
+      const brace = (x: number, dir: 1 | -1) => `<path d="M${x + dir * w} ${cy - h / 2} q${-dir * w * 0.6} 0 ${-dir * w * 0.6} ${h * 0.14} v${h * 0.2} q0 ${h * 0.12} ${-dir * w * 0.4} ${h * 0.16} q${dir * w * 0.4} ${h * 0.04} ${dir * w * 0.4} ${h * 0.16} v${h * 0.2} q0 ${h * 0.14} ${dir * w * 0.6} ${h * 0.14}" fill="none" stroke="url(#acc)" stroke-width="${u * 0.03}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      let out = brace(lx - w, 1) + brace(rx + w, -1);
+      const rows: [string, number][] = [['GET', 0.62], ['POST', 0.48], ['PUT', 0.56]];
+      rows.forEach(([verb, ww], i) => {
+        const y = cy - h * 0.22 + i * h * 0.22;
+        out += `<text x="${lx + w * 0.2}" y="${y + u * 0.02}" font-family="${FAMILY}" font-weight="800" font-size="${u * 0.055}" fill="${i % 2 ? c : a}">${verb}</text>`;
+        out += `<rect x="${lx + w * 0.2 + u * 0.15}" y="${y - u * 0.012}" width="${(gap - u * 0.18) * ww}" height="${u * 0.024}" rx="${u * 0.012}" fill="${i % 2 ? c : a}" fill-opacity="0.6"/>`;
+      });
+      return out;
+    }
+    case 'container': {
+      const s = u * 0.15;
+      const iso = (x: number, y: number, col: string, op: number) => {
+        const top = `M${x} ${y} l${s} ${-s * 0.5} l${s} ${s * 0.5} l${-s} ${s * 0.5} Z`;
+        const left = `M${x} ${y} l${s} ${s * 0.5} v${s} l${-s} ${-s * 0.5} Z`;
+        const right = `M${x + s} ${y + s * 0.5} l${s} ${-s * 0.5} v${s} l${-s} ${s * 0.5} Z`;
+        return `<path d="${left}" fill="${col}" fill-opacity="${op * 0.75}"/><path d="${right}" fill="${col}" fill-opacity="${op * 0.5}"/><path d="${top}" fill="${col}" fill-opacity="${op}"/>`;
+      };
+      const grid: [number, number, number][] = [[0, 2, 0], [1, 2, 0], [2, 2, 0], [0.5, 1.25, 0], [1.5, 1.25, 0], [1, 0.5, 0], [0, 2, 1], [2, 2, 1], [1, 0.5, 1]];
+      let out = '';
+      const ox = cx - s * 2;
+      const oy = cy - s * 0.3;
+      for (const [gx, gy, layer] of grid) {
+        const x = ox + gx * s * 1.05 + (gy - 1) * 0;
+        const y = oy + (gy - 1) * s * 0.78 - layer * s * 1.05;
+        out += iso(x, y, layer ? c : a, layer ? 0.95 : 0.8);
+      }
+      return out;
+    }
   }
 }
 
@@ -272,7 +506,7 @@ function layoutFrame(l: Layout, p: Palette): Frame {
     case 'frame':
       return { bg: `<rect x="36" y="36" width="${COVER_W - 72}" height="${COVER_H - 72}" rx="30" fill="none" stroke="${p.a}" stroke-opacity="0.45" stroke-width="3"/>`, motif: { x: 850, y: 300, w: 360, h: 360 }, title: { x: 96, y: 170, w: 740, h: 400, anchor: 'top', align: 'start', maxLines: 3, max: 84, min: 42 }, label: { x: 96, y: 96, align: 'start' }, mark: { x: 96, y: COVER_H - 96 + 4, align: 'start' } };
     case 'spotlight':
-      return { bg: '', motif: { x: 290, y: 20, w: 700, h: 680 }, motifOpacity: 0.3, title: { x: 150, y: 150, w: COVER_W - 300, h: 420, anchor: 'center', align: 'middle', maxLines: 3, max: 88, min: 44 }, label: { x: COVER_W / 2, y: M, align: 'middle' }, mark: { x: COVER_W / 2, y: COVER_H - M + 4, align: 'middle' } };
+      return { bg: '', motif: { x: 290, y: 20, w: 700, h: 680 }, motifOpacity: 0.22, title: { x: 150, y: 150, w: COVER_W - 300, h: 420, anchor: 'center', align: 'middle', maxLines: 3, max: 88, min: 44 }, label: { x: COVER_W / 2, y: M, align: 'middle' }, mark: { x: COVER_W / 2, y: COVER_H - M + 4, align: 'middle' } };
     case 'column':
       return { bg: `<rect x="0" y="0" width="400" height="${COVER_H}" fill="${p.tone === 'dark' ? '#000' : '#fff'}" fill-opacity="${p.tone === 'dark' ? 0.24 : 0.5}"/><rect x="400" y="0" width="6" height="${COVER_H}" fill="url(#acc)"/>`, motif: { x: 20, y: 150, w: 360, h: 420 }, title: { x: 470, y: 150, w: 740, h: 440, anchor: 'center', align: 'start', maxLines: 4, max: 80, min: 42 }, label: { x: 470, y: M, align: 'start' }, mark: { x: 470, y: COVER_H - M + 4, align: 'start' } };
   }
