@@ -94,3 +94,14 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Merge commit on `main` (local only, not pushed); rollback tag `main-before-merge-2026-11-24` (= `d2339c2`), release tag
   `release-local-2026-11-24`. Includes Step 0, Step 1, payments, Steps 2–7. `feat/landing-redesign` stays archived (not merged).
 - Local stack runs `main` with the clean demo catalogue. New work starts from `main` on new `feat/…` branches.
+
+## 2026-11-24: premium marketplace redesign, Step A (design system + header/footer + homepage) for the owner's review
+- Owner master prompt "complete premium frontend redesign". Rollback point: tag `checkpoint-2026-11-24-premium-redesign` =
+  `bd57c5d` (main), backup branch `backup/pre-premium-redesign-2026-11-24`. Work on `feature/premium-marketplace-redesign`
+  (not merged, not pushed). Undo everything: `git checkout checkpoint-2026-11-24-premium-redesign -- apps/web`.
+- Research (rendered pages, not text), audit and the page-by-page plan: `docs/research/premium-redesign-2026-11.md`.
+- Per rule 12 the redesign is delivered one step at a time: Step A now; Steps B–G (catalogue, course page, auth/cart,
+  learning + player, studio, admin) only after the owner approves Step A.
+- Fixed in Step A: captions were ON by default (rule 11 never implemented); footer links that led to empty results.
+- Isolated preview stack: `./scripts/preview.sh up|seed|demo|down|destroy` → http://localhost:3100 (own DB/Redis/MinIO/API).
+- Screenshots: `docs/design/premium-redesign-2026-11-24/` (before/after, 390/1440/1920, dark, both hero slides).

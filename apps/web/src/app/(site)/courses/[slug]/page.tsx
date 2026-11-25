@@ -83,7 +83,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             </section>
           ) : null}
 
-          <section className="mt-12">
+          <section id="curriculum" className="mt-12 scroll-mt-20">
             <h2 className="mb-4 font-display text-2xl font-extrabold">Course content</h2>
             <Curriculum sections={c.sections} />
           </section>

@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { ArrowUpRight, Search } from "lucide-react";
-import { getCategories, getCourse, getCourses, getFeaturedInstructors } from "@/lib/catalog";
+import { ArrowUpRight, Award, Clock, CreditCard, FlaskConical, Infinity as InfinityIcon, ListChecks, PlaySquare, RotateCcw } from "lucide-react";
+import { getCategories, getCourse, getCourses, getFeaturedInstructors, getTerms } from "@/lib/catalog";
 import { CoursePath } from "@/components/home/CoursePath";
-import { HeroLoop } from "@/components/HeroLoop";
+import { HomeHero, type HeroCourse } from "@/components/home/HomeHero";
+import { PreviewProvider } from "@/components/PreviewContext";
+import { courseFacts, findShot, type Shot } from "@/lib/home-media";
 import { CourseTile, Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { RatingInline } from "@/components/Stars";
 import { Avatar } from "@/components/Avatar";
 import { categoryIcon } from "@/components/CategoryIcon";
-import { hours, levelLabel, plural } from "@/lib/format";
+import { hours, levelLabel, money, plural } from "@/lib/format";
 import type { CourseCard, InstructorSummary } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +22,7 @@ function SectionHead({ title, sub, href, cta }: { title: string; sub?: string; h
   return (
     <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
       <div className="max-w-2xl">
-        <h2 className="font-display text-[clamp(1.5rem,2.6vw,2.1rem)] font-extrabold text-ink">{title}</h2>
+        <h2 className="h-section">{title}</h2>
         {sub ? <p className="mt-2 text-ink-2">{sub}</p> : null}
       </div>
       {href ? <Link href={href} className="link inline-flex items-center gap-1 text-sm">{cta}<ArrowUpRight className="size-4" /></Link> : null}
@@ -88,54 +90,81 @@ function InstructorFeature({ i }: { i: InstructorSummary }) {
 }
 
 export default async function Home() {
-  const [cats, popular, newest, rated, instructors] = await Promise.all([
+  const [cats, popular, newest, rated, instructors, terms] = await Promise.all([
     getCategories(),
     getCourses({ sort: "popular", pageSize: 5 }),
     getCourses({ sort: "newest", pageSize: 8 }),
     getCourses({ sort: "rating", pageSize: 3 }),
     getFeaturedInstructors(3),
+    getTerms(),
   ]);
   const all = [...popular.items, ...newest.items, ...rated.items];
   const featured = rated.items[0] ?? popular.items[0];
   const runnersUp = (rated.items.length > 1 ? rated.items.slice(1, 3) : newest.items.filter((c) => c.slug !== featured?.slug).slice(0, 2));
   const offline = !popular.ok && !newest.ok;
   const countFor = (slug: string) => all.filter((c) => c.category?.slug === slug).length;
-  // A small catalogue is shown in depth (one course as a route) instead of the same course in three rails.
+  // A small catalogue is shown in depth (one course with its route) instead of the same course in three rails.
   // The rails come back on their own once there are enough courses to fill them.
   const SMALL = 4;
   const small = popular.ok && popular.total < SMALL;
-  const flagship = small && popular.items[0] ? await getCourse(popular.items[0].slug) : null;
+  const spotlight = featured ? await getCourse(small && popular.items[0] ? popular.items[0].slug : featured.slug) : null;
+  const flagship = small ? spotlight : null;
   const others = flagship ? popular.items.filter((c) => c.slug !== flagship.slug) : [];
   // Only categories that have courses; the strip is hidden until it can show a real choice.
   const liveCats = cats.filter((c) => (c.courseCount ?? countFor(c.slug)) > 0);
 
+  // Hero: the featured course (slide 2) and real frames from its labs (only lessons that exist in its curriculum).
+  const sf = spotlight ? courseFacts(spotlight) : null;
+  const heroCourse: HeroCourse | null = spotlight && sf ? {
+    slug: spotlight.slug,
+    title: spotlight.title,
+    subtitle: spotlight.subtitle,
+    price: money(spotlight.priceCents, spotlight.currency),
+    instructor: spotlight.instructor.name,
+    thumbnailUrl: spotlight.thumbnailUrl,
+    facts: [plural(sf.lessons, "lesson"), hours(spotlight.totalDurationSec), sf.labs ? plural(sf.labs, "lab download") : "", levelLabel[spotlight.level] ?? ""].filter(Boolean),
+    previewId: sf.previews[0]?.id ?? null,
+    previewLength: sf.previews[0]?.durationSec,
+  } : null;
+  const shots = (keys: Parameters<typeof findShot>[1][]) => keys.map((k) => findShot(spotlight, k)).filter(Boolean) as Shot[];
+  const heroShots = shots(["k8sDoctor", "ragAzure"]);
+  const quizShot = sf?.quizzes ? findShot(spotlight, "quiz") : null;
+  const labShots = shots(["bedrock", "ragDocker", "n8n"]);
+
+  // Facts under the hero: the featured course's own numbers while there is one course, otherwise catalogue-wide promises.
+  const facts: [typeof Clock, string, string][] = flagship && sf ? [
+    [PlaySquare, String(sf.lessons), "video lessons"],
+    [Clock, hours(flagship.totalDurationSec), "of video"],
+    ...(sf.labs ? [[FlaskConical, String(sf.labs), "lab downloads"] as [typeof Clock, string, string]] : []),
+    ...(sf.quizzes ? [[ListChecks, String(sf.quizzes), "short quizzes"] as [typeof Clock, string, string]] : []),
+    [RotateCcw, "14-day", "refunds"],
+    [InfinityIcon, "Lifetime", "access"],
+  ] : popular.ok ? [
+    [PlaySquare, String(popular.total), popular.total === 1 ? "course" : "courses"],
+    [RotateCcw, "14-day", "refunds"],
+    [CreditCard, "Stripe", "secure checkout"],
+    [InfinityIcon, "Lifetime", "access"],
+  ] : [];
+  const share = terms?.instructorSharePercent;
+
+  const previews = spotlight ? spotlight.sections.flatMap((s) => s.lectures).filter((l) => l.isPreview) : [];
+
   return (
-    <>
-      {/* Hero: the DEL loop as the learning pipeline */}
-      <section className="relative overflow-hidden border-b border-line">
-        <div className="container-x grid items-center gap-10 pb-16 pt-12 md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-6 lg:pb-24 lg:pt-20">
-          <div className="max-w-xl">
-            <h1 className="font-display text-[clamp(2.35rem,5.4vw,4.1rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink">
-              Learn AI and DevOps the way production works.
-            </h1>
-            <p className="mt-5 max-w-lg text-lg text-ink-2">
-              Courses from engineers who build and run these systems. Every lesson ends with a lab you can run on your laptop or your own cloud account.
-            </p>
-            <form action="/courses" role="search" className="mt-8 flex max-w-lg items-center gap-2 rounded-full border-[1.5px] border-line-strong bg-surface p-1.5 pl-5 shadow-lift focus-within:border-violet">
-              <Search className="size-5 shrink-0 text-muted" aria-hidden="true" />
-              <input name="q" type="search" aria-label="Search courses" placeholder="What do you want to build?" className="h-11 min-w-0 flex-1 bg-transparent text-base text-ink placeholder:text-muted focus:outline-none" />
-              <button className="btn btn-primary !rounded-full">Search</button>
-            </form>
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted">Popular:</span>
-              {searches.map((s) => (
-                <Link key={s} href={`/courses?q=${encodeURIComponent(s)}`} className="rounded-full border border-line px-3 py-1 font-bold text-ink-2 hover:border-violet hover:text-violet">{s}</Link>
-              ))}
-            </div>
-          </div>
-          <HeroLoop spotlight={featured ? { title: featured.title, href: `/courses/${featured.slug}`, meta: `${featured.instructor.name}, ${hours(featured.totalDurationSec)}` } : null} />
+    <PreviewProvider courseTitle={spotlight?.title ?? ""} slug={spotlight?.slug ?? ""} previews={previews}>
+      <HomeHero course={heroCourse} searches={searches} labShots={heroShots} quizShot={quizShot} />
+
+      {facts.length ? (
+        <div className="border-b border-line bg-surface">
+          <ul className="container-x grid grid-cols-2 gap-x-6 gap-y-4 py-5 sm:grid-cols-3 lg:flex lg:justify-between" aria-label={flagship ? `${flagship.title} in numbers` : "Buying on DEL"}>
+            {facts.map(([I, v, l]) => (
+              <li key={l} className="flex items-center gap-3">
+                <I className="size-5 shrink-0 text-violet" aria-hidden="true" />
+                <span className="text-[0.95rem] leading-tight"><span className="font-display font-bold text-ink">{v}</span> <span className="text-ink-2">{l}</span></span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </section>
+      ) : null}
 
       {/* Category index */}
       {liveCats.length >= 3 ? (
@@ -165,7 +194,7 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {flagship ? <CoursePath c={flagship} /> : null}
+      {flagship ? <CoursePath c={flagship} labShots={labShots} /> : null}
 
       {others.length ? (
         <section className="container-x pt-16">
@@ -224,24 +253,58 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {/* Teach band */}
-      <section className="container-x pt-24">
-        <div className="relative overflow-hidden rounded-panel bg-stage px-6 py-12 text-white md:px-14 md:py-16">
-          <svg viewBox="0 0 120 60" className="pointer-events-none absolute -right-24 -top-10 h-[150%] opacity-25" aria-hidden="true" fill="none">
-            <path d="M60,30 C48,14 34,8 22,10 C10,12 4,22 4,30 C4,38 10,48 22,50 C34,52 48,46 60,30 C72,46 86,52 98,50 C110,48 116,38 116,30 C116,22 110,12 98,10 C86,8 72,14 60,30" stroke="#9d8fff" strokeWidth="2.5" />
-          </svg>
-          <div className="relative grid gap-8 md:grid-cols-[1.4fr_1fr] md:items-end">
-            <div>
-              <h2 className="font-display text-[clamp(1.8rem,3.4vw,2.6rem)] font-extrabold leading-tight">You run it in production. Teach it here.</h2>
-              <p className="mt-4 max-w-xl text-white/75">Publish your course, keep the price you set, and get paid out through Stripe. We review every course so learners trust what they buy.</p>
-            </div>
-            <div className="flex flex-wrap gap-3 md:justify-end">
-              <Link href="/teach" className="btn btn-cyan">Become an instructor</Link>
-              <Link href="/teach#how" className="btn border border-white/25 text-white hover:bg-white/10">How it works</Link>
+      {/* How buying and learning work: the same rules the course page and checkout apply. */}
+      {!offline ? (
+        <section aria-labelledby="how-title" className="mt-20 border-y border-line bg-surface md:mt-24">
+          <div className="container-x py-14 md:py-16">
+            <h2 id="how-title" className="h-section">How learning on DEL works</h2>
+            <ol className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+              {([
+                [PlaySquare, "Watch free lessons", "Preview lessons play right on the course page, no account needed."],
+                [CreditCard, "Buy once", "One price per course, paid through Stripe. Refund within 14 days while you’ve watched under 25%."],
+                [FlaskConical, "Learn by doing", "Video lessons, short quizzes and lab files you run on your laptop or your own cloud account."],
+                [Award, "Get your certificate", "Finish the course to get a certificate anyone can verify online."],
+              ] as const).map(([I, t, d], k) => (
+                <li key={t} className="relative">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-9 place-items-center rounded-full bg-violet-soft text-violet"><I className="size-[18px]" aria-hidden="true" /></span>
+                    <span className="text-xs font-bold tabular-nums text-muted">Step {k + 1}</span>
+                  </div>
+                  <h3 className="mt-4 font-display text-lg font-bold text-ink">{t}</h3>
+                  <p className="mt-1.5 text-[0.95rem] text-ink-2">{d}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Teach on DEL: real terms from /platform/terms, kept quieter than the learner content. */}
+      <section aria-labelledby="teach-title" className="container-x pt-16 md:pt-20">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-center lg:gap-16">
+          <div>
+            <p className="eyebrow">Teach on DEL</p>
+            <h2 id="teach-title" className="h-section mt-2">Teach what you run in production</h2>
+            <p className="mt-3 max-w-lg text-ink-2">Publish a course, set your own price and get paid through Stripe. We review every course before it goes live, so learners can trust what they buy.</p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Link href="/teach" className="btn btn-primary">Become an instructor</Link>
+              <Link href="/teach#how" className="btn btn-outline">How it works</Link>
             </div>
           </div>
+          <dl className="grid gap-px overflow-hidden rounded-panel bg-line ring-1 ring-line sm:grid-cols-3">
+            {([
+              ...(share ? [[`${share}%`, "of each sale is yours, after Stripe’s processing fee"]] : []),
+              ["Stripe", "payouts to your own connected account"],
+              ["Reviewed", "every course is checked before it’s listed"],
+            ] as [string, string][]).map(([v, l]) => (
+              <div key={v} className="flex flex-col-reverse justify-end bg-surface p-6">
+                <dd className="mt-1 text-sm text-ink-2">{l}</dd>
+                <dt className="font-display text-2xl font-bold text-ink">{v}</dt>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
-    </>
+    </PreviewProvider>
   );
 }

@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { FlaskConical, PlayCircle } from "lucide-react";
+import { Award, BookOpenCheck, Clock, FlaskConical, ListChecks, PlayCircle, PlaySquare } from "lucide-react";
 import type { CourseDetail, SectionOutline } from "@/lib/types";
-import { clock, date, hours, plural } from "@/lib/format";
+import { clock, hours, plural } from "@/lib/format";
+import { courseFacts, type Shot } from "@/lib/home-media";
 import { CourseCover } from "../CourseCover";
 import { Price } from "../CourseViews";
-import { PreviewButton, PreviewProvider } from "../PreviewContext";
+import { RatingInline } from "../Stars";
+import { PreviewButton } from "../PreviewContext";
 
-type Stage = { name: string; sub: string; sections: { s: SectionOutline; n: number; lab: boolean }[] };
+type Stage = { name: string; sub: string; lab: boolean; sections: { s: SectionOutline; n: number; lab: boolean }[] };
 
 const isLab = (s: SectionOutline) => /^lab\b/i.test(s.title.trim());
-const minutes = (s: SectionOutline) => s.lectures.reduce((a, l) => a + l.durationSec, 0);
+const seconds = (s: SectionOutline) => s.lectures.reduce((a, l) => a + l.durationSec, 0);
 
 /**
  * The course as a route: sections before the first lab explain the ideas, the lab sections build things, and the sections
@@ -18,114 +20,132 @@ const minutes = (s: SectionOutline) => s.lectures.reduce((a, l) => a + l.duratio
 function stages(sections: SectionOutline[]): Stage[] {
   const numbered = sections.map((s, i) => ({ s, n: i + 1, lab: isLab(s) }));
   const first = numbered.findIndex((x) => x.lab);
-  if (first < 0) return [{ name: "The course, step by step", sub: "", sections: numbered }];
+  if (first < 0) return [{ name: "The course, step by step", sub: "", lab: false, sections: numbered }];
   let last = first;
   numbered.forEach((x, i) => { if (x.lab) last = i; });
   const out: Stage[] = [
-    { name: "Understand", sub: "The ideas and the vocabulary, each explained with a real situation", sections: numbered.slice(0, first) },
-    { name: "Build in labs", sub: "Hands-on labs on AWS, Azure and Docker that you run yourself", sections: numbered.slice(first, last + 1) },
-    { name: "Automate", sub: "Put AI to work in the tools you already use", sections: numbered.slice(last + 1) },
+    { name: "Understand", sub: "The ideas and the vocabulary, each explained with a real situation.", lab: false, sections: numbered.slice(0, first) },
+    { name: "Build in labs", sub: "Hands-on labs on AWS, Azure and Docker that you run yourself.", lab: true, sections: numbered.slice(first, last + 1) },
+    { name: "Automate", sub: "Put AI to work in the tools you already use.", lab: false, sections: numbered.slice(last + 1) },
   ];
   return out.filter((st) => st.sections.length);
 }
 
-function Stop({ s, n, lab }: { s: SectionOutline; n: number; lab: boolean }) {
-  const stripped = lab ? s.title.replace(/^lab\s*:\s*/i, "") : s.title;
-  const title = stripped.charAt(0).toUpperCase() + stripped.slice(1);
-  return (
-    <li className="relative grid grid-cols-[2rem_1fr] gap-x-3 py-2.5">
-      <span className={`relative z-10 grid size-8 place-items-center rounded-full text-sm font-bold tabular-nums ${lab ? "bg-cyan text-white" : "border-[1.5px] border-line-strong bg-paper text-ink-2"}`}>{n}</span>
-      <span className="min-w-0 pt-1">
-        <span className="block font-bold leading-snug text-ink">
-          {lab ? <span className="sr-only">Lab: </span> : null}{title}
-          {lab ? <FlaskConical className="ml-1.5 inline size-4 align-[-2px] text-cyan" aria-hidden="true" /> : null}
-        </span>
-        <span className="mt-0.5 block text-sm text-muted">{plural(s.lectures.length, "lesson")}, {hours(minutes(s))}</span>
-      </span>
-    </li>
-  );
+function sectionTitle(s: SectionOutline, lab: boolean) {
+  const t = lab ? s.title.replace(/^lab\s*:\s*/i, "") : s.title;
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-export function CoursePath({ c }: { c: CourseDetail }) {
-  const previews = c.sections.flatMap((s) => s.lectures).filter((l) => l.isPreview);
-  const lessons = c.sections.reduce((a, s) => a + s.lectures.length, 0);
-  const quizzes = c.sections.reduce((a, s) => a + s.lectures.filter((l) => l.hasQuiz).length, 0);
+/** Featured course: a buying summary on the left, the curriculum as three stages on the right, with real lab screens. */
+export function CoursePath({ c, labShots }: { c: CourseDetail; labShots: Shot[] }) {
+  const f = courseFacts(c);
+  const preview = f.previews[0];
   const route = stages(c.sections);
-  const facts = [
-    plural(lessons, "video lesson"),
-    `${hours(c.totalDurationSec)} in total`,
-    c.resourceCount ? plural(c.resourceCount, "lab download") : null,
-    quizzes ? plural(quizzes, "quiz", "quizzes") : null,
-    "Certificate when you finish",
-  ].filter(Boolean) as string[];
+  const facts: [typeof Clock, string][] = [
+    [PlaySquare, plural(f.lessons, "video lesson")],
+    [Clock, `${hours(c.totalDurationSec)} of video`],
+    ...(f.labs ? [[FlaskConical, plural(f.labs, "lab download")] as [typeof Clock, string]] : []),
+    ...(f.quizzes ? [[ListChecks, plural(f.quizzes, "short quiz", "short quizzes")] as [typeof Clock, string]] : []),
+    [Award, "Certificate when you finish"],
+  ];
 
   return (
-    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews}>
-      <section aria-labelledby="path-title" className="container-x pt-16 md:pt-20" data-testid="course-path">
-        <h2 id="path-title" className="max-w-3xl font-display text-[clamp(1.5rem,2.6vw,2.1rem)] font-extrabold text-ink">
-          One course, from the first idea to agents in production
-        </h2>
-        <p className="mt-2 max-w-2xl text-ink-2">
-          {route.length > 1 ? `${plural(c.sections.length, "section")} in the order you need them. Watch a free lesson before you decide.` : "Watch a free lesson before you decide."}
-        </p>
-
-        <div className="mt-9 grid items-center gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-14">
-          <div className="relative overflow-hidden rounded-panel ring-1 ring-line">
-            <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} size="lg" className="!rounded-none" />
-            {previews[0] ? (
-              <PreviewButton lectureId={previews[0].id} className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-[#141833]/90 py-1.5 pl-1.5 pr-3.5 text-sm font-bold text-white shadow-float transition-colors hover:bg-[#141833]">
-                <PlayCircle className="size-6" aria-hidden="true" />
-                <span>Free lesson<span className="sr-only">: {previews[0].title}</span>{previews[0].durationSec ? <span className="font-normal text-white/75">, {clock(previews[0].durationSec)}</span> : null}</span>
-              </PreviewButton>
-            ) : null}
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-display text-[clamp(1.4rem,2.4vw,1.9rem)] font-extrabold leading-tight text-ink">
-              <Link href={`/courses/${c.slug}`} className="hover:text-violet">{c.title}</Link>
-            </h3>
-            {c.subtitle ? <p className="mt-3 text-lg text-ink-2">{c.subtitle}</p> : null}
-            <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-ink-2" aria-label="What the course includes">
-              {facts.map((f) => <li key={f}>{f}</li>)}
-            </ul>
-            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Price cents={c.priceCents} currency={c.currency} className="text-3xl" />
-              <div className="flex flex-wrap gap-2">
-                <Link href={`/courses/${c.slug}`} className="btn btn-primary" data-testid="path-view-course">View the course</Link>
-                {previews[0] ? <PreviewButton lectureId={previews[0].id} className="btn btn-outline"><PlayCircle className="size-4" aria-hidden="true" />Watch a free lesson</PreviewButton> : null}
+    <section aria-labelledby="path-title" className="container-x pt-16 md:pt-24" data-testid="course-path">
+      <div className="grid gap-10 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-14 xl:grid-cols-[380px_minmax(0,1fr)] xl:gap-20">
+        {/* Buying summary */}
+        <aside className="lg:sticky lg:top-24 lg:self-start" aria-label="Course summary">
+          <div className="panel overflow-hidden shadow-lift">
+            <div className="relative">
+              <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} className="!rounded-none" />
+              {preview ? (
+                <PreviewButton lectureId={preview.id} className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-[#141833]/90 py-1.5 pl-1.5 pr-3.5 text-sm font-bold text-white shadow-float transition-colors hover:bg-[#141833]">
+                  <PlayCircle className="size-6" aria-hidden="true" />
+                  <span>Free lesson<span className="sr-only">: {preview.title}</span>{preview.durationSec ? <span className="font-normal text-white/75">, {clock(preview.durationSec)}</span> : null}</span>
+                </PreviewButton>
+              ) : null}
+            </div>
+            <div className="p-5">
+              <h3 className="font-display text-lg font-bold leading-snug text-ink">
+                <Link href={`/courses/${c.slug}`} className="hover:text-violet">{c.title}</Link>
+              </h3>
+              <p className="mt-1.5 text-sm text-muted">
+                By <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-ink-2 hover:text-violet">{c.instructor.name}</Link>
+              </p>
+              {c.ratingCount ? <div className="mt-2"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div> : null}
+              <ul className="mt-4 space-y-2 border-t border-line pt-4 text-sm text-ink-2" aria-label="What the course includes">
+                {facts.map(([I, t]) => <li key={t} className="flex items-center gap-2.5"><I className="size-4 shrink-0 text-muted" aria-hidden="true" />{t}</li>)}
+              </ul>
+              <div className="mt-5 flex items-baseline justify-between gap-3 border-t border-line pt-4">
+                <Price cents={c.priceCents} currency={c.currency} className="text-2xl" />
+                <span className="text-xs text-muted">One-time price, lifetime access</span>
+              </div>
+              <div className="mt-4 grid gap-2">
+                <Link href={`/courses/${c.slug}`} className="btn btn-primary w-full" data-testid="path-view-course">View the course</Link>
+                {preview ? <PreviewButton lectureId={preview.id} className="btn btn-outline w-full"><PlayCircle className="size-4" aria-hidden="true" />Watch a free lesson</PreviewButton> : null}
               </div>
             </div>
-            <p className="mt-5 text-sm text-muted">
-              Taught by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-ink-2 hover:text-violet">{c.instructor.name}</Link>
-              {c.updatedAt ? <>, updated {date(c.updatedAt)}</> : null}
-            </p>
+          </div>
+        </aside>
+
+        {/* Curriculum as stages */}
+        <div className="min-w-0">
+          <p className="eyebrow">Featured course</p>
+          <h2 id="path-title" className="h-section mt-2 max-w-2xl">One course, from the first idea to agents in production</h2>
+          <p className="mt-3 max-w-2xl text-ink-2">
+            {plural(c.sections.length, "section")} in the order you need them: understand the ideas, build them in labs, then automate the work you already do.
+          </p>
+
+          <ol className="mt-8 divide-y divide-line border-y border-line" aria-label="Course route">
+            {route.map((st, k) => {
+              const lessons = st.sections.reduce((a, x) => a + x.s.lectures.length, 0);
+              const secs = st.sections.reduce((a, x) => a + seconds(x.s), 0);
+              return (
+                <li key={st.name} className="grid gap-x-10 gap-y-4 py-7 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[230px_minmax(0,1fr)]">
+                  <div>
+                    <p className={`text-xs font-bold tabular-nums ${st.lab ? "text-cyan-ink" : "text-muted"}`}>Stage {k + 1}</p>
+                    <h3 className="mt-1 flex items-center gap-2 font-display text-lg font-bold text-ink">
+                      {st.name}{st.lab ? <FlaskConical className="size-4 text-cyan" aria-hidden="true" /> : null}
+                    </h3>
+                    <p className="mt-1 text-sm text-ink-2">{st.sub}</p>
+                    <p className="mt-2 text-xs text-muted">{plural(lessons, "lesson")}, {hours(secs)}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <ol className={`grid gap-x-8 ${st.sections.length > 4 ? "sm:grid-cols-2" : ""}`}>
+                      {st.sections.map((x) => (
+                        <li key={x.s.id} className="flex items-baseline gap-3 border-b border-dashed border-line py-2 text-[0.95rem] last:border-b-0 sm:[&:nth-last-child(2):nth-child(odd)]:border-b-0">
+                          <span className={`w-5 shrink-0 text-right text-xs font-bold tabular-nums ${x.lab ? "text-cyan-ink" : "text-muted"}`}>{x.n}</span>
+                          <span className="min-w-0 flex-1 text-ink">{x.lab ? <span className="sr-only">Lab: </span> : null}{sectionTitle(x.s, x.lab)}</span>
+                          <span className="shrink-0 text-xs tabular-nums text-muted">{hours(seconds(x.s))}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {st.lab && labShots.length ? (
+                      <ul className="mt-5 grid gap-4 sm:grid-cols-3" aria-label="Screens from the labs">
+                        {labShots.map((s) => (
+                          <li key={s.key}>
+                            <figure>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={s.src} alt={s.alt} loading="lazy" className="aspect-video w-full rounded-lg object-cover object-left-top ring-1 ring-line" />
+                              <figcaption className="mt-2 text-sm leading-snug text-ink-2">
+                                {s.lesson.title.replace(/\s*\(live\)\s*$/i, "")}
+                                <span className="text-muted">, {clock(s.lesson.durationSec)}</span>
+                              </figcaption>
+                            </figure>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <p className="flex items-center gap-2 text-muted"><BookOpenCheck className="size-4" aria-hidden="true" />Labs run on your own computer or cloud account with the downloadable files.</p>
+            <Link href={`/courses/${c.slug}#curriculum`} className="link">See every lesson</Link>
           </div>
         </div>
-
-        {/* A stage with many sections takes two columns, so the columns end at about the same height. */}
-        <ol className="mt-12 grid gap-x-10 gap-y-10 border-t border-line pt-10 md:grid-cols-2 lg:grid-cols-4" aria-label="Course route">
-          {route.map((st) => {
-            const wide = st.sections.length > 6;
-            const half = Math.ceil(st.sections.length / 2);
-            const parts = wide ? [st.sections.slice(0, half), st.sections.slice(half)] : [st.sections];
-            return (
-              <li key={st.name} className={`min-w-0 ${wide || route.length === 1 ? "md:col-span-2" : ""}`}>
-                <h3 className="font-display text-xl font-extrabold text-ink">{st.name}</h3>
-                {st.sub ? <p className="mt-1 max-w-md text-sm text-ink-2">{st.sub}</p> : null}
-                <div className={`mt-4 grid gap-x-10 ${parts.length > 1 ? "sm:grid-cols-2" : ""}`}>
-                  {parts.map((part, i) => (
-                    <ol key={i} start={part[0]?.n} className="relative before:absolute before:bottom-6 before:left-4 before:top-6 before:w-px before:bg-line-strong">
-                      {part.map((x) => <Stop key={x.s.id} {...x} />)}
-                    </ol>
-                  ))}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-        <p className="mt-6 text-sm text-muted">
-          Sections in <span className="font-bold text-cyan-ink">cyan</span> with <FlaskConical className="inline size-4 align-[-2px] text-cyan" aria-label="the flask" /> are labs: you run them on your own computer or cloud account with the downloadable files.
-        </p>
-      </section>
-    </PreviewProvider>
+      </div>
+    </section>
   );
 }

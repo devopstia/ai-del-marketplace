@@ -1,0 +1,28 @@
+# Isolated PREVIEW stack for a feature branch (own database, Redis, MinIO, API and web; nothing shared with the main stack).
+#   ./scripts/preview.sh up | seed | down | destroy
+# Ports: web 3100, api 4100, postgres 5533, redis 6480, minio 9100/9101 (all on 127.0.0.1).
+# The preview uses the host name "localhost" so its session cookie never collides with the main stack on 127.0.0.1.
+x-preview-env: &preview-env
+  WEB_URL: http://localhost:3100
+  API_URL: http://localhost:4100
+  S3_PUBLIC_ENDPOINT: http://localhost:9100
+
+services:
+  postgres:
+    ports: !override ["127.0.0.1:5533:5432"]
+  redis:
+    ports: !override ["127.0.0.1:6480:6379"]
+  minio:
+    ports: !override ["127.0.0.1:9100:9000", "127.0.0.1:9101:9001"]
+  api:
+    environment: *preview-env
+    ports: !override ["127.0.0.1:4100:4000"]
+  worker:
+    environment: *preview-env
+  web:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4100/api
+    environment:
+      WEB_URL: http://localhost:3100
+    ports: !override ["127.0.0.1:3100:3000"]

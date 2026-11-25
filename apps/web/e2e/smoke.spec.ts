@@ -96,6 +96,17 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page.getByTestId("video-player")).toBeVisible();
     await expect.poll(() => page.locator("video").getAttribute("src")).toContain("http");
     await expect(page.getByRole("navigation", { name: "Course content" }).first()).toBeAttached();
+    // Owner rule: captions are off until the learner turns them on, and the choice is remembered.
+    const cc = page.getByRole("button", { name: "Captions" });
+    if (await cc.count()) {
+      await expect(cc).toHaveAttribute("aria-pressed", "false");
+      await expect.poll(() => page.locator("video").evaluate((v: HTMLVideoElement) => v.textTracks[0]?.mode)).not.toBe("showing");
+      await cc.click();
+      await expect(cc).toHaveAttribute("aria-pressed", "true");
+      await page.reload();
+      await expect(page.getByRole("button", { name: "Captions" })).toHaveAttribute("aria-pressed", "true");
+      await page.getByRole("button", { name: "Captions" }).click(); // leave the default for other tests
+    }
   });
   test("refund from the receipt (within 14 days, little watched)", async ({ page }) => {
     await login(page, email, password, "/orders");

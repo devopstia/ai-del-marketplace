@@ -125,9 +125,11 @@
   --color-stage: var(--stage);
   --font-display: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
-  --radius-panel: 22px;
-  --radius-tile: 14px;
-  --radius-control: 10px;
+  /* Premium redesign (2026-11-24): tighter radii and one notch lighter display weight; "extrabold" renders at 700. */
+  --radius-panel: 16px;
+  --radius-tile: 12px;
+  --radius-control: 9px;
+  --font-weight-extrabold: 700;
   --shadow-lift: 0 1px 2px hsl(var(--shadow-color) / 0.06), 0 8px 24px -12px hsl(var(--shadow-color) / 0.22);
   --shadow-float: 0 2px 4px hsl(var(--shadow-color) / 0.06), 0 24px 48px -20px hsl(var(--shadow-color) / 0.35);
 }
@@ -202,9 +204,13 @@ p { text-wrap-style: pretty; }
   }
   .link { color: var(--violet); font-weight: 700; text-underline-offset: 3px; }
   .link:hover { text-decoration: underline; }
-  .container-x { width: 100%; max-width: 1320px; margin-inline: auto; padding-inline: 1rem; }
+  .container-x { width: 100%; max-width: 1440px; margin-inline: auto; padding-inline: 1rem; }
   @media (min-width: 640px) { .container-x { padding-inline: 1.5rem; } }
-  @media (min-width: 1024px) { .container-x { padding-inline: 2rem; } }
+  @media (min-width: 1024px) { .container-x { padding-inline: 2.5rem; } }
+
+  /* Section heading scale shared by marketing pages. */
+  .h-section { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.45rem, 2.1vw, 1.85rem); line-height: 1.15; letter-spacing: -0.02em; color: var(--ink); }
+  .eyebrow { font-size: .8125rem; font-weight: 700; letter-spacing: .02em; color: var(--violet); }
 
   .prose-del { max-width: 70ch; color: var(--ink-2); }
   .prose-del p { margin-block: .8em; }
@@ -221,6 +227,11 @@ p { text-wrap-style: pretty; }
 @keyframes loop-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .loop-token { offset-rotate: 0deg; animation: loop-travel 18s linear infinite; }
 .loop-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: loop-draw 1.6s cubic-bezier(.6,.1,.2,1) forwards; }
+
+/* Hero slides cross-fade; reduced motion turns the fade off (see below). */
+@keyframes slide-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes hero-progress { from { width: 0%; } to { width: 100%; } }
+.slide-in { animation: slide-in .45s cubic-bezier(.2,.7,.2,1) both; }
 
 @keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
 .pop-in { animation: pop-in .18s ease-out; }

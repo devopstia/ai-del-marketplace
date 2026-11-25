@@ -8,7 +8,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "./AuthProvider";
 import { Avatar } from "./Avatar";
 
-function SearchBox({ className = "", onDone }: { className?: string; onDone?: () => void }) {
+function SearchBox({ className = "", onDone, autoFocus = false }: { className?: string; onDone?: () => void; autoFocus?: boolean }) {
   const router = useRouter();
   const [q, setQ] = useState("");
   return (
@@ -26,9 +26,10 @@ function SearchBox({ className = "", onDone }: { className?: string; onDone?: ()
         value={q}
         onChange={(e) => setQ(e.target.value)}
         type="search"
+        autoFocus={autoFocus}
         aria-label="Search courses"
         placeholder="Search Kubernetes, MCP agents, Bedrock…"
-        className="h-11 w-full rounded-full border-[1.5px] border-line bg-surface-2 pl-10 pr-4 text-[0.95rem] text-ink placeholder:text-muted focus:border-violet focus:bg-surface focus:outline-none"
+        className="h-11 w-full rounded-control border border-line bg-surface-2 pl-10 pr-4 text-[0.95rem] text-ink placeholder:text-muted focus:border-violet focus:bg-surface focus:outline-none"
       />
     </form>
   );
@@ -92,6 +93,7 @@ function UserMenu() {
 export function SiteHeader() {
   const { me, loading, cartCount, has } = useAuth();
   const [mobile, setMobile] = useState(false);
+  const [find, setFind] = useState(false);
   const pathname = usePathname();
   const teachHref = has("instructor") ? "/studio" : "/teach";
   const nav = "rounded-lg px-3 py-2 text-[0.92rem] font-bold text-ink-2 hover:bg-surface-2 hover:text-ink";
@@ -104,13 +106,16 @@ export function SiteHeader() {
         <nav className="ml-2 hidden items-center lg:flex" aria-label="Main">
           <Link href="/courses" className={`${nav} ${active("/courses")}`}>Browse courses</Link>
         </nav>
-        <SearchBox className="mx-2 hidden max-w-md flex-1 md:block" />
+        <SearchBox className="mx-2 hidden max-w-xl flex-1 md:block lg:mx-4" />
         <div className="ml-auto flex items-center gap-1">
           <nav className="hidden items-center lg:flex" aria-label="Account">
             <Link href={teachHref} className={nav}>{has("instructor") ? "Studio" : "Teach on DEL"}</Link>
             {has("admin") ? <Link href="/admin" className={nav}>Admin</Link> : null}
             {me ? <Link href="/my-learning" className={`${nav} ${active("/my-learning")}`}>My learning</Link> : null}
           </nav>
+          <button type="button" className="btn btn-ghost btn-sm !px-2.5 md:hidden" aria-label="Search courses" aria-expanded={find} onClick={() => setFind((f) => !f)}>
+            <Search className="size-[19px]" />
+          </button>
           <ThemeToggle className="hidden sm:inline-flex" />
           <Link href="/cart" className="btn btn-ghost btn-sm relative !px-2.5" aria-label={`Cart, ${cartCount} items`}>
             <ShoppingCart className="size-[19px]" />
@@ -124,8 +129,8 @@ export function SiteHeader() {
             <UserMenu />
           ) : (
             <div className="hidden items-center gap-2 sm:flex">
-              <Link href="/login" className="btn btn-ghost btn-sm">Log in</Link>
-              <Link href="/register" className="btn btn-primary btn-sm">Join free</Link>
+              <Link href="/login" className="btn btn-outline btn-sm">Log in</Link>
+              <Link href="/register" className="btn btn-primary btn-sm">Sign up</Link>
             </div>
           )}
           <button type="button" className="btn btn-ghost btn-sm !px-2.5 lg:hidden" aria-label="Open menu" aria-expanded={mobile} onClick={() => setMobile(true)}>
@@ -133,6 +138,11 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+      {find ? (
+        <div className="container-x pb-3 md:hidden">
+          <SearchBox onDone={() => setFind(false)} autoFocus />
+        </div>
+      ) : null}
       {mobile ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close menu" onClick={() => setMobile(false)} />
@@ -158,7 +168,7 @@ export function SiteHeader() {
             {!me ? (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Link href="/login" onClick={() => setMobile(false)} className="btn btn-outline">Log in</Link>
-                <Link href="/register" onClick={() => setMobile(false)} className="btn btn-primary">Join free</Link>
+                <Link href="/register" onClick={() => setMobile(false)} className="btn btn-primary">Sign up</Link>
               </div>
             ) : null}
           </div>

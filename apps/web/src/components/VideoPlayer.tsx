@@ -36,7 +36,14 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
   const [dur, setDur] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [muted, setMuted] = useState(false);
-  const [cc, setCc] = useState(true);
+  // Captions are off until the learner turns them on (owner rule); their choice is remembered in this browser.
+  const [cc, setCcState] = useState(false);
+  const setCc = (next: (c: boolean) => boolean) =>
+    setCcState((c) => {
+      const v = next(c);
+      try { localStorage.setItem("del-captions", v ? "on" : "off"); } catch { /* storage blocked */ }
+      return v;
+    });
   const [full, setFull] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
   const [idle, setIdle] = useState(false);
@@ -47,6 +54,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
       const s = Number(localStorage.getItem("del-speed"));
       // Restore the reader's preferred speed after mount (browser-only preference).
       if (SPEEDS.includes(s)) setSpeed(s);
+      if (localStorage.getItem("del-captions") === "on") setCcState(true);
     } catch { /* storage blocked */ }
   }, []);
   useEffect(() => {
@@ -54,8 +62,14 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
   }, [speed, src]);
   useEffect(() => {
     const el = v.current;
-    if (!el || !el.textTracks[0]) return;
-    el.textTracks[0].mode = cc ? "showing" : "hidden";
+    const track = el?.textTracks[0];
+    if (!track) return;
+    track.mode = cc ? "showing" : "hidden";
+    // Keep cues above the control bar instead of under it.
+    const lift = () => { for (const cue of Array.from(track.cues ?? [])) if ("line" in cue) (cue as VTTCue).line = -4; };
+    lift();
+    el.querySelector("track")?.addEventListener("load", lift);
+    return () => el.querySelector("track")?.removeEventListener("load", lift);
   }, [cc, captionsUrl, src]);
   useEffect(() => {
     const f = () => setFull(document.fullscreenElement === wrap.current);
@@ -153,7 +167,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
         onEnded={(e) => { setPlaying(false); onEnded?.(e.currentTarget.currentTime); }}
         onError={() => onError?.()}
       >
-        {captionsUrl ? <track kind="captions" src={captionsUrl} srcLang="en" label="English" default /> : null}
+        {captionsUrl ? <track kind="captions" src={captionsUrl} srcLang="en" label="English" /> : null}
       </video>
 
       {!playing && t === 0 ? (

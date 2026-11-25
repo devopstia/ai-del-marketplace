@@ -20,7 +20,7 @@ export function Logo({ href = "/", sub, compact = false }: { href?: string; sub?
     <Link href={href} className="group flex items-center gap-2.5 rounded-lg" aria-label="DevOps Easy Learning home">
       <LoopMark className="h-6 w-12 shrink-0" />
       <span className="flex flex-col leading-none">
-        <span className={`font-display font-extrabold tracking-[-0.02em] text-ink ${compact ? "whitespace-nowrap text-[0.95rem]" : "max-w-[7.5rem] text-[0.95rem] leading-[1.05] sm:max-w-none sm:whitespace-nowrap sm:text-[1.05rem]"}`}>DevOps Easy Learning</span>
+        <span className={`font-display font-extrabold tracking-[-0.02em] text-ink ${compact ? "whitespace-nowrap text-[0.95rem]" : "whitespace-nowrap text-[0.98rem] sm:text-[1.05rem]"}`}>DevOps Easy Learning</span>
         {sub ? <span className="mt-0.5 text-[0.72rem] font-bold text-muted">{sub}</span> : null}
       </span>
     </Link>
