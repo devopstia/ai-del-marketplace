@@ -98,3 +98,5 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 ## 2026-11-25: checkpoint before new work
 - Rollback point: tag `checkpoint-2026-11-25-start` = commit `bd57c5d` (`main`), backup branch `backup/main-2026-11-25`.
   Work continues on `feat/next-2026-11-25`. Restore any path with `git checkout checkpoint-2026-11-25-start -- <path>`.
+- 2026-11-25: /courses results in two columns (owner request). Rollback tag `checkpoint-2026-11-25-courses-grid` (= `e9c04ad`),
+  backup branch `backup/courses-grid-2026-11-25`. Screenshots in `docs/design/courses-grid-2026-11-25/`.

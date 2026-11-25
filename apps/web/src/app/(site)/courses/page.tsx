@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { getCategories, getCourses } from "@/lib/catalog";
-import { CourseResultRow } from "@/components/CourseViews";
+import { CourseResultCard } from "@/components/CourseViews";
 import { AutoSubmit } from "@/components/AutoSubmit";
 import { qs } from "@/lib/qs";
 
@@ -99,7 +99,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
           </div>
 
           {res.items.length ? (
-            <div className="divide-y divide-line">{res.items.map((c) => <CourseResultRow key={c.slug} c={c} />)}</div>
+            <div className="grid gap-x-8 gap-y-10 pt-6 sm:grid-cols-2">{res.items.map((c) => <CourseResultCard key={c.slug} c={c} />)}</div>
           ) : res.ok ? (
             <div className="py-20 text-center">
               <h2 className="font-display text-xl font-bold">No courses match these filters</h2>
