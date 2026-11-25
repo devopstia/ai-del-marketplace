@@ -146,6 +146,7 @@ model User {
   supportTickets    SupportTicket[]  @relation("TicketRequester")
   assignedTickets   SupportTicket[]  @relation("TicketAssignee")
   supportMessages   SupportMessage[] @relation("TicketMessageAuthor")
+  playbackSessions  PlaybackSession[]
 }
 
 model Session {
@@ -320,6 +321,19 @@ model VideoAsset {
 
   @@index([ownerId])
   @@map("video_assets")
+  /// Encrypted HLS rendition (content protection): none | queued | processing | ready | failed | unsupported.
+  hlsStatus     String    @default("none")
+  /// Random storage prefix of the segments (hls/<prefix>/seg_00000.ts): unguessable, new for every packaging run.
+  hlsPrefix     String?
+  /// The playlist with placeholders for the key URI and segment URLs (filled per playback session).
+  hlsPlaylist   String?
+  /// The 16-byte AES-128 key, wrapped with a key derived from SESSION_SECRET (never stored in the clear).
+  hlsKey        String?
+  hlsIv         String?
+  hlsError      String?
+  hlsAttempts   Int       @default(0)
+  hlsPackagedAt DateTime?
+  playbackSessions PlaybackSession[]
 }
 
 model Resource {
@@ -725,4 +739,23 @@ model SupportAttachment {
   createdAt  DateTime       @default(now())
 
   @@map("support_attachments")
+}
+
+/// One viewing of a protected video: binds the manifest and the key to one person, one video and a time window.
+/// `ref` is the short code shown in the moving watermark; a super admin can trace it to the account.
+model PlaybackSession {
+  id        String     @id @default(uuid())
+  ref       String     @unique
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetId   String
+  asset     VideoAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  lectureId String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime   @default(now())
+  expiresAt DateTime
+
+  @@index([userId, createdAt])
+  @@map("playback_sessions")
 }

@@ -2,6 +2,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Captions, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
 import { clock } from "@/lib/format";
+import { API_URL } from "@/lib/config";
 
 export interface PlayerHandle {
   video: HTMLVideoElement | null;
@@ -19,13 +20,15 @@ interface Props {
   onEnded?: (t: number) => void;
   onError?: () => void;
   overlay?: React.ReactNode;
+  /** Encrypted HLS: the playlist and key come from the API with the session cookie. */
+  protectedStream?: boolean;
 }
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
 /** Custom-control player over native <video>: speed, captions, ±10 s, fullscreen, keyboard shortcuts. */
 export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
-  { src, format, captionsUrl, startAt = 0, autoPlay = false, title, onTime, onPause, onEnded, onError, overlay },
+  { src, format, captionsUrl, startAt = 0, autoPlay = false, title, onTime, onPause, onEnded, onError, overlay, protectedStream = false },
   ref,
 ) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -36,17 +39,21 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
   const [dur, setDur] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [muted, setMuted] = useState(false);
-  const [cc, setCc] = useState(true);
+  // Captions are OFF until the learner turns them on (AGENTS.md rule 11); their own choice is remembered.
+  const [cc, setCc] = useState(false);
   const [full, setFull] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
   const [idle, setIdle] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onErrorRef = useRef(onError);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
 
   useEffect(() => {
     try {
       const s = Number(localStorage.getItem("del-speed"));
       // Restore the reader's preferred speed after mount (browser-only preference).
       if (SPEEDS.includes(s)) setSpeed(s);
+      if (localStorage.getItem("del-cc") === "on") setCc(true);
     } catch { /* storage blocked */ }
   }, []);
   useEffect(() => {
@@ -57,6 +64,10 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
     if (!el || !el.textTracks[0]) return;
     el.textTracks[0].mode = cc ? "showing" : "hidden";
   }, [cc, captionsUrl, src]);
+  const toggleCc = useCallback(() => setCc((c) => {
+    try { localStorage.setItem("del-cc", c ? "off" : "on"); } catch { /* storage blocked */ }
+    return !c;
+  }), []);
   useEffect(() => {
     const f = () => setFull(document.fullscreenElement === wrap.current);
     document.addEventListener("fullscreenchange", f);
@@ -65,20 +76,26 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
 
   // HLS (Mux): Safari plays it natively; elsewhere attach hls.js on demand.
   const isHls = format === "hls" || /\.m3u8(\?|$)/.test(src);
+  // Protected streams prefer hls.js (it sends the session cookie only to our API, never to storage); native HLS is the fallback.
   useEffect(() => {
     const el = v.current;
-    if (!el || !isHls || el.canPlayType("application/vnd.apple.mpegurl")) return;
+    if (!el || !isHls) return;
+    const native = !!el.canPlayType("application/vnd.apple.mpegurl");
+    if (native && !protectedStream) return;
     let destroyed = false;
     let hls: { destroy: () => void } | null = null;
+    const apiOrigin = new URL(API_URL).origin;
     void import("hls.js").then(({ default: Hls }) => {
-      if (destroyed || !Hls.isSupported()) return;
-      const h = new Hls();
+      if (destroyed) return;
+      if (!Hls.isSupported()) { if (native) el.src = src; return; }
+      const h = new Hls({ xhrSetup: (xhr, url) => { xhr.withCredentials = url.startsWith(apiOrigin); } });
+      h.on(Hls.Events.ERROR, (_e, d) => { if (d.fatal) onErrorRef.current?.(); });
       h.loadSource(src);
       h.attachMedia(el);
       hls = h;
     });
     return () => { destroyed = true; hls?.destroy(); };
-  }, [src, isHls]);
+  }, [src, isHls, protectedStream]);
 
   const toggle = useCallback(() => {
     const el = v.current;
@@ -110,7 +127,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
     else if (k === "arrowright" || k === "l") { e.preventDefault(); seek(k === "l" ? 10 : 5); }
     else if (k === "f") fullscreen();
     else if (k === "m") setMuted((m) => !m);
-    else if (k === "c") setCc((c) => !c);
+    else if (k === "c") toggleCc();
     poke();
   }
 
@@ -125,7 +142,9 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
       aria-label={title ? `Video player: ${title}` : "Video player"}
       onKeyDown={onKey}
       onMouseMove={poke}
+      onContextMenu={protectedStream ? (e) => e.preventDefault() : undefined}
       data-testid="video-player"
+      data-protected={protectedStream ? "true" : undefined}
     >
       <video
         ref={v}
@@ -133,6 +152,9 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
         src={isHls ? undefined : src}
         className="size-full"
         playsInline
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture={protectedStream}
+        disableRemotePlayback={protectedStream}
         autoPlay={autoPlay}
         muted={muted}
         crossOrigin={captionsUrl ? "anonymous" : undefined}
@@ -141,6 +163,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
           const el = e.currentTarget;
           setDur(el.duration || 0);
           el.playbackRate = speed;
+          if (el.textTracks[0]) el.textTracks[0].mode = cc ? "showing" : "hidden";
           if (startAt > 0 && startAt < (el.duration || Infinity) - 2) el.currentTime = startAt;
         }}
         onTimeUpdate={(e) => {
@@ -153,7 +176,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
         onEnded={(e) => { setPlaying(false); onEnded?.(e.currentTarget.currentTime); }}
         onError={() => onError?.()}
       >
-        {captionsUrl ? <track kind="captions" src={captionsUrl} srcLang="en" label="English" default /> : null}
+        {captionsUrl ? <track kind="captions" src={captionsUrl} srcLang="en" label="English" /> : null}
       </video>
 
       {!playing && t === 0 ? (
@@ -163,6 +186,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
           </span>
         </button>
       ) : null}
+
 
       {overlay}
 
@@ -207,7 +231,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
             ) : null}
           </div>
           {captionsUrl ? (
-            <button type="button" className={`${ctl} ${cc ? "bg-white/15" : ""}`} onClick={() => setCc((c) => !c)} aria-pressed={cc} aria-label="Captions">
+            <button type="button" className={`${ctl} ${cc ? "bg-white/15" : ""}`} onClick={toggleCc} aria-pressed={cc} aria-label="Captions">
               <Captions className="size-5" />
             </button>
           ) : null}

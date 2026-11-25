@@ -22,6 +22,10 @@ import { PayoutsService } from '../src/commerce/payouts.service';
 import { RefundsService } from '../src/commerce/refunds.service';
 import { simulatedStripeFee, splitLine, splitOrder } from '../src/commerce/money';
 import { AuditService } from '../src/common/audit.service';
+import { StorageService } from '../src/common/storage.service';
+import { packageHls } from '../src/protection/hls-packager';
+import { createDecipheriv } from 'node:crypto';
+import { tmpdir } from 'node:os';
 
 const API_DIR = join(__dirname, '..');
 const ROOT_ENV = join(API_DIR, '..', '..', '.env');
@@ -692,5 +696,63 @@ describe('e2e: buy and learn', () => {
     for (let i = 0; i < 3; i++) await sam.send('post', '/api/support/tickets', { subject: `Question number ${i}`, category: 'other', description: 'A question about the platform.' }).expect(201);
     expect((await sam.send('post', '/api/support/tickets', { subject: 'One too many', category: 'other', description: 'A question about the platform.' }).expect(429)).body.error.code).toBe('too_many_tickets');
     expect(await prisma.auditLog.count({ where: { action: { in: ['support.ticket_opened', 'support.reply', 'support.resolve', 'support.ticket_updated'] } } })).toBeGreaterThan(4);
+  });
+
+  it('content protection: encrypted HLS through a session bound to the learner, key and playlist refused to others', async () => {
+    if (!available) return;
+    let ffmpeg = true;
+    try { execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); } catch { ffmpeg = false; }
+    if (!ffmpeg) return console.warn('[e2e] content protection skipped: ffmpeg not installed');
+    const teacher = await userAgent('cp-teacher@e2e.example', ['student', 'instructor'], {});
+    const buyer = await userAgent('cp-buyer@e2e.example', ['student']);
+    const other = await userAgent('cp-other@e2e.example', ['student']);
+    const { course, lecture } = await publishedCourse(teacher.user.id, 'cp-course', 1999);
+    await prisma.enrollment.create({ data: { userId: buyer.user.id, courseId: course.id, source: 'free' } });
+
+    // A real 6-second H.264/AAC video, packaged exactly as the worker does it.
+    const file = join(tmpdir(), `cp-${Date.now()}.mp4`);
+    execFileSync('ffmpeg', ['-v', 'error', '-f', 'lavfi', '-i', 'testsrc=size=320x180:rate=25', '-f', 'lavfi', '-i', 'sine=frequency=440', '-t', '6', '-c:v', 'libx264', '-g', '50', '-c:a', 'aac', '-shortest', '-y', file]);
+    const storage = app.get(StorageService);
+    const assetRow = await prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id }, select: { videoAssetId: true } });
+    const key = `videos/cp-${Date.now()}/source.mp4`;
+    await storage.put(key, readFileSync(file), 'video/mp4');
+    await prisma.videoAsset.update({ where: { id: assetRow.videoAssetId! }, data: { storageKey: key, durationSec: 6 } });
+    const p = await packageHls(await storage.presignInternalGet(key, 600), (k, body) => storage.put(k, body, 'video/mp2t'));
+    expect(p.segments).toBeGreaterThanOrEqual(2);
+    await prisma.videoAsset.update({ where: { id: assetRow.videoAssetId! }, data: { hlsStatus: 'ready', hlsPrefix: p.prefix, hlsPlaylist: p.playlist, hlsKey: p.keyWrapped, hlsIv: p.ivHex } });
+    expect(p.playlist).not.toContain(p.prefix); // the storage prefix never reaches the browser
+
+    // The enrolled learner gets a session, not a file link.
+    const pb = await buyer.send('post', `/api/lectures/${lecture.id}/playback`).expect(200);
+    expect(pb.body).toMatchObject({ format: 'hls', protected: true });
+    expect(pb.body.watermark).toBeUndefined();
+    expect(pb.body.url).toMatch(/\/api\/playback\/[0-9a-f-]{36}\/index\.m3u8$/);
+    const path = new URL(pb.body.url).pathname;
+    const sid = path.split('/')[3];
+
+    // Playlist: only for its owner; key URI on the API; segments are signed links that never expose the original.
+    await request(app.getHttpServer()).get(path).expect(401);
+    await other.agent.get(path).expect(404);
+    const m = await buyer.agent.get(path).expect(200);
+    expect(m.headers['content-type']).toContain('application/vnd.apple.mpegurl');
+    expect(m.headers['cache-control']).toContain('no-store');
+    expect(m.text).toContain(`#EXT-X-KEY:METHOD=AES-128,URI="http://127.0.0.1:4000/api/playback/${sid}/key",IV=0x${p.ivHex}`);
+    const seg = m.text.split('\n').find((l) => l.startsWith('http'))!;
+    expect(seg).toContain('X-Amz-Signature=');
+    expect(seg).not.toContain('source.mp4');
+
+    // Key: 16 bytes for the owner only; it decrypts a real MPEG-TS segment (sync byte 0x47), which is unreadable without it.
+    await other.agent.get(`/api/playback/${sid}/key`).expect(404);
+    const k = await buyer.agent.get(`/api/playback/${sid}/key`).buffer(true).parse((res, cb) => { const chunks: Buffer[] = []; res.on('data', (c: Buffer) => chunks.push(c)); res.on('end', () => cb(null, Buffer.concat(chunks))); }).expect(200);
+    expect((k.body as Buffer).length).toBe(16);
+    const enc = Buffer.from(await (await fetch(seg)).arrayBuffer());
+    expect(enc[0]).not.toBe(0x47);
+    const d = createDecipheriv('aes-128-cbc', k.body as Buffer, Buffer.from(p.ivHex, 'hex'));
+    expect(Buffer.concat([d.update(enc), d.final()])[0]).toBe(0x47);
+
+    // An expired session stops working; previews and not-yet-packaged videos keep the signed MP4.
+    await prisma.playbackSession.update({ where: { id: sid }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    await buyer.agent.get(path).expect(404);
+    await buyer.agent.get(`/api/playback/${sid}/key`).expect(404);
   });
 });

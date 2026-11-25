@@ -168,3 +168,7 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - 6 installable app: branch `feat/pwa`, rollback tag `checkpoint-2026-11-25-pwa`. docs/PWA.md, AGENTS.md rule 18.
 - 8 Support Center: branch `feat/support` (from `feat/pwa`). docs/SUPPORT.md. Tickets SUP-000123, plain text, private
   attachments, staff queue with internal notes, auto-close after 7 days, reopen within 30, only super admins close directly.
+- 4 Content protection: branch `feat/content-protection` (from `feat/support`); rollback tag
+  `checkpoint-2026-11-25-content-protection` = `c31fa05`, branch `backup/before-content-protection`. Encrypted HLS
+  (ffmpeg copy, AES-128 per video, wrapped key), sessions bound to the learner, no visible watermark (owner:
+  no letters on videos), signed-MP4 fallback; `PROTECTED_PLAYBACK` switch. Also fixed: captions were on by default (rule 11). docs/CONTENT_PROTECTION.md.

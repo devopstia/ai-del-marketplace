@@ -339,3 +339,23 @@ test.describe.serial("support center", () => {
   });
 });
 
+test.describe("content protection", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+  test("an enrolled learner watches encrypted video with no file link and nothing written on it", async ({ page }) => {
+    const mp4: string[] = [];
+    page.on("request", (r) => { if (/\.mp4(\?|$)/.test(r.url())) mp4.push(r.url()); });
+    await login(page, USERS.student, PASSWORD, "/my-learning");
+    const href = await page.locator('a[href^="/learn/"]').first().getAttribute("href");
+    const key = page.waitForResponse((r) => r.url().endsWith("/key") && r.status() === 200);
+    await page.goto(href!);
+    const player = page.getByTestId("video-player");
+    await expect(player).toHaveAttribute("data-protected", "true");
+    await expect(page.getByTestId("video-watermark")).toHaveCount(0);
+    await key;
+    await expect.poll(() => page.evaluate(() => document.querySelector<HTMLVideoElement>("[data-testid=video-player] video")!.readyState), { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+    expect(mp4).toEqual([]);
+    // Captions stay off until the learner turns them on (rule 11).
+    await expect(page.getByRole("button", { name: "Captions" })).toHaveAttribute("aria-pressed", "false");
+  });
+});
+

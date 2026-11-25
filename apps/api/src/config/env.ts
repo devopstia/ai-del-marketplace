@@ -11,6 +11,12 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
   SESSION_SECRET: z.string().min(16),
+  /** Content protection: encrypted HLS for enrolled learners (owner 2026-11-25). "false" falls back to signed MP4 links. */
+  PROTECTED_PLAYBACK: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
+  /** HLS segment target length; with copy (no re-encode) a segment is never shorter than the source's keyframe spacing. */
+  HLS_SEGMENT_SECONDS: z.coerce.number().int().min(2).max(10).default(4),
+  /** Re-encode video to 2-second keyframes while packaging: faster start on slow links, more CPU, small quality cost. */
+  HLS_REENCODE: z.string().default('false').transform((v) => v === 'true' || v === '1'),
   WEB_URL: z.string().url().default('http://127.0.0.1:3000'),
   API_URL: z.string().url().default('http://127.0.0.1:4000'),
   S3_ENDPOINT: z.string().url().default('http://127.0.0.1:9000'),

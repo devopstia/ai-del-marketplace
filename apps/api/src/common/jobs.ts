@@ -36,6 +36,17 @@ export class JobsService {
     });
   }
 
+  /** Content protection: package a ready video as encrypted HLS. One queued job per asset at a time. */
+  async packageHls(assetId: string) {
+    await this.media.add('package-hls', { assetId } satisfies ProcessVideoJob, {
+      jobId: `hls-${assetId}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 30_000 },
+      removeOnComplete: true,
+      removeOnFail: true,
+    });
+  }
+
   /** Retry reading an order's Stripe fee until Stripe has created the balance transaction (about 2 h of retries). */
   async settleFee(orderId: string) {
     try {

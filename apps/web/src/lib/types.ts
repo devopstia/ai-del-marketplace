@@ -199,6 +199,8 @@ export interface Playback {
   expiresAt?: string;
   captionsUrl?: string | null;
   positionSec?: number;
+  /** Encrypted HLS through a playback session (content protection). */
+  protected?: boolean;
 }
 
 export interface ResourceItem {
