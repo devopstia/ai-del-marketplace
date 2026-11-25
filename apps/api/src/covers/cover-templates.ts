@@ -1,0 +1,71 @@
+/**
+ * The DEL course cover collection (owner brief 2026-11-25). Every template is a combination of one layout, one brand palette
+ * and one topic motif, drawn by cover-render.ts with the site's own font. These are the built-in templates; they are seeded
+ * into the `cover_templates` table, where a super admin can rename, recolour, re-tag, reorder, activate or deactivate them and
+ * add new ones made from the same layouts, palettes and motifs.
+ */
+
+export const LAYOUTS = ['statement', 'split', 'band', 'frame', 'spotlight', 'column'] as const;
+export type Layout = (typeof LAYOUTS)[number];
+
+export const MOTIFS = ['loop', 'pipeline', 'neural', 'cloud', 'hexgrid', 'terminal', 'shield', 'graph', 'orbit', 'matrix'] as const;
+export type Motif = (typeof MOTIFS)[number];
+
+export interface Palette {
+  /** Two background stops (diagonal gradient). */
+  bg: [string, string];
+  /** Title colour. */
+  ink: string;
+  /** Main and second accent: motif, label, DEL mark. */
+  a: string;
+  b: string;
+  /** Dark or light ground: decides label and mark colours. */
+  tone: 'dark' | 'light';
+}
+
+export const PALETTES = {
+  midnight: { bg: ['#141833', '#231c63'], ink: '#f2f1ff', a: '#9d8fff', b: '#58c3f2', tone: 'dark' },
+  ocean: { bg: ['#0a2033', '#0f3b57'], ink: '#eef8ff', a: '#58c3f2', b: '#8ee0c4', tone: 'dark' },
+  aurora: { bg: ['#130f30', '#33165a'], ink: '#f7f0ff', a: '#b89cff', b: '#ff9ec2', tone: 'dark' },
+  forest: { bg: ['#0a1d18', '#0f3a2c'], ink: '#ecfff6', a: '#3fcf92', b: '#58c3f2', tone: 'dark' },
+  ember: { bg: ['#1c1123', '#40192f'], ink: '#fff3ee', a: '#ff9e7a', b: '#f2b53c', tone: 'dark' },
+  steel: { bg: ['#0f1626', '#1e2a40'], ink: '#eef3ff', a: '#93c5fd', b: '#9d8fff', tone: 'dark' },
+  ice: { bg: ['#eaf4fb', '#d8e8f6'], ink: '#141833', a: '#4f3fb0', b: '#1279b8', tone: 'light' },
+  lilac: { bg: ['#f5f3ff', '#e6e1fb'], ink: '#141833', a: '#4f3fb0', b: '#c23a6e', tone: 'light' },
+  sand: { bg: ['#fbf6ec', '#f1e6cf'], ink: '#24180a', a: '#8a5a06', b: '#4f3fb0', tone: 'light' },
+} as const satisfies Record<string, Palette>;
+export type PaletteKey = keyof typeof PALETTES;
+
+export interface TemplateDef {
+  key: string;
+  name: string;
+  layout: Layout;
+  palette: PaletteKey;
+  motif: Motif;
+  /** Topics it suits; the picker suggests these first and existing courses are matched by them. */
+  topics: string[];
+}
+
+export const BUILT_IN_TEMPLATES: TemplateDef[] = [
+  { key: 'loop-midnight', name: 'Loop', layout: 'statement', palette: 'midnight', motif: 'loop', topics: ['devops', 'ai-for-devops', 'general'] },
+  { key: 'pipeline-ocean', name: 'Pipeline', layout: 'band', palette: 'ocean', motif: 'pipeline', topics: ['cicd-gitops', 'devops'] },
+  { key: 'neural-aurora', name: 'Neural', layout: 'split', palette: 'aurora', motif: 'neural', topics: ['ai-foundations', 'ai-for-devops', 'mcp-agents'] },
+  { key: 'hex-steel', name: 'Cluster', layout: 'statement', palette: 'steel', motif: 'hexgrid', topics: ['kubernetes', 'containers', 'devops'] },
+  { key: 'cloud-ice', name: 'Cloud layers', layout: 'band', palette: 'ice', motif: 'cloud', topics: ['cloud-ai', 'cloud'] },
+  { key: 'terminal-forest', name: 'Terminal', layout: 'split', palette: 'forest', motif: 'terminal', topics: ['programming', 'automation-n8n', 'linux'] },
+  { key: 'shield-ember', name: 'Shield', layout: 'frame', palette: 'ember', motif: 'shield', topics: ['security', 'devsecops'] },
+  { key: 'graph-ocean', name: 'Signals', layout: 'column', palette: 'ocean', motif: 'graph', topics: ['observability', 'sre', 'data'] },
+  { key: 'orbit-midnight', name: 'Orbit', layout: 'spotlight', palette: 'midnight', motif: 'orbit', topics: ['architecture', 'mcp-agents', 'general'] },
+  { key: 'neural-lilac', name: 'Neural light', layout: 'band', palette: 'lilac', motif: 'neural', topics: ['ai-foundations', 'ai-for-devops'] },
+  { key: 'loop-steel', name: 'Loop frame', layout: 'frame', palette: 'steel', motif: 'loop', topics: ['devops', 'ai-for-devops'] },
+  { key: 'pipeline-aurora', name: 'Workflow', layout: 'column', palette: 'aurora', motif: 'pipeline', topics: ['automation-n8n', 'mcp-agents', 'cicd-gitops'] },
+  { key: 'hex-ice', name: 'Cluster light', layout: 'split', palette: 'ice', motif: 'hexgrid', topics: ['kubernetes', 'containers'] },
+  { key: 'terminal-midnight', name: 'Shell', layout: 'statement', palette: 'midnight', motif: 'terminal', topics: ['programming', 'linux', 'mcp-agents'] },
+  { key: 'cloud-ocean', name: 'Cloud', layout: 'split', palette: 'ocean', motif: 'cloud', topics: ['cloud-ai', 'cloud'] },
+  { key: 'shield-forest', name: 'Guardrails', layout: 'statement', palette: 'forest', motif: 'shield', topics: ['security', 'devsecops', 'ai-for-devops'] },
+  { key: 'graph-sand', name: 'Metrics light', layout: 'band', palette: 'sand', motif: 'graph', topics: ['observability', 'data', 'sre'] },
+  { key: 'matrix-ember', name: 'Data matrix', layout: 'spotlight', palette: 'ember', motif: 'matrix', topics: ['data', 'ai-foundations', 'mlops'] },
+];
+
+/** Used when a course has no template yet or its template was deactivated. */
+export const FALLBACK_TEMPLATE_KEY = 'loop-midnight';

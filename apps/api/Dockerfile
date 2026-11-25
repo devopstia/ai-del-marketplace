@@ -34,6 +34,7 @@ COPY --from=prod-deps --chown=node:node /app/node_modules /app/node_modules
 COPY --from=build --chown=node:node /app/apps/api/dist /app/apps/api/dist
 COPY --chown=node:node apps/api/package.json apps/api/prisma.config.ts /app/apps/api/
 COPY --chown=node:node apps/api/prisma /app/apps/api/prisma
+COPY --chown=node:node apps/api/assets /app/apps/api/assets
 WORKDIR /app/apps/api
 USER node
 EXPOSE 4000
