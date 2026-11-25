@@ -89,3 +89,8 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Step 6 studio (`…-step6-studio`): DEL Studio switch for super admins (audit names the real person), terms note, per-sale fee and payout status.
 - Step 7 admin (`…-step7-admin`): Money page (totals, reconciliation, refund requests, disputes), Edit terms per instructor, super-admin-only commission.
 - Screenshots: `docs/design/steps2-7-2026-11-24/`.
+
+## 2026-11-24: everything merged into `main` and redeployed locally (owner: "merge everything into main and redeploy so that we can continue from there")
+- Merge commit on `main` (local only, not pushed); rollback tag `main-before-merge-2026-11-24` (= `d2339c2`), release tag
+  `release-local-2026-11-24`. Includes Step 0, Step 1, payments, Steps 2–7. `feat/landing-redesign` stays archived (not merged).
+- Local stack runs `main` with the clean demo catalogue. New work starts from `main` on new `feat/…` branches.
