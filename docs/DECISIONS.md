@@ -100,3 +100,6 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   Work continues on `feat/next-2026-11-25`. Restore any path with `git checkout checkpoint-2026-11-25-start -- <path>`.
 - 2026-11-25: /courses results in two columns (owner request). Rollback tag `checkpoint-2026-11-25-courses-grid` (= `e9c04ad`),
   backup branch `backup/courses-grid-2026-11-25`. Screenshots in `docs/design/courses-grid-2026-11-25/`.
+- 2026-11-25: 4 sample courses for the local demo (owner: "add another 4 dummy course"), via `scripts/demo-dummy-courses.cjs`
+  (article lessons only, descriptions say "Sample course"; audited). Remove with
+  `docker compose exec -T -e REMOVE=1 api node - < scripts/demo-dummy-courses.cjs`. Not part of the clean demo.
