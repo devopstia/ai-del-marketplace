@@ -10,12 +10,14 @@ import { sha256 } from '../common/seal';
 import { randomToken } from '../common/util';
 import { env } from '../config/env';
 import { checkPassword, passwordMessage } from './password-policy';
+import { ALL_ADMIN_PERMISSIONS } from '../common/permissions';
 import { type Ctx, SignInService } from './signin.service';
 
 export const ARGON2_OPTS = { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
 const RESET_TTL_MS = 60 * 60_000;
 
-const publicUser = { id: true, email: true, name: true, avatarUrl: true, roles: true, status: true, createdAt: true } as const;
+const publicUser = { id: true, email: true, name: true, avatarUrl: true, roles: true, status: true, createdAt: true, adminPermissions: true, signupMethod: true, emailVerifiedAt: true } as const;
+const VERIFY_TTL_MS = 3 * 24 * 3600_000;
 
 @Injectable()
 export class AuthService {
@@ -44,8 +46,11 @@ export class AuthService {
     await this.assertStrong(input.password, { email, name: input.name });
     const exists = await this.prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (exists) throw conflict('An account with this email already exists. Log in instead, or reset your password.', 'email_taken');
-    const user = await this.prisma.user.create({ data: { email, name: input.name.trim(), passwordHash: await this.hashPassword(input.password), passwordChangedAt: new Date(), roles: ['student'] } });
+    // Every public sign-up is a student (owner 2026-11-25): roles are never taken from the request.
+    const user = await this.prisma.user.create({ data: { email, name: input.name.trim(), passwordHash: await this.hashPassword(input.password), passwordChangedAt: new Date(), roles: ['student'], signupMethod: 'email' } });
     await this.audit.log({ actorId: user.id, action: 'auth.register', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method: 'password' } });
+    await this.sendVerification(user.id, ctx.ip);
+    await this.notifyStaff('registration', { name: user.name, method: 'email' });
     return this.signIn.begin(user, 'password', req, res, ctx, { cartCourseIds: input.cartCourseIds, next: input.next });
   }
 
@@ -78,8 +83,44 @@ export class AuthService {
       select: { ...publicUser, instructorProfile: { select: { status: true, payoutsEnabled: true, isPlatform: true } } },
     });
     if (!user) throw notFound('User');
-    const { instructorProfile, ...rest } = user;
-    return { ...rest, instructor: instructorProfile };
+    const { instructorProfile, adminPermissions, ...rest } = user;
+    const mfa = await this.prisma.user.findUnique({ where: { id: userId }, select: { mfaEnabledAt: true } });
+    return { ...rest, adminPermissions: rest.roles.includes('super_admin') ? ALL_ADMIN_PERMISSIONS : rest.roles.includes('admin') ? adminPermissions : [], mfaEnabled: !!mfa?.mfaEnabledAt, instructor: instructorProfile };
+  }
+
+  // ---------- email verification ----------
+  /** Sends a single-use link (3 days) proving the person owns the address. At most 3 per hour. */
+  async sendVerification(userId: string, ip: string | null) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, emailVerifiedAt: true } });
+    if (!user || user.emailVerifiedAt) return { ok: true, verified: !!user?.emailVerifiedAt };
+    const recent = await this.prisma.emailVerification.count({ where: { userId, createdAt: { gt: new Date(Date.now() - 3600_000) } } });
+    if (recent >= 3) throw new AppError(429, 'too_many_requests', 'We sent a link a moment ago. Check your inbox and spam folder, or try again in an hour.');
+    const raw = randomToken(32);
+    await this.prisma.emailVerification.create({ data: { id: sha256(raw), userId, email: user.email, expiresAt: new Date(Date.now() + VERIFY_TTL_MS) } });
+    await this.jobs.sendEmail({ to: user.email, template: 'verify-email', data: { name: user.name, link: `${env().WEB_URL}/verify-email?token=${raw}` } });
+    await this.audit.log({ actorId: userId, action: 'auth.email_verification_sent', targetType: 'user', targetId: userId, ip });
+    return { ok: true, verified: false };
+  }
+
+  /** Opening the link proves ownership of the address it was sent to (only if the account still uses that address). */
+  async verifyEmail(raw: string, ip: string | null) {
+    const v = await this.prisma.emailVerification.findUnique({ where: { id: sha256(raw) }, include: { user: { select: { id: true, email: true } } } });
+    if (!v || v.usedAt || v.expiresAt < new Date() || v.user.email !== v.email) throw new AppError(400, 'verify_link_invalid', 'This link has expired or was already used. Sign in and ask for a new one.');
+    const used = await this.prisma.emailVerification.updateMany({ where: { id: v.id, usedAt: null }, data: { usedAt: new Date() } });
+    if (!used.count) throw new AppError(400, 'verify_link_invalid', 'This link has expired or was already used. Sign in and ask for a new one.');
+    await this.prisma.user.updateMany({ where: { id: v.userId, emailVerifiedAt: null }, data: { emailVerifiedAt: new Date() } });
+    await this.audit.log({ actorId: v.userId, action: 'auth.email_verified', targetType: 'user', targetId: v.userId, ip });
+    return { ok: true };
+  }
+
+  /** Optional staff notices (Super Admin › Settings): new registrations and instructor applications. */
+  async notifyStaff(kind: 'registration' | 'application', data: Record<string, unknown>) {
+    const key = kind === 'registration' ? 'notify_new_registrations' : 'notify_instructor_applications';
+    const setting = await this.prisma.platformSetting.findUnique({ where: { key } });
+    const on = setting ? setting.value === true || setting.value === 'true' : kind === 'application';
+    if (!on) return;
+    const staff = await this.prisma.user.findMany({ where: { roles: { has: 'super_admin' }, status: 'active' }, select: { email: true, name: true } });
+    for (const s of staff) await this.jobs.sendEmail({ to: s.email, template: kind === 'registration' ? 'staff-new-registration' : 'staff-instructor-application', data: { staffName: s.name, ...data, link: `${env().WEB_URL}/admin/${kind === 'registration' ? 'users' : 'instructors'}` } });
   }
 
   /** DEL's own instructor account (the platform-owned profile), for the super admin's "DEL Studio" switch. */

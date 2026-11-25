@@ -17,6 +17,8 @@ import { ARGON2_OPTS } from '../src/auth/auth.service';
 import { configureApp } from '../src/bootstrap';
 import { JobsService } from '../src/common/jobs';
 import { seal } from '../src/common/seal';
+import { ALL_ADMIN_PERMISSIONS } from '../src/common/permissions';
+import { sendAccessReminders } from '../src/access/reminders';
 import { codeAt, newSecret, stepAt } from '../src/auth/totp';
 import { PrismaService } from '../src/common/prisma.service';
 import { resetEnvCache } from '../src/config/env';
@@ -242,8 +244,8 @@ describe('e2e: buy and learn', () => {
   // ---------- Phase 1 ----------
   const PW = 'Long-enough-pw1';
   const MFA_SEED = newSecret();
-  async function userAgent(email: string, roles: any[], profile?: { isPlatform?: boolean }) {
-    const user = await prisma.user.create({ data: { email, name: email.split('@')[0], passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles, mfaSecret: seal('mfa', MFA_SEED), mfaEnabledAt: new Date() } });
+  async function userAgent(email: string, roles: any[], profile?: { isPlatform?: boolean }, adminPermissions: string[] = ALL_ADMIN_PERMISSIONS) {
+    const user = await prisma.user.create({ data: { email, name: email.split('@')[0], passwordHash: await argon2.hash(PW, ARGON2_OPTS), roles, adminPermissions: roles.includes('admin') ? adminPermissions : [], mfaSecret: seal('mfa', MFA_SEED), mfaEnabledAt: new Date() } });
     if (profile) await prisma.instructorProfile.create({ data: { userId: user.id, status: 'approved', isPlatform: !!profile.isPlatform } });
     const agent = request.agent(app.getHttpServer());
     const csrf: string = (await agent.get('/api/auth/me')).body.csrf;
@@ -401,19 +403,21 @@ describe('e2e: buy and learn', () => {
 
     // Refund policy: eligible now; watching 25% or more of a course makes it ineligible.
     const lc50 = order.lines.find((l) => l.courseId === c50.course.id)!;
-    await prisma.lectureProgress.create({ data: { userId: buyer.user.id, lectureId: c50.lecture.id, positionSec: 20, completed: true } });
+    await prisma.lectureProgress.create({ data: { userId: buyer.user.id, lectureId: c50.lecture.id, positionSec: 20, completed: true, watchedSec: 20, watchedRanges: [[0, 20]] } });
     const el = await buyer.agent.get(`/api/orders/${order.id}/refund`).expect(200);
     expect(el.body.lines.find((l: any) => l.lineId === lc50.id)).toMatchObject({ eligible: false, reason: 'watched_too_much', watchedPercent: 100 });
     const l100 = el.body.lines.find((l: any) => l.courseId === c100.course.id);
     expect(l100).toMatchObject({ eligible: true, reason: null });
     expect(el.body).toMatchObject({ policy: { windowDays: 14, maxWatchedPercent: 25, selfServicePerYear: 3 }, selfServiceLeft: 3 });
-    const denied = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [lc50.id] }).expect(400);
-    expect(denied.body.error.code).toBe('watched_too_much');
+    // Not eligible: recorded and declined at once (with the reason), never silently refused.
+    const denied = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [lc50.id] }).expect(200);
+    expect(denied.body.status).toBe('declined');
+    expect((await prisma.refundRequest.findFirstOrThrow({ where: { id: denied.body.requestId } })).status).toBe('auto_declined');
     await request(app.getHttpServer()).get(`/api/orders/${order.id}/refund`).expect(401);
     const other = await userAgent('m-other@e2e.example', ['student']);
     await other.agent.get(`/api/orders/${order.id}/refund`).expect(404);
     const done = await buyer.send('post', `/api/orders/${order.id}/refund`, { lineIds: [l100.lineId], reason: 'Not what I needed' }).expect(200);
-    expect(done.body).toEqual({ status: 'refunded' });
+    expect(done.body).toMatchObject({ status: 'refunded', requests: [{ status: 'refunded' }] });
     expect(await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: buyer.user.id, courseId: c100.course.id } } })).toMatchObject({ revokedAt: expect.any(Date) });
     expect(await prisma.orderLine.findUniqueOrThrow({ where: { id: l100.lineId } })).toMatchObject({ transferStatus: 'none', refundedAt: expect.any(Date) });
 
@@ -989,5 +993,533 @@ describe('e2e: buy and learn', () => {
       const a = await fresh();
       expect((await a.send('post', '/api/auth/login', { email: 'auth-target@e2e.example', password: PW }).expect(200)).body).toEqual({ mfa: 'enroll' });
     });
+  });
+
+  it('reviews from the learning view: rating and count, one review per student, moderation kept, same numbers as the public page', async () => {
+    if (!available) return;
+    const teacher = await userAgent('rv-teacher@e2e.example', ['student', 'instructor'], {});
+    const ann = await userAgent('rv-ann@e2e.example', ['student']);
+    const bob = await userAgent('rv-bob@e2e.example', ['student']);
+    const stranger = await userAgent('rv-stranger@e2e.example', ['student']);
+    const admin = await userAgent('rv-admin@e2e.example', ['student', 'admin']);
+    const { course } = await publishedCourse(teacher.user.id, 'rv-course', 1999);
+    for (const u of [ann, bob]) await prisma.enrollment.create({ data: { userId: u.user.id, courseId: course.id, source: 'free' } });
+
+    const fresh = (await ann.agent.get('/api/me/courses/rv-course').expect(200)).body;
+    expect(fresh).toMatchObject({ rating: { average: 0, count: 0 }, canReview: true, myReview: null });
+    expect((await teacher.agent.get('/api/me/courses/rv-course').expect(200)).body.canReview).toBe(false);
+
+    await stranger.send('post', '/api/courses/rv-course/reviews', { rating: 5 }).expect(403);
+    await ann.send('post', '/api/courses/rv-course/reviews', { rating: 6 }).expect(400);
+    const a1 = await ann.send('post', '/api/courses/rv-course/reviews', { rating: 5, body: 'Great labs' }).expect(201);
+    expect(a1.body.courseRating).toEqual({ average: 5, count: 1 });
+    await bob.send('post', '/api/courses/rv-course/reviews', { rating: 2 }).expect(201);
+    // Editing replaces the student's one review.
+    const a2 = await ann.send('post', '/api/courses/rv-course/reviews', { rating: 4, body: 'Great labs, long intro' }).expect(201);
+    expect(a2.body.courseRating).toEqual({ average: 3, count: 2 });
+    expect(await prisma.review.count({ where: { courseId: course.id } })).toBe(2);
+    const mine = (await ann.agent.get('/api/me/courses/rv-course').expect(200)).body;
+    expect(mine).toMatchObject({ rating: { average: 3, count: 2 }, myReview: { rating: 4, body: 'Great labs, long intro', status: 'visible' } });
+    // The public page shows the same numbers and the review.
+    const pub = (await request(app.getHttpServer()).get('/api/courses/rv-course').expect(200)).body;
+    expect([pub.ratingAvg ?? pub.rating?.average, pub.ratingCount ?? pub.rating?.count]).toEqual([3, 2]);
+
+    // A hidden review stays hidden when its author edits it, and leaves the average.
+    const bobReview = await prisma.review.findFirstOrThrow({ where: { userId: bob.user.id } });
+    await admin.send('patch', `/api/admin/reviews/${bobReview.id}`, { status: 'hidden' }).expect(200);
+    const b2 = await bob.send('post', '/api/courses/rv-course/reviews', { rating: 1, body: 'edited' }).expect(201);
+    expect(b2.body.status).toBe('hidden');
+    expect(b2.body.courseRating).toEqual({ average: 4, count: 1 });
+    expect((await bob.agent.get('/api/me/courses/rv-course').expect(200)).body.myReview.status).toBe('hidden');
+  });
+
+  describe('one-year access and the 25% refund rule (owner 2026-11-25)', () => {
+    const jobs = () => app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const DAY = 86_400_000;
+    async function buy(u: Awaited<ReturnType<typeof userAgent>>, courseId: string) {
+      await u.send('post', '/api/cart', { courseId }).expect(201);
+      const co = await u.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+      await u.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+      return co.body.orderId as string;
+    }
+    async function course100(teacherId: string, slug: string) {
+      const c = await publishedCourse(teacherId, slug, 2000);
+      await prisma.lecture.update({ where: { id: c.lecture.id }, data: { durationSec: 100 } });
+      await prisma.videoAsset.updateMany({ where: { lectures: { some: { id: c.lecture.id } } }, data: { durationSec: 100 } });
+      return c;
+    }
+
+    it('a purchase gives exactly 12 months; expiry locks the course (backend), keeps progress, and renewal extends it', async () => {
+      const teacher = await userAgent('acc-teacher@e2e.example', ['student', 'instructor'], {});
+      const stu = await userAgent('acc-stu@e2e.example', ['student']);
+      const { course, lecture } = await course100(teacher.user.id, 'acc-course');
+      const orderId = await buy(stu, course.id);
+      const paidAt = (await prisma.order.findUniqueOrThrow({ where: { id: orderId } })).paidAt!;
+      const enr = await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } });
+      const oneYear = new Date(paidAt); oneYear.setUTCMonth(oneYear.getUTCMonth() + 12);
+      expect(enr.accessExpiresAt?.toISOString()).toBe(oneYear.toISOString());
+      const ml = (await stu.agent.get('/api/me/learning').expect(200)).body;
+      expect(ml.items.find((i: any) => i.course.slug === 'acc-course').access).toMatchObject({ state: 'active', canRenew: false, daysLeft: expect.any(Number) });
+      expect((await stu.agent.get('/api/courses/acc-course').expect(200)).body.viewer.access).toMatchObject({ state: 'active', canRenew: false });
+      // Can't buy again while more than 30 days are left.
+      expect((await stu.send('post', '/api/cart', { courseId: course.id }).expect(409)).body.error.code).toBe('already_enrolled');
+      await stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec: 40, played: [[0, 40]] }).expect(200);
+
+      // Expired: locked everywhere on the server, listed under Expired, progress kept, renewal offered.
+      await prisma.enrollment.update({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } }, data: { accessExpiresAt: new Date(Date.now() - DAY) } });
+      await stu.send('post', `/api/lectures/${lecture.id}/playback`).expect(403);
+      await stu.agent.get('/api/me/courses/acc-course').expect(403);
+      await stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec: 50 }).expect(403);
+      const after = (await stu.agent.get('/api/me/learning').expect(200)).body;
+      expect(after.items.some((i: any) => i.course.slug === 'acc-course')).toBe(false);
+      expect(after.expired[0]).toMatchObject({ course: { slug: 'acc-course' }, access: { state: 'expired', canRenew: true } });
+      expect((await prisma.lectureProgress.findFirstOrThrow({ where: { userId: stu.user.id } })).watchedSec).toBe(40);
+
+      // Renewal = buying again: a fresh year from today, progress where it was.
+      const renewal = await buy(stu, course.id);
+      const r2 = (await prisma.order.findUniqueOrThrow({ where: { id: renewal } })).paidAt!;
+      const e2 = await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } });
+      const y2 = new Date(r2); y2.setUTCMonth(y2.getUTCMonth() + 12);
+      expect(e2.accessExpiresAt?.toISOString()).toBe(y2.toISOString());
+      await stu.send('post', `/api/lectures/${lecture.id}/playback`).expect(200);
+      expect((await stu.agent.get('/api/me/courses/acc-course').expect(200)).body.sections[0].lectures[0].progress.positionSec).toBe(40);
+
+      // Early renewal (last 30 days) adds a year after the current end; refunding it gives the earlier end back.
+      const end = new Date(Date.now() + 10 * DAY);
+      await prisma.enrollment.update({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } }, data: { accessExpiresAt: end } });
+      await prisma.accessPeriod.updateMany({ where: { userId: stu.user.id, courseId: course.id, revokedAt: null }, data: { endsAt: end } });
+      const early = await buy(stu, course.id);
+      const ext = new Date(end); ext.setUTCMonth(ext.getUTCMonth() + 12);
+      expect((await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } })).accessExpiresAt?.toISOString()).toBe(ext.toISOString());
+      // (The student watched 40% earlier, so their own request would be declined: consumption is per course.)
+      expect((await stu.send('post', `/api/orders/${early}/refund`, {}).expect(200)).body.status).toBe('declined');
+      const boss = await userAgent('acc-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      await boss.send('post', `/api/admin/orders/${early}/refund`, { reason: 'test: renewal refund' }).expect(200);
+      const back = await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: stu.user.id, courseId: course.id } } });
+      expect(back.revokedAt).toBeNull();
+      expect(back.accessExpiresAt?.toISOString()).toBe(end.toISOString());
+    });
+
+    it('consumption counts unique seconds: replays and skips do not add', async () => {
+      const teacher = await userAgent('cons-teacher@e2e.example', ['student', 'instructor'], {});
+      const stu = await userAgent('cons-stu@e2e.example', ['student']);
+      const { course, lecture } = await course100(teacher.user.id, 'cons-course');
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: course.id, source: 'free' } });
+      const save = (played: [number, number][], positionSec: number) => stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec, played }).expect(200);
+      await save([[0, 10]], 10);
+      await save([[0, 10]], 10); // replay
+      await save([[9.5, 20]], 20); // continuous with a tiny overlap
+      await save([[80, 90]], 90); // skipped 20→80, watched 10 s
+      const row = await prisma.lectureProgress.findFirstOrThrow({ where: { userId: stu.user.id, lectureId: lecture.id } });
+      expect(row.watchedSec).toBe(30);
+      expect(row.watchedRanges).toEqual([[0, 20], [80, 90]]);
+      await save([[0, 500]], 100); // clamped to the lesson length
+      expect((await prisma.lectureProgress.findFirstOrThrow({ where: { userId: stu.user.id, lectureId: lecture.id } })).watchedSec).toBe(100);
+    });
+
+    it('refunds: 20% and 25% refunded automatically, 30% declined with the email, 14-day window, review, Super Admin exception', async () => {
+      const teacher = await userAgent('rf-teacher@e2e.example', ['student', 'instructor'], {});
+      const admin = await userAgent('rf-admin@e2e.example', ['student', 'admin']);
+      const boss = await userAgent('rf-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const results: Record<string, any> = {};
+      for (const pct of [20, 25, 30]) {
+        const stu = await userAgent(`rf-${pct}@e2e.example`, ['student']);
+        const { course, lecture } = await course100(teacher.user.id, `rf-course-${pct}`);
+        const orderId = await buy(stu, course.id);
+        await stu.send('put', `/api/lectures/${lecture.id}/progress`, { positionSec: pct, played: [[0, pct]] }).expect(200);
+        jobs().sendEmail.mockClear();
+        const r = await stu.send('post', `/api/orders/${orderId}/refund`, {}).expect(200);
+        results[pct] = { stu, orderId, body: r.body, emails: jobs().sendEmail.mock.calls.map((c) => c[0]) };
+      }
+      expect(results[20].body.status).toBe('refunded');
+      expect(results[25].body.status).toBe('refunded'); // exactly 25% still qualifies
+      expect(results[30].body.status).toBe('declined');
+      expect(results[30].emails).toContainEqual(expect.objectContaining({ template: 'refund-declined', data: expect.objectContaining({ watchedPercent: 30, thresholdPercent: 25 }) }));
+      expect(results[20].emails).toContainEqual(expect.objectContaining({ template: 'refund-approved' }));
+      const declined = await prisma.refundRequest.findFirstOrThrow({ where: { orderId: results[30].orderId } });
+      expect(declined).toMatchObject({ status: 'auto_declined' });
+      expect((declined.analysis as any).lines[0]).toMatchObject({ totalSec: 100, watchedSec: 30, watchedPercent: 30, thresholdPercent: 25, eligible: false, reason: 'watched_too_much', withinWindow: true });
+
+      // Outside the 14-day window: declined even at 0% watched.
+      const late = await userAgent('rf-late@e2e.example', ['student']);
+      const lc = await course100(teacher.user.id, 'rf-course-late');
+      const lateOrder = await buy(late, lc.course.id);
+      await prisma.order.update({ where: { id: lateOrder }, data: { refundEligibleUntil: new Date(Date.now() - DAY) } });
+      const lr = await late.send('post', `/api/orders/${lateOrder}/refund`, {}).expect(200);
+      expect(lr.body.status).toBe('declined');
+      expect(((await prisma.refundRequest.findFirstOrThrow({ where: { orderId: lateOrder } })).analysis as any).lines[0].reason).toBe('window_closed');
+
+      // The student asks for a review; it waits for a person; only a Super Admin can overturn it.
+      const stu30 = results[30].stu;
+      await stu30.send('post', `/api/refund-requests/${declined.id}/review`, { note: 'short' }).expect(400);
+      await stu30.send('post', `/api/refund-requests/${declined.id}/review`, { note: 'The video froze and replayed by itself; I watched about 10 minutes.' }).expect(200);
+      const queue = (await admin.agent.get('/api/admin/refund-requests?status=needs_action').expect(200)).body;
+      expect(queue.items.map((i: any) => i.id)).toContain(declined.id);
+      expect(queue.items.find((i: any) => i.id === declined.id)).toMatchObject({ needsAction: true, reviewNote: expect.stringContaining('froze'), history: expect.arrayContaining([expect.objectContaining({ action: 'refund.auto_declined' }), expect.objectContaining({ action: 'refund.review_requested' })]) });
+      expect((await admin.send('post', `/api/admin/refund-requests/${declined.id}/approve`, { note: 'ok' }).expect(403)).body.error.code).toBe('super_admin_only');
+      await boss.send('post', `/api/admin/refund-requests/${declined.id}/approve`, {}).expect(400); // a note is required
+      await boss.send('post', `/api/admin/refund-requests/${declined.id}/approve`, { note: 'Player fault confirmed in support ticket.' }).expect(200);
+      expect((await prisma.order.findUniqueOrThrow({ where: { id: results[30].orderId } })).status).toBe('refunded');
+      expect(await prisma.auditLog.count({ where: { action: 'refund.exception_approved' } })).toBe(1);
+    });
+
+    it('expiry reminders: 30, 7 and 1 days before and on expiry, each once', async () => {
+      const stu = await userAgent('rem-stu@e2e.example', ['student']);
+      const teacher = await userAgent('rem-teacher@e2e.example', ['student', 'instructor'], {});
+      const { course } = await publishedCourse(teacher.user.id, 'rem-course', 1000);
+      const now = new Date();
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: course.id, source: 'purchase', accessExpiresAt: new Date(now.getTime() + 20 * DAY) } });
+      jobs().sendEmail.mockClear();
+      const svc = app.get(JobsService);
+      const mine = () => jobs().sendEmail.mock.calls.map((c) => c[0]).filter((m: any) => m.to === 'rem-stu@e2e.example');
+      await sendAccessReminders(prisma as any, svc, now);
+      await sendAccessReminders(prisma as any, svc, now); // same hour again: nothing new
+      expect(mine()).toEqual([expect.objectContaining({ template: 'access-expiring', data: expect.objectContaining({ daysLeft: 20, course: 'rem-course' }) })]);
+      await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 14 * DAY)); // 6 days left → the 7-day reminder
+      await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 21 * DAY)); // ended
+      await sendAccessReminders(prisma as any, svc, new Date(now.getTime() + 22 * DAY)); // never twice
+      expect(mine().map((m: any) => [m.template, m.data.daysLeft])).toEqual([['access-expiring', 20], ['access-expiring', 6], ['access-expired', 0]]);
+    });
+  });
+
+  describe('four roles and instructor applications (owner 2026-11-25)', () => {
+    const app_ = () => request.agent(app.getHttpServer());
+    const apply = {
+      headline: 'Terraform trainer', bio: 'I have taught Terraform to platform teams for years.', expertise: ['Terraform', 'AWS'],
+      experience: 'Five years of workshops for platform teams.', plannedCourses: 'Terraform modules in practice',
+    };
+
+    it('every public sign-up is a student; a sign-up that sends roles is refused', async () => {
+      if (!available) return;
+      const a = app_();
+      const csrf: string = (await a.get('/api/auth/me')).body.csrf;
+      const bad = await a.post('/api/auth/register').set('X-CSRF-Token', csrf).send({ email: 'sneaky@e2e.example', password: 'Quiet-river-stone-58', name: 'Sneaky', roles: ['admin'] }).expect(400);
+      expect(bad.body.error.code).toBe('validation_failed');
+      expect(await prisma.user.findUnique({ where: { email: 'sneaky@e2e.example' } })).toBeNull();
+      await a.post('/api/auth/register').set('X-CSRF-Token', csrf).send({ email: 'plain@e2e.example', password: 'Quiet-river-stone-58', name: 'Plain' }).expect(201);
+      const u = await prisma.user.findUniqueOrThrow({ where: { email: 'plain@e2e.example' } });
+      expect(u).toMatchObject({ roles: ['student'], signupMethod: 'email', emailVerifiedAt: null, adminPermissions: [] });
+      // the verification link proves ownership once
+      const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+      const call = jobs.sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === 'verify-email' && j.to === 'plain@e2e.example');
+      const token = new URL(call.data.link).searchParams.get('token');
+      await a.post('/api/auth/verify-email').set('X-CSRF-Token', csrf).send({ token }).expect(200);
+      expect((await a.post('/api/auth/verify-email').set('X-CSRF-Token', csrf).send({ token }).expect(400)).body.error.code).toBe('verify_link_invalid');
+      const verified = await prisma.user.findUniqueOrThrow({ where: { email: 'plain@e2e.example' } });
+      expect(verified.emailVerifiedAt).not.toBeNull();
+    });
+
+    it('apply → under review → needs info → resubmit → approved keeps student; rejected stays student; no duplicates', async () => {
+      if (!available) return;
+      const boss = await userAgent('rbac-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const stu = await userAgent('rbac-applicant@e2e.example', ['student']);
+      await stu.agent.get('/api/instructor/courses').expect(403);
+      await stu.send('post', '/api/instructor/apply', { headline: 'x', bio: 'too short' }).expect(400);
+      await stu.send('post', '/api/instructor/apply', apply).expect(201);
+      expect((await stu.send('post', '/api/instructor/apply', apply).expect(409)).body.error.code).toBe('already_applied');
+      const list = (await boss.agent.get('/api/admin/people/applications?status=open').expect(200)).body;
+      expect(list.items.find((x: any) => x.email === 'rbac-applicant@e2e.example')).toMatchObject({ status: 'pending', expertise: ['Terraform', 'AWS'] });
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'under_review' }).expect(200);
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'needs_info' }).expect(400);
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'needs_info', note: 'Please add a sample lesson link.' }).expect(200);
+      await stu.send('post', '/api/instructor/apply', { ...apply, extraInfo: 'Sample: https://example.com/lesson' }).expect(201);
+      await boss.send('post', `/api/admin/people/applications/${stu.user.id}/decision`, { decision: 'approved' }).expect(200);
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: stu.user.id } })).roles.sort()).toEqual(['instructor', 'student']);
+      await stu.agent.get('/api/instructor/courses').expect(200); // role applies to the open session at once
+      await stu.agent.get('/api/me/learning').expect(200); // and student access stays
+
+      const other = await userAgent('rbac-rejected@e2e.example', ['student']);
+      await other.send('post', '/api/instructor/apply', apply).expect(201);
+      await boss.send('post', `/api/admin/people/applications/${other.user.id}/decision`, { decision: 'rejected', note: 'Not a fit right now.' }).expect(200);
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: other.user.id } })).roles).toEqual(['student']);
+    });
+
+    it('admin permissions, step-up for privileged roles, no self-promotion, last super admin, revocation applies at once', async () => {
+      if (!available) return;
+      const boss = await userAgent('rbac-super@e2e.example', ['student', 'admin', 'super_admin']);
+      const helper = await userAgent('rbac-admin@e2e.example', ['student', 'admin'], undefined, ['users.view', 'support.manage']);
+      const target = await userAgent('rbac-target@e2e.example', ['student']);
+      // explicit permissions: users.view yes, courses.review / finance / audit no
+      await helper.agent.get('/api/admin/people/users').expect(200);
+      expect((await helper.agent.get('/api/admin/review-queue').expect(403)).body.error.code).toBe('permission_required');
+      await helper.agent.get('/api/admin/finance').expect(403);
+      await helper.agent.get('/api/admin/audit').expect(403);
+      // an admin can't change roles at all, nor promote themselves (old and new endpoints)
+      await helper.send('put', `/api/admin/people/users/${helper.user.id}/access`, { roles: ['admin', 'super_admin'] }).expect(403);
+      await helper.send('patch', `/api/admin/users/${helper.user.id}`, { roles: ['admin', 'super_admin'] }).expect(403);
+      // a super admin can't change their own roles
+      expect((await boss.send('put', `/api/admin/people/users/${boss.user.id}/access`, { roles: ['student'] }).expect(403)).body.error.code).toBe('self_change');
+      // granting admin needs a fresh authenticator code
+      expect((await boss.send('put', `/api/admin/people/users/${target.user.id}/access`, { roles: ['admin'], adminPermissions: ['users.view'] }).expect(400)).body.error.code).toBe('step_up_required');
+      await boss.send('put', `/api/admin/people/users/${target.user.id}/access`, { roles: ['admin'], adminPermissions: ['users.view', 'not.a.permission'], code: '000000' }).expect(401);
+      const ok = await boss.send('put', `/api/admin/people/users/${target.user.id}/access`, { roles: ['admin'], adminPermissions: ['users.view', 'not.a.permission'], code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+      expect(ok.body).toMatchObject({ roles: ['student', 'admin'], adminPermissions: ['users.view'] });
+      await target.agent.get('/api/admin/people/users').expect(200); // a new role applies to the open session at once
+      await target.agent.get('/api/admin/orders').expect(403);
+      // instructor without an application needs a reason (DEL verified them another way)
+      const plain = await userAgent('rbac-plain@e2e.example', ['student']);
+      expect((await boss.send('put', `/api/admin/people/users/${plain.user.id}/access`, { roles: ['instructor'] }).expect(400)).body.error.code).toBe('reason_required');
+      await boss.send('put', `/api/admin/people/users/${plain.user.id}/access`, { roles: ['instructor'], reason: 'Contacted DEL, portfolio checked' }).expect(200);
+      await plain.agent.get('/api/instructor/courses').expect(200);
+      // revocation applies to open sessions at once
+      await boss.send('put', `/api/admin/people/users/${plain.user.id}/access`, { roles: [] }).expect(200);
+      await plain.agent.get('/api/instructor/courses').expect(403);
+      // another super admin removes one; nobody suspends themselves; an admin can't suspend a super admin
+      const second = await userAgent('rbac-super2@e2e.example', ['student', 'admin', 'super_admin']);
+      await second.send('put', `/api/admin/people/users/${boss.user.id}/access`, { roles: ['student'], code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+      expect((await boss.agent.get('/api/admin/people/users')).status).toBe(401); // removed privileged role ended the session
+      const lone = await second.send('post', `/api/admin/people/users/${second.user.id}/status`, { status: 'suspended', reason: 'test' }).expect(403);
+      expect(lone.body.error.code).toBe('self_change');
+      const third = await userAgent('rbac-admin3@e2e.example', ['student', 'admin'], undefined, ['users.manage', 'users.view']);
+      expect((await third.send('post', `/api/admin/people/users/${second.user.id}/status`, { status: 'suspended', reason: 'x' }).expect(403)).body.error.code).toBe('super_admin_required');
+      await third.send('post', `/api/admin/people/users/${target.user.id}/status`, { status: 'suspended' }).expect(403); // target is an admin now
+      await third.send('post', `/api/admin/people/users/${plain.user.id}/status`, { status: 'suspended' }).expect(400); // reason required
+      await third.send('post', `/api/admin/people/users/${plain.user.id}/status`, { status: 'suspended', reason: 'Chargeback fraud' }).expect(200);
+      await plain.agent.get('/api/me/learning').expect(401);
+      const hist = (await second.agent.get(`/api/admin/people/users/${target.user.id}`).expect(200)).body.history;
+      expect(hist[0]).toMatchObject({ action: 'user.access_changed', actor: { id: boss.user.id } });
+    });
+  });
+
+  it('contact page: message with screenshots reaches DEL support by email; only images, honeypot, staff only', async () => {
+    if (!available) return;
+    const a = request.agent(app.getHttpServer());
+    const csrf: string = (await a.get('/api/auth/me')).body.csrf;
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4c50000000049454e44ae426082', 'hex');
+    const post = () => a.post('/api/contact').set('X-CSRF-Token', csrf).field('name', 'Ama Mensah').field('email', 'ama@e2e.example').field('topic', 'payment').field('subject', 'Card declined').field('body', 'My card from Ghana was declined at checkout.');
+    const ok = await post().attach('images', png, { filename: 'screen.png', contentType: 'image/png' }).expect(200);
+    expect(ok.body.ref).toMatch(/^C-\d+$/);
+    const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const mail = jobs.sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === 'contact-message');
+    expect(mail).toMatchObject({ to: 'support@devopseasylearning.com', replyTo: 'ama@e2e.example', attachments: [{ name: 'screen.png', mime: 'image/png' }] });
+    expect(jobs.sendEmail.mock.calls.map((c) => c[0]).some((j) => j.template === 'contact-received' && j.to === 'ama@e2e.example')).toBe(true);
+    // a renamed non-image is refused; the honeypot is refused
+    expect((await post().attach('images', Buffer.from('<?php echo 1;'), { filename: 'x.png', contentType: 'image/png' }).expect(400)).body.error.code).toBe('attachment_type');
+    await post().field('website', 'http://spam.example').expect(400);
+    // staff with support.manage only
+    const stu = await userAgent('contact-stu@e2e.example', ['student']);
+    await stu.agent.get('/api/admin/contact').expect(403);
+    const staff = await userAgent('contact-staff@e2e.example', ['student', 'admin'], undefined, ['support.manage']);
+    const list = (await staff.agent.get('/api/admin/contact?status=new').expect(200)).body;
+    const m = list.items.find((x: any) => x.ref === ok.body.ref);
+    expect(m.attachments).toHaveLength(1);
+    const img = await staff.agent.get(`/api${m.attachments[0].url}`).expect(200);
+    expect(img.headers['content-type']).toBe('image/png');
+    await staff.send('patch', `/api/admin/contact/${m.id}`, { status: 'handled' }).expect(200);
+  });
+
+  it('curriculum editor: drag-and-drop arrange across sections (draft and published), course package for enrolled learners only', async () => {
+    if (!available) return;
+    const teacher = await userAgent('arr-teacher@e2e.example', ['student', 'instructor'], {});
+    const draft = (await teacher.send('post', '/api/instructor/courses', { title: 'Arrange me' }).expect(201)).body;
+    const s1 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections`, { title: 'Intro' }).expect(201)).body;
+    const s2 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections`, { title: 'Deploy' }).expect(201)).body;
+    const l1 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections/${s1.id}/lectures`, { title: 'A' }).expect(201)).body;
+    const l2 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections/${s1.id}/lectures`, { title: 'B' }).expect(201)).body;
+    const l3 = (await teacher.send('post', `/api/instructor/courses/${draft.id}/sections/${s2.id}/lectures`, { title: 'C' }).expect(201)).body;
+    const id = (x: any) => x.id ?? x.lecture?.id;
+    // move B to the second section, first place; swap sections
+    const r = await teacher.send('put', `/api/instructor/courses/${draft.id}/curriculum`, { sections: [{ id: s2.id, lectureIds: [id(l2), id(l3)] }, { id: s1.id, lectureIds: [id(l1)] }] }).expect(200);
+    expect(r.body.sections.map((s: any) => [s.title, s.lectures.map((l: any) => l.title)])).toEqual([['Deploy', ['B', 'C']], ['Intro', ['A']]]);
+    // nothing may be dropped or duplicated
+    await teacher.send('put', `/api/instructor/courses/${draft.id}/curriculum`, { sections: [{ id: s2.id, lectureIds: [id(l2)] }, { id: s1.id, lectureIds: [id(l1)] }] }).expect(400);
+    // someone else's course
+    const other = await userAgent('arr-other@e2e.example', ['student', 'instructor'], {});
+    await other.send('put', `/api/instructor/courses/${draft.id}/curriculum`, { sections: [] }).expect(404);
+
+    // published course: the arrangement goes into the draft revision; live order unchanged until approved
+    const { course, section, lecture } = await publishedCourse(teacher.user.id, 'arr-live', 1500);
+    const sec2 = await prisma.section.create({ data: { courseId: course.id, title: 'Extra', position: 1 } });
+    const live = await teacher.send('put', `/api/instructor/courses/${course.id}/curriculum`, { sections: [{ id: sec2.id, lectureIds: [lecture.id] }, { id: section.id, lectureIds: [] }] }).expect(200);
+    expect(live.body.version).toBe('draft');
+    expect((await prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id } })).sectionId).toBe(section.id);
+
+    // course package: upload, list, learner download only with access
+    const storage = app.get(StorageService);
+    const key = `resources/${teacher.user.id}/pkg/complete-labs.zip`;
+    await storage.put(key, Buffer.from('PK zip'), 'application/zip');
+    await teacher.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'All lab files', storageKey: key }).expect(201);
+    await teacher.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'x', storageKey: `resources/${other.user.id}/x.zip` }).expect(400);
+    const files = (await teacher.agent.get(`/api/instructor/courses/${course.id}/package`).expect(200)).body.items;
+    expect(files).toHaveLength(1);
+    const stranger = await userAgent('arr-stranger@e2e.example', ['student']);
+    await stranger.send('post', `/api/course-files/${files[0].id}/download`).expect(403);
+    await prisma.enrollment.create({ data: { userId: stranger.user.id, courseId: course.id, source: 'admin' } });
+    expect((await stranger.agent.get('/api/me/courses/arr-live').expect(200)).body.packageFiles).toHaveLength(1);
+    expect((await stranger.send('post', `/api/course-files/${files[0].id}/download`).expect(200)).body.url).toContain('complete-labs.zip');
+    await teacher.send('delete', `/api/instructor/courses/${course.id}/package/${files[0].id}`).expect(200);
+  });
+
+  describe('manual enrollment and invitations (owner 2026-11-25)', () => {
+    const jobsMock = () => app.get(JobsService) as unknown as { sendEmail: jest.Mock };
+    const lastMail = (template: string, to?: string) => jobsMock().sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === template && (!to || j.to === to));
+    const inDays = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString();
+
+    it('instructor requests several own courses; foreign courses and activation are blocked; super admin verifies payment, commissions per instructor, approves; invitation → code → account → courses', async () => {
+      if (!available) return;
+      const boss = await userAgent('me-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const t1 = await userAgent('me-t1@e2e.example', ['student', 'instructor'], {});
+      const t2 = await userAgent('me-t2@e2e.example', ['student', 'instructor'], {});
+      const a = await publishedCourse(t1.user.id, 'me-a', 4000);
+      const b = await publishedCourse(t1.user.id, 'me-b', 6000);
+      const foreign = await publishedCourse(t2.user.id, 'me-c', 5000);
+      const email = 'ama.new@e2e.example';
+      // instructor can't include another instructor's course, or activate anything
+      expect((await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama Mensah', items: [{ courseId: a.course.id }, { courseId: foreign.course.id }] }).expect(403)).body.error.code).toBe('not_your_course');
+      await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama', items: [{ courseId: a.course.id, expiresAt: inDays(800) }] }).expect(400);
+      const req = (await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama Mensah', items: [{ courseId: a.course.id, expiresAt: inDays(200) }, { courseId: b.course.id }], note: 'Paid by mobile money' }).expect(201)).body;
+      expect(req).toMatchObject({ status: 'pending', student: { hasAccount: false }, paymentStatus: 'payment_pending' });
+      expect(lastMail('manual-enrollment-submitted', 'me-boss@e2e.example')).toBeTruthy();
+      await t1.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(403);
+      await t1.send('post', `/api/enrollments/manual/${req.id}/invitation/link`).expect(403);
+      await t2.agent.get(`/api/enrollments/manual/${req.id}`).expect(404);
+      // duplicate open request for the same course
+      expect((await t1.send('post', '/api/enrollments/manual', { studentEmail: email, studentName: 'Ama', items: [{ courseId: a.course.id }] }).expect(409)).body.error.code).toBe('duplicate_request');
+      // approval needs a verified payment (or a complimentary reason)
+      expect((await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(409)).body.error.code).toBe('payment_not_verified');
+      // 65,000 XAF at 0.00165 USD = 107.25 USD, fee 2.25 USD, allocation must add up
+      // items come back in id order: pick them by course
+      const ia = req.items.find((i: any) => i.courseId === a.course.id);
+      const ib = req.items.find((i: any) => i.courseId === b.course.id);
+      await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '65000', usdRate: '0.00165', feeUsdCents: 225, allocations: [{ itemId: ia.id, grossUsdCents: 4000 }, { itemId: ib.id, grossUsdCents: 6000 }] }).expect(400);
+      const paid = (await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '65000', usdRate: '0.00165', feeUsdCents: 225, allocations: [{ itemId: ia.id, grossUsdCents: 4290 }, { itemId: ib.id, grossUsdCents: 6435 }] }).expect(201)).body;
+      expect(paid.payments[0]).toMatchObject({ grossUsdCents: 10725, feeUsdCents: 225, netUsdCents: 10500, status: 'pending' });
+      await boss.send('post', `/api/enrollments/manual/${req.id}/payments`, { method: 'mobile_money', reference: 'MM-7781', currency: 'XAF', amount: '1', usdRate: '1', feeUsdCents: 0, allocations: [{ itemId: ia.id, grossUsdCents: 0 }] }).expect(409);
+      expect((await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(409)).body.error.code).toBe('payment_not_verified');
+      await boss.send('post', `/api/enrollments/payments/${paid.payments[0].id}/verify`).expect(200);
+      const ok = (await boss.send('post', `/api/enrollments/manual/${req.id}/approve`, {}).expect(200)).body;
+      expect(ok).toMatchObject({ status: 'approved', paymentStatus: 'payment_verified', invitation: { status: 'pending' } });
+      // 80/20 of the net per course: fee 225 split 90/135 → nets 4200 and 6300 → instructor 3360 + 5040
+      const al = ok.earnings.sort((x: any, y: any) => x.netUsdCents - y.netUsdCents);
+      expect(al.map((x: any) => [x.netUsdCents, x.instructorCents, x.platformCents, x.payoutStatus])).toEqual([[4200, 3360, 840, 'earnings_recorded'], [6300, 5040, 1260, 'earnings_recorded']]);
+      // the instructor now sees and can resend/copy the invitation; previous link stops working
+      const inviteMail = lastMail('student-invitation', email);
+      const firstToken = inviteMail.data.link.split('/invite/')[1];
+      const copied = (await t1.send('post', `/api/enrollments/manual/${req.id}/invitation/link`).expect(200)).body.link as string;
+      const token = copied.split('/invite/')[1];
+      expect((await request(app.getHttpServer()).get(`/api/invitations/${firstToken}`).expect(410)).body.error.code).toBe('invitation_revoked');
+      const info = (await request(app.getHttpServer()).get(`/api/invitations/${token}`).expect(200)).body;
+      expect(info.courses).toHaveLength(2);
+      expect(info.email).not.toContain('ama.new@');
+      // opening the link is not enough: the email code is required
+      const guest = request.agent(app.getHttpServer());
+      const csrf: string = (await guest.get('/api/auth/me')).body.csrf;
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code: '000000', name: 'Ama Mensah', password: 'Quiet-river-stone-58' }).expect(400);
+      await guest.post(`/api/invitations/${token}/code`).set('X-CSRF-Token', csrf).expect(200);
+      const code = lastMail('invitation-code', email).data.code;
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code: code === '000000' ? '111111' : '000000', name: 'Ama Mensah', password: 'Quiet-river-stone-58' }).expect(400);
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code, name: 'Ama Mensah', password: 'short' }).expect(400);
+      const acc = await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code, name: 'Ama Mensah', password: 'Quiet-river-stone-58' }).expect(200);
+      expect(acc.body).toEqual({ mfa: 'enroll' }); // Google Authenticator next, like every sign-up
+      const student = await prisma.user.findUniqueOrThrow({ where: { email }, include: { enrollments: true } });
+      expect(student).toMatchObject({ roles: ['student'], signupMethod: 'invitation' });
+      expect(student.emailVerifiedAt).not.toBeNull();
+      expect(student.enrollments.map((e) => e.source)).toEqual(['manual', 'manual']);
+      const ea = student.enrollments.find((e) => e.courseId === a.course.id)!;
+      expect(Math.abs(+ea.accessExpiresAt! - +new Date(inDays(200)))).toBeLessThan(5000); // each course keeps its own date
+      await guest.post(`/api/invitations/${token}/accept`).set('X-CSRF-Token', csrf).send({ code, name: 'Ama M', password: 'Quiet-river-stone-58' }).expect(409);
+      // payout only by a super admin, completed needs a reference
+      await t1.send('post', `/api/enrollments/allocations/${al[0].id}/payout`, { status: 'payout_completed', reference: 'x' }).expect(403);
+      await boss.send('post', `/api/enrollments/allocations/${al[0].id}/payout`, { status: 'payout_completed' }).expect(400);
+      await boss.send('post', `/api/enrollments/allocations/${al[0].id}/payout`, { status: 'payout_completed', reference: 'WIRE-55' }).expect(200);
+      const earn = (await t1.agent.get('/api/enrollments/earnings').expect(200)).body;
+      expect(earn.totals).toMatchObject({ instructorCents: 8400, paidOutCents: 3360 });
+      // expiry change and revocation are enforced by the backend
+      await boss.send('put', `/api/enrollments/items/${ia.id}/expiry`, { expiresAt: inDays(400), reason: 'Paid for a longer plan' }).expect(200);
+      expect(lastMail('course-access-extended', email)).toBeTruthy();
+      await boss.send('post', `/api/enrollments/items/${ib.id}/revoke`, { reason: 'Payment reversed' }).expect(200);
+      expect((await prisma.enrollment.findUniqueOrThrow({ where: { userId_courseId: { userId: student.id, courseId: b.course.id } } })).revokedAt).not.toBeNull();
+    });
+
+    it('super admin: direct multi-instructor complimentary enrollment for an existing student, no duplicates, progress kept; reject and needs-info for instructors', async () => {
+      if (!available) return;
+      const boss = await userAgent('me2-boss@e2e.example', ['student', 'admin', 'super_admin']);
+      const t1 = await userAgent('me2-t1@e2e.example', ['student', 'instructor'], {});
+      const t2 = await userAgent('me2-t2@e2e.example', ['student', 'instructor'], {});
+      const x = await publishedCourse(t1.user.id, 'me2-x', 3000);
+      const y = await publishedCourse(t2.user.id, 'me2-y', 3000);
+      const stu = await userAgent('me2-stu@e2e.example', ['student']);
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: x.course.id, source: 'purchase', accessExpiresAt: new Date(Date.now() - 86_400_000) } });
+      await prisma.lectureProgress.create({ data: { userId: stu.user.id, lectureId: x.lecture.id, positionSec: 12, completed: true } });
+      await boss.send('post', '/api/enrollments/manual', { studentEmail: 'me2-stu@e2e.example', studentName: 'Sam Stu', items: [{ courseId: x.course.id }, { courseId: y.course.id }], complimentary: true }).expect(400); // reason required
+      const direct = (await boss.send('post', '/api/enrollments/manual', { studentEmail: 'me2-stu@e2e.example', studentName: 'Sam Stu', items: [{ courseId: x.course.id, expiresAt: inDays(90) }, { courseId: y.course.id, expiresAt: inDays(365) }], complimentary: true, complimentaryReason: 'Scholarship for the Douala cohort' }).expect(201)).body;
+      expect(direct).toMatchObject({ status: 'approved', complimentary: true, student: { hasAccount: true }, invitation: { status: 'not_needed' } });
+      expect(lastMail('courses-assigned', 'me2-stu@e2e.example')).toBeTruthy();
+      const ens = await prisma.enrollment.findMany({ where: { userId: stu.user.id }, orderBy: { accessExpiresAt: 'asc' } });
+      expect(ens.map((e) => e.courseId)).toEqual([x.course.id, y.course.id]);
+      expect(await prisma.lectureProgress.count({ where: { userId: stu.user.id, completed: true } })).toBe(1);
+      await stu.agent.get('/api/me/courses/me2-y').expect(200);
+      // now enrolled: a second request is refused
+      expect((await boss.send('post', '/api/enrollments/manual', { studentEmail: 'me2-stu@e2e.example', studentName: 'Sam Stu', items: [{ courseId: y.course.id }], complimentary: true, complimentaryReason: 'again' }).expect(409)).body.error.code).toBe('already_enrolled');
+      // expired access is enforced by the API
+      await prisma.enrollment.update({ where: { userId_courseId: { userId: stu.user.id, courseId: y.course.id } }, data: { accessExpiresAt: new Date(Date.now() - 1000) } });
+      await stu.agent.get('/api/me/courses/me2-y').expect(403);
+      // reject and needs-info → resubmit
+      const r1 = (await t1.send('post', '/api/enrollments/manual', { studentEmail: 'someone@e2e.example', studentName: 'Some One', items: [{ courseId: x.course.id }] }).expect(201)).body;
+      await boss.send('post', `/api/enrollments/manual/${r1.id}/decision`, { decision: 'needs_info', note: 'Which payment reference?' }).expect(200);
+      expect(lastMail('manual-enrollment-needs-info', 'me2-t1@e2e.example')).toBeTruthy();
+      await t1.send('post', `/api/enrollments/manual/${r1.id}/resubmit`, { note: 'Reference MM-1' }).expect(200);
+      await boss.send('post', `/api/enrollments/manual/${r1.id}/decision`, { decision: 'rejected', note: 'Payment not received' }).expect(200);
+      await boss.send('post', `/api/enrollments/manual/${r1.id}/approve`, { complimentary: true, complimentaryReason: 'nope' }).expect(409);
+      expect(await prisma.user.findUnique({ where: { email: 'someone@e2e.example' } })).toBeNull();
+      const lst = (await t1.agent.get('/api/enrollments/manual').expect(200)).body;
+      expect(lst.items.every((i: any) => i.requestedBy.id === t1.user.id)).toBe(true);
+    });
+  });
+
+  it('review moderation: instructors report, admins hide/restore with a reason, only super admins delete; ratings recalculated', async () => {
+    if (!available) return;
+    const teacher = await userAgent('mod-teacher@e2e.example', ['student', 'instructor'], {});
+    const other = await userAgent('mod-other@e2e.example', ['student', 'instructor'], {});
+    const stu = await userAgent('mod-stu@e2e.example', ['student']);
+    const stu2 = await userAgent('mod-stu2@e2e.example', ['student']);
+    const helper = await userAgent('mod-admin@e2e.example', ['student', 'admin'], undefined, ['reviews.moderate']);
+    const boss = await userAgent('mod-boss@e2e.example', ['student', 'admin', 'super_admin']);
+    const { course } = await publishedCourse(teacher.user.id, 'mod-course', 1500);
+    for (const s of [stu, stu2]) await prisma.enrollment.create({ data: { userId: s.user.id, courseId: course.id, source: 'admin' } });
+    await stu.send('post', '/api/courses/mod-course/reviews', { rating: 1, body: 'BUY CHEAP FOLLOWERS at spam.example' }).expect(201);
+    await stu2.send('post', '/api/courses/mod-course/reviews', { rating: 2, body: 'Too fast for beginners, the labs need more explanation.' }).expect(201);
+    const reviews = await prisma.review.findMany({ where: { courseId: course.id } });
+    const spam = reviews.find((r) => r.rating === 1)!;
+    expect((await prisma.course.findUniqueOrThrow({ where: { id: course.id } })).ratingCount).toBe(2);
+    // reports: own course only, a reason with details, once
+    await other.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'This is an advert for followers.' }).expect(404);
+    await teacher.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'short' }).expect(400);
+    await teacher.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'This is an advert for buying followers, not a review.' }).expect(201);
+    await teacher.send('post', `/api/instructor/reviews/${spam.id}/report`, { reason: 'spam', details: 'This is an advert for buying followers, not a review.' }).expect(409);
+    await teacher.send('delete', `/api/admin/reviews/${spam.id}`, { reason: 'trying to delete' }).expect(403); // instructors never delete
+    // admin with reviews.moderate sees reported ones, hides with a reason → rating recalculated, report actioned
+    const listed = (await helper.agent.get('/api/admin/reviews?reported=true').expect(200)).body;
+    expect(listed.items.map((r: any) => r.id)).toEqual([spam.id]);
+    expect(listed.items[0].reports[0]).toMatchObject({ reason: 'spam', status: 'open', reporter: 'mod-teacher' });
+    await helper.send('post', `/api/admin/reviews/${spam.id}/status`, { status: 'hidden' }).expect(400);
+    await helper.send('post', `/api/admin/reviews/${spam.id}/status`, { status: 'hidden', reason: 'Advertising, not a course review' }).expect(200);
+    expect(await prisma.course.findUniqueOrThrow({ where: { id: course.id } })).toMatchObject({ ratingCount: 1, ratingAvg: 2 });
+    expect((await prisma.reviewReport.findFirstOrThrow({ where: { reviewId: spam.id } })).status).toBe('actioned');
+    // the genuine low rating stays; an admin can't delete, a super admin can (with a reason)
+    await helper.send('delete', `/api/admin/reviews/${spam.id}`, { reason: 'Advertising spam' }).expect(403);
+    await boss.send('delete', `/api/admin/reviews/${spam.id}`, { reason: 'Advertising spam' }).expect(200);
+    expect(await prisma.review.findUnique({ where: { id: spam.id } })).toBeNull();
+    const log = await prisma.auditLog.findFirstOrThrow({ where: { action: 'review.deleted', targetId: spam.id } });
+    expect(log.meta).toMatchObject({ reason: 'Advertising spam', snapshot: { rating: 1 } });
+    // a report can be dismissed when nothing breaks the policy
+    const genuine = reviews.find((r) => r.rating === 2)!;
+    const rep = (await teacher.send('post', `/api/instructor/reviews/${genuine.id}/report`, { reason: 'other', details: 'I disagree with this rating of my course.' }).expect(201)).body;
+    await helper.send('post', `/api/admin/review-reports/${rep.id}/dismiss`, { note: 'Honest feedback, no policy violation' }).expect(200);
+    expect((await prisma.review.findUniqueOrThrow({ where: { id: genuine.id } })).status).toBe('visible');
+  });
+
+  it('storage layout: new uploads live under instructors/<id>/courses/<id>/…, never under another instructor', async () => {
+    if (!available) return;
+    const t = await userAgent('keys-teacher@e2e.example', ['student', 'instructor'], {});
+    const o = await userAgent('keys-other@e2e.example', ['student', 'instructor'], {});
+    const { course } = await publishedCourse(t.user.id, 'keys-course', 1000);
+    const v = (await t.send('post', '/api/instructor/uploads/video', { filename: 'a.mp4', contentType: 'video/mp4', courseId: course.id }).expect(201)).body;
+    expect((await prisma.videoAsset.findUniqueOrThrow({ where: { id: v.assetId } })).storageKey).toBe(`instructors/${t.user.id}/courses/${course.id}/videos/${v.assetId}/source.mp4`);
+    const r = (await t.send('post', '/api/instructor/uploads/resource', { filename: 'lab files.zip', contentType: 'application/zip', sizeBytes: 10, courseId: course.id }).expect(201)).body;
+    expect(r.storageKey).toMatch(new RegExp(`^instructors/${t.user.id}/courses/${course.id}/resources/[0-9a-f-]+/lab_files\\.zip$`));
+    // another instructor can't file things under this course
+    await o.send('post', '/api/instructor/uploads/video', { filename: 'a.mp4', contentType: 'video/mp4', courseId: course.id }).expect(400);
+    await o.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'x', storageKey: r.storageKey }).expect(404);
   });
 });

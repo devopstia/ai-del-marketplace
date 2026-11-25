@@ -12,8 +12,13 @@ export interface Me {
   avatarUrl?: string | null;
   roles: Role[];
   status?: string;
-  instructorStatus?: "pending" | "approved" | "rejected" | null;
+  instructorStatus?: "pending" | "under_review" | "needs_info" | "approved" | "rejected" | null;
   createdAt?: string;
+  /** Admin permissions (all of them for a super admin; empty for everyone else). */
+  adminPermissions?: string[];
+  emailVerified?: boolean;
+  mfaEnabled?: boolean;
+  signupMethod?: string;
   /** Super admin working in the studio as DEL ("DEL Studio"); null otherwise. */
   actingAs?: { id: string; name: string } | null;
 }
@@ -127,6 +132,8 @@ export interface CourseDetail extends CourseCard {
   /** True when the server already answered for a signed-in visitor (enrolled/inCart are then authoritative). */
   viewerSignedIn: boolean;
   hasCaptions: boolean;
+  /** One-year access (owner 2026-11-25): the viewer's access to this course, when they have or had it. */
+  access?: { state: "active" | "expiring" | "expired"; expiresAt: string | null; daysLeft: number | null; canRenew: boolean } | null;
 }
 
 export interface Review {
@@ -191,6 +198,8 @@ export interface LearningItem {
   lastLectureTitle?: string | null;
   lastActivityAt?: string | null;
   certificateCode?: string | null;
+  /** One-year access (owner 2026-11-25). Null for free courses and grants without an end date. */
+  access?: { state: "active" | "expiring" | "expired"; purchasedAt: string | null; expiresAt: string | null; daysLeft: number | null; canRenew: boolean } | null;
 }
 
 export interface Playback {

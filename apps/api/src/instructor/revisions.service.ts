@@ -1,3 +1,4 @@
+import { ownsResourceKey } from '../common/storage-keys';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
 import type { RevisionStatus } from '../generated/prisma/enums';
@@ -59,7 +60,7 @@ export async function applyTree(tx: Tx, courseId: string, tree: CourseTree, opts
     if (opts.requireReady && a.status !== 'ready') throw conflict('A video in this revision is still processing', 'video_not_ready');
   }
   if (tree.course.thumbnailKey && !tree.course.thumbnailKey.startsWith(`images/${opts.ownerId}/`)) throw badRequest('Invalid thumbnail', 'invalid_revision');
-  if (resources.some((r) => !r.storageKey.startsWith(`resources/${opts.ownerId}/`) || r.storageKey.includes('..'))) {
+  if (resources.some((r) => !ownsResourceKey(opts.ownerId, r.storageKey))) {
     throw badRequest('Invalid resource file', 'invalid_revision');
   }
 

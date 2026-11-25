@@ -1,0 +1,39 @@
+# Isolated test stack (fresh database, sign-in code ON) next to the owner's local site:
+#   docker compose -p del-test -f docker-compose.yml -f docker-compose.test.yml up -d --build
+# Web http://127.0.0.1:3100, API :4100, Mailpit :8125. The owner's stack (3000/4000) is not touched.
+services:
+  mailpit:
+    ports: !override ["127.0.0.1:8125:8025"]
+  postgres:
+    ports: !override ["127.0.0.1:5434:5432"]
+  redis:
+    ports: !override ["127.0.0.1:6381:6379"]
+  minio:
+    ports: !override ["127.0.0.1:9100:9000"]
+  api:
+    image: ai-del-marketplace-api:test
+    ports: !override ["127.0.0.1:4100:4000"]
+    environment:
+      MFA_REQUIRED: "true"
+      WEB_URL: http://127.0.0.1:3100
+      API_URL: http://127.0.0.1:4100
+      S3_PUBLIC_ENDPOINT: http://127.0.0.1:9100
+      DEV_TEST_PAYMENTS: "true"
+      # the whole browser suite signs in ~40 times from one IP
+      AUTH_RATE_LIMIT: "300"
+      OAUTH_TEST_PROVIDER: "true"
+  worker:
+    image: ai-del-marketplace-api:test
+    environment:
+      MFA_REQUIRED: "true"
+      WEB_URL: http://127.0.0.1:3100
+      API_URL: http://127.0.0.1:4100
+      S3_PUBLIC_ENDPOINT: http://127.0.0.1:9100
+  web:
+    image: ai-del-marketplace-web:test
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: http://127.0.0.1:4100/api
+    ports: !override ["127.0.0.1:3100:3000"]
+    environment:
+      WEB_URL: http://127.0.0.1:3100

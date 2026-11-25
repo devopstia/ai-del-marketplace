@@ -1,0 +1,248 @@
+import { env } from '../config/env';
+import { type Block, layout, type Rendered } from './layout';
+
+/**
+ * Every email the marketplace sends (docs/EMAIL.md lists when each one goes out). Templates receive only the data
+ * the code passes in the job; no template reads the database. Wording: plain, short, one clear action.
+ */
+type D = Record<string, unknown>;
+const s = (v: unknown, f = '') => (typeof v === 'string' && v ? v : f);
+const first = (d: D) => s(d.name, 'there').split(' ')[0]!;
+const web = () => env().WEB_URL.replace(/\/$/, '');
+const when = (v: unknown) => { const d = v ? new Date(String(v)) : null; return d && !Number.isNaN(+d) ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) : ''; };
+const usd = (c: unknown) => `$${(Number(c ?? 0) / 100).toFixed(2)}`;
+const list = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? x : s((x as D)?.title))).filter(Boolean) : []);
+const courseRows = (v: unknown): [string, string][] => (Array.isArray(v) ? v.map((x) => [s((x as D).title), `until ${when((x as D).expiresAt)}`] as [string, string]) : []);
+const mk = (subject: string, blocks: Block[], preheader?: string, why?: string): Rendered => layout({ subject, blocks, preheader, why });
+const STAFF_WHY = 'You receive this because you are a super admin of DevOps Easy Learning. Turn these emails off in Super Admin › Settings.';
+
+export const TEMPLATES: Record<string, (d: D) => Rendered> = {
+  // ---------- account ----------
+  'verify-email': (d) => mk('Welcome to DevOps Easy Learning: confirm your email', [
+    { h1: `Welcome, ${first(d)}` },
+    { p: 'Your account is ready. Confirm this email address so receipts, access reminders and password resets reach you.' },
+    { cta: { href: s(d.link), label: 'Confirm my email' } },
+    { muted: 'The link works once and expires in 3 days. If you didn’t create an account, ignore this email.' },
+    { link: s(d.link) },
+  ], 'Confirm your email to finish setting up your account'),
+  welcome: (d) => mk('Welcome to DevOps Easy Learning', [
+    { h1: `Welcome, ${first(d)}` },
+    { p: 'Your account is ready. Browse the courses, try the free previews, and pick up where you left off from your Student Studio.' },
+    { cta: { href: `${web()}/student`, label: 'Open my Student Studio' } },
+  ]),
+  'password-reset': (d) => mk('Reset your DevOps Easy Learning password', [
+    { h1: 'Reset your password' },
+    { p: `Hi ${first(d)}, someone (hopefully you) asked to reset the password of your account.` },
+    { cta: { href: s(d.link), label: 'Choose a new password' } },
+    { muted: 'The link works once and expires in 1 hour. Resetting signs you out everywhere; Google Authenticator is still asked at sign-in. If you didn’t ask, ignore this email: your password stays the same.' },
+    { link: s(d.link) },
+  ], 'This link expires in one hour'),
+  'security-password-changed': (d) => mk('Your password was changed', [
+    { h1: 'Your password was changed' },
+    { p: `Hi ${first(d)}, the password of your DevOps Easy Learning account was just changed and every other session was signed out.` },
+    { note: 'If this wasn’t you, reset your password now and write to support@devopseasylearning.com.' },
+    { cta: { href: `${web()}/forgot-password`, label: 'Reset my password' } },
+  ]),
+  'security-mfa-reset': (d) => mk('Two-step sign-in was reset on your account', [
+    { h1: 'Two-step sign-in was reset' },
+    { p: `Hi ${first(d)}, DevOps Easy Learning removed the Google Authenticator from your account after confirming who you are. You set up a new one at your next sign-in.` },
+    { note: 'If you didn’t ask for this, write to support@devopseasylearning.com right away.' },
+  ]),
+  'security-identity-linked': (d) => mk(`${s(d.provider, 'A sign-in method')} was linked to your account`, [
+    { h1: 'New way to sign in' },
+    { p: `**${s(d.provider)}** can now be used to sign in to your DevOps Easy Learning account. Google Authenticator is still asked every time.` },
+    { note: 'If this wasn’t you, remove it in Account settings › Security and change your password.' },
+    { cta: { href: `${web()}/student/account`, label: 'Review my sign-in methods' } },
+  ]),
+  'security-identity-unlinked': (d) => mk(`${s(d.provider, 'A sign-in method')} was removed from your account`, [
+    { h1: 'Sign-in method removed' },
+    { p: `**${s(d.provider)}** can no longer be used to sign in to your account.` },
+    { cta: { href: `${web()}/student/account`, label: 'Review my sign-in methods' } },
+  ]),
+  'security-role-changed': (d) => mk('Your access on DevOps Easy Learning changed', [
+    { h1: 'Your access changed' },
+    { p: `Hi ${first(d)}, a super admin changed the roles on your account.` },
+    { rows: [...(list(d.added).length ? [['Added', list(d.added).join(', ').replace(/_/g, ' ')] as [string, string]] : []), ...(list(d.removed).length ? [['Removed', list(d.removed).join(', ').replace(/_/g, ' ')] as [string, string]] : [])] },
+    { note: 'If you didn’t expect this, write to support@devopseasylearning.com.' },
+  ]),
+
+  // ---------- purchases and access ----------
+  'order-receipt': (d) => mk(`Your receipt from DevOps Easy Learning${d.total ? ` (${usd(d.total)})` : ''}`, [
+    { h1: `Thanks for your purchase, ${first(d)}` },
+    { p: 'Your courses are ready in your Student Studio. Each purchase includes 12 months of access; nothing renews automatically.' },
+    { rows: [...(Array.isArray(d.lines) ? (d.lines as D[]).map((l) => [`${s(l.title)}${l.renewal ? ' (renewal)' : ''}`, `${usd(l.priceCents)} · until ${when(l.accessUntil)}`] as [string, string]) : []), ['Total', usd(d.total)]] },
+    { cta: { href: `${web()}/student/courses`, label: 'Start learning' } },
+    { muted: `Receipt ${s(d.orderId).slice(0, 8)}: ${web()}/student/purchases/${s(d.orderId)}. Refunds within 14 days if you watched 25% of a course or less.` },
+  ], 'Your courses are ready'),
+  'access-expiring': (d) => mk(`Your access to ${s(d.course)} ends in ${Number(d.daysLeft)} day${Number(d.daysLeft) === 1 ? '' : 's'}`, [
+    { h1: 'Your access ends soon' },
+    { p: `Hi ${first(d)}, your 12 months of access to **${s(d.course)}** end on **${when(d.expiresAt)}**.` },
+    { p: 'Renew for another 12 months at the current price. Your progress, notes and certificate stay as they are. Nothing is charged automatically.' },
+    { cta: { href: `${web()}/courses/${s(d.slug)}`, label: 'Renew for 12 months' } },
+  ]),
+  'access-expired': (d) => mk(`Your access to ${s(d.course)} has ended`, [
+    { h1: 'Your access has ended' },
+    { p: `Hi ${first(d)}, your 12 months of access to **${s(d.course)}** ended on ${when(d.expiresAt)}. Your progress is saved.` },
+    { cta: { href: `${web()}/courses/${s(d.slug)}`, label: 'Renew and continue' } },
+  ]),
+  'course-access-activated': (d) => mk('Your course is ready', [
+    { h1: `Your course is ready, ${first(d)}` },
+    { p: 'DevOps Easy Learning added this course to your account:' },
+    { rows: courseRows(d.courses) },
+    { cta: { href: s(d.link, `${web()}/student/courses`), label: 'Start learning' } },
+  ]),
+  'courses-assigned': (d) => mk('Your new courses are ready', [
+    { h1: `Your courses are ready, ${first(d)}` },
+    { p: 'DevOps Easy Learning added these courses to your account. Each has its own access date:' },
+    { rows: courseRows(d.courses) },
+    { cta: { href: s(d.link, `${web()}/student/courses`), label: 'Open My courses' } },
+  ]),
+  'course-access-extended': (d) => mk(`Access to ${s(d.course)} extended`, [
+    { h1: 'Your access was extended' },
+    { p: `Hi ${first(d)}, you now have access to **${s(d.course)}** until **${when(d.expiresAt)}**.` },
+    { cta: { href: s(d.link, `${web()}/student/courses`), label: 'Continue learning' } },
+  ]),
+
+  // ---------- refunds ----------
+  'refund-received': (d) => mk('We received your refund request', [
+    { h1: 'Refund request received' },
+    { p: `Hi ${first(d)}, we received your request for: ${list(d.courses).join(', ')}. A person reviews it and we email you the decision.` },
+  ]),
+  'refund-approved': (d) => mk('Your refund is approved', [
+    { h1: 'Your refund is approved' },
+    { p: `Hi ${first(d)}, we refunded ${d.amountCents != null ? `**${usd(d.amountCents)}** for ` : ''}${list(d.courses).join(', ') || 'your course'}. It reaches your card in 5–10 business days, depending on your bank.` },
+    ...(s(d.note) ? [{ note: s(d.note) } as Block] : []),
+  ]),
+  'refund-declined': (d) => mk('About your refund request', [
+    { h1: 'We can’t refund this automatically' },
+    { p: `Hi ${first(d)}, refunds are available within ${Number(d.windowDays ?? 14)} days of purchase when no more than ${Number(d.thresholdPercent ?? 25)}% of the course video was watched.` },
+    { rows: [['Course', s(d.course)], ['Watched', `${Number(d.watchedPercent ?? 0)}% (unique playback)`]] },
+    { p: 'If something went wrong with the course, ask for a review from your receipt. A person looks at every review.' },
+    { cta: { href: `${web()}/student/purchases`, label: 'Ask for a review' } },
+  ]),
+  'refund-review-received': (d) => mk('We received your review request', [
+    { h1: 'A person will review your request' },
+    { p: `Hi ${first(d)}, thanks for explaining. A DevOps Easy Learning team member reviews your refund request and emails you the decision.` },
+  ]),
+  'refund-declined-after-review': (d) => mk('Your refund review', [
+    { h1: 'Your refund review' },
+    { p: `Hi ${first(d)}, we reviewed your request and can’t refund it.` },
+    ...(s(d.note) ? [{ note: s(d.note) } as Block] : []),
+    { muted: 'Questions? Reply to this email.' },
+  ]),
+
+  // ---------- instructors ----------
+  'instructor-application-received': (d) => mk('We received your instructor application', [
+    { h1: 'Application received' },
+    { p: `Thanks, ${first(d)}. DevOps Easy Learning reviews every application, usually within two working days, and emails you the decision.` },
+    { cta: { href: s(d.link, `${web()}/student/teach`), label: 'See my application' } },
+  ]),
+  'instructor-approved': (d) => mk('You’re now an instructor on DevOps Easy Learning', [
+    { h1: `Welcome to teaching, ${first(d)}` },
+    { p: 'Your application is approved. The Instructor Studio is in your studio switcher; your student account and courses stay as they are.' },
+    { list: ['Create a course and add sections and lessons', 'Upload each lesson’s video and its files', 'Submit it for review'] },
+    { cta: { href: s(d.link, `${web()}/studio`), label: 'Open the Instructor Studio' } },
+  ]),
+  'instructor-rejected': (d) => mk('About your instructor application', [
+    { h1: 'Your application wasn’t approved' },
+    { p: `Hi ${first(d)}, thank you for applying. We can’t approve it at this time. You keep your student account.` },
+    ...(s(d.note) ? [{ note: s(d.note) } as Block] : []),
+    { cta: { href: s(d.link, `${web()}/student/teach`), label: 'Update and apply again' } },
+  ]),
+  'instructor-needs-info': (d) => mk('A question about your instructor application', [
+    { h1: 'We need a little more information' },
+    { p: `Hi ${first(d)}, to finish reviewing your application:` },
+    { note: s(d.note) },
+    { cta: { href: s(d.link, `${web()}/student/teach`), label: 'Update my application' } },
+  ]),
+
+  // ---------- manual enrollment ----------
+  'student-invitation': (d) => mk('DevOps Easy Learning invited you to your courses', [
+    { h1: `Your courses are waiting, ${first(d)}` },
+    { p: 'DevOps Easy Learning enrolled you in:' },
+    { rows: courseRows(d.courses) },
+    { p: 'Create your account: we send a code to this address to confirm it’s you, you choose your own password, then you set up Google Authenticator.' },
+    { cta: { href: s(d.link), label: 'Create my account' } },
+    { muted: `This invitation expires in ${Number(d.expiresInDays ?? 7)} days and works once. If you didn’t expect it, ignore this email.` },
+    { link: s(d.link) },
+  ], 'Create your account to start learning'),
+  'invitation-code': (d) => mk(`${s(d.code)} is your DevOps Easy Learning code`, [
+    { h1: 'Your confirmation code' },
+    { p: `Hi ${first(d)}, enter this code on the invitation page:` },
+    { code: s(d.code) },
+    { muted: 'It expires in 15 minutes. Never share it: DevOps Easy Learning will never ask you for it.' },
+  ], 'Valid for 15 minutes'),
+  'manual-enrollment-request-received': (d) => mk(`Request ${s(d.ref)} sent to DevOps Easy Learning`, [
+    { h1: 'Enrollment request sent' },
+    { p: `Your request **${s(d.ref)}** for **${s(d.student)}** (${list(d.courses).join(', ')}) is waiting for DevOps Easy Learning. We verify the payment, then approve it and invite the student.` },
+    { cta: { href: s(d.link), label: 'See my requests' } },
+  ]),
+  'manual-enrollment-submitted': (d) => mk(`New manual enrollment request ${s(d.ref)}`, [
+    { h1: 'Manual enrollment to review' },
+    { rows: [['Request', s(d.ref)], ['Instructor', s(d.instructor)], ['Student', s(d.student)], ['Courses', list(d.courses).join(', ')]] },
+    { p: 'Verify the payment (or record a complimentary reason), then approve.' },
+    { cta: { href: s(d.link), label: 'Review the request' } },
+  ], undefined, STAFF_WHY),
+  'manual-enrollment-approved': (d) => mk(`Request ${s(d.ref)} approved`, [
+    { h1: 'Enrollment approved' },
+    { p: `**${s(d.student)}** now has access (or an invitation to create the account). You can copy or resend the invitation from your requests.` },
+    { cta: { href: s(d.link), label: 'Open my requests' } },
+  ]),
+  'manual-enrollment-rejected': (d) => mk(`Request ${s(d.ref)} was not approved`, [
+    { h1: 'Enrollment not approved' },
+    { p: `Your request for **${s(d.student)}** wasn’t approved.` },
+    { note: s(d.note) },
+    { cta: { href: s(d.link), label: 'Open my requests' } },
+  ]),
+  'manual-enrollment-needs-info': (d) => mk(`Request ${s(d.ref)}: more information needed`, [
+    { h1: 'DevOps Easy Learning has a question' },
+    { p: `About your request for **${s(d.student)}**:` },
+    { note: s(d.note) },
+    { cta: { href: s(d.link), label: 'Answer' } },
+  ]),
+
+  // ---------- staff ----------
+  'staff-new-registration': (d) => mk(`New registration: ${s(d.name)}`, [
+    { h1: 'New student registered' },
+    { rows: [['Name', s(d.name)], ['Signed up with', s(d.method)]] },
+    { cta: { href: s(d.link), label: 'Open Users and roles' } },
+  ], undefined, STAFF_WHY),
+  'staff-instructor-application': (d) => mk(`Instructor application: ${s(d.name)}`, [
+    { h1: 'New instructor application' },
+    { rows: [['Applicant', s(d.name)], ...(s(d.headline) ? [['Headline', s(d.headline)] as [string, string]] : [])] },
+    { cta: { href: s(d.link), label: 'Review the application' } },
+  ], undefined, STAFF_WHY),
+
+  // ---------- support and contact ----------
+  'support-reply': (d) => mk(`New reply on ${s(d.ticket)}: ${s(d.subject)}`, [
+    { h1: 'Support replied to your request' },
+    { p: `**${s(d.ticket)}**: ${s(d.subject)}` },
+    { cta: { href: `${web()}/support`, label: 'Read the reply' } },
+  ]),
+  'support-info-requested': (d) => mk(`We need more information on ${s(d.ticket)}`, [
+    { h1: 'Support needs a little more information' },
+    { p: `**${s(d.ticket)}**: ${s(d.subject)}` },
+    { cta: { href: `${web()}/support`, label: 'Answer' } },
+  ]),
+  'support-resolved': (d) => mk(`${s(d.ticket)} is resolved`, [
+    { h1: 'Your request is resolved' },
+    { p: `**${s(d.ticket)}**: ${s(d.subject)}. If anything is still wrong, reply in the request and it opens again.` },
+    { cta: { href: `${web()}/support`, label: 'See the request' } },
+  ]),
+  'contact-message': (d) => mk(`[${s(d.ref)}] ${s(d.subject)}`, [
+    { h1: s(d.subject) },
+    { rows: [['From', `${s(d.name)} <${s(d.email)}>`], ['Topic', s(d.topic)], ['Reference', s(d.ref)], ['Signed in', d.signedIn ? 'yes' : 'no']] },
+    { p: s(d.body) },
+    { muted: 'Screenshots, if any, are attached. Reply to this email to answer the sender directly.' },
+    { cta: { href: s(d.link), label: 'Open Contact messages' } },
+  ], undefined, 'Sent from the Contact page of the DevOps Easy Learning marketplace.'),
+  'contact-received': (d) => mk(`We received your message (${s(d.ref)})`, [
+    { h1: `Thanks, ${first(d)}` },
+    { p: `We received your message “${s(d.subject)}”. Your reference is **${s(d.ref)}**. We reply within one working day.` },
+  ], undefined, 'You receive this because you wrote to DevOps Easy Learning from the Contact page.'),
+};
+
+export function render(template: string, data: D = {}): Rendered | null {
+  const fn = TEMPLATES[template];
+  return fn ? fn(data) : null;
+}

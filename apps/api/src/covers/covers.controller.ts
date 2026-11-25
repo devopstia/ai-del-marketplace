@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { z } from 'zod';
-import { ActorCtx, type Actor, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, Roles, Perm } from '../common/auth-context';
 import { notFound } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { ZBody, ZQuery } from '../common/zod';
@@ -55,10 +55,10 @@ export class CoversController {
   }
 
   // ---------- admin: view; super admin: change ----------
-  @Roles('admin') @Get('admin/cover-templates')
+  @Perm('content.manage') @Get('admin/cover-templates')
   list() { return this.covers.adminList(); }
 
-  @Roles('admin') @Get('admin/cover-templates/:id/preview')
+  @Perm('content.manage') @Get('admin/cover-templates/:id/preview')
   async adminPreview(@Param('id', uuid) id: string, @ZQuery(previewQuery) q: z.infer<typeof previewQuery>, @Res() res: Response) {
     png(res, await this.covers.preview(id, q.title ?? 'Your course title goes here', q.topic ?? 'Topic', q.w));
   }

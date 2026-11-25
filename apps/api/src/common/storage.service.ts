@@ -23,13 +23,16 @@ export class StorageService {
 
   constructor() {
     const e = env();
+    // Local MinIO: fixed keys, path-style URLs. AWS (S3_ENDPOINT=aws): no keys at all, the server's IAM role signs
+    // (workload authentication, docs/DEPLOYMENT.md), virtual-hosted URLs.
+    const aws = e.S3_ENDPOINT === 'aws';
     const base = {
       region: e.S3_REGION,
-      forcePathStyle: true,
-      credentials: { accessKeyId: e.S3_ACCESS_KEY, secretAccessKey: e.S3_SECRET_KEY },
+      forcePathStyle: !aws,
+      ...(e.S3_ACCESS_KEY ? { credentials: { accessKeyId: e.S3_ACCESS_KEY, secretAccessKey: e.S3_SECRET_KEY } } : {}),
     };
-    this.internal = new S3Client({ ...base, endpoint: e.S3_ENDPOINT });
-    this.publicSigner = new S3Client({ ...base, endpoint: e.S3_PUBLIC_ENDPOINT });
+    this.internal = new S3Client({ ...base, ...(aws ? {} : { endpoint: e.S3_ENDPOINT }) });
+    this.publicSigner = new S3Client({ ...base, ...(aws ? {} : { endpoint: e.S3_PUBLIC_ENDPOINT }) });
     this.bucket = e.S3_BUCKET;
   }
 

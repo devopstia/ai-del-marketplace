@@ -1,0 +1,86 @@
+# Continuous integration (docs/DEPLOYMENT.md "Pipeline"), following Insurance Hub's ci.yml design:
+# pull requests and pushes run the checks; doc-only changes run nothing; release.yml calls it with the full suite.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+    paths-ignore: ["**/*.md", "docs/**", "prompts.md"]
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API (unit + end to end)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: del, POSTGRES_PASSWORD: ci-only-password, POSTGRES_DB: marketplace }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U del" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      # Throwaway values for the CI containers only; real secrets never appear in workflows.
+      E2E_DATABASE_URL: postgresql://del:ci-only-password@127.0.0.1:5432/marketplace_e2e
+      E2E_REDIS_URL: redis://127.0.0.1:6379
+      S3_ACCESS_KEY: ci-minio
+      S3_SECRET_KEY: ci-minio-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - name: Object storage (MinIO)
+        run: |
+          docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER=ci-minio -e MINIO_ROOT_PASSWORD=ci-minio-secret \
+            pgsty/minio:RELEASE.2026-08-04T00-00-00Z server /data
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:9000/minio/health/live && break; sleep 1; done
+          docker exec minio mc alias set local http://127.0.0.1:9000 ci-minio ci-minio-secret
+          docker exec minio mc mb -p local/del-media
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck -w apps/api
+      - name: Unit tests
+        run: npm run test:unit -w apps/api
+      - name: End-to-end tests (real Nest app, Postgres, Redis, MinIO)
+        run: npm run test:e2e -w apps/api
+
+  web:
+    name: Web (typecheck, lint, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck -w apps/web
+      - run: npm run lint -w apps/web
+      - run: npm run build -w apps/web
+        env: { NEXT_PUBLIC_API_URL: http://127.0.0.1:4000/api }
+
+  images:
+    name: Docker images build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: API and worker image
+        uses: docker/build-push-action@v6
+        with: { context: ., file: apps/api/Dockerfile, push: false, cache-from: type=gha, cache-to: "type=gha,mode=max" }
+      - name: Web image
+        uses: docker/build-push-action@v6
+        with: { context: ., file: apps/web/Dockerfile, push: false, build-args: "NEXT_PUBLIC_API_URL=https://example.invalid/api", cache-from: type=gha, cache-to: "type=gha,mode=max" }

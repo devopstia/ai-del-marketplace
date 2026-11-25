@@ -49,7 +49,8 @@ export interface ReqOpts {
 export async function api<T = unknown>(path: string, opts: ReqOpts = {}): Promise<T> {
   const method = opts.method ?? "GET";
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (opts.body !== undefined) headers["Content-Type"] = "application/json";
+  const form = typeof FormData !== "undefined" && opts.body instanceof FormData;
+  if (opts.body !== undefined && !form) headers["Content-Type"] = "application/json";
   if (method !== "GET") {
     const t = await ensureCsrf();
     if (t) headers["X-CSRF-Token"] = t;
@@ -60,7 +61,7 @@ export async function api<T = unknown>(path: string, opts: ReqOpts = {}): Promis
       method,
       headers,
       credentials: "include",
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      body: form ? (opts.body as FormData) : opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
       signal: opts.signal,
     });
   } catch {

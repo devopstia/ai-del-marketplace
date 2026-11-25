@@ -103,11 +103,13 @@ export class SignInService {
   async begin(user: User, method: Method, req: AppRequest, res: Response, ctx: Ctx, extra: { cartCourseIds?: string[]; next?: string } = {}) {
     if (user.status !== 'active') throw new AppError(403, 'account_suspended', 'This account is suspended');
     this.assertNotLocked(user);
-    if (user.mfaEnabledAt && (await this.isTrusted(req, user.id))) {
+    // Local development switch (MFA_REQUIRED=false); never honoured in production.
+    const skip = !env().MFA_REQUIRED && !isProd();
+    if (skip || (user.mfaEnabledAt && (await this.isTrusted(req, user.id)))) {
       const token = await this.createSession(user.id, ctx);
       res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
       await this.prisma.user.update({ where: { id: user.id }, data: { failedLogins: 0 } });
-      await this.audit.log({ actorId: user.id, action: 'auth.login', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method, trustedDevice: true } });
+      await this.audit.log({ actorId: user.id, action: 'auth.login', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method, ...(skip ? { mfa: 'skipped (MFA_REQUIRED=false, local only)' } : { trustedDevice: true }) } });
       return { done: true as const, userId: user.id, cartCourseIds: extra.cartCourseIds };
     }
     const stage = user.mfaEnabledAt ? 'verify' : 'enroll';

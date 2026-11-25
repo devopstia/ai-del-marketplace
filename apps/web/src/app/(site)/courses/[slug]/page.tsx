@@ -10,6 +10,7 @@ import { Markdown } from "@/components/Markdown";
 import { Curriculum } from "@/components/Curriculum";
 import { PreviewProvider } from "@/components/PreviewContext";
 import { CourseFaq } from "@/components/CourseFaq";
+import { ProgramNote } from "@/components/promo/FullProgram";
 import { PurchaseCard } from "@/components/PurchaseCard";
 import { ReviewForm } from "@/components/ReviewForm";
 
@@ -120,6 +121,8 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           </section>
 
           <CourseFaq c={c} />
+
+          <div className="mt-10 max-w-2xl"><ProgramNote placement="course-page" /></div>
 
           <section id="reviews" className="mt-14 scroll-mt-24">
             <h2 className="font-display text-2xl font-extrabold">Learner reviews</h2>

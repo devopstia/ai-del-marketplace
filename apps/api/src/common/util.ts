@@ -21,3 +21,7 @@ export function splitAmount(priceCents: number, commissionBps: number) {
   const commissionCents = Math.round((priceCents * commissionBps) / 10000);
   return { commissionCents, instructorShareCents: priceCents - commissionCents };
 }
+
+/** Prisma skip/take for 1-based pages. */
+export const page = (p: number, size: number) => ({ skip: (p - 1) * size, take: size });
+export const paged = <T>(items: T[], total: number, q: { page: number; pageSize: number }) => ({ items, total, page: q.page, pageSize: q.pageSize, totalPages: Math.ceil(total / q.pageSize) });

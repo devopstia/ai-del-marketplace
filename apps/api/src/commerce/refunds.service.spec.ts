@@ -10,8 +10,8 @@ function fakeDb() {
       { id: 'b', orderId: 'o1', courseId: 'c-del', priceCents: 2999, instructorShareCents: 0, transferStatus: 'none', transferId: null, refundedAt: null as Date | null },
     ],
     enrollments: [
-      { orderLineId: 'a', courseId: 'c-nadia', revokedAt: null as Date | null },
-      { orderLineId: 'b', courseId: 'c-del', revokedAt: null as Date | null },
+      { userId: 'buyer', orderLineId: 'a', courseId: 'c-nadia', accessExpiresAt: null, revokedAt: null as Date | null },
+      { userId: 'buyer', orderLineId: 'b', courseId: 'c-del', accessExpiresAt: null, revokedAt: null as Date | null },
     ],
     studentCount: { 'c-nadia': 5, 'c-del': 9 } as Record<string, number>,
   };
@@ -41,7 +41,11 @@ function fakeDb() {
         rows.forEach((e) => Object.assign(e, data));
         return { count: rows.length };
       }),
+      findUnique: jest.fn(async ({ where }: any) => state.enrollments.find((e: any) => e.userId === where.userId_courseId.userId && e.courseId === where.userId_courseId.courseId) ?? null),
+      update: jest.fn(async ({ where, data }: any) => Object.assign(state.enrollments.find((e: any) => e.userId === where.userId_courseId.userId && e.courseId === where.userId_courseId.courseId)!, data)),
     },
+    // One-year access periods: none in these fixtures (enrolments made before periods), so a refund revokes the course.
+    accessPeriod: { updateMany: jest.fn(async () => ({ count: 0 })), findMany: jest.fn(async () => []) },
     course: { update: jest.fn(async ({ where }: any) => (state.studentCount[where.id] -= 1)) },
     certificate: { deleteMany: jest.fn(async () => ({ count: 0 })) },
   };

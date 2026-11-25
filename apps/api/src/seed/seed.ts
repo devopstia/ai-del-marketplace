@@ -77,8 +77,8 @@ async function upsertUser(email: string, name: string, roles: Role[], passwordHa
   const mfa = demoMfa();
   return prisma.user.upsert({
     where: { email },
-    create: { email, name, roles, passwordHash, passwordChangedAt: new Date(), ...mfa },
-    update: { name, roles, passwordHash, status: 'active', failedLogins: 0, lockedUntil: null, ...mfa },
+    create: { email, name, roles, passwordHash, passwordChangedAt: new Date(), signupMethod: 'seed', emailVerifiedAt: new Date(), ...mfa },
+    update: { name, roles, passwordHash, status: 'active', failedLogins: 0, lockedUntil: null, signupMethod: 'seed', emailVerifiedAt: new Date(), ...mfa },
   });
 }
 

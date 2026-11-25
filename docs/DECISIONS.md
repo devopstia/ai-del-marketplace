@@ -181,3 +181,29 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   every sign-in for everyone with an optional "Trust this device for 30 days"; all four providers built, buttons only
   with keys, tested with a local test provider; Have I Been Pwned for breached passwords. Hub review: no Google
   sign-in there (MFA, recovery codes, lockout ported). Migration ends all sessions. docs/AUTH.md, AGENTS.md rule 19.
+- Reviews in the course player (prompts.md task 1): branch `feat/learn-reviews` (rollback tag
+  `checkpoint-2026-11-25-learn-reviews`). "Rate course / Your review" tab, rating in Overview and the player bar;
+  same review record as the public page (one per student, edits replace it, a hidden review stays hidden).
+  Owner decisions for task 2 (2026-11-25): existing enrolments get 1 year from today; renewal = buy again at the
+  current price (sales apply, progress kept, no auto-charge); eligible refunds automatic (3/year, then admin);
+  AI refund analysis with Claude, hidden until ANTHROPIC_API_KEY is set.
+- One-year access + refund rule (prompts.md task 2): branch `feat/one-year-access` (rollback tag
+  `checkpoint-2026-11-25-one-year-access` = `525a82c`). Access periods, server-enforced expiry, renewal (last 30 days or
+  after expiry), reminders, unique-seconds consumption, automatic refund decisions with review, Admin › Refunds, Claude
+  summaries (hidden without key), policy page, "lifetime" removed everywhere. docs/ACCESS_AND_REFUNDS.md, AGENTS rule 20.
+- Batch 2 (prompts.md tasks 3–9 plus owner requests, 2026-11-25; owner: "work on all of those, deploy local and push into
+  main… go with recommendation"): rollback tag `checkpoint-2026-11-25-before-batch2` = `10d92d2`, branch
+  `backup/before-batch2-2026-11-25`; work on `feat/player-and-promo`. Decisions taken on the owner's behalf
+  (recommended options): YouTube-style player with in-place lesson changes (full screen survives Next); full program
+  promoted with `www.devopseasylearning.com` (bare domain has a certificate error), removed from the menu bar at the
+  owner's request; four roles with explicit admin permissions, existing admins keep all operational permissions,
+  step-up authenticator code for privileged role changes; Student Studio at `/student` with old links redirected; one
+  `AppShell` for every studio; curriculum drag and drop with dnd-kit (keyboard and touch), course package as a separate
+  table that applies immediately; manual enrollment with super-admin-only payment verification, allocation per course,
+  80/20 of the net, hashed 7-day invitations where every new link replaces the old one and an emailed code proves the
+  address; email through the Hub's layout with DEL branding, Resend in production and a local Mailpit inbox; CI on
+  GitHub Actions, images/release workflows gated by `PRODUCTION_ENABLED` (no AWS resources created), secrets in SSM
+  instead of the Hub's committed secrets file, SSM Run Command instead of SSH, no geographic rules; contact page
+  emails screenshots to support@devopseasylearning.com; social links from the DEL website; /install and /help
+  ("Platform videos", two columns) redesigned. Tests run on an isolated `del-test` stack (ports 3100/4100) so the
+  owner's local site (MFA_REQUIRED=false) is never touched.

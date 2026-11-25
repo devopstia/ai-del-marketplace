@@ -1,6 +1,6 @@
 import { Controller, Get, Header, Param, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { CurrentUser, Roles } from '../common/auth-context';
+import { CurrentUser, Roles, Perm } from '../common/auth-context';
 import type { AuthUser } from '../common/auth-context';
 import { ProtectionService } from './protection.service';
 
@@ -28,6 +28,6 @@ export class ProtectionController {
   }
 
 
-  @Roles('admin') @Get('admin/playback/status')
+  @Perm('content.manage') @Get('admin/playback/status')
   status() { return this.svc.status(); }
 }

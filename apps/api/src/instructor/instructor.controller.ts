@@ -5,12 +5,19 @@ import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
 import { InstructorService } from './instructor.service';
 
-const applySchema = z.object({
+const baseProfile = z.object({
   headline: z.string().trim().min(3).max(120),
   bio: z.string().trim().min(20).max(5000),
   website: z.string().url().max(300).nullable().optional(),
 });
-const profileSchema = applySchema.partial();
+/** Instructor application: what DEL needs to decide (owner 2026-11-25). */
+const applySchema = baseProfile.extend({
+  expertise: z.array(z.string().trim().min(2).max(60)).min(1).max(12),
+  experience: z.string().trim().min(20).max(3000),
+  plannedCourses: z.string().trim().min(10).max(3000),
+  extraInfo: z.string().trim().max(3000).optional(),
+}).strict();
+const profileSchema = baseProfile.partial();
 const str = (max: number) => z.string().trim().max(max);
 const courseFields = z.object({
   title: str(120).min(3),
@@ -29,6 +36,8 @@ const createSchema = courseFields.partial().extend({ title: str(120).min(3) });
 const updateSchema = courseFields.partial();
 const titleSchema = z.object({ title: str(200).min(1) });
 const idsSchema = z.object({ ids: z.array(z.string().uuid()).max(500) });
+const arrangeSchema = z.object({ sections: z.array(z.object({ id: z.string().uuid(), lectureIds: z.array(z.string().uuid()).max(1000) })).max(200) });
+const packageSchema = z.object({ title: z.string().trim().min(1).max(200), storageKey: z.string().max(400) });
 const lectureFields = z.object({
   title: str(200).min(1),
   type: z.enum(['video', 'article', 'quiz']),
@@ -114,6 +123,20 @@ export class InstructorController {
   addSection(@Param('id') id: string, @ZBody(titleSchema) body: z.infer<typeof titleSchema>, @ActorCtx() a: Actor) {
     return this.svc.addSection(a, id, body.title);
   }
+
+  @Roles('instructor') @Put('courses/:id/curriculum')
+  arrange(@Param('id') id: string, @ZBody(arrangeSchema) body: z.infer<typeof arrangeSchema>, @ActorCtx() a: Actor) {
+    return this.svc.arrange(a, id, body.sections);
+  }
+
+  @Roles('instructor') @Get('courses/:id/package')
+  packageFiles(@Param('id') id: string, @ActorCtx() a: Actor) { return this.svc.packageFiles(a.user.id, id); }
+
+  @Roles('instructor') @Post('courses/:id/package')
+  addPackageFile(@Param('id') id: string, @ZBody(packageSchema) body: z.infer<typeof packageSchema>, @ActorCtx() a: Actor) { return this.svc.addPackageFile(a, id, body); }
+
+  @Roles('instructor') @Delete('courses/:id/package/:fileId')
+  deletePackageFile(@Param('id') id: string, @Param('fileId') fid: string, @ActorCtx() a: Actor) { return this.svc.deletePackageFile(a, id, fid); }
 
   @Roles('instructor') @Put('courses/:id/sections/order')
   reorderSections(@Param('id') id: string, @ZBody(idsSchema) body: z.infer<typeof idsSchema>, @ActorCtx() a: Actor) {

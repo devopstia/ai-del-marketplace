@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { grantYear } from '../access/access';
 import { AuditService } from '../common/audit.service';
 import { JobsService } from '../common/jobs';
 import { refundDeadline, simulatedStripeFee, transferDueAt } from './money';
@@ -59,19 +60,14 @@ export class FulfilmentService {
       // Instructor shares wait for the refund window to close before they are transferred.
       await tx.orderLine.updateMany({ where: { orderId, transferStatus: 'pending' }, data: { transferDueAt: transferDueAt(paidAt) } });
       const enrolled: string[] = [];
+      const renewed: string[] = [];
       for (const line of order.lines) {
-        const key = { userId_courseId: { userId: order.userId, courseId: line.courseId } };
-        const existing = await tx.enrollment.findUnique({ where: key });
-        const source = line.priceCents === 0 ? ('free' as const) : ('purchase' as const);
-        if (!existing) {
-          await tx.enrollment.create({ data: { userId: order.userId, courseId: line.courseId, orderLineId: line.id, source } });
-        } else if (existing.revokedAt) {
-          await tx.enrollment.update({ where: key, data: { revokedAt: null, orderLineId: line.id, source } });
-        } else {
-          continue; // already enrolled (e.g. admin grant): nothing to do
-        }
-        await tx.course.update({ where: { id: line.courseId }, data: { studentCount: { increment: 1 } } });
+        // One year of access per paid line (renewals extend it); free courses have no expiry.
+        const g = await grantYear(tx, { userId: order.userId, courseId: line.courseId, orderLineId: line.id, paidAt, free: line.priceCents === 0 });
+        if (g.kind === 'none') continue; // unlimited access already (e.g. admin grant)
+        if (g.newStudent) await tx.course.update({ where: { id: line.courseId }, data: { studentCount: { increment: 1 } } });
         enrolled.push(line.courseId);
+        if (g.kind === 'renewal') renewed.push(line.courseId);
       }
       await tx.cartItem.deleteMany({ where: { userId: order.userId, courseId: { in: order.lines.map((l) => l.courseId) } } });
       await this.audit.log(
@@ -81,16 +77,24 @@ export class FulfilmentService {
           targetType: 'order',
           targetId: orderId,
           ip: payment.ip ?? null,
-          meta: { via: payment.via, totalCents: order.totalCents, paymentIntentId: payment.paymentIntentId ?? null, enrolled },
+          meta: { via: payment.via, totalCents: order.totalCents, paymentIntentId: payment.paymentIntentId ?? null, enrolled, renewed },
         },
         tx,
       );
-      return { orderId, alreadyFulfilled: false, enrolledCourseIds: enrolled, userId: order.userId };
+      return { orderId, alreadyFulfilled: false, enrolledCourseIds: enrolled, renewedCourseIds: renewed, userId: order.userId };
     });
 
     if (!result.alreadyFulfilled && result.userId) {
-      const user = await this.prisma.user.findUnique({ where: { id: result.userId }, select: { email: true } });
-      if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', data: { orderId } });
+      // The receipt email is best effort: building it never blocks the order.
+      try {
+        const user = await this.prisma.user.findUnique({ where: { id: result.userId }, select: { email: true, name: true } });
+        const o = await this.prisma.order.findUnique({ where: { id: orderId }, select: { totalCents: true, lines: { select: { courseId: true, priceCents: true, course: { select: { title: true } } } } } });
+        const ens = await this.prisma.enrollment.findMany({ where: { userId: result.userId, courseId: { in: o?.lines.map((l) => l.courseId) ?? [] } }, select: { courseId: true, accessExpiresAt: true } });
+        const lines = (o?.lines ?? []).map((l) => ({ title: l.course?.title ?? '', priceCents: l.priceCents, accessUntil: ens.find((e) => e.courseId === l.courseId)?.accessExpiresAt ?? null, renewal: result.renewedCourseIds?.includes(l.courseId) ?? false }));
+        if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', dedupeKey: `receipt:${orderId}`, data: { orderId, name: user.name, total: o?.totalCents ?? 0, lines } });
+      } catch (e) {
+        this.logger?.warn?.(`receipt email skipped: ${(e as Error).message}`);
+      }
     }
     if (!result.alreadyFulfilled) await this.settleFee(orderId, payment.via);
     const { userId: _u, ...out } = result;

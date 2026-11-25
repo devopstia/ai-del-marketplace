@@ -17,7 +17,7 @@ export function MediaStep({ course, patch, reload, goto, locked }: EditorCtx) {
         <div className="mt-4">
           <UploadBox accept="video/mp4,video/quicktime,video/webm" label="Upload promo video" hint="MP4, MOV or WebM. Uploads go straight to private storage." disabled={locked}
             onFile={async (f, prog) => {
-              const assetId = await uploadVideo(f, prog);
+              const assetId = await uploadVideo(f, prog, { courseId: course.id });
               await patch({ promoVideoAssetId: assetId }, "Promo video uploaded. It will be ready after processing.");
             }} />
         </div>

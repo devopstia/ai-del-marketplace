@@ -26,6 +26,10 @@ enum InstructorStatus {
   pending
   approved
   rejected
+  /// A super admin or admin has started reviewing the application.
+  under_review
+  /// The reviewer asked the applicant for more information (they can update and resubmit).
+  needs_info
 }
 
 enum CourseLevel {
@@ -94,12 +98,17 @@ enum RefundRequestStatus {
   pending
   approved
   declined
+  /// Automatically decided by the policy (eligible → refunded at once; not eligible → declined with an email).
+  auto_approved
+  auto_declined
 }
 
 enum EnrollmentSource {
   purchase
   free
   admin
+  /// Manual enrollment (external payment or complimentary), approved by a super admin.
+  manual
 }
 
 enum ReviewStatus {
@@ -162,6 +171,27 @@ model User {
   authTickets       AuthTicket[]
   trustedDevices    TrustedDevice[]
   passwordResets    PasswordReset[]
+  /// Admin role only: the operational permissions a super admin granted (src/common/permissions.ts). Super admins have all.
+  adminPermissions  String[]  @default([])
+  /// How the account was created: email | google | github | facebook | linkedin | invitation | seed.
+  signupMethod      String    @default("email")
+  /// When the person proved they own the email address (link or code, or a provider that verified it).
+  emailVerifiedAt   DateTime?
+  emailVerifications EmailVerification[]
+}
+
+/// Email ownership: a single-use link (or six-digit code for invitations), stored hashed.
+model EmailVerification {
+  id        String    @id // sha256 of the token or "code:<userId>:<code>"
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("email_verifications")
 }
 
 model Session {
@@ -196,6 +226,14 @@ model InstructorProfile {
   termsNote       String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  /// Instructor application (owner 2026-11-25): what the applicant told DEL.
+  expertise       String[]         @default([])
+  experience      String           @default("")
+  plannedCourses  String           @default("")
+  extraInfo       String           @default("")
+  submittedAt     DateTime?
+  reviewedById    String?
+  reviewedAt      DateTime?
 
   @@map("instructor_profiles")
 }
@@ -249,6 +287,7 @@ model Course {
   updatedAt         DateTime     @updatedAt
 
   sections     Section[]
+  packageFiles CourseResource[]
   revisions    CourseRevision[]
   cartItems    CartItem[]
   orderLines   OrderLine[]
@@ -478,7 +517,12 @@ model Enrollment {
 
   @@id([userId, courseId])
   @@index([courseId])
+  @@index([accessExpiresAt])
   @@map("enrollments")
+  /// One-year access (owner 2026-11-25): null = no expiry (free courses, admin grants, the course's own instructor).
+  accessExpiresAt DateTime?
+  /// Expiry reminders already sent ('30d', '7d', '1d', 'expired').
+  remindersSent   String[]  @default([])
 }
 
 model LectureProgress {
@@ -492,6 +536,9 @@ model LectureProgress {
 
   @@id([userId, lectureId])
   @@map("lecture_progress")
+  /// Unique seconds actually played, as merged [start, end] ranges: replays and skips don't add (refund rule, docs/ACCESS_AND_REFUNDS.md).
+  watchedRanges Json     @default("[]")
+  watchedSec    Int      @default(0)
 }
 
 model Review {
@@ -606,6 +653,16 @@ model RefundRequest {
 
   @@index([status, createdAt])
   @@map("refund_requests")
+  /// Facts at the time of the request, from backend records only: purchase and request dates, course duration,
+  /// unique seconds watched, percent, threshold, window, eligibility and reasons per line.
+  analysis       Json?
+  /// Optional AI summary of the facts (Claude); never changes the decision.
+  aiSummary      String?
+  aiModel        String?
+  /// The student asked for a human review of an automatic decline (exceptions, wrong playback data, legal rights).
+  reviewRequestedAt DateTime?
+  reviewNote     String?
+  processedAt    DateTime?
 }
 
 /// An instructor's own sale on one course: a fixed sale price between startsAt and endsAt (UTC). Never stored on the
@@ -879,4 +936,209 @@ model PasswordReset {
 
   @@index([userId])
   @@map("password_resets")
+}
+
+/// One paid year of access to a course (owner 2026-11-25). Renewing early adds a year after the current end; refunding
+/// a renewal revokes only that year. Enrollment.accessExpiresAt is the latest end of the periods still in force.
+model AccessPeriod {
+  id          String    @id @default(uuid())
+  userId      String
+  courseId    String
+  orderLineId String?   @unique
+  /// Manual enrollment course line that granted this period (instead of an order line).
+  manualItemId String?  @unique
+  startsAt    DateTime
+  endsAt      DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, courseId])
+  @@map("access_periods")
+}
+
+/// Contact page (owner 2026-11-25): a message to DEL support, optionally with screenshots. Emailed to CONTACT_EMAIL.
+model ContactMessage {
+  id          String    @id @default(uuid())
+  /// Short reference shown to the sender (C-1001).
+  number      Int       @unique @default(autoincrement())
+  name        String
+  email       String
+  topic       String
+  subject     String
+  body        String
+  userId      String?
+  /// [{ key, name, mime, sizeBytes }] in private storage (contact/<id>/...).
+  attachments Json      @default("[]")
+  status      String    @default("new") // new | handled
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+/// Complete course package: course-level downloads (all demo code, configs, docs) next to the per-lesson files.
+model CourseResource {
+  id         String   @id @default(uuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title      String
+  storageKey String
+  sizeBytes  Int
+  mime       String
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([courseId, position])
+  @@map("course_resources")
+}
+
+/// Manual enrollment (owner 2026-11-25, docs/MANUAL_ENROLLMENT.md): a student gets one or more courses after an
+/// external payment (bank transfer, mobile money...) or as a complimentary grant. Instructors request it for their own
+/// courses; only a super admin approves, verifies the payment and activates access. Never charges or pays via Stripe.
+model ManualEnrollment {
+  id               String   @id @default(uuid())
+  number           Int      @unique @default(autoincrement())
+  /// pending | needs_info | approved | rejected | cancelled
+  status           String   @default("pending")
+  studentEmail     String
+  studentName      String
+  /// Set when the email belongs to an existing account (or once the invitation is accepted).
+  studentId        String?
+  requestedById    String
+  /// instructor | super_admin (a super admin's direct enrollment needs no second approval)
+  requestedByRole  String
+  note             String   @default("")
+  reviewNote       String?
+  complimentary    Boolean  @default(false)
+  complimentaryReason String?
+  decidedById      String?
+  decidedAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  items            ManualEnrollmentItem[]
+  payments         ExternalPayment[]
+  invitations      Invitation[]
+
+  @@index([status])
+  @@index([requestedById])
+  @@index([studentEmail])
+  @@map("manual_enrollments")
+}
+
+model ManualEnrollmentItem {
+  id            String    @id @default(uuid())
+  requestId     String
+  request       ManualEnrollment @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  courseId      String
+  /// Course owner when requested (revenue is attributed to them).
+  instructorId  String
+  listPriceCents Int
+  expiresAt     DateTime
+  activatedAt   DateTime?
+  revokedAt     DateTime?
+  allocations   ExternalPaymentAllocation[]
+
+  @@unique([requestId, courseId])
+  @@index([courseId])
+  @@map("manual_enrollment_items")
+}
+
+/// An external payment as recorded and verified by a super admin. Amounts in minor units of `currency`; USD for reports.
+model ExternalPayment {
+  id            String    @id @default(uuid())
+  requestId     String
+  request       ManualEnrollment @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// bank_transfer | mobile_money | cash | paypal | other
+  method        String
+  reference     String
+  currency      String
+  amountMinor   Int
+  /// USD per 1 unit of `currency` (documented rate; 1 for USD).
+  usdRate       String
+  grossUsdCents Int
+  feeUsdCents   Int
+  netUsdCents   Int
+  /// pending | verified
+  status        String    @default("pending")
+  notes         String    @default("")
+  recordedById  String
+  verifiedById  String?
+  verifiedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  allocations   ExternalPaymentAllocation[]
+
+  @@unique([method, reference])
+  @@map("external_payments")
+}
+
+/// One payment's share for one course: what the instructor earned and whether it was paid out (by hand, never Stripe).
+model ExternalPaymentAllocation {
+  id              String   @id @default(uuid())
+  paymentId       String
+  payment         ExternalPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  itemId          String
+  item            ManualEnrollmentItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  instructorId    String
+  grossUsdCents   Int
+  feeUsdCents     Int
+  netUsdCents     Int
+  instructorCents Int
+  platformCents   Int
+  /// earnings_recorded | payout_pending | payout_completed
+  payoutStatus    String   @default("earnings_recorded")
+  payoutReference String?
+  payoutAt        DateTime?
+  payoutById      String?
+
+  @@unique([paymentId, itemId])
+  @@index([instructorId])
+  @@map("external_payment_allocations")
+}
+
+/// Invitation to create a student account for a manual enrollment. Only a hash of the token is stored; a new link
+/// invalidates the previous one. Opening the link proves nothing by itself: the student confirms the email address.
+model Invitation {
+  id          String    @id @default(uuid())
+  tokenHash   String    @unique
+  requestId   String
+  request     ManualEnrollment @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  email       String
+  /// pending | accepted | expired | revoked
+  status      String    @default("pending")
+  expiresAt   DateTime
+  createdById String
+  acceptedAt  DateTime?
+  acceptedUserId String?
+  revokedAt   DateTime?
+  /// Six-digit email code for the ownership check (hashed), with its expiry and tries.
+  codeHash    String?
+  codeExpiresAt DateTime?
+  codeTries   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([requestId])
+  @@map("invitations")
+}
+
+/// An instructor flags a review on their own course (spam, abuse, fake, …); a super admin investigates (owner 2026-11-25).
+/// Instructors never delete reviews; low ratings alone are not a reason to remove one.
+model ReviewReport {
+  id           String    @id @default(uuid())
+  reviewId     String
+  reporterId   String
+  /// spam | abusive | fake | off_topic | personal_data | other
+  reason       String
+  details      String    @default("")
+  /// open | dismissed | actioned
+  status       String    @default("open")
+  resolvedById String?
+  resolvedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime  @default(now())
+
+  @@index([status])
+  @@index([reviewId])
+  @@map("review_reports")
 }

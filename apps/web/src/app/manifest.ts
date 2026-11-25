@@ -6,8 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/?app=del",
     name: "DevOps Easy Learning",
     short_name: "DEL",
-    description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs, real cloud demos, lifetime access.",
-    start_url: "/my-learning?source=pwa",
+    description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs and real cloud demos.",
+    start_url: "/student?source=pwa",
     scope: "/",
     display: "standalone",
     orientation: "any",
@@ -22,7 +22,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     // Long-press the app icon (Android, desktop Chrome/Edge).
     shortcuts: [
-      { name: "My learning", short_name: "Learning", url: "/my-learning?source=pwa", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "My courses", short_name: "Courses", url: "/student/courses?source=pwa", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Browse courses", short_name: "Courses", url: "/courses?source=pwa", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Deals", short_name: "Deals", url: "/deals?source=pwa", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     ],

@@ -7,6 +7,8 @@ const bool = z
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  /** Which deployment this is: production, staging (cloud test copy) or local. Only staging may use simulated payments in a production build. */
+  DEPLOY_ENV: z.enum(['local', 'staging', 'production']).default('local'),
   PORT: z.coerce.number().int().default(4000),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
@@ -19,8 +21,9 @@ const schema = z.object({
   HLS_REENCODE: z.string().default('false').transform((v) => v === 'true' || v === '1'),
   WEB_URL: z.string().url().default('http://127.0.0.1:3000'),
   API_URL: z.string().url().default('http://127.0.0.1:4000'),
-  S3_ENDPOINT: z.string().url().default('http://127.0.0.1:9000'),
-  S3_PUBLIC_ENDPOINT: z.string().url().default('http://127.0.0.1:9000'),
+  /** A MinIO/S3-compatible URL, or "aws" for Amazon S3 with the instance role (production). */
+  S3_ENDPOINT: z.string().url().or(z.literal('aws')).default('http://127.0.0.1:9000'),
+  S3_PUBLIC_ENDPOINT: z.string().url().or(z.literal('aws')).default('http://127.0.0.1:9000'),
   S3_BUCKET: z.string().default('del-media'),
   S3_REGION: z.string().default('us-east-1'),
   S3_ACCESS_KEY: z.string().default(''),
@@ -33,6 +36,7 @@ const schema = z.object({
   MUX_WEBHOOK_SECRET: z.string().default(''),
   STRIPE_SECRET_KEY: z.string().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().default(''),
+  STRIPE_PUBLISHABLE_KEY: z.string().default(''),
   DEV_TEST_PAYMENTS: bool,
   SEED_PASSWORD: z.string().default(''),
   AUTH_RATE_LIMIT: z.coerce.number().int().positive().default(20),
@@ -48,7 +52,23 @@ const schema = z.object({
   /** Development only: a built-in "Test provider" to exercise social sign-in end to end without real keys. Refused in production. */
   OAUTH_TEST_PROVIDER: bool,
   /** Compromised-password check against Have I Been Pwned (k-anonymity: only 5 hex characters of a SHA-1 hash leave the server). */
+  /** Optional: AI summaries of refund requests for admins (Claude). Without a key the summary is simply not shown. */
+  ANTHROPIC_API_KEY: z.string().default(''),
+  REFUND_AI_MODEL: z.string().default('claude-opus-5-5'),
   PASSWORD_BREACH_CHECK: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
+  /**
+   * Local development only: `false` skips the Google Authenticator step so the owner can sign in quickly while testing.
+   * Ignored in production (the code is always required there). docs/AUTH.md.
+   */
+  /** console (log only) | smtp (local Mailpit or any SMTP server) | resend (production, HTTPS API). */
+  EMAIL_PROVIDER: z.enum(['console', 'smtp', 'resend', 'ses']).default('console'),
+  SMTP_URL: z.string().default(''),
+  EMAIL_FROM: z.string().default('DevOps Easy Learning <no-reply@devopseasylearning.com>'),
+  EMAIL_REPLY_TO: z.string().default('support@devopseasylearning.com'),
+  RESEND_API_KEY: z.string().default(''),
+  /** Where Contact page messages go (DEL support inbox). */
+  CONTACT_EMAIL: z.string().email().default('support@devopseasylearning.com'),
+  MFA_REQUIRED: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
   /** The name shown in Google Authenticator. */
   MFA_ISSUER: z.string().default('DevOps Easy Learning'),
   /** Local demo accounts only: the authenticator seed the seed script gives them (base32), so tests and demos can sign in. */
@@ -80,4 +100,4 @@ export function resetEnvCache(): void {
 export const isProd = () => env().NODE_ENV === 'production';
 
 /** Dev test payments are allowed only when explicitly enabled AND never in production. */
-export const devPaymentsEnabled = () => env().DEV_TEST_PAYMENTS && env().NODE_ENV !== 'production';
+export const devPaymentsEnabled = () => env().DEV_TEST_PAYMENTS && (env().NODE_ENV !== 'production' || env().DEPLOY_ENV === 'staging');

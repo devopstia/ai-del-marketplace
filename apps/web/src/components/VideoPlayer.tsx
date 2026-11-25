@@ -1,6 +1,6 @@
 "use client";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Captions, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
+import { Captions, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { clock } from "@/lib/format";
 import { API_URL } from "@/lib/config";
 
@@ -22,13 +22,23 @@ interface Props {
   overlay?: React.ReactNode;
   /** Encrypted HLS: the playlist and key come from the API with the session cookie. */
   protectedStream?: boolean;
+  /**
+   * Element that goes full screen (default: the player itself). The lesson player passes its stage, which stays mounted
+   * between lessons, so the next video opens without leaving full screen.
+   */
+  fullscreenRef?: React.RefObject<HTMLElement | null>;
+  /** Previous / next lesson, shown in the control bar (also Shift+P / Shift+N, like YouTube). */
+  onPrev?: () => void;
+  onNext?: () => void;
+  prevTitle?: string;
+  nextTitle?: string;
 }
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
 /** Custom-control player over native <video>: speed, captions, ±10 s, fullscreen, keyboard shortcuts. */
 export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
-  { src, format, captionsUrl, startAt = 0, autoPlay = false, title, onTime, onPause, onEnded, onError, overlay, protectedStream = false },
+  { src, format, captionsUrl, startAt = 0, autoPlay = false, title, onTime, onPause, onEnded, onError, overlay, protectedStream = false, fullscreenRef, onPrev, onNext, prevTitle, nextTitle },
   ref,
 ) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -68,11 +78,15 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
     try { localStorage.setItem("del-cc", c ? "off" : "on"); } catch { /* storage blocked */ }
     return !c;
   }), []);
+  const target = useCallback(() => fullscreenRef?.current ?? wrap.current, [fullscreenRef]);
   useEffect(() => {
-    const f = () => setFull(document.fullscreenElement === wrap.current);
+    const f = () => setFull(!!document.fullscreenElement && document.fullscreenElement === target());
+    f(); // a player that mounts inside a stage that is already full screen (next lesson)
+    // ...takes the keyboard focus, so shortcuts keep working after the lesson changed
+    if (document.fullscreenElement?.contains(wrap.current)) wrap.current?.focus({ preventScroll: true });
     document.addEventListener("fullscreenchange", f);
     return () => document.removeEventListener("fullscreenchange", f);
-  }, []);
+  }, [target]);
 
   // HLS (Mux): Safari plays it natively; elsewhere attach hls.js on demand.
   const isHls = format === "hls" || /\.m3u8(\?|$)/.test(src);
@@ -108,16 +122,28 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
     if (el) el.currentTime = Math.max(0, Math.min(el.duration || 0, el.currentTime + d));
   }, []);
   const fullscreen = useCallback(() => {
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void wrap.current?.requestFullscreen?.();
-  }, []);
-  const poke = () => {
+    if (document.fullscreenElement) { void document.exitFullscreen(); return; }
+    const el = target();
+    if (el?.requestFullscreen) { void el.requestFullscreen().catch(() => {}); return; }
+    // iPhone Safari: only the video element itself can go full screen (native controls there).
+    const vid = v.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    vid?.webkitEnterFullscreen?.();
+  }, [target]);
+  // Controls show on any mouse movement or touch and fade after 2.5 s without one, while the video plays.
+  const poke = useCallback(() => {
     setIdle(false);
     if (idleTimer.current) clearTimeout(idleTimer.current);
     idleTimer.current = setTimeout(() => setIdle(true), 2500);
-  };
+  }, []);
+  useEffect(() => () => { if (idleTimer.current) clearTimeout(idleTimer.current); }, []);
 
   function onKey(e: React.KeyboardEvent) {
+    // Lesson shortcuts work wherever focus is inside the player (also on its buttons).
+    if (e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "N" || e.key === "n" || e.key === "P" || e.key === "p")) {
+      const fn = e.key.toLowerCase() === "n" ? onNext : onPrev;
+      if (fn) { e.preventDefault(); fn(); }
+      return;
+    }
     if ((e.target as HTMLElement).closest("button, input, select")) {
       if (e.key !== " " || (e.target as HTMLElement).tagName === "INPUT") return;
     }
@@ -142,6 +168,13 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
       aria-label={title ? `Video player: ${title}` : "Video player"}
       onKeyDown={onKey}
       onMouseMove={poke}
+      onTouchStart={poke}
+      onMouseLeave={() => { if (playing) setIdle(true); }}
+      onDoubleClick={(e) => {
+        // Double-click anywhere on the picture toggles full screen (not on the control bar).
+        if ((e.target as HTMLElement).closest("[data-player-controls]")) return;
+        fullscreen();
+      }}
       onContextMenu={protectedStream ? (e) => e.preventDefault() : undefined}
       data-testid="video-player"
       data-protected={protectedStream ? "true" : undefined}
@@ -190,7 +223,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
 
       {overlay}
 
-      <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-10 transition-opacity duration-200 ${idle && playing ? "opacity-0" : "opacity-100"}`}>
+      <div data-player-controls className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-10 transition-opacity duration-200 ${idle && playing ? "opacity-0" : "opacity-100"}`}>
         <input
           type="range"
           min={0}
@@ -204,15 +237,27 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
           style={{ background: `linear-gradient(90deg,#58c3f2 ${pct}%,rgba(255,255,255,.3) ${pct}%)` }}
         />
         <div className="mt-1.5 flex items-center gap-1 text-white">
+          {onPrev || onNext ? (
+            <button type="button" className={`${ctl} disabled:opacity-35 disabled:hover:bg-transparent`} onClick={onPrev} disabled={!onPrev}
+              aria-label={prevTitle ? `Previous lesson: ${prevTitle}` : "Previous lesson"} title={prevTitle ? `Previous: ${prevTitle} (Shift+P)` : undefined} data-testid="player-prev">
+              <SkipBack className="size-[18px]" fill="currentColor" />
+            </button>
+          ) : null}
           <button type="button" className={ctl} onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
             {playing ? <Pause className="size-5" fill="currentColor" /> : <Play className="size-5" fill="currentColor" />}
           </button>
-          <button type="button" className={ctl} onClick={() => seek(-10)} aria-label="Back 10 seconds"><RotateCcw className="size-[18px]" /></button>
-          <button type="button" className={ctl} onClick={() => seek(10)} aria-label="Forward 10 seconds"><RotateCw className="size-[18px]" /></button>
+          {onPrev || onNext ? (
+            <button type="button" className={`${ctl} disabled:opacity-35 disabled:hover:bg-transparent`} onClick={onNext} disabled={!onNext}
+              aria-label={nextTitle ? `Next lesson: ${nextTitle}` : "Next lesson"} title={nextTitle ? `Next: ${nextTitle} (Shift+N)` : undefined} data-testid="player-next">
+              <SkipForward className="size-[18px]" fill="currentColor" />
+            </button>
+          ) : null}
+          <button type="button" className={`${ctl} ${onPrev || onNext ? "max-sm:hidden" : ""}`} onClick={() => seek(-10)} aria-label="Back 10 seconds"><RotateCcw className="size-[18px]" /></button>
+          <button type="button" className={`${ctl} ${onPrev || onNext ? "max-sm:hidden" : ""}`} onClick={() => seek(10)} aria-label="Forward 10 seconds"><RotateCw className="size-[18px]" /></button>
           <button type="button" className={ctl} onClick={() => setMuted((m) => !m)} aria-label={muted ? "Unmute" : "Mute"}>
             {muted ? <VolumeX className="size-[18px]" /> : <Volume2 className="size-[18px]" />}
           </button>
-          <span className="ml-1 text-xs tabular-nums text-white/85">{clock(t)} / {clock(dur)}</span>
+          <span className="ml-1 whitespace-nowrap text-xs tabular-nums text-white/85">{clock(t)} / {clock(dur)}</span>
           <span className="ml-auto" />
           <div className="relative">
             <button type="button" className={`${ctl} !w-auto px-2 text-sm font-bold`} onClick={() => setSpeedOpen((o) => !o)} aria-haspopup="menu" aria-expanded={speedOpen} aria-label={`Playback speed ${speed}x`}>

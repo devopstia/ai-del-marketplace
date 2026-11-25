@@ -1,5 +1,6 @@
 "use client";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { clearGuest, guestCart, onGuestCart } from "@/lib/guest-cart";
+import { createContext, useRef, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, setCsrf } from "@/lib/api";
 import { list, toMe, obj } from "@/lib/normalize";
 import type { Me, Role } from "@/lib/types";
@@ -21,7 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
 
+  const meRef = useRef<Me | null>(null);
   const refreshCart = useCallback(async () => {
+    if (!meRef.current) { setCartCount(guestCart().length); return; }
     try {
       const c = await api("/cart");
       setCartCount(list(c, "items").length);
@@ -29,6 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCartCount(0);
     }
   }, []);
+  // Guests: the count follows the browser's list (also changes made in another tab).
+  useEffect(() => onGuestCart(() => { if (!meRef.current) setCartCount(guestCart().length); }), []);
 
   const refresh = useCallback(async () => {
     try {
@@ -36,8 +41,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const o = obj(r);
       setCsrf((o.csrf ?? o.csrfToken) as string | undefined);
       const m = toMe(r);
+      meRef.current = m;
       setMe(m);
-      if (m) void refreshCart();
+      // Just signed in (any method): move the guest cart into the account, then forget it in this browser.
+      const ids = m ? guestCart() : [];
+      if (ids.length) { try { await api("/cart/merge", { method: "POST", body: { courseIds: ids } }); clearGuest(); } catch { /* kept for the next try */ } }
+      void refreshCart();
       return m;
     } catch {
       setMe(null);
@@ -57,8 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await api("/auth/logout", { method: "POST" });
     } finally {
+      meRef.current = null;
       setMe(null);
-      setCartCount(0);
+      setCartCount(guestCart().length);
     }
   }, []);
 

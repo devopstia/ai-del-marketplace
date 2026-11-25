@@ -63,7 +63,7 @@ export function TestPayment({ orderId }: { orderId: string }) {
           </button>
           <Link href="/cart" className="btn btn-ghost">Cancel and return to cart</Link>
         </div>
-        {order?.status === "paid" ? <p className="mt-3 text-sm text-mint">This order is already paid. <Link className="link" href="/my-learning">Go to My learning</Link></p> : null}
+        {order?.status === "paid" ? <p className="mt-3 text-sm text-mint">This order is already paid. <Link className="link" href="/student/courses">Go to My courses</Link></p> : null}
       </div>
     </div>
   );

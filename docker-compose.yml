@@ -38,10 +38,28 @@ x-api-env: &api-env
   LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
   LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
   OAUTH_TEST_PROVIDER: ${OAUTH_TEST_PROVIDER:-false}
+  MFA_REQUIRED: ${MFA_REQUIRED:-true}
   PASSWORD_BREACH_CHECK: ${PASSWORD_BREACH_CHECK:-true}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  REFUND_AI_MODEL: ${REFUND_AI_MODEL:-claude-opus-5-5}
   AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-20}
+  # Email (docs/EMAIL.md): locally every message lands in Mailpit (http://127.0.0.1:8025); production uses Resend.
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+  SMTP_URL: ${SMTP_URL:-smtp://mailpit:1025}
+  EMAIL_FROM: ${EMAIL_FROM:-DevOps Easy Learning <no-reply@devopseasylearning.com>}
+  EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-support@devopseasylearning.com}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  CONTACT_EMAIL: ${CONTACT_EMAIL:-support@devopseasylearning.com}
 
 services:
+  # Local inbox for every email the app sends (nothing leaves this computer). UI: http://127.0.0.1:8025
+  mailpit:
+    image: axllent/mailpit:v1.21.8
+    restart: unless-stopped
+    ports: ["127.0.0.1:8025:8025", "127.0.0.1:1025:1025"]
+    environment:
+      MP_MAX_MESSAGES: 2000
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped

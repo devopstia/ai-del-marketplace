@@ -25,8 +25,13 @@ export default function LearnIndex({ params }: { params: Promise<{ slug: string 
     <div className="grid min-h-dvh place-items-center p-6 text-center">
       {err ? (
         <div>
-          <p className="font-display text-xl font-bold">{err}</p>
-          <Link href={`/courses/${slug}`} className="btn btn-outline mt-4">Back to course page</Link>
+          <p className="font-display text-2xl font-bold">You don’t have access to this course right now</p>
+          <p className="mx-auto mt-2 max-w-md text-ink-2">If your 12 months of access ended, renew it on the course page: your progress is saved and you continue where you left off.</p>
+          <p className="mt-1 text-sm text-muted">{err}</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <Link href={`/courses/${slug}`} className="btn btn-primary" data-testid="renew-from-player">Renew or view the course</Link>
+            <Link href="/student/courses" className="btn btn-outline">My courses</Link>
+          </div>
         </div>
       ) : <Loader2 className="size-8 animate-spin text-violet" aria-label="Opening course" />}
     </div>

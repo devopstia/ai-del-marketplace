@@ -1,0 +1,33 @@
+# Production reverse proxy (docs/DEPLOYMENT.md). HTTPS certificates from Let's Encrypt, renewed by Caddy.
+# Deliberately NO country or region rules (unlike Insurance Hub's nginx geo allowlist): learners and instructors
+# in Africa, the Americas, Europe and Asia must all reach the marketplace. Abuse is handled by rate limits in the
+# API (sign-in, registration, contact form, invitations) and Stripe's own fraud checks, never by geography.
+{
+	email {$ACME_EMAIL}
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+{$PUBLIC_HOST} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	# Stripe and Mux webhooks need the raw body; they are forwarded untouched like every API call.
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+	handle {
+		reverse_proxy web:3000
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+www.{$PUBLIC_HOST} {
+	redir https://{$PUBLIC_HOST}{uri} permanent
+}

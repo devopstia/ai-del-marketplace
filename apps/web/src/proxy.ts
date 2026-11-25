@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Protected areas need a session cookie. Role checks (instructor/admin) happen in the API and in the
 // studio/admin layouts; this only stops signed-out visitors early with a redirect to log in.
-const PROTECTED = ["/my-learning", "/learn", "/account", "/orders", "/cart", "/checkout", "/studio", "/admin", "/support"];
+const PROTECTED = ["/student", "/my-learning", "/learn", "/account", "/orders", "/checkout", "/studio", "/admin", "/support"];
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -15,5 +15,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/my-learning/:path*", "/learn/:path*", "/account/:path*", "/orders/:path*", "/cart/:path*", "/checkout/:path*", "/studio/:path*", "/admin/:path*", "/support/:path*", "/support"],
+  matcher: ["/student/:path*", "/student", "/my-learning/:path*", "/learn/:path*", "/account/:path*", "/orders/:path*", "/checkout/:path*", "/studio/:path*", "/admin/:path*", "/support/:path*", "/support"],
 };

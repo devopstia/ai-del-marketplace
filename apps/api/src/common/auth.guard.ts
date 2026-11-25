@@ -2,7 +2,8 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createHash } from 'node:crypto';
 import type { Role } from '../generated/prisma/enums';
-import { AppRequest, hasRole, IS_PUBLIC, ROLES } from './auth-context';
+import { AppRequest, hasRole, IS_PUBLIC, PERMISSION, ROLES } from './auth-context';
+import { can, type AdminPermission } from './permissions';
 import { SESSION_COOKIE } from './cookies';
 import { ACT_AS_COOKIE, ACT_AS_PLATFORM, acting, STUDIO_PATH } from './acting';
 import { forbidden, unauthorized } from './errors';
@@ -27,7 +28,7 @@ export class AuthGuard implements CanActivate {
     if (typeof token === 'string' && token.length >= 20 && token.length <= 200) {
       const session = await this.prisma.session.findUnique({
         where: { id: hashSessionToken(token) },
-        include: { user: { select: { id: true, email: true, name: true, roles: true, status: true } } },
+        include: { user: { select: { id: true, email: true, name: true, roles: true, status: true, adminPermissions: true } } },
       });
       if (session && !session.revokedAt && session.expiresAt > new Date() && session.user.status === 'active') {
         const { status: _s, ...user } = session.user;
@@ -42,6 +43,9 @@ export class AuthGuard implements CanActivate {
     if (isPublic && !roles?.length) return true;
     if (!req.user) throw unauthorized();
     if (roles?.length && !roles.some((r) => hasRole(req.user, r))) throw forbidden();
+    const perm = this.reflector.getAllAndOverride<AdminPermission | undefined>(PERMISSION, [ctx.getHandler(), ctx.getClass()]);
+    // In "DEL Studio" mode req.user is DEL's instructor account; permissions are always the real person's.
+    if (perm && !can(req.realUser ?? req.user, perm)) throw forbidden('Your admin account does not have this permission', 'permission_required');
     return true;
   }
 
@@ -52,7 +56,7 @@ export class AuthGuard implements CanActivate {
     const del = await this.prisma.instructorProfile.findFirst({
       where: { isPlatform: true, status: 'approved', user: { status: 'active' } },
       orderBy: { createdAt: 'asc' },
-      select: { user: { select: { id: true, email: true, name: true, roles: true } } },
+      select: { user: { select: { id: true, email: true, name: true, roles: true, adminPermissions: true } } },
     });
     if (!del) return;
     const real = req.user;

@@ -1,0 +1,73 @@
+# Production stack on one EC2 instance (docs/DEPLOYMENT.md), the Insurance Hub layout adapted to the marketplace.
+# NOT DEPLOYED: production needs the owner's authorisation and domain first (owner, 2026-11-25).
+# Database: Amazon RDS PostgreSQL. Files and videos: Amazon S3 through the instance role (no keys).
+# Secrets: /srv/del-marketplace/.env, written at each release from SSM Parameter Store (scripts/deploy-aws.sh).
+# No geographic blocking anywhere: the marketplace is global, Africa included (AGENTS.md rule 23).
+name: del-marketplace
+
+x-app: &app
+  image: ${ECR_REGISTRY}/del-marketplace/api:${IMAGE_TAG}
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    REDIS_URL: redis://redis:6379
+    S3_ENDPOINT: aws
+    S3_PUBLIC_ENDPOINT: aws
+    EMAIL_PROVIDER: resend
+    DEV_TEST_PAYMENTS: "false"
+    OAUTH_TEST_PROVIDER: "false"
+    MFA_REQUIRED: "true"
+  logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [web, api]
+    logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
+
+  api:
+    <<: *app
+    command: ["sh", "-c", "prisma migrate deploy && node dist/main.js"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+    depends_on: [redis]
+
+  worker:
+    <<: *app
+    command: ["node", "dist/worker.js"]
+    depends_on:
+      api: { condition: service_healthy }
+
+  web:
+    image: ${ECR_REGISTRY}/del-marketplace/web:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:4000/api
+      WEB_URL: https://${PUBLIC_HOST}
+    depends_on:
+      api: { condition: service_healthy }
+    logging: { driver: json-file, options: { max-size: 10m, max-file: "5" } }
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+
+volumes:
+  caddy_data:
+  caddy_config:
+  redisdata:

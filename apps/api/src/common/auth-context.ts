@@ -1,12 +1,15 @@
 import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
 import type { Request } from 'express';
 import type { Role } from '../generated/prisma/enums';
+import type { AdminPermission } from './permissions';
 
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   roles: Role[];
+  /** Admin role only (src/common/permissions.ts). */
+  adminPermissions?: string[];
 }
 
 export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; rawBody?: Buffer };
@@ -14,11 +17,17 @@ export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessi
 export const IS_PUBLIC = 'isPublic';
 export const ROLES = 'roles';
 export const SKIP_CSRF = 'skipCsrf';
+export const PERMISSION = 'permission';
 
 /** Route is reachable without a session (a session, if present, is still attached). */
 export const Public = () => SetMetadata(IS_PUBLIC, true);
 /** Route requires one of these roles. super_admin implicitly has admin. */
 export const Roles = (...roles: Role[]) => SetMetadata(ROLES, roles);
+/**
+ * Route requires an admin permission (super admins have all). Implies an admin role; use instead of @Roles('admin').
+ * Checked by the global guard on every request: switching dashboards never changes what an account may do.
+ */
+export const Perm = (perm: AdminPermission) => SetMetadata(PERMISSION, perm);
 /** Route is exempt from CSRF (server-to-server webhooks only). */
 export const SkipCsrf = () => SetMetadata(SKIP_CSRF, true);
 

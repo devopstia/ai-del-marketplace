@@ -1,6 +1,6 @@
 import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put } from '@nestjs/common';
 import { z } from 'zod';
-import { ActorCtx, type Actor, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, Roles, Perm } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { PromotionsService } from './promotions.service';
 
@@ -57,7 +57,7 @@ export class InstructorPromotionsController {
 export class AdminPromotionsController {
   constructor(private readonly svc: PromotionsService) {}
 
-  @Get('promotions') list() { return this.svc.listPromotions(); }
+  @Perm('promotions.view') @Get('promotions') list() { return this.svc.listPromotions(); }
 
   @Roles('super_admin') @Post('promotions')
   create(@ZBody(promotionSchema) b: z.infer<typeof promotionSchema>, @ActorCtx() a: Actor) { return this.svc.createPromotion(a, b); }
@@ -68,7 +68,7 @@ export class AdminPromotionsController {
   @Roles('super_admin') @HttpCode(200) @Post('promotions/:id/cancel')
   cancel(@Param('id', uuid) id: string, @ActorCtx() a: Actor) { return this.svc.cancelPromotion(a, id); }
 
-  @Get('course-sales')
+  @Perm('promotions.view') @Get('course-sales')
   sales(@ZQuery(salesQuery) q: z.infer<typeof salesQuery>) { return this.svc.listCourseSales(q.status); }
 
   @Roles('super_admin') @HttpCode(200) @Post('course-sales/:id/cancel')

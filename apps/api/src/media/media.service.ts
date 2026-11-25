@@ -1,3 +1,4 @@
+import { captionsKeyFor, resourceKey } from '../common/storage-keys';
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { VideoAsset } from '../generated/prisma/client';
@@ -34,8 +35,16 @@ export class MediaService {
     return asset.provider === 'mux' ? this.muxProvider : this.local;
   }
 
-  async createVideoUpload(a: Actor, input: { filename: string; contentType: string }) {
-    const target = await this.uploadProvider.createUpload(a.user.id, input);
+  /** The course a file belongs to, when given: it must be the uploader's own course. */
+  private async ownCourseId(ownerId: string, courseId?: string) {
+    if (!courseId) return null;
+    const c = await this.prisma.course.findFirst({ where: { id: courseId, instructorId: ownerId }, select: { id: true } });
+    if (!c) throw badRequest('Course not found', 'course_not_found');
+    return c.id;
+  }
+
+  async createVideoUpload(a: Actor, input: { filename: string; contentType: string; courseId?: string }) {
+    const target = await this.uploadProvider.createUpload(a.user.id, { ...input, courseId: await this.ownCourseId(a.user.id, input.courseId) });
     await this.audit.log({ actorId: a.user.id, action: 'media.video_upload_created', targetType: 'video_asset', targetId: target.assetId, ip: a.ip });
     return target;
   }
@@ -56,7 +65,7 @@ export class MediaService {
   async captionsUpload(a: Actor, assetId: string) {
     const asset = await this.ownedAsset(a.user.id, assetId);
     if (asset.provider !== 'local') throw badRequest('Mux generates captions automatically', 'unsupported');
-    const key = `videos/${asset.id}/captions.vtt`;
+    const key = captionsKeyFor(asset.storageKey, asset.id);
     await this.prisma.videoAsset.update({ where: { id: asset.id }, data: { captionsKey: key } });
     return { uploadUrl: await this.storage.presignPut(key, 'text/vtt'), method: 'PUT', headers: { 'Content-Type': 'text/vtt' } };
   }
@@ -81,10 +90,10 @@ export class MediaService {
   }
 
   /** Resource (ZIP, script, PDF) upload: presigned PUT under the owner's prefix; finalised by completeResourceUpload. */
-  async resourceUpload(ownerId: string, input: { filename: string; contentType: string; sizeBytes: number }) {
+  async resourceUpload(ownerId: string, input: { filename: string; contentType: string; sizeBytes: number; courseId?: string }) {
     if (input.sizeBytes > MAX_RESOURCE_BYTES) throw badRequest('Resource is larger than 200 MB', 'too_large');
     const safe = input.filename.replace(/[^\w.\-]/g, '_').slice(-120) || 'file';
-    const storageKey = `resources/${ownerId}/${randomUUID()}/${safe}`;
+    const storageKey = resourceKey(ownerId, randomUUID(), safe, await this.ownCourseId(ownerId, input.courseId));
     return { storageKey, uploadUrl: await this.storage.presignPut(storageKey, input.contentType), method: 'PUT', headers: { 'Content-Type': input.contentType } };
   }
 

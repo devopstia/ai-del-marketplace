@@ -8,6 +8,8 @@ import { RefundsService } from '../commerce/refunds.service';
 import { PayoutsService } from '../commerce/payouts.service';
 import { StripeService } from '../commerce/stripe.service';
 import { PAYOUT_HOLD_DAYS, REFUND_WINDOW_DAYS } from '../commerce/money';
+import { JobsService } from '../common/jobs';
+import { env } from '../config/env';
 
 const requireSuper = (a: Actor) => {
   if (!hasRole(a.user, 'super_admin')) throw forbidden('Only a super admin can change commission or payout terms', 'super_admin_required');
@@ -23,6 +25,7 @@ export class FinanceService {
     private readonly refunds: RefundsService,
     private readonly payouts: PayoutsService,
     private readonly stripe: StripeService,
+    private readonly jobs: JobsService,
   ) {}
 
   // ---------- instructor terms (super admin) ----------
@@ -69,37 +72,69 @@ export class FinanceService {
   }
 
   // ---------- refund requests ----------
-  async refundRequests(status: 'pending' | 'approved' | 'declined' | undefined) {
+  /**
+   * Super Admin refund dashboard (owner 2026-11-25): every request with the student, course, purchase, the watch facts
+   * computed at request time, the optional AI summary, the decision and its history. `needs_action` = waiting for a
+   * person (over the yearly self-service limit, or a review the student asked for).
+   */
+  async refundRequests(status: 'needs_action' | 'pending' | 'approved' | 'declined' | 'auto_approved' | 'auto_declined' | undefined) {
+    const where = status === 'needs_action'
+      ? { OR: [{ status: 'pending' as const }, { status: 'auto_declined' as const, reviewRequestedAt: { not: null } }] }
+      : status ? { status } : {};
     const rows = await this.prisma.refundRequest.findMany({
-      where: status ? { status } : {},
-      orderBy: { createdAt: 'asc' },
+      where,
+      orderBy: { createdAt: 'desc' },
       take: 200,
       include: { user: { select: { id: true, name: true, email: true } }, order: { include: { lines: { include: { course: { select: { title: true } } } } } } },
     });
+    const history = await this.prisma.auditLog.findMany({
+      where: { targetType: 'order', targetId: { in: [...new Set(rows.map((r) => r.orderId))] }, OR: [{ action: { startsWith: 'refund.' } }, { action: { startsWith: 'order.refund' } }] },
+      orderBy: { at: 'asc' },
+      select: { action: true, at: true, targetId: true, meta: true, actor: { select: { name: true } } },
+    });
+    const counts = await this.prisma.refundRequest.groupBy({ by: ['status'], _count: { _all: true } });
+    const needsAction = await this.prisma.refundRequest.count({ where: { OR: [{ status: 'pending' }, { status: 'auto_declined', reviewRequestedAt: { not: null } }] } });
     return {
+      counts: { ...Object.fromEntries(counts.map((c) => [c.status, c._count._all])), needs_action: needsAction },
+      aiEnabled: !!env().ANTHROPIC_API_KEY,
       items: rows.map((r) => ({
         id: r.id,
         status: r.status,
+        needsAction: r.status === 'pending' || (r.status === 'auto_declined' && !!r.reviewRequestedAt),
         reason: r.reason,
         decisionNote: r.decisionNote,
         createdAt: r.createdAt,
         decidedAt: r.decidedAt,
+        processedAt: r.processedAt,
+        reviewRequestedAt: r.reviewRequestedAt,
+        reviewNote: r.reviewNote,
+        analysis: r.analysis,
+        aiSummary: r.aiSummary,
+        aiModel: r.aiModel,
         user: r.user,
         orderId: r.orderId,
         paidAt: r.order.paidAt,
-        lines: r.order.lines.filter((l) => r.lineIds.includes(l.id)).map((l) => ({ id: l.id, title: l.course.title, priceCents: l.priceCents, refundedAt: l.refundedAt })),
+        lines: r.order.lines.filter((l) => r.lineIds.includes(l.id)).map((l) => ({ id: l.id, title: l.course.title, priceCents: l.priceCents, refundedAt: l.refundedAt, transferStatus: l.transferStatus, instructorShareCents: l.instructorShareCents })),
+        history: history.filter((h) => h.targetId === r.orderId && (!h.meta || (h.meta as { requestId?: string }).requestId === r.id || !(h.meta as { requestId?: string }).requestId)).map((h) => ({ action: h.action, at: h.at, by: h.actor?.name ?? 'System' })),
       })),
     };
   }
 
+  /**
+   * A person decides. Pending requests (over the yearly limit): any admin. Overturning an automatic decline (an
+   * approved exception, a legal right, wrong playback data): Super Admin only. Declining needs a note for the student.
+   */
   async decideRefundRequest(a: Actor, id: string, approve: boolean, note: string | undefined) {
-    const r = await this.prisma.refundRequest.findUnique({ where: { id } });
+    const r = await this.prisma.refundRequest.findUnique({ where: { id }, include: { user: { select: { email: true, name: true } } } });
     if (!r) throw notFound('Refund request');
-    if (r.status !== 'pending') throw conflict('This request was already decided', 'already_decided');
-    if (!approve && !note?.trim()) throw badRequest('Add a note so the learner knows why', 'note_required');
-    if (approve) await this.refunds.refund(r.orderId, r.lineIds, `Approved request: ${note?.trim() || r.reason || 'no reason given'}`, { id: a.user.id, ip: a.ip });
-    await this.prisma.refundRequest.update({ where: { id }, data: { status: approve ? 'approved' : 'declined', decisionNote: note?.trim() || null, decidedById: a.user.id, decidedAt: new Date() } });
-    await this.audit.log({ actorId: a.user.id, action: approve ? 'order.refund_request_approved' : 'order.refund_request_declined', targetType: 'order', targetId: r.orderId, ip: a.ip, meta: { requestId: id, note: note ?? null } });
+    const exception = r.status === 'auto_declined' && !!r.reviewRequestedAt;
+    if (r.status !== 'pending' && !exception) throw conflict('This request was already decided', 'already_decided');
+    if (exception && !a.user.roles.includes('super_admin')) throw forbidden('Only a Super Admin can overturn an automatic decision', 'super_admin_only');
+    if (!note?.trim() && (!approve || exception)) throw badRequest('Add a note: the student sees it, and it is kept in the audit log', 'note_required');
+    if (approve) await this.refunds.refund(r.orderId, r.lineIds, `${exception ? 'Approved exception' : 'Approved request'}: ${note?.trim() || r.reason || 'no reason given'}`, { id: a.user.id, ip: a.ip });
+    await this.prisma.refundRequest.update({ where: { id }, data: { status: approve ? 'approved' : 'declined', decisionNote: note?.trim() || r.decisionNote, decidedById: a.user.id, decidedAt: new Date(), ...(approve ? { processedAt: new Date() } : {}) } });
+    await this.audit.log({ actorId: a.user.id, action: approve ? (exception ? 'refund.exception_approved' : 'order.refund_request_approved') : 'order.refund_request_declined', targetType: 'order', targetId: r.orderId, ip: a.ip, meta: { requestId: id, note: note ?? null } });
+    await this.jobs.sendEmail({ to: r.user.email, template: approve ? 'refund-approved' : 'refund-declined-after-review', data: { name: r.user.name, requestId: id, note: note?.trim() || null } });
     return { id, status: approve ? 'approved' : 'declined' };
   }
 

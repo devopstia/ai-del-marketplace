@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Loader2, MessageSquareReply } from "lucide-react";
+import { Flag, Loader2, MessageSquareReply } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { list, toReview } from "@/lib/normalize";
@@ -38,7 +38,41 @@ function Reply({ r, onDone }: { r: Review; onDone: (text: string) => void }) {
   );
 }
 
+const REASONS: [string, string][] = [["spam", "Spam or advertising"], ["abusive", "Harassment or abuse"], ["fake", "Fake or not a real learner"], ["off_topic", "Not about the course"], ["personal_data", "Personal information"], ["other", "Other policy violation"]];
+
+/** Report a review to DEL. Instructors never delete reviews; honest low ratings stay (owner 2026-11-25). */
+function Report({ r, reported, onDone }: { r: Review; reported: boolean; onDone: () => void }) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("spam");
+  const [details, setDetails] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (reported) return <span className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted" data-testid="reported"><Flag className="size-4" />Reported to DEL</span>;
+  if (!open) return <button type="button" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-muted hover:text-rose" onClick={() => setOpen(true)} data-testid="report-review"><Flag className="size-4" />Report</button>;
+  return (
+    <form className="mt-3 max-w-2xl rounded-tile border border-line bg-surface-2/60 p-4" onSubmit={async (e) => {
+      e.preventDefault();
+      setBusy(true);
+      try {
+        await api(`/instructor/reviews/${r.id}/report`, { method: "POST", body: { reason, details } });
+        toast("ok", "Reported. DEL reviews it and keeps you posted.");
+        setOpen(false);
+        onDone();
+      } catch (err) { toast("error", errMsg(err)); } finally { setBusy(false); }
+    }}>
+      <p className="text-sm text-ink-2">Report a review that breaks the review policy. Negative but honest feedback, including one-star ratings, stays published.</p>
+      <label className="label mt-3" htmlFor={`rr-${r.id}`}>Reason</label>
+      <select id={`rr-${r.id}`} className="field" value={reason} onChange={(e) => setReason(e.target.value)}>{REASONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+      <label className="label mt-3" htmlFor={`rd-${r.id}`}>What is wrong with it</label>
+      <textarea id={`rd-${r.id}`} className="field" rows={3} required minLength={10} maxLength={2000} value={details} onChange={(e) => setDetails(e.target.value)} placeholder="For example: it advertises another site; the person never took the course." />
+      <div className="mt-3 flex gap-2"><button className="btn btn-primary btn-sm" disabled={busy || details.trim().length < 10} data-testid="send-report">{busy ? <Loader2 className="size-4 animate-spin" /> : null}Send report</button><button type="button" className="btn btn-ghost btn-sm" onClick={() => setOpen(false)}>Cancel</button></div>
+    </form>
+  );
+}
+
 export default function ReviewsPage() {
+  const reports = useApi("/instructor/review-reports", (r) => ((r as { items?: { reviewId: string; status: string }[] }).items ?? []));
+  const openReported = new Set((reports.data ?? []).filter((x) => x.status === "open").map((x) => x.reviewId));
   const { data, error, setData } = useApi("/instructor/reviews", map);
   const [filter, setFilter] = useState<"all" | "unanswered">("all");
   const shown = (data ?? []).filter((r) => filter === "all" || !r.instructorReply);
@@ -63,7 +97,10 @@ export default function ReviewsPage() {
             </div>
             <p className="mt-3 max-w-3xl text-ink-2">{r.body || <span className="italic text-muted">Rating only, no written review.</span>}</p>
             {r.instructorReply ? <div className="mt-3 max-w-3xl border-l-2 border-violet pl-3 text-sm"><p className="font-bold">Your reply</p><p className="text-ink-2">{r.instructorReply}</p></div> : null}
-            <Reply r={r} onDone={(text) => setData((d) => d?.map((x) => (x.id === r.id ? { ...x, instructorReply: text } : x)) ?? null)} />
+            <div className="flex flex-wrap items-center gap-x-6">
+              <Reply r={r} onDone={(text) => setData((d) => d?.map((x) => (x.id === r.id ? { ...x, instructorReply: text } : x)) ?? null)} />
+              <Report r={r} reported={openReported.has(r.id)} onDone={() => reports.reload()} />
+            </div>
           </li>
         ))}
       </ul>

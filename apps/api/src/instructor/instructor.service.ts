@@ -1,3 +1,6 @@
+import { ownsResourceKey } from '../common/storage-keys';
+import { env } from '../config/env';
+import { JobsService } from '../common/jobs';
 import { Injectable, Optional } from '@nestjs/common';
 import { CoversService } from '../covers/covers.service';
 import type { Prisma } from '../generated/prisma/client';
@@ -64,19 +67,38 @@ export class InstructorService {
     private readonly storage: StorageService,
     private readonly revisions: RevisionsService,
     @Optional() private readonly covers?: CoversService,
+    @Optional() private readonly jobs?: JobsService,
   ) {}
 
   // ---------- profile ----------
-  async apply(a: Actor, input: { headline: string; bio: string; website?: string | null }) {
+  /**
+   * Any signed-in student applies; DEL (a super admin, or an admin with instructors.review) decides. One open application
+   * at a time; after "needs more information" or a rejection the applicant updates it and sends it again.
+   */
+  async apply(a: Actor, input: { headline: string; bio: string; website?: string | null; expertise: string[]; experience: string; plannedCourses: string; extraInfo?: string }) {
     const existing = await this.prisma.instructorProfile.findUnique({ where: { userId: a.user.id } });
     if (existing?.status === 'approved') throw conflict('You are already an instructor', 'already_instructor');
-    if (existing?.status === 'pending') throw conflict('Your application is already under review', 'already_applied');
+    if (existing?.status === 'pending' || existing?.status === 'under_review') throw conflict('Your application is already under review', 'already_applied');
+    const data = {
+      headline: input.headline, bio: input.bio, website: input.website ?? null,
+      expertise: Array.from(new Set(input.expertise.map((x) => x.trim()))), experience: input.experience, plannedCourses: input.plannedCourses, extraInfo: input.extraInfo ?? '',
+      status: 'pending' as const, submittedAt: new Date(),
+    };
     const profile = await this.prisma.instructorProfile.upsert({
       where: { userId: a.user.id },
-      create: { userId: a.user.id, headline: input.headline, bio: input.bio, website: input.website ?? null, status: 'pending' },
-      update: { headline: input.headline, bio: input.bio, website: input.website ?? null, status: 'pending', reviewNote: null },
+      create: { userId: a.user.id, ...data },
+      update: { ...data, reviewedById: null, reviewedAt: null },
     });
-    await this.audit.log({ actorId: a.user.id, action: 'instructor.applied', targetType: 'instructor', targetId: a.user.id, ip: a.ip });
+    await this.audit.log({ actorId: a.user.id, action: 'instructor.applied', targetType: 'instructor', targetId: a.user.id, ip: a.ip, meta: { resubmitted: !!existing } });
+    if (this.jobs) {
+      const web = env().WEB_URL;
+      await this.jobs.sendEmail({ to: a.user.email, template: 'instructor-application-received', data: { name: a.user.name, link: `${web}/student/teach` } });
+      const setting = await this.prisma.platformSetting.findUnique({ where: { key: 'notify_instructor_applications' } });
+      if (!setting || setting.value === true || setting.value === 'true') {
+        const staff = await this.prisma.user.findMany({ where: { roles: { has: 'super_admin' }, status: 'active' }, select: { email: true, name: true } });
+        for (const s of staff) await this.jobs.sendEmail({ to: s.email, template: 'staff-instructor-application', data: { staffName: s.name, name: a.user.name, headline: input.headline, link: `${web}/admin/instructors` } });
+      }
+    }
     return profile;
   }
 
@@ -462,6 +484,52 @@ export class InstructorService {
     return this.courseDetail(a.user.id, courseId);
   }
 
+  /** Whole curriculum order after drag and drop (sections, lessons, lessons moved between sections). */
+  async arrange(a: Actor, courseId: string, layout: { id: string; lectureIds: string[] }[]) {
+    const c = await this.editableCourse(a.user.id, courseId);
+    if (c.status === 'published') {
+      await this.revisions.mutate(courseId, (t) => T.arrange(t, layout));
+      return this.courseDetail(a.user.id, courseId);
+    }
+    const sections = await this.prisma.section.findMany({ where: { courseId }, select: { id: true, lectures: { select: { id: true } } } });
+    assertSameSet(sections.map((s) => s.id), layout.map((x) => x.id));
+    assertSameSet(sections.flatMap((s) => s.lectures.map((l) => l.id)), layout.flatMap((x) => x.lectureIds));
+    await this.prisma.$transaction([
+      ...layout.map((x, i) => this.prisma.section.update({ where: { id: x.id }, data: { position: i } })),
+      ...layout.flatMap((x) => x.lectureIds.map((id, i) => this.prisma.lecture.update({ where: { id }, data: { sectionId: x.id, position: i } }))),
+    ]);
+    await this.audit.log({ actorId: a.user.id, action: 'course.curriculum_arranged', targetType: 'course', targetId: courseId, ip: a.ip });
+    return this.courseDetail(a.user.id, courseId);
+  }
+
+  // ---------- complete course package (course-level downloads, owner 2026-11-25) ----------
+  async packageFiles(userId: string, courseId: string) {
+    await this.editableCourse(userId, courseId);
+    const items = await this.prisma.courseResource.findMany({ where: { courseId }, orderBy: { position: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true, createdAt: true } });
+    return { items };
+  }
+
+  async addPackageFile(a: Actor, courseId: string, input: { title: string; storageKey: string }) {
+    await this.editableCourse(a.user.id, courseId);
+    if (!ownsResourceKey(a.user.id, input.storageKey)) throw badRequest('Invalid storage key', 'invalid_key');
+    const head = await this.storage.head(input.storageKey);
+    if (!head) throw badRequest('Upload the file first', 'upload_missing');
+    const count = await this.prisma.courseResource.count({ where: { courseId } });
+    if (count >= 20) throw badRequest('A course package holds up to 20 files', 'too_many_files');
+    const r = await this.prisma.courseResource.create({ data: { courseId, title: input.title, storageKey: input.storageKey, sizeBytes: head.size, mime: head.contentType, position: count } });
+    await this.audit.log({ actorId: a.user.id, action: 'course.package_file_added', targetType: 'course', targetId: courseId, ip: a.ip, meta: { id: r.id, title: r.title } });
+    return { id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime };
+  }
+
+  async deletePackageFile(a: Actor, courseId: string, id: string) {
+    await this.editableCourse(a.user.id, courseId);
+    const r = await this.prisma.courseResource.findFirst({ where: { id, courseId } });
+    if (!r) throw notFound('File');
+    await this.prisma.courseResource.delete({ where: { id } });
+    await this.audit.log({ actorId: a.user.id, action: 'course.package_file_removed', targetType: 'course', targetId: courseId, ip: a.ip, meta: { id, title: r.title } });
+    return { ok: true };
+  }
+
   async setQuiz(a: Actor, courseId: string, lectureId: string, questions: QuizQuestionInput[]) {
     for (const [i, q] of questions.entries()) {
       if (q.correct >= q.options.length) {
@@ -498,7 +566,7 @@ export class InstructorService {
   /** Step 2 of a resource upload: the file must already be in storage under the caller's prefix. */
   async addResource(a: Actor, courseId: string, lectureId: string, input: { title: string; storageKey: string }) {
     const c = await this.editableCourse(a.user.id, courseId);
-    if (!input.storageKey.startsWith(`resources/${a.user.id}/`) || input.storageKey.includes('..')) throw badRequest('Invalid storage key', 'invalid_key');
+    if (!ownsResourceKey(a.user.id, input.storageKey)) throw badRequest('Invalid storage key', 'invalid_key');
     const head = await this.storage.head(input.storageKey);
     if (!head) throw badRequest('Upload the file first', 'upload_missing');
     if (c.status === 'published') {

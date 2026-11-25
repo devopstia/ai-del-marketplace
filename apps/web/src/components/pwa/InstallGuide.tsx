@@ -71,89 +71,83 @@ export function InstallGuide() {
   // Put the steps for this browser first.
   const ordered = [...guide.browsers].sort((a, b) => Number(shown === platform && !!browserName && b.name.toLowerCase().includes(browserName)) - Number(shown === platform && !!browserName && a.name.toLowerCase().includes(browserName)));
 
+  const steps = device && here && !canPrompt ? ordered[0]! : null;
   return (
-    <div className="container-x pb-12 pt-8">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start">
-        <div className="min-w-0">
-          <div className="flex items-center gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/icon-192.png" alt="" className="size-16 rounded-2xl shadow-float" />
-            <div>
-              <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold leading-tight text-ink">Install the app</h1>
-              <p className="text-ink-2">Your courses one tap away: its own icon, full screen, no app store.</p>
+    <div className="pb-6">
+      {/* 1. This device: the one thing to do here, with the reasons beside it */}
+      <section className="border-b border-line" aria-labelledby="install-h">
+        <div className="container-x grid gap-10 py-10 md:py-14 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-center lg:gap-16">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/icon-192.png" alt="" className="size-12 rounded-xl shadow-lift" />
+              <p className="text-sm font-bold text-violet">DevOps Easy Learning app</p>
             </div>
-          </div>
+            <h1 id="install-h" className="mt-4 font-display text-[clamp(2rem,4.2vw,3rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-ink">Your courses, one tap away</h1>
+            <p className="mt-3 max-w-xl text-lg text-ink-2">Install DEL on your phone, tablet or computer. It opens in its own window with its own icon. No app store, nothing to update.</p>
 
-          <section className="mt-8 rounded-panel border border-line bg-surface p-5 sm:p-6" aria-labelledby="this-device" data-testid="install-this-device">
-            {installed ? (
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-mint" aria-hidden="true" />
-                <div>
-                  <h2 id="this-device" className="font-display text-xl font-bold">You’re using the installed app</h2>
-                  <p className="mt-1 text-ink-2">DevOps Easy Learning is installed on this device. To add it to another device, pick it below.</p>
+            <div className="mt-7 max-w-xl" data-testid="install-this-device">
+              {installed ? (
+                <p className="flex items-start gap-3 rounded-tile border border-line bg-surface px-4 py-3.5 text-ink-2"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-mint" aria-hidden="true" /><span><b className="text-ink">You’re using the installed app.</b> To add DEL to another device, use the QR code or the steps below.</span></p>
+              ) : canPrompt ? (
+                <div className="flex flex-wrap items-center gap-4">
+                  <button type="button" className="btn btn-primary !px-6 !py-3 text-base" onClick={install} data-testid="install-button"><Download className="size-5" />Install the app</button>
+                  <span className="text-sm text-muted">Takes a second on this {DEVICE_NAME[platform] ?? "device"}.</span>
                 </div>
-              </div>
-            ) : (
-              <>
-                <h2 id="this-device" className="font-display text-xl font-bold">{device ? `On this ${DEVICE_NAME[platform] ?? "device"}` : "On this device"}</h2>
-                {canPrompt ? (
-                  <>
-                    <p className="mt-1 text-ink-2">One click and DEL opens in its own window, with its own icon.</p>
-                    <button type="button" className="btn btn-primary mt-4" onClick={install} data-testid="install-button"><Download className="size-4" />Install app</button>
-                  </>
-                ) : device && here ? (
-                  <ol className="mt-3 space-y-2.5" data-testid="install-steps">
-                    {ordered[0]!.steps.map((s, i) => (
-                      <li key={i} className="flex gap-3 text-ink-2"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-violet text-xs font-bold text-on-violet">{i + 1}</span><span>{s}</span></li>
+              ) : steps ? (
+                <>
+                  <h2 className="text-sm font-bold text-ink">On this {DEVICE_NAME[platform] ?? "device"}{steps.name ? `, in ${steps.name}` : ""}</h2>
+                  <ol className="mt-3 space-y-3" data-testid="install-steps">
+                    {steps.steps.map((s, i) => (
+                      <li key={i} className="flex gap-3 text-ink-2"><span className="grid size-7 shrink-0 place-items-center rounded-full bg-violet-soft text-sm font-extrabold text-violet">{i + 1}</span><span className="pt-0.5">{s}</span></li>
                     ))}
                   </ol>
-                ) : (
-                  <p className="mt-1 text-ink-2">Pick your device below for the steps.</p>
-                )}
-                {device?.platform === "iphone" && device.browser !== "safari" ? <p className="mt-3 text-sm text-muted">Tip: if you don’t see Add to Home Screen, open this page in Safari.</p> : null}
-              </>
-            )}
-          </section>
+                  {device?.platform === "iphone" && device.browser !== "safari" ? <p className="mt-3 text-sm text-muted">Don’t see Add to Home Screen? Open this page in Safari.</p> : null}
+                </>
+              ) : <p className="text-ink-2">Choose your device below for the exact steps.</p>}
+            </div>
 
-          <section className="mt-8" aria-labelledby="other-devices">
-            <h2 id="other-devices" className="font-display text-lg font-bold">All devices</h2>
-            <div className="mt-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Devices">
-              {GUIDES.map((g) => (
-                <button key={g.id} type="button" role="tab" aria-selected={shown === g.id} onClick={() => setTab(g.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold ${shown === g.id ? "border-violet bg-violet text-on-violet" : "border-line text-ink-2 hover:border-violet hover:text-ink"}`}>
-                  <g.icon className="size-4" aria-hidden="true" />{g.label}
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2" role="tabpanel">
-              {guide.browsers.map((b) => (
-                <div key={b.name} className="rounded-tile border border-line bg-surface p-4">
-                  <h3 className="font-display font-bold text-ink">{b.name}</h3>
-                  <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-ink-2">{b.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <aside className="grid min-w-0 gap-5">
-          {qr ? (
-            <div className="rounded-panel border border-line bg-surface p-5 sm:p-6" data-testid="install-qr">
-              <h2 className="font-display text-lg font-bold">On your phone</h2>
-              <p className="mt-1 text-sm text-ink-2">Scan with your phone’s camera to open this page there.</p>
-              <div className="mt-4 w-48 rounded-xl bg-white p-2" aria-label="QR code that opens the install page" role="img" dangerouslySetInnerHTML={{ __html: qr }} />
-            </div>
-          ) : null}
-          <div className="rounded-panel border border-line bg-surface p-5 sm:p-6">
-            <h2 className="font-display text-lg font-bold">Why install it</h2>
-            <ul className="mt-3 space-y-3 text-sm text-ink-2">
-              <li className="flex gap-3"><Zap className="mt-0.5 size-5 shrink-0 text-violet" aria-hidden="true" /><span><b className="text-ink">Opens like an app.</b> Its own icon and window, without browser tabs and bars.</span></li>
-              <li className="flex gap-3"><RefreshCw className="mt-0.5 size-5 shrink-0 text-violet" aria-hidden="true" /><span><b className="text-ink">Always up to date.</b> No store updates; you always get the latest version.</span></li>
-              <li className="flex gap-3"><Smartphone className="mt-0.5 size-5 shrink-0 text-violet" aria-hidden="true" /><span><b className="text-ink">Light on storage.</b> Your progress, notes and certificates stay on your account.</span></li>
+            <ul className="mt-9 grid max-w-xl gap-4 border-t border-line pt-6 text-sm sm:grid-cols-3">
+              <li><Zap className="size-5 text-violet" aria-hidden="true" /><p className="mt-2 font-bold text-ink">Opens like an app</p><p className="text-ink-2">Full screen, no browser tabs.</p></li>
+              <li><RefreshCw className="size-5 text-violet" aria-hidden="true" /><p className="mt-2 font-bold text-ink">Always current</p><p className="text-ink-2">The latest version, every time.</p></li>
+              <li><Smartphone className="size-5 text-violet" aria-hidden="true" /><p className="mt-2 font-bold text-ink">Light on storage</p><p className="text-ink-2">Progress stays in your account.</p></li>
             </ul>
           </div>
-        </aside>
-      </div>
+
+          {qr ? (
+            <div className="flex items-center gap-6 rounded-panel border border-line bg-surface p-6 lg:flex-col lg:items-start lg:p-8" data-testid="install-qr">
+              <div className="w-36 shrink-0 rounded-xl bg-white p-2 lg:w-44" aria-label="QR code that opens the install page" role="img" dangerouslySetInnerHTML={{ __html: qr }} />
+              <div>
+                <h2 className="font-display text-lg font-bold">Install it on your phone</h2>
+                <p className="mt-1 text-sm text-ink-2">Point your phone’s camera at the code. This page opens there with the steps for your phone.</p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      {/* 2. Every device and browser */}
+      <section className="container-x pt-12" aria-labelledby="other-devices">
+        <h2 id="other-devices" className="font-display text-2xl font-extrabold">Steps for every device</h2>
+        <div className="mt-6 grid gap-6 md:grid-cols-[17.5rem_minmax(0,1fr)] md:gap-10">
+          <div className="scroll-rail -mx-1 flex gap-1.5 overflow-x-auto px-1 md:mx-0 md:flex-col md:overflow-visible md:px-0" role="tablist" aria-label="Devices" aria-orientation="vertical">
+            {GUIDES.map((g) => (
+              <button key={g.id} type="button" role="tab" aria-selected={shown === g.id} onClick={() => setTab(g.id)}
+                className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3.5 py-2.5 text-left text-sm font-bold ${shown === g.id ? "bg-violet-soft text-violet" : "text-ink-2 hover:bg-surface-2 hover:text-ink"}`}>
+                <g.icon className="size-[18px]" aria-hidden="true" />{g.label}{g.id === platform ? <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-[0.7rem] font-bold text-muted max-md:ml-1">This device</span> : null}
+              </button>
+            ))}
+          </div>
+          <div role="tabpanel" className="self-start divide-y divide-line border-y border-line">
+            {guide.browsers.map((b) => (
+              <div key={b.name} className="grid gap-3 py-5 sm:grid-cols-[13rem_minmax(0,1fr)] sm:gap-8">
+                <h3 className="font-display font-bold text-ink">{b.name}</h3>
+                <ol className="space-y-2 text-ink-2">{b.steps.map((st, i) => <li key={i} className="flex gap-3"><span className="w-4 shrink-0 text-right font-bold tabular-nums text-muted">{i + 1}.</span><span>{st}</span></li>)}</ol>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { Injectable, Optional } from '@nestjs/common';
+import { accessState, daysLeft, hasAccess } from '../access/access';
+import { mergeRanges, parseRanges, rangeSeconds } from '../access/consumption';
 import { ProtectionService } from '../protection/protection.service';
 import { AuditService } from '../common/audit.service';
 import { AuthUser, isAdmin } from '../common/auth-context';
@@ -32,7 +34,8 @@ export class LearningService {
     if (course.instructorId === user.id) return 'owner';
     if (isAdmin(user)) return 'admin';
     const e = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId: user.id, courseId: course.id } } });
-    return e && !e.revokedAt ? 'enrolled' : null;
+    // Enforced here for every lecture, video, resource, quiz and progress call: an expired year means no access.
+    return hasAccess(e) ? 'enrolled' : null;
   }
 
   private async lectureWithCourse(lectureId: string) {
@@ -57,6 +60,22 @@ export class LearningService {
     return { total: lectures.length, completed: done, percent: lectures.length ? Math.round((done / lectures.length) * 100) : 0 };
   }
 
+  async myReviews(userId: string) {
+    const [reviews, enrolled] = await Promise.all([
+      this.prisma.review.findMany({
+        where: { userId }, orderBy: { updatedAt: 'desc' },
+        include: { course: { select: { id: true, slug: true, title: true, coverKey: true, ratingAvg: true, ratingCount: true } } },
+      }),
+      this.prisma.enrollment.findMany({ where: { userId, revokedAt: null }, select: { course: { select: { id: true, slug: true, title: true, coverKey: true, instructorId: true } } } }),
+    ]);
+    const reviewed = new Set(reviews.map((r) => r.courseId));
+    const card = (c: { id: string; slug: string; title: string; coverKey: string | null }) => ({ id: c.id, slug: c.slug, title: c.title, thumbnailUrl: this.media.imageUrl(c.coverKey) });
+    return {
+      items: reviews.map((r) => ({ id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt, updatedAt: r.updatedAt, course: { ...card(r.course), ratingAvg: r.course.ratingAvg, ratingCount: r.course.ratingCount } })),
+      toReview: enrolled.filter((e) => !reviewed.has(e.course.id) && e.course.instructorId !== userId).map((e) => card(e.course)),
+    };
+  }
+
   async myLearning(userId: string) {
     const enrolments = await this.prisma.enrollment.findMany({
       where: { userId, revokedAt: null },
@@ -72,15 +91,27 @@ export class LearningService {
         select: { positionSec: true, updatedAt: true, lecture: { select: { id: true, title: true } } },
       });
       const cert = await this.prisma.certificate.findUnique({ where: { userId_courseId: { userId, courseId: e.courseId } }, select: { code: true } });
+      const line = e.orderLineId ? await this.prisma.orderLine.findUnique({ where: { id: e.orderLineId }, select: { order: { select: { paidAt: true } } } }) : null;
+      const state = accessState(e);
       items.push({
         course: { id: e.course.id, slug: e.course.slug, title: e.course.title, thumbnailUrl: this.media.imageUrl(e.course.coverKey), instructor: e.course.instructor },
         enrolledAt: e.createdAt,
+        // One-year access (owner 2026-11-25): when it was bought, when it ends, days left; expired courses keep progress.
+        access: { state, purchasedAt: line?.order.paidAt ?? e.createdAt, expiresAt: e.accessExpiresAt, daysLeft: daysLeft(e.accessExpiresAt), canRenew: state === 'expiring' || state === 'expired' },
         progress,
         lastLecture: last ? { id: last.lecture.id, title: last.lecture.title, positionSec: last.positionSec, at: last.updatedAt } : null,
         certificateCode: cert?.code ?? null,
       });
     }
-    return { items };
+    return { items: items.filter((i) => i.access.state !== 'expired'), expired: items.filter((i) => i.access.state === 'expired') };
+  }
+
+  /** The learner's access dates for the player (null for owners, admins and courses without an end date). */
+  private async accessInfo(userId: string, courseId: string) {
+    const e = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId } } });
+    if (!e?.accessExpiresAt) return null;
+    const state = accessState(e);
+    return { state, expiresAt: e.accessExpiresAt, daysLeft: daysLeft(e.accessExpiresAt), canRenew: state === 'expiring' || state === 'expired' };
   }
 
   /** Full curriculum for someone with access (no URLs: playback/download go through signed-URL endpoints). */
@@ -114,7 +145,7 @@ export class LearningService {
     const done = progress.filter((p) => p.completed).length;
     const [cert, review] = await Promise.all([
       this.prisma.certificate.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } }, select: { code: true, issuedAt: true } }),
-      this.prisma.review.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } }, select: { id: true, rating: true, body: true } }),
+      this.prisma.review.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } }, select: { id: true, rating: true, body: true, status: true, instructorReply: true, createdAt: true, updatedAt: true } }),
     ]);
     return {
       id: c.id,
@@ -128,6 +159,11 @@ export class LearningService {
       lastLectureId: last?.lectureId ?? null,
       certificate: cert,
       myReview: review,
+      // Reviews inside the learning view (owner 2026-11-25): the same numbers as the public course page.
+      rating: { average: Math.round(c.ratingAvg * 10) / 10, count: c.ratingCount },
+      accessInfo: await this.accessInfo(user.id, c.id),
+      packageFiles: await this.prisma.courseResource.findMany({ where: { courseId: c.id }, orderBy: { position: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true } }),
+      canReview: access === 'enrolled',
       sections: c.sections.map((s) => ({
         id: s.id,
         title: s.title,
@@ -162,16 +198,19 @@ export class LearningService {
     return this.media.playback(lecture.videoAsset, user.id);
   }
 
-  async saveProgress(user: AuthUser, lectureId: string, input: { positionSec: number; completed?: boolean }) {
+  async saveProgress(user: AuthUser, lectureId: string, input: { positionSec: number; completed?: boolean; played?: [number, number][] }) {
     const { lecture, access } = await this.requireLectureAccess(user, lectureId);
     if (!access) throw forbidden('Enrol in this course to track progress', 'not_enrolled');
     const pos = lecture.durationSec > 0 ? Math.min(input.positionSec, lecture.durationSec) : input.positionSec;
     const existing = await this.prisma.lectureProgress.findUnique({ where: { userId_lectureId: { userId: user.id, lectureId } } });
     const completed = (existing?.completed ?? false) || !!input.completed; // completion is sticky
+    // Unique seconds watched: merged with what was already played, so replays never add (docs/ACCESS_AND_REFUNDS.md).
+    const ranges = mergeRanges([...parseRanges(existing?.watchedRanges), ...(input.played ?? [])], lecture.durationSec);
+    const watched = { watchedRanges: ranges as unknown as object, watchedSec: rangeSeconds(ranges) };
     const row = await this.prisma.lectureProgress.upsert({
       where: { userId_lectureId: { userId: user.id, lectureId } },
-      create: { userId: user.id, lectureId, positionSec: pos, completed },
-      update: { positionSec: pos, completed },
+      create: { userId: user.id, lectureId, positionSec: pos, completed, ...watched },
+      update: { positionSec: pos, completed, ...watched },
     });
     const course = await this.progressFor(user.id, lecture.section.courseId);
     return { lectureId, positionSec: row.positionSec, completed: row.completed, courseProgress: course };
@@ -187,6 +226,16 @@ export class LearningService {
     const r = await this.prisma.resource.findUnique({ where: { id: resourceId } });
     if (!r) throw notFound('Resource');
     await this.requireLectureAccess(user, r.lectureId);
+    const ttl = 300;
+    const filename = r.storageKey.split('/').pop() ?? 'download';
+    return { url: await this.storage.presignGet(r.storageKey, ttl, { downloadName: filename }), expiresAt: new Date(Date.now() + ttl * 1000).toISOString(), filename };
+  }
+
+  /** Complete course package file: same rule as lesson files (owner, admin, or an active enrolment). */
+  async downloadPackageFile(user: AuthUser, id: string) {
+    const r = await this.prisma.courseResource.findUnique({ where: { id }, include: { course: { select: { id: true, instructorId: true } } } });
+    if (!r) throw notFound('File');
+    if (!(await this.access(user, r.course))) throw forbidden('Enrol in this course to download its files', 'not_enrolled');
     const ttl = 300;
     const filename = r.storageKey.split('/').pop() ?? 'download';
     return { url: await this.storage.presignGet(r.storageKey, ttl, { downloadName: filename }), expiresAt: new Date(Date.now() + ttl * 1000).toISOString(), filename };
@@ -236,7 +285,9 @@ export class LearningService {
       update: { rating: input.rating, body: input.body },
     });
     await recalcRating(this.prisma, c.id);
-    return review;
+    const course = await this.prisma.course.findUniqueOrThrow({ where: { id: c.id }, select: { ratingAvg: true, ratingCount: true } });
+    // An edit never un-hides a review an admin hid (moderation stays in force); the student sees its status.
+    return { ...review, rating: review.rating, courseRating: { average: Math.round(course.ratingAvg * 10) / 10, count: course.ratingCount } };
   }
 
   async certificate(user: AuthUser, slug: string) {

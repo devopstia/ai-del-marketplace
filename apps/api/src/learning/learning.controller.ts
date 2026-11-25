@@ -5,7 +5,8 @@ import { CurrentUser, type AuthUser } from '../common/auth-context';
 import { ZBody } from '../common/zod';
 import { LearningService } from './learning.service';
 
-const progressSchema = z.object({ positionSec: z.number().int().min(0).max(24 * 3600), completed: z.boolean().optional() });
+/** `played`: [start, end] seconds actually played since the last save (unique-viewing tracking for the refund rule). */
+const progressSchema = z.object({ positionSec: z.number().int().min(0).max(24 * 3600), completed: z.boolean().optional(), played: z.array(z.tuple([z.number().min(0).max(24 * 3600), z.number().min(0).max(24 * 3600)])).max(200).optional() });
 const quizSchema = z.object({ answers: z.array(z.number().int().min(0).max(9)).min(1).max(50) });
 const reviewSchema = z.object({ rating: z.number().int().min(1).max(5), body: z.string().trim().max(4000).default('') });
 
@@ -21,6 +22,12 @@ export class LearningController {
   @Get('me/courses/:slug')
   course(@Param('slug') slug: string, @CurrentUser() u: AuthUser) {
     return this.svc.courseForLearner(u, slug);
+  }
+
+  /** Student Studio › Reviews: my reviews, and enrolled courses still waiting for one. */
+  @Get('me/reviews')
+  myReviews(@CurrentUser() u: AuthUser) {
+    return this.svc.myReviews(u.id);
   }
 
   @Get('me/certificates')
@@ -42,6 +49,12 @@ export class LearningController {
   @Get('lectures/:id/resources')
   resources(@Param('id') id: string, @CurrentUser() u: AuthUser) {
     return this.svc.resources(u, id);
+  }
+
+  @HttpCode(200)
+  @Post('course-files/:id/download')
+  downloadPackageFile(@Param('id') id: string, @CurrentUser() u: AuthUser) {
+    return this.svc.downloadPackageFile(u, id);
   }
 
   @HttpCode(200)

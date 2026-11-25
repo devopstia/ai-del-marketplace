@@ -14,6 +14,12 @@ export interface EmailJob {
   to: string;
   template: string;
   data?: Record<string, unknown>;
+  /** Reply-To (e.g. the sender of a contact message). */
+  replyTo?: string;
+  /** Same key = same email: a retried operation never sends it twice (BullMQ job id). */
+  dedupeKey?: string;
+  /** Private storage objects attached to the email (fetched by the worker at send time). */
+  attachments?: { key: string; name: string; mime: string }[];
 }
 
 /** Thin wrapper over BullMQ so services (and tests) don't depend on queue internals. */
@@ -59,11 +65,13 @@ export class JobsService {
   /** Hourly: transfer instructor shares whose refund-window hold has ended. Safe to call on every start (idempotent). */
   async scheduleRecurring() {
     await this.payments.upsertJobScheduler('release-transfers', { every: 60 * 60 * 1000 }, { name: 'release-transfers', data: {} });
+    // One-year access: expiry reminders and notices (docs/ACCESS_AND_REFUNDS.md).
+    await this.payments.upsertJobScheduler('access-reminders', { every: 60 * 60 * 1000 }, { name: 'access-reminders', data: {} });
   }
 
   async sendEmail(job: EmailJob) {
     try {
-      await this.email.add('send', job, { attempts: 3, removeOnComplete: 1000, removeOnFail: 1000 });
+      await this.email.add('send', job, { attempts: 4, backoff: { type: 'exponential', delay: 30_000 }, removeOnComplete: 5000, removeOnFail: 5000, ...(job.dedupeKey ? { jobId: `mail:${job.dedupeKey}` } : {}) });
     } catch (e) {
       // Email is best effort: never fail a business action because the queue is down.
       this.logger.warn(`email enqueue failed: ${(e as Error).message}`);

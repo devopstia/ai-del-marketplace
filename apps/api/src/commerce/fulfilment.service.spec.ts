@@ -13,6 +13,7 @@ function fakeDb() {
     studentCount: {} as Record<string, number>,
     cartDeleted: 0,
     audits: [] as string[],
+    periods: [] as any[],
     profiles: {
       'i-nadia': { isPlatform: false, stripeAccountId: 'acct_nadia', payoutsEnabled: true },
       'i-del': { isPlatform: true, stripeAccountId: null, payoutsEnabled: false },
@@ -36,9 +37,11 @@ function fakeDb() {
     },
     enrollment: {
       findUnique: jest.fn(async ({ where }: any) => state.enrollments.find((e) => e.userId === where.userId_courseId.userId && e.courseId === where.userId_courseId.courseId) ?? null),
-      create: jest.fn(async ({ data }: any) => state.enrollments.push({ ...data, revokedAt: null })),
+      findMany: jest.fn(async () => state.enrollments),
+      create: jest.fn(async ({ data }: any) => state.enrollments.push({ accessExpiresAt: null, ...data, revokedAt: null })),
       update: jest.fn(),
     },
+    accessPeriod: { create: jest.fn(async ({ data }: any) => (state.periods.push(data), data)) },
     course: { update: jest.fn(async ({ where }: any) => (state.studentCount[where.id] = (state.studentCount[where.id] ?? 0) + 1)) },
     cartItem: { deleteMany: jest.fn(async () => (state.cartDeleted++, { count: 1 })) },
     orderLine: {

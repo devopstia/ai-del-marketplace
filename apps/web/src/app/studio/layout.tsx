@@ -1,22 +1,31 @@
 "use client";
-import { BadgeDollarSign, BookOpen, LifeBuoy, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
-import { AppShell } from "@/components/shell/AppShell";
+import { UserPlus, MonitorPlay, BadgeDollarSign, BookOpen, LifeBuoy, Tag, LayoutDashboard, MessageSquareText, UserRound, Users, Wallet } from "lucide-react";
+import { AppShell, type NavGroup } from "@/components/shell/AppShell";
 import { useAuth } from "@/components/AuthProvider";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Skeleton } from "@/components/Empty";
-import { ConsoleSwitch } from "@/components/shell/ConsoleSwitch";
 
-const nav = [
-  { href: "/studio", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/studio/courses", label: "Courses", icon: BookOpen },
-  { href: "/studio/sales", label: "Sales", icon: BadgeDollarSign },
-  { href: "/studio/promotions", label: "Promotions", icon: Tag },
-  { href: "/studio/students", label: "Students", icon: Users },
-  { href: "/studio/reviews", label: "Reviews", icon: MessageSquareText },
-  { href: "/studio/payouts", label: "Payouts", icon: Wallet },
-  { href: "/studio/profile", label: "Profile", icon: UserRound },
-  { href: "/support", label: "Help and support", icon: LifeBuoy },
+const nav: NavGroup[] = [
+  { items: [{ href: "/studio", label: "Dashboard", icon: LayoutDashboard, exact: true }] },
+  { label: "Teach", items: [
+    { href: "/studio/courses", label: "Courses", icon: BookOpen },
+    { href: "/studio/students", label: "Students", icon: Users },
+    { href: "/studio/enrollments", label: "Manual enrollments", icon: UserPlus },
+    { href: "/studio/reviews", label: "Reviews", icon: MessageSquareText },
+  ] },
+  { label: "Business", items: [
+    { href: "/studio/sales", label: "Sales", icon: BadgeDollarSign },
+    { href: "/studio/promotions", label: "Promotions", icon: Tag },
+    { href: "/studio/payouts", label: "Payments & payouts", icon: Wallet },
+  ] },
+  { label: "Account", items: [
+    { href: "/studio/profile", label: "Profile", icon: UserRound },
+  ] },
+  { label: "Help", items: [
+    { href: "/help", label: "Platform videos", icon: MonitorPlay, testId: "nav-platform-videos" },
+    { href: "/support", label: "Help and support", icon: LifeBuoy },
+  ] },
 ];
 
 export default function StudioLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +47,7 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
     );
   }
   return (
-    <AppShell area={acting ? "DEL Studio" : "Instructor studio"} nav={nav} footer={acting ? <ConsoleSwitch to="admin" /> : null}>
+    <AppShell studio={acting ? "del" : "instructor"} nav={nav}>
       {acting ? (
         <p className="-mt-2 mb-6 rounded-tile border border-line bg-cyan-soft px-4 py-2.5 text-sm text-ink" role="status" data-testid="acting-banner">
           You’re working as <b>{me.actingAs!.name}</b>. Courses, sales and students here are DEL’s; every change is recorded under your name.

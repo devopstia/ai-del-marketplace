@@ -1,69 +1,218 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X, type LucideIcon } from "lucide-react";
-import { Logo } from "../Logo";
+import { usePathname, useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, LogOut, Menu, Store, X, type LucideIcon } from "lucide-react";
+import { LoopMark } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { useAuth } from "../AuthProvider";
 import { Avatar } from "../Avatar";
+import { useToast } from "../Toast";
+import { api, errMsg } from "@/lib/api";
+import { studiosFor, type Studio, type StudioKey } from "@/lib/studios";
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean; badge?: number };
+export type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean; badge?: number; testId?: string };
+export type NavGroup = { label?: string; items: NavItem[] };
 
-/** Sidebar workspace used by the instructor studio and the admin console. */
-export function AppShell({ area, nav, children, footer }: { area: string; nav: NavItem[]; children: React.ReactNode; footer?: React.ReactNode }) {
+/* ---------- breadcrumbs: pages may name their own last step (a course title, a ticket number) ---------- */
+const CrumbCtx = createContext<(label: string | null) => void>(() => {});
+/** Name the current page in the breadcrumb trail (e.g. the course being edited). */
+export function useCrumb(label: string | null | undefined) {
+  const set = useContext(CrumbCtx);
+  useEffect(() => { set(label ?? null); return () => set(null); }, [label, set]);
+}
+
+const STORE_KEY = "del-sidebar";
+
+/**
+ * The one workspace layout for every studio (owner 2026-11-25): Student, Instructor, DEL, Admin / Super Admin.
+ * Collapsible sidebar (remembered on this device), studio switcher, "Back to marketplace" always visible,
+ * a back button to the parent page, and breadcrumbs. Same structure everywhere; the menu differs by role.
+ */
+export function AppShell({ studio, nav, children, banner }: { studio: StudioKey; nav: NavGroup[]; children: React.ReactNode; banner?: React.ReactNode }) {
   const pathname = usePathname();
-  const { me } = useAuth();
+  const { me, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [crumb, setCrumb] = useState<string | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read the remembered choice after mount
+    try { if (localStorage.getItem(STORE_KEY) === "collapsed") setCollapsed(true); } catch { /* storage blocked */ }
+  }, []);
+  const toggle = () => setCollapsed((c) => {
+    try { localStorage.setItem(STORE_KEY, c ? "expanded" : "collapsed"); } catch { /* storage blocked */ }
+    return !c;
+  });
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- close the phone drawer after navigating
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  const studios = studiosFor(me);
+  const current = studios.find((s) => s.key === studio) ?? studios[0];
+  const items = nav.flatMap((g) => g.items);
   const isActive = (n: NavItem) => (n.exact ? pathname === n.href : pathname === n.href || pathname.startsWith(`${n.href}/`));
-  const links = (
-    <ul className="space-y-0.5">
-      {nav.map((n) => {
-        const a = isActive(n);
-        return (
-          <li key={n.href}>
-            <Link href={n.href} onClick={() => setOpen(false)} aria-current={a ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[0.93rem] font-bold ${a ? "bg-violet-soft text-violet" : "text-ink-2 hover:bg-surface-2 hover:text-ink"}`}>
-              <n.icon className="size-[18px]" aria-hidden="true" />
-              <span className="flex-1">{n.label}</span>
-              {n.badge ? <span className="rounded-full bg-amber px-1.5 text-xs font-bold leading-5 text-[#1f1500] tabular-nums">{n.badge}</span> : null}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-  );
-  return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface lg:flex">
-        <div className="px-4 py-5"><Logo sub={area} compact /></div>
-        <nav aria-label={area} className="flex-1 overflow-y-auto px-3">{links}</nav>
-        <div className="border-t border-line p-3">{footer}
+  // the most specific match wins (/admin/support vs /admin)
+  const active = [...items].sort((a, b) => b.href.length - a.href.length).find(isActive);
+  const root = items[0];
+  const trail: { label: string; href?: string }[] = [{ label: current?.label ?? "", href: root?.href }];
+  if (active && active !== root) trail.push({ label: active.label, href: active.href });
+  if (active && pathname !== active.href) trail.push({ label: crumb ?? "Details" });
+  const parent = trail.length > 1 ? trail[trail.length - 2] : null;
+
+  const side = (mobile: boolean) => {
+    const mini = collapsed && !mobile;
+    return (
+      <div className="flex h-full flex-col">
+        <div className={`flex items-center gap-2 ${mini ? "flex-col px-2 py-4" : "px-4 pb-3 pt-4"}`}>
+          <Link href="/" aria-label="DevOps Easy Learning marketplace" className="shrink-0"><LoopMark className={mini ? "h-6 w-12" : "h-7 w-14"} /></Link>
+          {mobile ? <button type="button" className="btn btn-ghost btn-sm ml-auto !px-2" onClick={() => setOpen(false)} aria-label="Close navigation"><X className="size-5" /></button> : null}
+        </div>
+        <div className={mini ? "px-2" : "px-3"}><StudioSwitcher studios={studios} current={current} mini={mini} /></div>
+        <div className={`mt-2 ${mini ? "px-2" : "px-3"}`}>
+          <Link href="/" title={mini ? "Back to marketplace" : undefined} data-testid="back-to-marketplace"
+            className={`flex items-center gap-3 rounded-lg border border-line px-3 py-2 text-[0.9rem] font-bold text-ink-2 hover:border-violet hover:text-ink ${mini ? "justify-center !px-0" : ""}`}>
+            <Store className="size-[18px] shrink-0" aria-hidden="true" />{mini ? <span className="sr-only">Back to marketplace</span> : "Back to marketplace"}
+          </Link>
+        </div>
+        <nav aria-label={current?.label ?? "Studio"} className={`mt-3 flex-1 overflow-y-auto pb-4 ${mini ? "px-2" : "px-3"}`}>
+          {nav.map((g, gi) => (
+            <div key={gi} className={gi ? "mt-4" : ""}>
+              {g.label ? (mini ? <div className="mx-2 mb-2 border-t border-line" aria-hidden="true" /> : <p className="px-3 pb-1.5 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-muted">{g.label}</p>) : null}
+              <ul className="space-y-0.5">
+                {g.items.map((n) => {
+                  const a = n === active;
+                  return (
+                    <li key={n.href}>
+                      <Link href={n.href} aria-current={a ? "page" : undefined} title={mini ? n.label : undefined} data-testid={n.testId}
+                        className={`relative flex items-center gap-3 rounded-lg py-2 text-[0.92rem] font-bold ${mini ? "justify-center px-0" : "px-3"} ${a ? "bg-violet-soft text-violet" : "text-ink-2 hover:bg-surface-2 hover:text-ink"}`}>
+                        <n.icon className="size-[18px] shrink-0" aria-hidden="true" />
+                        {mini ? <span className="sr-only">{n.label}</span> : <span className="min-w-0 flex-1 truncate">{n.label}</span>}
+                        {n.badge ? (mini
+                          ? <span className="absolute right-1 top-1 size-2 rounded-full bg-amber" aria-label={`${n.badge} waiting`} />
+                          : <span className="rounded-full bg-amber px-1.5 text-xs font-bold leading-5 text-[#1f1500] tabular-nums">{n.badge}</span>) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        <div className={`border-t border-line ${mini ? "px-2 py-3" : "p-3"}`}>
           {me ? (
-            <div className="flex items-center gap-3 px-2 py-2">
-              <Avatar name={me.name} src={me.avatarUrl} size={34} />
-              <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{me.name}</p><p className="truncate text-xs text-muted">{me.email}</p></div>
-              <ThemeToggle />
+            <div className={`flex items-center gap-2 ${mini ? "flex-col" : ""}`}>
+              <Avatar name={me.name} src={me.avatarUrl} size={32} />
+              {!mini ? <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{me.name}</p><p className="truncate text-xs text-muted">{me.email}</p></div> : null}
+              <button type="button" className="btn btn-ghost btn-sm !px-2" onClick={() => void logout()} aria-label="Log out" title="Log out"><LogOut className="size-4" /></button>
             </div>
           ) : null}
+          {!mobile ? (
+            <button type="button" onClick={toggle} aria-expanded={!collapsed} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} data-testid="sidebar-toggle"
+              className={`mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-muted hover:bg-surface-2 hover:text-ink ${mini ? "justify-center !px-0" : ""}`}>
+              {collapsed ? <ChevronsRight className="size-4" /> : <><ChevronsLeft className="size-4" />Collapse</>}
+            </button>
+          ) : null}
         </div>
-      </aside>
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-surface px-3 lg:hidden">
-        <button type="button" className="btn btn-ghost btn-sm !px-2" aria-label="Open navigation" onClick={() => setOpen(true)}><Menu className="size-5" /></button>
-        <Logo sub={area} compact />
-        <span className="ml-auto"><ThemeToggle /></span>
-      </header>
-      {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={`${area} navigation`}>
-          <button type="button" aria-label="Close navigation" className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="pop-in absolute inset-y-0 left-0 w-[min(18rem,85vw)] overflow-y-auto bg-surface p-3 shadow-float">
-            <div className="mb-3 flex items-center justify-between px-2 py-2"><Logo sub={area} compact /><button type="button" className="btn btn-ghost btn-sm !px-2" onClick={() => setOpen(false)} aria-label="Close navigation"><X className="size-5" /></button></div>
-            {links}
-            <div className="mt-4 border-t border-line pt-3">{footer}</div>
+      </div>
+    );
+  };
+
+  return (
+    <CrumbCtx.Provider value={setCrumb}>
+      <div className="min-h-dvh lg:grid" data-sidebar={collapsed ? "collapsed" : "expanded"}>
+        <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-line bg-surface transition-[width] duration-200 lg:block ${collapsed ? "w-[76px]" : "w-[264px]"}`}>{side(false)}</aside>
+        <div className={`min-w-0 transition-[padding] duration-200 ${collapsed ? "lg:pl-[76px]" : "lg:pl-[264px]"}`}>
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-line bg-[color-mix(in_oklab,var(--paper)_90%,transparent)] px-3 backdrop-blur-md sm:px-6 lg:px-8">
+            <button type="button" className="btn btn-ghost btn-sm !px-2 lg:hidden" aria-label="Open navigation" onClick={() => setOpen(true)}><Menu className="size-5" /></button>
+            {parent?.href ? (
+              <Link href={parent.href} className="btn btn-ghost btn-sm !px-2" aria-label={`Back to ${parent.label}`} title={`Back to ${parent.label}`} data-testid="studio-back"><ArrowLeft className="size-5" /></Link>
+            ) : null}
+            <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
+              <ol className="flex min-w-0 items-center gap-1 text-sm" data-testid="breadcrumbs">
+                {trail.map((t, i) => {
+                  const last = i === trail.length - 1;
+                  return (
+                    <li key={i} className={`flex min-w-0 items-center gap-1 ${!last && i === 0 && trail.length > 2 ? "max-sm:hidden" : ""}`}>
+                      {i ? <ChevronRight className="size-3.5 shrink-0 text-muted" aria-hidden="true" /> : null}
+                      {last || !t.href ? <span aria-current={last ? "page" : undefined} className="truncate font-bold text-ink">{t.label}</span>
+                        : <Link href={t.href} className="truncate text-muted hover:text-ink">{t.label}</Link>}
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+            <Link href="/" className="btn btn-ghost btn-sm max-sm:!px-2" data-testid="topbar-marketplace" aria-label="Back to marketplace"><Store className="size-4" /><span className="max-sm:hidden">Marketplace</span></Link>
+            <ThemeToggle />
+          </header>
+          {banner}
+          <main id="main" className="min-w-0 px-4 pb-14 pt-7 sm:px-6 lg:px-8">{children}</main>
+        </div>
+        {open ? (
+          <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={`${current?.label ?? "Studio"} navigation`}>
+            <button type="button" aria-label="Close navigation" className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+            <div className="pop-in absolute inset-y-0 left-0 w-[min(19rem,86vw)] bg-surface pb-[env(safe-area-inset-bottom)] shadow-float">{side(true)}</div>
           </div>
+        ) : null}
+      </div>
+    </CrumbCtx.Provider>
+  );
+}
+
+/** Which studio am I in, and where else may I go? DEL Studio is the instructor studio acting as DEL (super admins). */
+function StudioSwitcher({ studios, current, mini }: { studios: Studio[]; current?: Studio; mini: boolean }) {
+  const { me } = useAuth();
+  const toast = useToast();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<StudioKey | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); };
+  }, [open]);
+  const go = useCallback(async (s: Studio) => {
+    setOpen(false);
+    if (s.key === current?.key) return;
+    const acting = !!me?.actingAs;
+    // DEL Studio and the own Instructor Studio share /studio: the API is told which one (and records the real person).
+    if (s.key === "del" || acting) {
+      setBusy(s.key);
+      try {
+        await api("/auth/act-as", { method: "POST", body: { mode: s.key === "del" ? "del" : "self" } });
+        window.location.assign(s.href);
+      } catch (e) { toast("error", errMsg(e)); setBusy(null); }
+      return;
+    }
+    router.push(s.href);
+  }, [current?.key, me?.actingAs, router, toast]);
+  const many = studios.length > 1;
+  const Icon = current?.icon;
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => many && setOpen((o) => !o)} aria-haspopup={many ? "menu" : undefined} aria-expanded={many ? open : undefined}
+        title={mini ? current?.label : undefined} data-testid="studio-switcher"
+        className={`flex w-full items-center gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5 text-left ${many ? "hover:bg-violet-soft" : "cursor-default"} ${mini ? "justify-center !px-0" : ""}`}>
+        {Icon ? (busy ? <Loader2 className="size-[18px] shrink-0 animate-spin text-violet" /> : <Icon className="size-[18px] shrink-0 text-violet" aria-hidden="true" />) : null}
+        {!mini ? <span className="min-w-0 flex-1"><span className="block truncate text-[0.93rem] font-extrabold text-ink">{current?.label}</span>{many ? <span className="block text-xs text-muted">Switch studio</span> : null}</span> : <span className="sr-only">{current?.label}{many ? ", switch studio" : ""}</span>}
+        {many && !mini ? <ChevronDown className={`size-4 text-muted transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" /> : null}
+      </button>
+      {open ? (
+        <div role="menu" aria-label="Your studios" className={`pop-in absolute z-40 mt-1 w-64 rounded-tile border border-line bg-surface p-1.5 shadow-float ${mini ? "left-full top-0 ml-2" : "left-0 right-0 w-auto"}`}>
+          {studios.map((s) => (
+            <button key={s.key} type="button" role="menuitemradio" aria-checked={s.key === current?.key} onClick={() => void go(s)} data-testid={`switch-${s.key}`}
+              className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-surface-2">
+              <s.icon className="mt-0.5 size-[18px] shrink-0 text-violet" aria-hidden="true" />
+              <span className="min-w-0 flex-1"><span className="block text-sm font-bold text-ink">{s.label}</span><span className="block text-xs text-muted">{s.hint}</span></span>
+              {s.key === current?.key ? <Check className="mt-0.5 size-4 text-violet" aria-hidden="true" /> : null}
+            </button>
+          ))}
+          <div className="my-1 border-t border-line" />
+          <Link href="/" role="menuitem" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-ink-2 hover:bg-surface-2 hover:text-ink"><Store className="size-[18px]" />Marketplace</Link>
         </div>
       ) : null}
-      <main id="main" className="min-w-0 px-4 py-8 sm:px-8 lg:px-10">{children}</main>
     </div>
   );
 }
