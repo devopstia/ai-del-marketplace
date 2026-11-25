@@ -121,3 +121,5 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   reviews; "Most enrolled" only with 3+ courses that have learners; shared card rules; covers without a second title, never
   repeating beside each other; node-graph cover always spread; instructors use the full row). Purchase card lists video time
   and readings separately. /courses: tidy filter URLs, two topics named in the heading. Screenshots `docs/design/home-improve-2026-11-25/`.
+- 2026-11-25 owner disliked "Taught by practitioners" + dark teach band ("design it well"): replaced by option C from the
+  comparison page: each instructor with their real courses ("Learn from the people who build it") and a one-row teach invite.

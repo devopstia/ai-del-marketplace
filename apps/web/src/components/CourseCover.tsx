@@ -67,13 +67,13 @@ function Pattern({ seed, a, b }: { seed: number; a: string; b: string }) {
   );
 }
 
-/** Cover seeds for a grid, read left to right: a cover never repeats the pattern or ground of the one before it or
- *  two before it (the one above in a two-column grid). Unchanged covers keep their usual look. */
-export function coverSeeds(slugs: string[]): number[] {
+/** Cover seeds for a grid, read left to right: a cover never repeats the pattern or ground of the covers `avoid` places
+ *  before it (by default the one beside it and the one above it in a two-column grid). Unclashing covers keep their look. */
+export function coverSeeds(slugs: string[], avoid: number[] = [1, 2]): number[] {
   const out: number[] = [];
   slugs.forEach((slug, i) => {
     let s = hash(slug);
-    const clash = (x: number) => [out[i - 1], out[i - 2]].some((o) => o !== undefined && (o % 4 === x % 4 || o % grounds.length === x % grounds.length));
+    const clash = (x: number) => avoid.map((d) => out[i - d]).some((o) => o !== undefined && (o % 4 === x % 4 || o % grounds.length === x % grounds.length));
     for (let n = 0; n < 24 && clash(s); n++) s++;
     out.push(s);
   });

@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { ArrowUpRight, Search } from "lucide-react";
-import { getCategories, getCourse, getCourses, getFeaturedInstructors } from "@/lib/catalog";
+import { getCategories, getCourse, getCourses, getFeaturedInstructors, getInstructor } from "@/lib/catalog";
+import { InstructorShowcase, TeachInvite } from "@/components/home/InstructorShowcase";
 import { CoursePath } from "@/components/home/CoursePath";
 import { HeroLoop } from "@/components/HeroLoop";
 import { CourseBadges, CourseTile, MIN_STUDENTS_SHOWN, Price } from "@/components/CourseViews";
 import { CourseCover, coverSeeds } from "@/components/CourseCover";
-import { Avatar } from "@/components/Avatar";
 import { categoryIcon } from "@/components/CategoryIcon";
 import { hours, levelLabel, plural } from "@/lib/format";
-import type { CourseCard, InstructorSummary } from "@/lib/types";
+import type { CourseCard } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -67,25 +67,6 @@ function RankedRow({ c, rank }: { c: CourseCard; rank?: number }) {
   );
 }
 
-function InstructorFeature({ i }: { i: InstructorSummary }) {
-  // Counts come from /instructors/featured; the bio is the instructor's own text, so it is not shown as a quotation.
-  const courses = i.courseCount ?? 0;
-  const students = i.studentCount ?? 0;
-  return (
-    <figure className="flex h-full flex-col border-t-2 border-ink pt-6">
-      {i.bio ? <p className="font-display text-xl font-semibold leading-snug text-ink md:text-[1.4rem]">{i.bio}</p> : null}
-      <figcaption className="mt-6 flex items-center gap-3">
-        <Avatar name={i.name} src={i.avatarUrl} size={48} />
-        <span className="min-w-0">
-          <Link href={`/instructors/${i.id}`} className="block font-bold text-ink hover:text-violet">{i.name}</Link>
-          <span className="block truncate text-sm text-muted">{i.headline ?? "Instructor"}</span>
-        </span>
-      </figcaption>
-      <p className="mt-4 text-sm text-muted">{plural(courses, "course")}{students ? `, ${plural(students, "learner")}` : ""}</p>
-    </figure>
-  );
-}
-
 export default async function Home() {
   const [cats, popular, newest, rated, instructors] = await Promise.all([
     getCategories(),
@@ -111,6 +92,9 @@ export default async function Home() {
   const others = flagship ? popular.items.filter((c) => c.slug !== flagship.slug) : [];
   // Only categories that have courses; the strip is hidden until it can show a real choice.
   const liveCats = cats.filter((c) => (c.courseCount ?? countFor(c.slug)) > 0);
+  // Each featured instructor with their published courses (their profile lists them).
+  const people = (await Promise.all(instructors.map(async (i) => ({ i, courses: (await getInstructor(i.id))?.courses ?? [] }))))
+    .filter((p) => p.courses.length);
 
   return (
     <>
@@ -218,33 +202,15 @@ export default async function Home() {
         </section>
       ) : null}
 
-      {instructors.length >= 2 ? (
-        <section className="container-x pt-20">
-          <SectionHead title="Taught by practitioners" sub="Every instructor is reviewed before they publish, and every course is checked before it goes live." />
-          <div className={`grid gap-10 ${instructors.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
-            {instructors.map((i) => <InstructorFeature key={i.id} i={i} />)}
-          </div>
+      {people.length ? (
+        <section className="container-x pb-4 pt-20">
+          <SectionHead title="Learn from the people who build it" sub="Every instructor is reviewed before they publish, and every course is checked before it goes live." />
+          <InstructorShowcase people={people} />
+          <div className="mt-6"><TeachInvite /></div>
         </section>
-      ) : null}
-
-      {/* Teach band */}
-      <section className="container-x pt-24">
-        <div className="relative overflow-hidden rounded-panel bg-stage px-6 py-12 text-white md:px-14 md:py-16">
-          <svg viewBox="0 0 120 60" className="pointer-events-none absolute -right-24 -top-10 h-[150%] opacity-25" aria-hidden="true" fill="none">
-            <path d="M60,30 C48,14 34,8 22,10 C10,12 4,22 4,30 C4,38 10,48 22,50 C34,52 48,46 60,30 C72,46 86,52 98,50 C110,48 116,38 116,30 C116,22 110,12 98,10 C86,8 72,14 60,30" stroke="#9d8fff" strokeWidth="2.5" />
-          </svg>
-          <div className="relative grid gap-8 md:grid-cols-[1.4fr_1fr] md:items-end">
-            <div>
-              <h2 className="font-display text-[clamp(1.8rem,3.4vw,2.6rem)] font-extrabold leading-tight">You run it in production. Teach it here.</h2>
-              <p className="mt-4 max-w-xl text-white/75">Publish your course, keep the price you set, and get paid out through Stripe. We review every course so learners trust what they buy.</p>
-            </div>
-            <div className="flex flex-wrap gap-3 md:justify-end">
-              <Link href="/teach" className="btn btn-cyan">Become an instructor</Link>
-              <Link href="/teach#how" className="btn border border-white/25 text-white hover:bg-white/10">How it works</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      ) : (
+        <section className="container-x pb-4 pt-20"><TeachInvite /></section>
+      )}
     </>
   );
 }
