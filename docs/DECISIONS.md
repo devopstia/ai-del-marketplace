@@ -181,3 +181,9 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   every sign-in for everyone with an optional "Trust this device for 30 days"; all four providers built, buttons only
   with keys, tested with a local test provider; Have I Been Pwned for breached passwords. Hub review: no Google
   sign-in there (MFA, recovery codes, lockout ported). Migration ends all sessions. docs/AUTH.md, AGENTS.md rule 19.
+- Reviews in the course player (prompts.md task 1): branch `feat/learn-reviews` (rollback tag
+  `checkpoint-2026-11-25-learn-reviews`). "Rate course / Your review" tab, rating in Overview and the player bar;
+  same review record as the public page (one per student, edits replace it, a hidden review stays hidden).
+  Owner decisions for task 2 (2026-11-25): existing enrolments get 1 year from today; renewal = buy again at the
+  current price (sales apply, progress kept, no auto-charge); eligible refunds automatic (3/year, then admin);
+  AI refund analysis with Claude, hidden until ANTHROPIC_API_KEY is set.

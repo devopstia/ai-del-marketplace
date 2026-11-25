@@ -114,7 +114,7 @@ export class LearningService {
     const done = progress.filter((p) => p.completed).length;
     const [cert, review] = await Promise.all([
       this.prisma.certificate.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } }, select: { code: true, issuedAt: true } }),
-      this.prisma.review.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } }, select: { id: true, rating: true, body: true } }),
+      this.prisma.review.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } }, select: { id: true, rating: true, body: true, status: true, instructorReply: true, createdAt: true, updatedAt: true } }),
     ]);
     return {
       id: c.id,
@@ -128,6 +128,9 @@ export class LearningService {
       lastLectureId: last?.lectureId ?? null,
       certificate: cert,
       myReview: review,
+      // Reviews inside the learning view (owner 2026-11-25): the same numbers as the public course page.
+      rating: { average: Math.round(c.ratingAvg * 10) / 10, count: c.ratingCount },
+      canReview: access === 'enrolled',
       sections: c.sections.map((s) => ({
         id: s.id,
         title: s.title,
@@ -236,7 +239,9 @@ export class LearningService {
       update: { rating: input.rating, body: input.body },
     });
     await recalcRating(this.prisma, c.id);
-    return review;
+    const course = await this.prisma.course.findUniqueOrThrow({ where: { id: c.id }, select: { ratingAvg: true, ratingCount: true } });
+    // An edit never un-hides a review an admin hid (moderation stays in force); the student sees its status.
+    return { ...review, rating: review.rating, courseRating: { average: Math.round(course.ratingAvg * 10) / 10, count: course.ratingCount } };
   }
 
   async certificate(user: AuthUser, slug: string) {

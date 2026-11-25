@@ -109,6 +109,23 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect.poll(() => page.locator("video").getAttribute("src")).toContain("http");
     await expect(page.getByRole("navigation", { name: "Course content" }).first()).toBeAttached();
   });
+  test("rate and review the course without leaving the player", async ({ page }) => {
+    await login(page, email, password, `/learn/${PAID_COURSE}`);
+    await page.getByTestId("open-review").click();
+    const panel = page.getByTestId("review-panel");
+    await expect(panel.getByTestId("course-rating")).toBeVisible();
+    await panel.getByTestId("star-4").click();
+    await panel.getByTestId("review-body").fill("Labs worked first time on my laptop.");
+    await panel.getByTestId("review-save").click();
+    await expect(panel.getByTestId("my-review")).toContainText("Labs worked first time");
+    // Edit: one review per student, updated in place.
+    await panel.getByTestId("review-edit").click();
+    await panel.getByTestId("star-5").click();
+    await panel.getByTestId("review-save").click();
+    await expect(panel.getByTestId("my-review")).toContainText("Excellent");
+    await page.goto(`/courses/${PAID_COURSE}`);
+    await expect(page.locator("#reviews")).toContainText("Labs worked first time");
+  });
   test("refund from the receipt (within 14 days, little watched)", async ({ page }) => {
     await login(page, email, password, "/orders");
     // sign-in finishes with a full page load of /orders: wait for it before moving on

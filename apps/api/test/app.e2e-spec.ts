@@ -990,4 +990,42 @@ describe('e2e: buy and learn', () => {
       expect((await a.send('post', '/api/auth/login', { email: 'auth-target@e2e.example', password: PW }).expect(200)).body).toEqual({ mfa: 'enroll' });
     });
   });
+
+  it('reviews from the learning view: rating and count, one review per student, moderation kept, same numbers as the public page', async () => {
+    if (!available) return;
+    const teacher = await userAgent('rv-teacher@e2e.example', ['student', 'instructor'], {});
+    const ann = await userAgent('rv-ann@e2e.example', ['student']);
+    const bob = await userAgent('rv-bob@e2e.example', ['student']);
+    const stranger = await userAgent('rv-stranger@e2e.example', ['student']);
+    const admin = await userAgent('rv-admin@e2e.example', ['student', 'admin']);
+    const { course } = await publishedCourse(teacher.user.id, 'rv-course', 1999);
+    for (const u of [ann, bob]) await prisma.enrollment.create({ data: { userId: u.user.id, courseId: course.id, source: 'free' } });
+
+    const fresh = (await ann.agent.get('/api/me/courses/rv-course').expect(200)).body;
+    expect(fresh).toMatchObject({ rating: { average: 0, count: 0 }, canReview: true, myReview: null });
+    expect((await teacher.agent.get('/api/me/courses/rv-course').expect(200)).body.canReview).toBe(false);
+
+    await stranger.send('post', '/api/courses/rv-course/reviews', { rating: 5 }).expect(403);
+    await ann.send('post', '/api/courses/rv-course/reviews', { rating: 6 }).expect(400);
+    const a1 = await ann.send('post', '/api/courses/rv-course/reviews', { rating: 5, body: 'Great labs' }).expect(201);
+    expect(a1.body.courseRating).toEqual({ average: 5, count: 1 });
+    await bob.send('post', '/api/courses/rv-course/reviews', { rating: 2 }).expect(201);
+    // Editing replaces the student's one review.
+    const a2 = await ann.send('post', '/api/courses/rv-course/reviews', { rating: 4, body: 'Great labs, long intro' }).expect(201);
+    expect(a2.body.courseRating).toEqual({ average: 3, count: 2 });
+    expect(await prisma.review.count({ where: { courseId: course.id } })).toBe(2);
+    const mine = (await ann.agent.get('/api/me/courses/rv-course').expect(200)).body;
+    expect(mine).toMatchObject({ rating: { average: 3, count: 2 }, myReview: { rating: 4, body: 'Great labs, long intro', status: 'visible' } });
+    // The public page shows the same numbers and the review.
+    const pub = (await request(app.getHttpServer()).get('/api/courses/rv-course').expect(200)).body;
+    expect([pub.ratingAvg ?? pub.rating?.average, pub.ratingCount ?? pub.rating?.count]).toEqual([3, 2]);
+
+    // A hidden review stays hidden when its author edits it, and leaves the average.
+    const bobReview = await prisma.review.findFirstOrThrow({ where: { userId: bob.user.id } });
+    await admin.send('patch', `/api/admin/reviews/${bobReview.id}`, { status: 'hidden' }).expect(200);
+    const b2 = await bob.send('post', '/api/courses/rv-course/reviews', { rating: 1, body: 'edited' }).expect(201);
+    expect(b2.body.status).toBe('hidden');
+    expect(b2.body.courseRating).toEqual({ average: 4, count: 1 });
+    expect((await bob.agent.get('/api/me/courses/rv-course').expect(200)).body.myReview.status).toBe('hidden');
+  });
 });

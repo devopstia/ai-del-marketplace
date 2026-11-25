@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, FileText, ListChecks, Loader2, PanelRightClose, PanelRightOpen, PlayCircle } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronLeft, ChevronRight, FileText, ListChecks, Loader2, PanelRightClose, PanelRightOpen, PlayCircle, Star } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { obj, toCourseDetail } from "@/lib/normalize";
 import { clock, hours } from "@/lib/format";
@@ -15,17 +15,20 @@ import { Markdown } from "../Markdown";
 import { QuizPanel } from "./QuizPanel";
 import { ResourcesPanel } from "./ResourcesPanel";
 import { NotesPanel } from "./NotesPanel";
+import { ReviewPanel, toReviewInfo, type ReviewInfo } from "./ReviewPanel";
+import { RatingInline } from "@/components/Stars";
 import { useToast } from "../Toast";
 
 const SAVE_EVERY_MS = 10_000;
 const AUTOPLAY_SECONDS = 5;
 
-type Tab = "overview" | "content" | "resources" | "quiz" | "notes";
+type Tab = "overview" | "content" | "resources" | "quiz" | "notes" | "review";
 
 export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: string }) {
   const router = useRouter();
   const toast = useToast();
   const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [reviews, setReviews] = useState<ReviewInfo | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [playErr, setPlayErr] = useState<string | null>(null);
@@ -42,6 +45,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
     api(`/me/courses/${slug}`).then((r) => {
       const c = toCourseDetail(r);
       setCourse(c);
+      setReviews(toReviewInfo(r));
       const sec = c.sections.find((s) => s.lectures.some((l) => l.id === lectureId));
       setOpenSections(new Set(sec ? [sec.id] : c.sections.slice(0, 1).map((s) => s.id)));
     }).catch((e) => setLoadErr(errMsg(e)));
@@ -133,6 +137,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
     ...(lecture?.hasResources ? ([["resources", "Lab files"]] as [Tab, string][]) : []),
     ...(lecture?.hasQuiz || lecture?.type === "quiz" ? ([["quiz", "Quiz"]] as [Tab, string][]) : []),
     ["notes", "Notes"],
+    ["review", reviews?.mine ? "Your review" : "Rate course"],
   ];
 
   const outline = course ? (
@@ -184,6 +189,11 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
         <Link href="/" aria-label="DevOps Easy Learning home" className="hidden sm:block"><LoopMark className="h-5 w-10" /></Link>
         <span className="hidden h-6 w-px bg-line sm:block" />
         <p className="min-w-0 flex-1 truncate font-display font-bold">{course?.title ?? "Loading course…"}</p>
+        {reviews?.count ? (
+          <button type="button" onClick={() => setTab("review")} className="hidden items-center gap-1.5 rounded-lg px-2 py-1 text-sm hover:bg-surface-2 xl:flex" aria-label={`Course rating ${reviews.average.toFixed(1)} from ${reviews.count} reviews. Open reviews`}>
+            <Star className="size-4 text-amber" fill="currentColor" strokeWidth={0} /><span className="font-bold tabular-nums">{reviews.average.toFixed(1)}</span><span className="text-muted tabular-nums">({reviews.count})</span>
+          </button>
+        ) : null}
         <span className="hidden items-center gap-2 text-sm text-muted md:flex"><LoopMeter value={pct} size="sm" label={false} /><span className="tabular-nums">{done} of {flat.length} complete</span></span>
         <ThemeToggle />
         <button type="button" className="btn btn-ghost btn-sm hidden !px-2 lg:inline-flex" onClick={() => setSidebar((s) => !s)} aria-label={sidebar ? "Hide course content" : "Show course content"} aria-pressed={sidebar}>
@@ -280,6 +290,12 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
                     <div><dt className="text-muted">Course</dt><dd className="font-bold">{course.title}</dd></div>
                     <div><dt className="text-muted">Instructor</dt><dd className="font-bold">{course.instructor.name}</dd></div>
                     <div><dt className="text-muted">Your progress</dt><dd className="mt-0.5"><LoopMeter value={pct} size="sm" /></dd></div>
+                    {reviews ? (
+                      <div><dt className="text-muted">Course rating</dt><dd className="mt-0.5 flex flex-wrap items-center gap-2">
+                        <RatingInline avg={reviews.average} count={reviews.count} />
+                        {reviews.canReview ? <button type="button" className="link text-sm" onClick={() => setTab("review")} data-testid="open-review">{reviews.mine ? `Your rating: ${reviews.mine.rating}★` : "Rate this course"}</button> : null}
+                      </dd></div>
+                    ) : null}
                   </dl>
                   {next ? (
                     <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
@@ -296,6 +312,7 @@ export function LearnPlayer({ slug, lectureId }: { slug: string; lectureId: stri
               {tab === "resources" ? <ResourcesPanel lectureId={lectureId} /> : null}
               {tab === "quiz" ? <QuizPanel lectureId={lectureId} onPassed={() => { void save(posRef.current, true); toast("ok", "Quiz passed."); }} /> : null}
               {tab === "notes" ? <NotesPanel lectureId={lectureId} /> : null}
+              {tab === "review" && reviews ? <ReviewPanel slug={slug} info={reviews} onSaved={setReviews} /> : null}
             </div>
           </div>
         </div>
