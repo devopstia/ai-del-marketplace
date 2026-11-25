@@ -109,3 +109,6 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   (= `1ce1b75`). Includes: hero right column, AI hub, RAG cycle slide 2, /courses two-column grid + header row, sample-course script.
 - Next work on `feat/courses-improvements`: rollback tag `checkpoint-2026-11-25-courses-improve` (= `1ce1b75`), backup branch
   `backup/main-after-merge-2026-11-25`.
+- 2026-11-25 `feat/courses-improvements`: /courses filter counts (facets), several topics at once, cleaner cards (see commit
+  b86ee1d). Verified on a fresh stack (`down -v`): API 129/129, smoke 135/135, web typecheck + lint, Playwright 16/16 with
+  E2E_PASSWORD. Then clean demo (seed, import-del, demo-catalogue) + the 5 sample courses re-added.
