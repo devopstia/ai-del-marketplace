@@ -35,13 +35,17 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
    buttons appear only when keys are saved. The owner creates each provider app and pastes the keys in
    **Super Admin › People › Sign-in methods** (`/admin/sign-in`, shows the redirect URIs). Facebook needs business
    verification; LinkedIn needs a Company Page. The owner wants the "Continue with Google" button like their example.
-4. **Stripe test keys** in Super Admin › Payments & Stripe. Until then Buy/Checkout show "Contact us to enrol". Live
+4. **Stripe test keys** in Super Admin › Payments & Stripe (owner plans to do it on 2026-11-27, in a **new Stripe account
+   for DEL**, not the Insurance Hub's; never copy the Hub's keys). Until then Buy/Checkout show "Contact us to enrol". Live
    payments only after the owner's explicit authorisation (typed confirmation + authenticator).
 5. **SES production access** (AWS console › SES). Until then email only reaches verified addresses.
 6. **Alerts:** subscribe an email to SNS `del-marketplace-alerts`.
 7. **Videos and courses on production:** never upload local training videos or unfinished courses until the owner says so.
 8. **⌘K search and terms acceptance at purchase** (owner's earlier ordered list, items 5 and 11) were never built; confirm
    they are still wanted.
+
+9. **Super Admin password:** the bootstrap password was shown in chat on 2026-11-26 at the owner's request; the owner will
+   change it (Account settings). Afterwards the SSM copy `/del-marketplace/bootstrap/ADMIN_PASSWORD` is stale: mark or delete it.
 
 ## 3. Known gaps (from the 2026-11-26 requirement audit, `docs/FINAL_REVIEW_2026-11-26.md`)
 
