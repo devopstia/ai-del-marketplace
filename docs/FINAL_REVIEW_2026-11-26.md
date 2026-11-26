@@ -40,6 +40,26 @@ A requirement-by-requirement audit compared every documented requirement with th
 | Web typecheck + lint, API typecheck | clean (lint: 6 warnings, 0 errors) |
 | GitHub CI | green |
 
-## 4. Release status
+## 4. Staging QA (browser review as student, instructor and super admin, 390/1440/1920)
 
-See the summary given to the owner and docs/AWS_COSTS.md for the cost estimate.
+No blockers. Fixed: instructor "Pending" counted held money twice (display only); \$0 shown as "Free" on payouts; a 403
+logged on course pages for signed-in visitors; Purchase history and the Security card on phones; dashboards left ~450 px
+empty at 1920; copy (receipt location, lessons, "1 student", welcome for new accounts, refund line wrap); broken contact
+attachments now always fall back to a file tile; leftover test courses unpublished on staging. Not changed: the course
+page preview overlay (owner-approved design) and the empty-cart sentence (owner's wording). A one-off 502 on
+/admin/payments happened during a staging redeploy and did not reproduce.
+
+## 5. Release
+
+- Tag **`release-2026-11-26-final-review-r4`**, images **`4b5706c24617`** (immutable). Earlier tags `release-2026-11-26-final-review`,
+  `-r2`, `-r3` were never deployed (pipeline fixes: OIDC subject format, scannable images, then the scan gate).
+- Production deployed 2026-11-26 ~02:55 UTC after an RDS snapshot `pre-release-4b5706c24617-20261126-0254`; staging first.
+- Rollback: `./scripts/deploy-aws.sh release production 80a2549306af` (previous stable, `release-2026-11-26-launch-prep`).
+- Post-release checks on https://ai-devopseasylearning.com: 12 public pages 200, light default at 1920 and 390 with no sideways
+  scroll, no console errors, sign-up → Student + authenticator, role injection refused, admin API refused to a student,
+  payments "off" (no Stripe keys). The synthetic check account was deleted.
+- **Image scan:** the API image now has 1 critical finding (`CVE-2026-52490`, libtiff: affects only the `tiffcrop` tool,
+  which is not installed) instead of 4 in the previous production image. The CI gate still blocks on it, so this release
+  went out through `scripts/deploy-aws.sh` on the owner's instruction; accepting the finding in the gate needs the owner's decision.
+
+Costs: docs/AWS_COSTS.md.
