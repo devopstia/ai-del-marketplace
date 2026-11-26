@@ -262,3 +262,14 @@ Their courses show under the DEL brand (cards, cart, checkout, search, paths: "D
 DevOps Easy Learning · Taught by <name>"; badge on the course and instructor pages; certificates "Course by"). Branding only:
 their own rate (per-instructor agreed rate) and their own Stripe Connect payouts are unchanged. Independent instructors keep
 their own name. Admin: "Official DEL" tab, order lines say Official DEL / independent / platform.
+
+## 2026-11-26: Simpler checkout, no yellow notices (owner brief "Improve Checkout Page Design…")
+Checkpoint `checkpoint-2026-11-26-checkout-simplify`, branch `backup/pre-checkout-simplify`, work on `feat/checkout-simplify`.
+Checkout: one access sentence from the API (`accessMonths`, apps/api/src/access/access.ts), one unticked acceptance
+("I have read and agree to the Terms and Conditions, Course Access Policy, and Refund Policy", links open in a new tab to
+/policies/terms and /policies/access-and-refunds#access / #refunds), a separate unticked consent to immediate access (right of
+withdrawal) for paid orders; button disabled until both; the API still refuses orders without them and records terms version,
+time, IP and the refund policy version. Removed the policy box and the paragraph under the button. Test-mode notice is one line.
+Yellow: the `--amber` tokens now hold the brand cyan family (cyan-ink / cyan-soft) in light and dark, so every notice, warning
+and pending badge uses the palette; rating stars keep their gold through a new `--star` token. Access length is still the
+fixed 12 months (rule 20); making it a Super Admin setting is a separate decision.
