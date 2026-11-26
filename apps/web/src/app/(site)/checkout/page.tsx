@@ -7,6 +7,7 @@ import { api, errMsg } from "@/lib/api";
 import { obj, toCart } from "@/lib/normalize";
 import { moneyExact } from "@/lib/format";
 import type { Cart } from "@/lib/types";
+import { TERMS_VERSION } from "@/lib/terms";
 import { Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { Empty, Skeleton } from "@/components/Empty";
@@ -26,7 +27,9 @@ export default function CheckoutPage() {
     setBusy(true);
     setErr(null);
     try {
-      const r = obj(await api("/checkout", { method: "POST", body: { immediateAccessConsent: consent } }));
+      // The API records the accepted terms version, time and IP on the order; it refuses an order without them.
+      const paid = (cart?.totalCents ?? 0) > 0;
+      const r = obj(await api("/checkout", { method: "POST", body: { acceptTerms: consent, termsVersion: TERMS_VERSION, immediateAccessConsent: paid && consent } }));
       const url = String(r.url ?? "");
       if (!url) throw new Error("Checkout didn’t return a payment page. Try again.");
       window.location.assign(url);
@@ -69,18 +72,22 @@ export default function CheckoutPage() {
             </dl>
             {err ? <p role="alert" className="mt-4 rounded-lg bg-rose-soft px-3 py-2 text-sm font-bold text-rose">{err}</p> : null}
             {cart.totalCents > 0 ? (
-              <label className="mt-5 flex items-start gap-2.5 text-sm text-ink-2">
-                <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[var(--violet)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="consent" />
-                <span>I want access to the course right away. I understand that once I start watching, refunds follow the policy below instead of the 14-day withdrawal right.</span>
-              </label>
-            ) : null}
-            {cart.totalCents > 0 ? (
-              <p className="mt-3 rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-sm text-ink-2" data-testid="access-terms">
+              <p className="mt-5 rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-sm text-ink-2" data-testid="access-terms">
                 <span className="font-bold text-ink">12 months of access, not lifetime.</span> Each course is yours for 12 months from today. Renewing is optional and never charged automatically. Refunds: within 14 days if you’ve watched 25% or less. <Link href="/policies/access-and-refunds" className="link">Read the policy</Link>
               </p>
             ) : null}
+            {cart.totalCents > 0 && payMode === "off" ? null : (
+              <label className="mt-4 flex items-start gap-2.5 text-sm text-ink-2">
+                <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[var(--violet)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="consent" />
+                <span>
+                  I accept the <Link href="/policies/terms" target="_blank" rel="noopener" className="link">Terms of use</Link> and
+                  the <Link href="/policies/access-and-refunds" target="_blank" rel="noopener" className="link">Access and refunds policy</Link>.
+                  {cart.totalCents > 0 ? " I want access right away and understand that, once I start watching, refunds follow this policy instead of the 14-day withdrawal right." : null}
+                </span>
+              </label>
+            )}
             {cart.totalCents > 0 && payMode === "off" ? <PaymentsClosed className="mt-5" /> : (
-            <button type="button" className="btn btn-primary mt-5 w-full" onClick={pay} disabled={busy || (cart.totalCents > 0 && !consent)} data-testid="pay">
+            <button type="button" className="btn btn-primary mt-5 w-full" onClick={pay} disabled={busy || !consent} data-testid="pay">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}Continue to secure payment
             </button>)}
             <p className="mt-3 text-xs text-muted">

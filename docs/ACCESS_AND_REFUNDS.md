@@ -19,6 +19,22 @@ Student-facing wording: `/policies/access-and-refunds`.
 - **Reminders** (`src/access/reminders.ts`, hourly job `access-reminders`): 30, 7 and 1 days before, and on expiry;
   each once per year of access (`remindersSent`, reset on renewal). Templates `access-expiring`, `access-expired`.
 
+## Terms acceptance at purchase (owner 2026-11-26)
+- Checkout shows one box: "I accept the Terms of use and the Access and refunds policy" (paid carts add the
+  immediate-access consent for the 14-day withdrawal right). The button stays disabled until it is ticked, free
+  enrolments included.
+- **Enforced in the API** (`CommerceService.checkout`): `POST /checkout` needs `acceptTerms: true` and
+  `termsVersion` equal to `TERMS_VERSION` (`src/commerce/terms.ts`, today `2026-11-25` = the "Last updated" date of
+  /policies/terms and /policies/privacy). Missing or false → 400 `terms_required`; an older version → 400
+  `terms_outdated` (both with `details.currentVersion`). No order is created in either case.
+- **Recorded on the order**: `orders.termsVersion`, `termsAcceptedAt`, `termsAcceptedIp` (migration
+  `20261127020000_terms_acceptance`; null for older orders). The learner's receipt (`GET /orders/:id` › `terms:
+  { version, acceptedAt }`, Student Studio › Purchase history › receipt) shows version and time; the admin order
+  detail (`GET /admin/orders/:id` › `terms: { version, acceptedAt, ip }`) also shows the IP.
+- **Changing the policies**: update the pages, then bump `TERMS_VERSION` in `apps/api/src/commerce/terms.ts` **and**
+  `TERMS_VERSION` / `TERMS_UPDATED` in `apps/web/src/lib/terms.ts` together (the policy pages read the date from there).
+- Tests: `checkout.spec.ts` (unit), e2e "terms acceptance at purchase", Playwright "checkout needs the terms box".
+
 ## Consumption (what "25% watched" means)
 - The player sends `played: [[start, end], …]` with each progress save (continuous playback only; a seek starts a new
   range). The API merges ranges per lesson (`mergeRanges`, gaps under 1.5 s join, clamped to the lesson length) and

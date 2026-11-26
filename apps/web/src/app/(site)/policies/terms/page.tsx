@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Policy } from "../_Policy";
+import { TERMS_UPDATED } from "@/lib/terms";
 
 export const metadata: Metadata = { title: "Terms of use", description: "The rules for learning, buying and teaching on the DevOps Easy Learning marketplace." };
 
@@ -9,7 +10,7 @@ export default function Terms() {
   return (
     <Policy
       title="Terms of use"
-      updated="25 November 2026"
+      updated={TERMS_UPDATED}
       intro="These terms apply when you use the DevOps Easy Learning marketplace to learn, buy or teach. By creating an account you agree to them."
       sections={[
         ["Your account", <p>One account per person. Keep your password and your Google Authenticator safe; you’re responsible for what happens in your account. Every new account is a student account; teaching needs an approved instructor application.</p>],

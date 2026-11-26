@@ -459,7 +459,11 @@ model Order {
   refundEligibleUntil      DateTime?
   /// Buyer asked for immediate access and acknowledged the withdrawal-right rule (EU/UK digital content).
   immediateAccessConsentAt DateTime?
-  disputes                 Dispute[]
+  /// Terms of use + Access and refunds policy accepted at checkout: version (src/commerce/terms.ts), time and IP.
+  termsVersion             String?
+  termsAcceptedAt          DateTime?
+  termsAcceptedIp          String?
+  disputes                Dispute[]
   refundRequests           RefundRequest[]
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt

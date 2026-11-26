@@ -270,6 +270,7 @@ export function toOrder(x: unknown): Order {
     }),
     user: u.id ? { id: str(u.id), name: str(u.name), email: str(u.email) } : null,
     lineCount: typeof o.lines === "number" ? o.lines : arr(o.lines ?? o.orderLines ?? o.items).length,
+    terms: obj(o.terms).version ? { version: str(obj(o.terms).version), acceptedAt: str(obj(o.terms).acceptedAt) || null } : null,
   };
 }
 

@@ -15,7 +15,12 @@ import { StripeService } from './stripe.service';
 import { WebhooksService } from './webhooks.service';
 
 const addSchema = z.object({ courseId: z.string().uuid() });
-const checkoutSchema = z.object({ immediateAccessConsent: z.boolean().optional() }).default({});
+const checkoutSchema = z.object({
+  immediateAccessConsent: z.boolean().optional(),
+  // Terms of use + Access and refunds policy, accepted on the checkout page (src/commerce/terms.ts).
+  acceptTerms: z.boolean().optional(),
+  termsVersion: z.string().trim().max(32).optional(),
+}).default({});
 const reviewSchema = z.object({ note: z.string().trim().min(10, 'Tell us briefly what happened (10 characters or more)').max(2000) });
 const refundRequestSchema = z.object({ lineIds: z.array(z.string().uuid()).max(50).optional(), reason: z.string().trim().max(500).optional() });
 export const courseIdsSchema = z.object({ courseIds: z.array(z.string().uuid()).max(50) });

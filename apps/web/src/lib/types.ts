@@ -187,6 +187,8 @@ export interface Order {
   lines: OrderLine[];
   user?: { id: string; name: string; email: string } | null;
   lineCount?: number;
+  /** Terms of use + Access and refunds policy accepted at checkout (null for orders before 2026-11-26). */
+  terms?: { version: string; acceptedAt: string | null } | null;
 }
 
 export interface LearningItem {

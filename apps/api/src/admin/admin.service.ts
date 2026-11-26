@@ -382,6 +382,7 @@ export class AdminService {
       feeSource: o.feeSource,
       refundEligibleUntil: o.refundEligibleUntil,
       immediateAccessConsentAt: o.immediateAccessConsentAt,
+      terms: o.termsVersion ? { version: o.termsVersion, acceptedAt: o.termsAcceptedAt, ip: o.termsAcceptedIp } : null,
       user: o.user,
       lines,
       history,
