@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { expect, freshCode, login, logout, PASSWORD, rememberSeed, tinyVideo, USERS, visible } from "./helpers";
+import { apiFromPage, expect, freshCode, login, logout, PASSWORD, rememberSeed, tinyVideo, USERS, visible, watchApiBase } from "./helpers";
 
 const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-for-devops";
 
@@ -617,5 +617,231 @@ test.describe("final review (owner 2026-11-25)", () => {
     await page.getByTestId("setup-google").click();
     await expect(page.getByTestId("provider-google")).toContainText("/api/auth/oauth/google/callback");
     await expect(page.getByTestId("save-google")).toBeDisabled();
+  });
+});
+
+test.describe.serial("manual enrollment and the invitation link (owner 2026-11-25)", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run instructor/admin flows");
+  const student = `e2e-invite-${Date.now()}@example.com`;
+  let course = "";
+  let invitePath = "";
+
+  test("an instructor sends a manual enrollment request for one of their courses", async ({ page }) => {
+    await login(page, USERS.instructor, PASSWORD, "/studio/enrollments");
+    await expect(page.getByRole("heading", { name: "Manual enrollments", exact: true })).toBeVisible();
+    await page.getByTestId("new-enrollment").click();
+    await page.getByTestId("me-email").fill(student);
+    await expect(page.getByTestId("me-new")).toBeVisible(); // no account yet: the student will get an invitation
+    await page.getByTestId("me-name").fill("E2E Invitee");
+    const option = page.getByTestId("me-course").first();
+    await option.waitFor({ timeout: 10_000 }).catch(() => undefined);
+    test.skip(!(await option.count()), "the instructor has no published course");
+    course = (await option.locator("span.font-bold").first().innerText()).trim();
+    await option.click();
+    await expect(option).toHaveAttribute("aria-selected", "true");
+    await page.getByTestId("me-submit").click();
+    await expect(page.getByText(/Request ME-\d+ sent to DevOps Easy Learning/)).toBeVisible();
+    // back on the list: the request waits for DEL
+    const row = page.getByTestId("enrollment-request").filter({ hasText: student });
+    await expect(row).toBeVisible();
+    await expect(row.getByText("Pending").first()).toBeVisible();
+  });
+
+  test("the super admin finds it with the filters, approves it as complimentary and copies the invitation link", async ({ page }) => {
+    test.skip(!course, "needs the request from the previous test");
+    await logout(page);
+    await login(page, USERS.admin, PASSWORD, "/admin/enrollments");
+    await page.getByLabel("Search requests").fill(student);
+    await expect(page).toHaveURL(/[?&]q=/);
+    const row = page.getByTestId("enrollment-request").filter({ hasText: student });
+    await expect(row).toBeVisible();
+    // Course filter: applied by the API and kept in the URL.
+    const filter = page.getByLabel("Course", { exact: true });
+    await filter.selectOption({ label: course });
+    await expect(page).toHaveURL(/[?&]course=[0-9a-f-]{36}/);
+    await expect(row).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel("Course", { exact: true })).toHaveValue(/[0-9a-f-]{36}/);
+    await expect(row).toBeVisible();
+
+    await row.locator("button[aria-expanded]").first().click();
+    const box = row.getByTestId("approve-box");
+    await box.getByRole("radio", { name: "Complimentary" }).click();
+    await expect(box.getByTestId("approve-request")).toBeDisabled(); // a reason is required
+    await box.getByLabel("Why it is complimentary").fill("Playwright smoke test scholarship");
+    await box.getByTestId("approve-request").click();
+    await expect(page.getByText("Approved. The invitation is on its way.")).toBeVisible();
+
+    await page.getByRole("tab", { name: "Approved" }).click();
+    await expect(page).toHaveURL(/[?&]status=approved/);
+    await expect(row).toBeVisible();
+    const toggle = row.locator("button[aria-expanded]").first();
+    if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+    await row.getByTestId("copy-invite").click();
+    const link = (await row.getByTestId("invite-link").innerText()).trim();
+    invitePath = new URL(link).pathname;
+    expect(invitePath).toMatch(/^\/invite\/[\w-]+$/);
+  });
+
+  test("opening the invitation shows the email-code step; a revoked or unknown link shows a clear message", async ({ page, browser }) => {
+    test.skip(!invitePath, "needs the invitation link from the previous test");
+    const guest = await browser.newContext();
+    const visitor = await guest.newPage();
+    await visitor.goto(invitePath);
+    await expect(visitor.getByRole("heading", { name: /^Welcome, E2E/ })).toBeVisible();
+    await expect(visitor.getByTestId("invite-courses")).toContainText(course);
+    await expect(visitor.getByRole("heading", { name: "Create your account" })).toBeVisible();
+    await visitor.getByTestId("invite-send-code").click();
+    const form = visitor.getByTestId("invite-form");
+    await expect(form.getByLabel("Code from the email")).toBeVisible();
+    await expect(form.getByTestId("invite-accept")).toBeDisabled(); // nothing happens before the six-digit code
+
+    // DEL revokes it: the same link now explains it can't be used.
+    await login(page, USERS.admin, PASSWORD, `/admin/enrollments?status=approved&q=${encodeURIComponent(student)}`);
+    const row = page.getByTestId("enrollment-request").filter({ hasText: student });
+    await row.locator("button[aria-expanded]").first().click();
+    await row.getByRole("button", { name: "Revoke invitation" }).click();
+    await expect(page.getByText("Invitation revoked.")).toBeVisible();
+    await visitor.reload();
+    await expect(visitor.getByRole("alert")).toContainText("This invitation can’t be used");
+    await expect(visitor.getByRole("alert")).toContainText(/replaced by a newer one or cancelled/);
+
+    await visitor.goto("/invite/not-a-real-invitation-token");
+    await expect(visitor.getByRole("alert")).toContainText("This invitation can’t be used");
+    await expect(visitor.getByRole("alert")).toContainText(/not valid/);
+    await expect(visitor.getByRole("alert").getByRole("link", { name: "Contact DEL" })).toHaveAttribute("href", "/contact");
+    await guest.close();
+  });
+});
+
+test.describe("admin screens: refunds, users and roles, review filters", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run admin flows");
+
+  test("Admin › Refunds loads and every status tab works", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/refunds");
+    await expect(page.getByRole("heading", { name: "Refunds", exact: true })).toBeVisible();
+    const tabs = page.getByRole("group", { name: "Filter requests" }).getByRole("button");
+    await expect(tabs.first()).toHaveAttribute("aria-pressed", "true");
+    for (const name of ["All", "Refunded automatically", "Approved", "Declined by policy", "Declined after review", "Needs action"]) {
+      const tab = tabs.filter({ hasText: new RegExp(`^${name}`) });
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-pressed", "true");
+      // a list or the empty state, never an error
+      await expect(page.getByTestId("refund-list").or(page.getByText(/^(Nothing waiting|No requests here)$/))).toBeVisible();
+    }
+  });
+
+  test("Admin › Users and roles: search, open a user and see the account history", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/users");
+    await expect(page.getByRole("heading", { name: "Users and roles", exact: true })).toBeVisible();
+    await page.getByLabel("Search users").fill("nadia");
+    const row = page.getByTestId("user-row").filter({ hasText: USERS.instructor });
+    await expect(row).toBeVisible();
+    await expect(page.getByTestId("user-row").filter({ hasText: USERS.student })).toHaveCount(0);
+    await row.getByTestId("manage-user").click();
+    const dialog = page.getByTestId("manage-dialog");
+    await expect(dialog).toContainText(USERS.instructor);
+    await expect(dialog.getByRole("heading", { name: "History" })).toBeVisible();
+    await expect(dialog.getByTestId("user-history").or(dialog.getByText("No changes recorded yet."))).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+  });
+
+  test("Admin › Course reviews: the course filter is applied and kept in the URL", async ({ page }) => {
+    await login(page, USERS.admin, PASSWORD, "/admin/course-reviews?view=all");
+    await expect(page.getByRole("tab", { name: /^All/ })).toHaveAttribute("aria-selected", "true");
+    const filter = page.getByLabel("Course", { exact: true });
+    await expect(filter.locator("option").first()).toHaveText("All courses");
+    test.skip((await filter.locator("option").count()) < 2, "no course has reviews yet");
+    const title = (await filter.locator("option").nth(1).innerText()).trim();
+    await filter.selectOption({ index: 1 });
+    await expect(page).toHaveURL(/[?&]course=[0-9a-f-]{36}/);
+    const rows = page.getByTestId("moderation-row");
+    await expect(rows.first()).toBeVisible();
+    await expect.poll(async () => (await rows.allInnerTexts()).every((t) => t.includes(title))).toBe(true);
+    await page.getByRole("button", { name: "Clear filters" }).click();
+    await expect(page).not.toHaveURL(/[?&]course=/);
+  });
+});
+
+test.describe.serial("curriculum drag and drop", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run instructor flows");
+
+  test("an instructor reorders lessons with the keyboard and the order is saved", async ({ page }) => {
+    const apiBase = watchApiBase(page);
+    await login(page, USERS.instructor, PASSWORD, "/studio/courses");
+    await page.getByTestId("new-course").click();
+    await page.getByLabel("Working title").fill(`E2E arrange ${Date.now()}`);
+    await page.getByTestId("create-course").click();
+    await page.waitForURL(/\/studio\/courses\/[0-9a-f-]{36}/);
+    const courseId = page.url().match(/\/studio\/courses\/([0-9a-f-]{36})/)![1];
+    try {
+      await page.goto(`/studio/courses/${courseId}?step=curriculum`);
+      await page.getByLabel("New section title").fill("Arrange");
+      await page.getByTestId("add-section").click();
+      await expect(page.getByLabel("Section 1 title")).toHaveValue("Arrange");
+      for (const t of ["Alpha lesson", "Beta lesson"]) {
+        await page.getByLabel("New lesson title").fill(t);
+        await page.getByLabel("Lesson type").selectOption("article");
+        await page.getByTestId("add-lecture").click();
+        await expect(page.getByTestId("lesson-row").filter({ hasText: t })).toBeVisible();
+      }
+      const rows = page.getByTestId("lesson-row");
+      await expect(rows.nth(0)).toContainText("Alpha lesson");
+
+      // dnd-kit keyboard sensor: Space picks up, arrow moves, Space drops.
+      const saved = page.waitForResponse((r) => r.url().endsWith(`/instructor/courses/${courseId}/curriculum`) && r.request().method() === "PUT");
+      await page.getByRole("button", { name: "Drag lesson Alpha lesson" }).focus();
+      await page.keyboard.press("Space");
+      await page.waitForTimeout(250);
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(250);
+      await page.keyboard.press("Space");
+      expect((await saved).status()).toBe(200);
+      await expect(rows.nth(0)).toContainText("Beta lesson");
+
+      await page.reload();
+      await expect(rows.nth(0)).toContainText("Beta lesson");
+      await expect(rows.nth(1)).toContainText("Alpha lesson");
+    } finally {
+      // never published; remove the draft so test runs leave nothing behind
+      if (apiBase()) expect(await apiFromPage(page, apiBase(), "DELETE", `/instructor/courses/${courseId}`)).toBe(200);
+    }
+  });
+});
+
+test.describe("lesson player", () => {
+  test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+
+  test("double-click toggles full screen; Next changes the URL without reloading the page or the stage", async ({ page }) => {
+    await login(page, USERS.student, PASSWORD, "/student/courses");
+    const href = await page.locator('a[href^="/learn/"]').first().getAttribute("href");
+    test.skip(!href, "the demo student has no course");
+    await page.goto(href!);
+    const player = page.getByTestId("video-player");
+    await expect(player).toBeVisible();
+
+    const box = (await player.boundingBox())!;
+    await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 3);
+    await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+    await expect.poll(() => page.evaluate(() => !!document.fullscreenElement?.classList.contains("player-stage"))).toBe(true);
+    const fsBox = (await player.boundingBox())!;
+    await page.mouse.dblclick(fsBox.x + fsBox.width / 2, fsBox.y + fsBox.height / 3);
+    await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+
+    const next = page.getByTestId("player-next");
+    test.skip(!(await next.count()) || (await next.isDisabled()), "the course has a single lesson");
+    // Marks that a page load or a remount of the stage would wipe out.
+    await page.evaluate(() => {
+      (window as unknown as { __e2eStay?: boolean }).__e2eStay = true;
+      (document.querySelector(".player-stage") as HTMLElement & { __e2eStay?: boolean }).__e2eStay = true;
+    });
+    const before = page.url();
+    await player.hover(); // wake the control bar
+    await next.click();
+    await expect.poll(() => page.url()).not.toBe(before);
+    expect(new URL(page.url()).pathname).toMatch(/^\/learn\/[\w-]+\/[\w-]+$/);
+    expect(await page.evaluate(() => (window as unknown as { __e2eStay?: boolean }).__e2eStay === true)).toBe(true);
+    expect(await page.evaluate(() => (document.querySelector(".player-stage") as HTMLElement & { __e2eStay?: boolean }).__e2eStay === true)).toBe(true);
   });
 });
