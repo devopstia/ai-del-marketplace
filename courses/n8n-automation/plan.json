@@ -1,0 +1,85 @@
+{
+  "environment": "staging",
+  "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+  "provider": "DevOps Easy Learning",
+  "instructorName": "DevOps Easy Learning",
+  "sourceDir": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos/18-automation-n8n",
+  "course": {
+    "title": "DevOps Automation with n8n",
+    "subtitle": "Self-host n8n and Mattermost, then build the automations DevOps teams rely on: deployment notifications, Kubernetes alerts, incidents, scheduled reports and AI summaries.",
+    "description": "Your systems produce events all day: a website goes down, a deployment finishes, a report is due. In this course you automate the work around those events with **n8n**, and deliver the result where your team already talks: **Mattermost**.\n\nYou start from zero. You deploy n8n and Mattermost yourself with Docker Compose, create a channel and its incoming webhook, and build your first workflows by hand. Then you build the automations DevOps teams actually use: green and red deployment notifications from your CI pipeline, workflows that fail safely with retries and error workflows, Kubernetes alerts without duplicate floods, incident management with escalation, and scheduled reports that answer the same morning questions for you.\n\nThe last part is about running it for real: advanced workflow patterns (sub-workflows, signed webhooks, idempotency, rate limits, pagination, loop guards), n8n in production (Postgres, queue mode with workers, the encryption key, backups, upgrades and rollback), and adding AI summaries safely, where the AI drafts and a human decides.\n\n**How each lesson works.** Every idea starts with an everyday example, then you see it running live. Each hands-on lesson comes with its slides (PDF) and a lab (ZIP) with the Compose files, scripts and workflows used in the video, so you can rebuild everything on your own computer or a cloud VM. Two vocabulary lessons explain the words you'll meet, one at a time.",
+    "level": "intermediate",
+    "language": "en",
+    "categorySlug": "automation-n8n",
+    "cover": "suggested",
+    "objectives": [
+      "Deploy n8n and Mattermost with Docker Compose and keep their data when containers are rebuilt",
+      "Create Mattermost channels and incoming webhooks, and keep webhook URLs and secrets out of your workflows",
+      "Build n8n workflows with triggers, nodes, expressions and executions, and publish them to run on their own",
+      "Send green and red deployment notifications from a CI pipeline through a token-protected webhook",
+      "Make workflows fail safely with retries, fallback paths, error workflows and step-by-step debugging",
+      "Watch a Kubernetes namespace and post one clear alert per problem, without duplicate floods",
+      "Turn alerts into incidents with severity, escalation, acknowledgement and resolution",
+      "Schedule reports that collect deployments, failures and service status and post a summary every morning",
+      "Apply sub-workflows, signed webhooks, idempotency, rate limits, pagination and loop guards",
+      "Run n8n in production with Postgres, queue mode, the encryption key, backups, upgrades and rollback",
+      "Add AI summaries to workflows safely: sensitive data removed first, and a human always decides"
+    ],
+    "requirements": [
+      "Comfortable with a terminal and basic Docker commands",
+      "Docker with the Compose plugin on your computer, or a cloud VM where you can install it",
+      "For the Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster",
+      "For the AI lesson: your own OpenAI API key with a monthly budget limit set"
+    ]
+  },
+  "sections": [
+    {
+      "title": "Getting started: n8n and Mattermost",
+      "lessons": [
+        { "folder": "01-n1-n8n-mattermost-explained", "title": "What n8n and Mattermost do for a DevOps team", "preview": true,
+          "summary": "Triggers, workflows, channels and incoming webhooks explained with one everyday example, and why DevOps teams self-host n8n and Mattermost together." },
+        { "folder": "02-n2-deploy-n8n-mattermost-live", "title": "Deploy n8n and Mattermost with Docker Compose",
+          "summary": "Read the Compose file block by block, start n8n, Mattermost and a demo site, fix a real port conflict, log in to both apps and prove your data survives new containers." },
+        { "folder": "03-n3-mattermost-webhook-live", "title": "Set up Mattermost for automation: channels and incoming webhooks",
+          "summary": "Tour Mattermost, create an alerts channel and its incoming webhook, keep the webhook URL in .env, and prove that n8n can post to it from inside Docker." },
+        { "folder": "04-n4-n8n-tour-first-workflow-live", "title": "Tour n8n and build your first workflows",
+          "summary": "Every n8n menu and settings page, then two workflows that post real messages to Mattermost: run them by hand, publish them, fix a real error and read every run in Executions." }
+      ]
+    },
+    {
+      "title": "Core concepts and your first real automations",
+      "lessons": [
+        { "folder": "05-nt1-n8n-words", "title": "n8n vocabulary: workflows, triggers, nodes, items and executions", "preview": true,
+          "summary": "Workflow, trigger, node, item, expression, execution and publish, one word at a time: an everyday example, an animation, then the real n8n screen." },
+        { "folder": "06-n6-n8n-deploy-notifications-live", "title": "Deployment notifications from your CI pipeline",
+          "summary": "A CI pipeline calls an n8n webhook after each deployment and the team sees a green or red message in Mattermost, protected by a token so forged calls get a 401." },
+        { "folder": "07-n5-n8n-errors-retries-debugging-live", "title": "Errors, retries and debugging",
+          "summary": "Retries, a fallback path, an error workflow that alerts the team, and debugging a failed execution node by node with pinned mock data, against an API that fails on purpose." }
+      ]
+    },
+    {
+      "title": "DevOps automations in practice",
+      "lessons": [
+        { "folder": "08-nt2-automation-chatops-words", "title": "Automation and ChatOps vocabulary",
+          "summary": "Webhook or polling, cron, sub-workflows, idempotency, rate limits, queue mode and slash commands, explained with one café example, then where you meet each in n8n and Mattermost." },
+        { "folder": "10-n10-n8n-kubernetes-alerts-live", "title": "Kubernetes alerts in Mattermost",
+          "summary": "n8n checks a namespace every 30 seconds and posts one clear alert for crash loops, stuck rollouts and unschedulable pods, without duplicates, plus a daily namespace health report." },
+        { "folder": "12-n12-n8n-incident-management-live", "title": "Incident management: severity, escalation and resolution",
+          "summary": "Turn repeated alerts into one incident with a severity, escalate when nobody acknowledges, and close the loop with a resolved message, on a real outage." },
+        { "folder": "13-n13-n8n-scheduled-reports-live", "title": "Scheduled reports for your team",
+          "summary": "Schedule Trigger workflows that collect deployments, failures and service status, write a short report and post it to Mattermost every morning." }
+      ]
+    },
+    {
+      "title": "Advanced patterns and production",
+      "lessons": [
+        { "folder": "15-n15-n8n-advanced-design-live", "title": "Advanced workflow design",
+          "summary": "Sub-workflows, signed webhooks, idempotency, rate limits and batches, pagination, loop guards, workflows in git and where the logs are, each one run for real." },
+        { "folder": "16-n16-n8n-production-live", "title": "Running n8n in production",
+          "summary": "Postgres, queue mode with workers, the encryption key, backups and restores, pinned upgrades with a rollback, and a disaster recovery drill." },
+        { "folder": "17-n17-n8n-ai-assisted-live", "title": "AI-assisted workflows, safely",
+          "summary": "AI summaries of failed deployments, incidents and errors: sensitive data removed first, output labelled as a draft, and a human always decides." }
+      ]
+    }
+  ]
+}

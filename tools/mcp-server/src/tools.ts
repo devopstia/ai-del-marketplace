@@ -77,6 +77,7 @@ export function registerTools(server: McpServer, del: DelClient) {
     return { uploaded: results.filter((r) => (r as { ok: boolean }).ok).length, failed: results.filter((r) => !(r as { ok: boolean }).ok).length, results };
   }));
   t('attach_file', { description: 'Attach an uploaded file (storageKey from upload_file) to a lesson so learners can download it.', inputSchema: { courseId: uuid, lessonId: uuid, title: z.string().min(1).max(200), storageKey: z.string().min(1).max(400) } }, ({ courseId, lessonId, title, storageKey }) => run(() => del.call('POST', `/courses/${courseId}/lectures/${lessonId}/resources`, { title, storageKey })));
+  t('upload_captions', { description: 'Attach captions (SRT or WebVTT from the shared folders) to an uploaded video. Learners see them only when they turn captions on.', inputSchema: { assetId: uuid, path: z.string() } }, ({ assetId, path }) => run(() => del.uploadCaptions(assetId, path)));
   t('video_status', { description: 'Processing status of one uploaded video, or of all the instructor’s videos (uploading | processing | ready | failed).', inputSchema: { assetId: uuid.optional() } }, ({ assetId }) => run(() => del.call('GET', assetId ? `/videos/${assetId}` : '/videos')));
 
   t('validate_course', { description: 'Is the course complete? Errors block submission (unprocessed or failed videos, missing files, empty quizzes…); warnings flag duplicates and missing details.', inputSchema: { courseId: uuid } }, ({ courseId }) => run(() => del.call('GET', `/courses/${courseId}/validation`)));

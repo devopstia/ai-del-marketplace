@@ -86,6 +86,9 @@ export class AgentApiController {
   @Get('videos') async videos(@Agent('courses:read') a: AgentActor) { return { items: await this.media.listAssets(a.user.id) }; }
   @Get('videos/:assetId') video(@Param('assetId') id: string, @Agent('courses:read') a: AgentActor) { return this.media.getAsset(a.user.id, id); }
 
+  /** Captions for an uploaded video (owner 2026-11-26, course publisher): returns a signed PUT for a WebVTT file. Off for learners until they press CC. */
+  @HttpCode(200) @Post('videos/:assetId/captions') captions(@Param('assetId') id: string, @Agent('uploads') a: AgentActor) { return this.media.captionsUpload(a, id); }
+
   @Post('uploads') startUpload(@ZBody(uploadSchema) b: z.infer<typeof uploadSchema>, @Agent('uploads') a: AgentActor) { return this.uploads.create(a, b, a.tokenId); }
   @Get('uploads/:id/parts') parts(@Param('id') id: string, @ZQuery(partsQuery) q: z.infer<typeof partsQuery>, @Agent('uploads') a: AgentActor) { return this.uploads.parts(a.user.id, id, q.from, q.count); }
   @HttpCode(200) @Post('uploads/:id/complete') complete(@Param('id') id: string, @Agent('uploads') a: AgentActor) { return this.uploads.complete(a, id); }

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { open, readdir, realpath, stat } from 'node:fs/promises';
+import { open, readdir, readFile, realpath, stat } from 'node:fs/promises';
 import { extname, join, relative, resolve, sep } from 'node:path';
 
 /**
@@ -27,6 +27,14 @@ const TYPES: Record<string, string> = {
 };
 export const contentTypeOf = (file: string) => TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream';
 export const isVideo = (file: string) => contentTypeOf(file).startsWith('video/');
+
+/** SRT → WebVTT (timestamps use "." and the file starts with WEBVTT); WebVTT is returned unchanged. */
+export function toVtt(text: string): string {
+  const t = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').trim();
+  if (t.startsWith('WEBVTT')) return t + '\n';
+  const body = t.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+  return `WEBVTT\n\n${body}\n`;
+}
 
 export interface UploadProgress { file: string; partNumber: number; partCount: number }
 export interface UploadResult { file: string; kind: 'video' | 'resource'; duplicate: boolean; resumed: boolean; assetId?: string; storageKey?: string; status?: string; partsUploaded: number }
@@ -101,13 +109,13 @@ export class DelClient {
    * Upload one file through resumable multipart: checksum (duplicate detection), start or resume, PUT the missing
    * parts with retries, complete. Never reports success unless the server confirms completion.
    */
-  async upload(path: string, opts: { courseId?: string; onProgress?: (p: UploadProgress) => void } = {}): Promise<UploadResult> {
+  async upload(path: string, opts: { courseId?: string; onProgress?: (p: UploadProgress) => void; /** Name learners see when they download it (default: the file's own name). */ name?: string } = {}): Promise<UploadResult> {
     const file = await this.allowed(path);
     const size = (await stat(file)).size;
     if (!size) throw new Error(`${path} is empty`);
     const kind = isVideo(file) ? 'video' : 'resource';
     const sha256 = await this.sha256(file);
-    const started = await this.call<Record<string, unknown>>('POST', '/uploads', { kind, filename: file.split(sep).pop(), contentType: contentTypeOf(file), sizeBytes: size, sha256, courseId: opts.courseId });
+    const started = await this.call<Record<string, unknown>>('POST', '/uploads', { kind, filename: opts.name ?? file.split(sep).pop(), contentType: contentTypeOf(file), sizeBytes: size, sha256, courseId: opts.courseId });
     if (started.duplicate) return { file, kind, duplicate: true, resumed: false, assetId: started.assetId as string | undefined, storageKey: started.storageKey as string | undefined, status: started.status as string | undefined, partsUploaded: 0 };
     const id = String(started.id);
     const partCount = Number(started.partCount);
@@ -133,6 +141,19 @@ export class DelClient {
     const done = await this.call<Record<string, unknown>>('POST', `/uploads/${id}/complete`);
     const video = done.video as { status?: string } | undefined;
     return { file, kind, duplicate: false, resumed: !!started.resume, assetId: done.assetId as string | undefined, storageKey: done.storageKey as string | undefined, status: video?.status ?? String(done.status), partsUploaded: uploaded };
+  }
+
+  /**
+   * Captions for an uploaded video: SRT or WebVTT from the shared folders, sent as WebVTT. Learners only see them when
+   * they turn captions on (CC); they also power search inside videos.
+   */
+  async uploadCaptions(assetId: string, path: string): Promise<{ assetId: string; bytes: number }> {
+    const file = await this.allowed(path);
+    const vtt = toVtt(await readFile(file, 'utf8'));
+    const put = await this.call<{ uploadUrl: string; headers: Record<string, string> }>('POST', `/videos/${assetId}/captions`);
+    const r = await this.fetchImpl(put.uploadUrl, { method: 'PUT', headers: put.headers, body: vtt });
+    if (!r.ok) throw new Error(`Captions upload failed: storage answered ${r.status}`);
+    return { assetId, bytes: Buffer.byteLength(vtt) };
   }
 
   private async putWithRetry(url: string, body: Buffer, attempts = 4) {
