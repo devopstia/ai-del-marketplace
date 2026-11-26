@@ -44,3 +44,50 @@ export async function courseConsumption(prisma: PrismaService, userId: string, c
     percent: totalSec ? Math.round((watchedSec / totalSec) * 1000) / 10 : 0,
   };
 }
+
+/**
+ * What a reviewer really watched (owner 2026-11-26, "reviews you can believe"): the same unique-seconds measure as
+ * the refund rule, computed live for a page of reviews in two queries (never per review, never estimated).
+ * `watchedPercent` is null when the course has no video lessons; `completed` means every lesson is marked done.
+ */
+export interface ReviewerWatch { watchedPercent: number | null; completed: boolean }
+export interface WatchLecture { id: string; courseId: string; durationSec: number; isVideo: boolean }
+export interface WatchProgress { userId: string; lectureId: string; watchedSec: number; completed: boolean }
+export const watchKey = (userId: string, courseId: string) => `${userId}:${courseId}`;
+const NO_WATCH: ReviewerWatch = { watchedPercent: null, completed: false };
+export const watchOf = (m: Map<string, ReviewerWatch>, userId: string, courseId: string) => m.get(watchKey(userId, courseId)) ?? NO_WATCH;
+
+export function summariseWatch(lectures: WatchLecture[], progress: WatchProgress[], pairs: { userId: string; courseId: string }[]): Map<string, ReviewerWatch> {
+  const byCourse = new Map<string, WatchLecture[]>();
+  for (const l of lectures) byCourse.set(l.courseId, [...(byCourse.get(l.courseId) ?? []), l]);
+  const prog = new Map(progress.map((p) => [`${p.userId}:${p.lectureId}`, p]));
+  const out = new Map<string, ReviewerWatch>();
+  for (const { userId, courseId } of pairs) {
+    const ls = byCourse.get(courseId) ?? [];
+    const videos = ls.filter((l) => l.isVideo);
+    const totalSec = videos.reduce((a, l) => a + l.durationSec, 0);
+    const watchedSec = videos.reduce((a, l) => a + Math.min(l.durationSec, prog.get(`${userId}:${l.id}`)?.watchedSec ?? 0), 0);
+    out.set(watchKey(userId, courseId), {
+      // Same rounding as courseConsumption (one decimal), so a review and a refund never disagree.
+      watchedPercent: totalSec ? Math.round((watchedSec / totalSec) * 1000) / 10 : null,
+      completed: ls.length > 0 && ls.every((l) => prog.get(`${userId}:${l.id}`)?.completed === true),
+    });
+  }
+  return out;
+}
+
+export async function reviewerWatch(prisma: PrismaService, pairs: { userId: string; courseId: string }[]): Promise<Map<string, ReviewerWatch>> {
+  if (!pairs.length) return new Map();
+  const courseIds = [...new Set(pairs.map((p) => p.courseId))];
+  const userIds = [...new Set(pairs.map((p) => p.userId))];
+  const rows = await prisma.lecture.findMany({
+    where: { section: { courseId: { in: courseIds } } },
+    select: { id: true, durationSec: true, type: true, section: { select: { courseId: true } } },
+  });
+  const lectures = rows.map((l) => ({ id: l.id, courseId: l.section.courseId, durationSec: l.durationSec, isVideo: l.type === 'video' }));
+  const progress = await prisma.lectureProgress.findMany({
+    where: { userId: { in: userIds }, lectureId: { in: lectures.map((l) => l.id) } },
+    select: { userId: true, lectureId: true, watchedSec: true, completed: true },
+  });
+  return summariseWatch(lectures, progress, pairs);
+}

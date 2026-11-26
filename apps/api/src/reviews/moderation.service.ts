@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { reviewerWatch, watchOf } from '../access/consumption';
 import type { Prisma } from '../generated/prisma/client';
 import { AuditService } from '../common/audit.service';
 import type { Actor } from '../common/auth-context';
@@ -62,9 +63,11 @@ export class ModerationService {
     const reports = await this.prisma.reviewReport.findMany({ where: { reviewId: { in: rows.map((r) => r.id) } }, orderBy: { createdAt: 'desc' } });
     const people = await this.prisma.user.findMany({ where: { id: { in: [...new Set(reports.flatMap((r) => [r.reporterId, r.resolvedById]).filter((x): x is string => !!x))] } }, select: { id: true, name: true } });
     const nameOf = (id?: string | null) => people.find((p) => p.id === id)?.name ?? null;
+    const watch = await reviewerWatch(this.prisma, rows.map((r) => ({ userId: r.userId, courseId: r.courseId })));
     return {
       ...paged(rows.map((r) => ({
         id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt,
+        ...watchOf(watch, r.userId, r.courseId),
         author: { id: r.user.id, name: r.user.name, email: r.user.email }, course: r.course,
         reports: reports.filter((x) => x.reviewId === r.id).map((x) => ({ id: x.id, reason: x.reason, reasonLabel: REASON_LABEL[x.reason as keyof typeof REASON_LABEL] ?? x.reason, details: x.details, status: x.status, createdAt: x.createdAt, reporter: nameOf(x.reporterId), resolvedBy: nameOf(x.resolvedById), resolvedAt: x.resolvedAt, resolution: x.resolution })),
       })), total, q),

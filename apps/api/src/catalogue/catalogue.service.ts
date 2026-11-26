@@ -1,4 +1,7 @@
 import { accessState, daysLeft, hasAccess } from '../access/access';
+import { reviewerWatch, watchOf } from '../access/consumption';
+import { certificateUrl, linkedInAddUrl, quizSummary } from './certificate-share';
+import { env } from '../config/env';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
 import { AuthUser, isAdmin } from '../common/auth-context';
@@ -248,15 +251,17 @@ export class CatalogueService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        select: { id: true, rating: true, body: true, instructorReply: true, createdAt: true, user: { select: { name: true, avatarUrl: true } } },
+        select: { id: true, userId: true, rating: true, body: true, instructorReply: true, createdAt: true, user: { select: { name: true, avatarUrl: true } } },
       }),
       this.prisma.review.count({ where }),
       this.prisma.review.groupBy({ by: ['rating'], where, _count: { _all: true } }),
     ]);
     const distribution: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
     for (const d of dist) distribution[String(d.rating)] = d._count._all;
+    const watch = await reviewerWatch(this.prisma, rows.map((r) => ({ userId: r.userId, courseId: course.id })));
     return {
-      items: rows.map(({ user, ...r }) => ({ ...r, author: { name: user.name, avatarUrl: user.avatarUrl }, verifiedPurchase: true })),
+      // userId stays server-side; the watched share is the reviewer's own measured viewing (docs/TRUST.md).
+      items: rows.map(({ user, userId, ...r }) => ({ ...r, author: { name: user.name, avatarUrl: user.avatarUrl }, verifiedPurchase: true, ...watchOf(watch, userId, course.id) })),
       ratingAvg: Math.round(course.ratingAvg * 10) / 10,
       ratingCount: course.ratingCount,
       distribution,
@@ -376,11 +381,22 @@ export class CatalogueService {
       select: {
         code: true,
         issuedAt: true,
+        userId: true,
         user: { select: { name: true } },
-        course: { select: { title: true, slug: true, instructor: { select: { name: true } }, sections: { select: { lectures: { select: { durationSec: true } } } } } },
+        course: {
+          select: {
+            title: true, slug: true, status: true, objectives: true, instructor: { select: { name: true } },
+            sections: { select: { lectures: { select: { durationSec: true, quiz: { select: { id: true } } } } } },
+          },
+        },
       },
     });
     if (!cert) throw notFound('Certificate');
+    const lectures = cert.course.sections.flatMap((s) => s.lectures);
+    const quizIds = lectures.flatMap((l) => (l.quiz ? [l.quiz.id] : []));
+    const attempts = quizIds.length ? await this.prisma.quizAttempt.findMany({ where: { userId: cert.userId, quizId: { in: quizIds } }, select: { quizId: true, score: true } }) : [];
+    const url = certificateUrl(env().WEB_URL, cert.code);
+    // Public by link: only the learner's name and course facts, never email or account details (docs/TRUST.md).
     return {
       code: cert.code,
       issuedAt: cert.issuedAt,
@@ -388,10 +404,17 @@ export class CatalogueService {
       course: {
         title: cert.course.title,
         slug: cert.course.slug,
+        published: cert.course.status === 'published',
         instructorName: cert.course.instructor.name,
-        totalDurationSec: cert.course.sections.flatMap((s) => s.lectures).reduce((n, l) => n + l.durationSec, 0),
+        totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
+        lessons: lectures.length,
       },
+      skills: cert.course.objectives.filter((s) => s.trim()).slice(0, 12),
+      quizzes: quizSummary(quizIds, attempts),
+      completed: true,
       valid: true,
+      url,
+      linkedInUrl: linkedInAddUrl({ courseTitle: cert.course.title, issuedAt: cert.issuedAt, code: cert.code, certUrl: url }),
     };
   }
 }

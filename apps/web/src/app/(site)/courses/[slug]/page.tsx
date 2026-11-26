@@ -13,6 +13,7 @@ import { CourseFaq } from "@/components/CourseFaq";
 import { ProgramNote } from "@/components/promo/FullProgram";
 import { PurchaseCard } from "@/components/PurchaseCard";
 import { ReviewForm } from "@/components/ReviewForm";
+import { WatchedBadge } from "@/components/WatchedBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -133,6 +134,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                   <p className="font-display text-6xl font-extrabold leading-none text-amber">{reviews.ratingAvg.toFixed(1)}</p>
                   <Stars value={reviews.ratingAvg} size={18} className="mt-2" />
                   <p className="mt-1 text-sm text-muted">Course rating, {reviews.ratingCount.toLocaleString("en-US")} ratings</p>
+                  <p className="mt-3 text-sm text-ink-2">Only enrolled students can review, and each review shows how much of the course its author really watched.</p>
                 </div>
                 <ul className="space-y-2" aria-label="Rating breakdown">
                   {([5, 4, 3, 2, 1] as const).map((s) => (
@@ -157,6 +159,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                         <p className="flex items-center gap-2 text-xs text-muted"><Stars value={r.rating} size={12} />{date(r.createdAt)}</p>
                       </div>
                     </div>
+                    <WatchedBadge watchedPercent={r.watchedPercent} completed={r.completed} className="mt-2" />
                     {r.body ? <p className="mt-3 text-[0.95rem] text-ink-2">{r.body}</p> : null}
                     {r.instructorReply ? (
                       <div className="mt-3 border-l-2 border-violet pl-3 text-sm">

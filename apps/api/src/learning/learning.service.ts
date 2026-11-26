@@ -1,6 +1,7 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { accessState, daysLeft, hasAccess } from '../access/access';
-import { mergeRanges, parseRanges, rangeSeconds } from '../access/consumption';
+import { mergeRanges, parseRanges, rangeSeconds, reviewerWatch, watchOf } from '../access/consumption';
+import { QUIZ_PASS_PERCENT } from '../catalogue/certificate-share';
 import { ProtectionService } from '../protection/protection.service';
 import { AuditService } from '../common/audit.service';
 import { AuthUser, isAdmin } from '../common/auth-context';
@@ -76,8 +77,9 @@ export class LearningService {
     ]);
     const reviewed = new Set(reviews.map((r) => r.courseId));
     const card = (c: { id: string; slug: string; title: string; coverKey: string | null }) => ({ id: c.id, slug: c.slug, title: c.title, thumbnailUrl: this.media.imageUrl(c.coverKey) });
+    const watch = await reviewerWatch(this.prisma, reviews.map((r) => ({ userId, courseId: r.courseId })));
     return {
-      items: reviews.map((r) => ({ id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt, updatedAt: r.updatedAt, course: { ...card(r.course), ratingAvg: r.course.ratingAvg, ratingCount: r.course.ratingCount } })),
+      items: reviews.map((r) => ({ id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt, updatedAt: r.updatedAt, ...watchOf(watch, userId, r.courseId), course: { ...card(r.course), ratingAvg: r.course.ratingAvg, ratingCount: r.course.ratingCount } })),
       toReview: enrolled.filter((e) => !reviewed.has(e.course.id) && e.course.instructorId !== userId).map((e) => card(e.course)),
     };
   }
@@ -271,7 +273,7 @@ export class LearningService {
     const results = questions.map((q, i) => ({ index: i, chosen: answers[i], correct: q.correct, isCorrect: answers[i] === q.correct, why: q.why }));
     const score = Math.round((results.filter((r) => r.isCorrect).length / questions.length) * 100);
     await this.prisma.quizAttempt.create({ data: { userId: user.id, quizId: quiz.id, score, answers } });
-    const passed = score >= 70;
+    const passed = score >= QUIZ_PASS_PERCENT;
     if (passed) {
       await this.prisma.lectureProgress.upsert({
         where: { userId_lectureId: { userId: user.id, lectureId } },

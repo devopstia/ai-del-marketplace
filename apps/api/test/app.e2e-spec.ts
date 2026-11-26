@@ -1073,6 +1073,19 @@ describe('e2e: buy and learn', () => {
     const pub = (await request(app.getHttpServer()).get('/api/courses/rv-course').expect(200)).body;
     expect([pub.ratingAvg ?? pub.rating?.average, pub.ratingCount ?? pub.rating?.count]).toEqual([3, 2]);
 
+    // Each review shows what its author really watched (unique seconds, same measure as refunds); no user ids leak.
+    const videos = await prisma.lecture.findMany({ where: { section: { courseId: course.id }, type: 'video' }, orderBy: { position: 'asc' } });
+    const totalSec = videos.reduce((n, l) => n + l.durationSec, 0);
+    if (videos.length && totalSec) {
+      await prisma.lectureProgress.create({ data: { userId: ann.user.id, lectureId: videos[0].id, watchedSec: videos[0].durationSec, watchedRanges: [[0, videos[0].durationSec]] } });
+      const list = (await request(app.getHttpServer()).get('/api/courses/rv-course/reviews').expect(200)).body.items;
+      const byBody = (b: string) => list.find((x: any) => x.body === b);
+      expect(byBody('Great labs, long intro')).toMatchObject({ watchedPercent: Math.round((videos[0].durationSec / totalSec) * 1000) / 10, completed: false });
+      expect(list.find((x: any) => x.rating === 2)).toMatchObject({ watchedPercent: 0, completed: false });
+      expect(list.every((x: any) => x.userId === undefined)).toBe(true);
+      expect((await ann.agent.get('/api/me/reviews').expect(200)).body.items[0].watchedPercent).toBeGreaterThan(0);
+    }
+
     // A hidden review stays hidden when its author edits it, and leaves the average.
     const bobReview = await prisma.review.findFirstOrThrow({ where: { userId: bob.user.id } });
     await admin.send('patch', `/api/admin/reviews/${bobReview.id}`, { status: 'hidden' }).expect(200);

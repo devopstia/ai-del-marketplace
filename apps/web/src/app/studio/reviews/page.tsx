@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Flag, Loader2, MessageSquareReply } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { WatchedBadge } from "@/components/WatchedBadge";
 import { list, toReview } from "@/lib/normalize";
 import { date } from "@/lib/format";
 import type { Review } from "@/lib/types";
@@ -92,7 +93,7 @@ export default function ReviewsPage() {
           <li key={r.id} className="p-5 sm:p-6">
             <div className="flex flex-wrap items-center gap-3">
               <Avatar name={r.user.name} size={40} />
-              <div className="min-w-0 flex-1"><p className="font-bold">{r.user.name}</p><p className="text-xs text-muted">{r.course?.title}{r.course ? ", " : ""}{date(r.createdAt)}</p></div>
+              <div className="min-w-0 flex-1"><p className="font-bold">{r.user.name}</p><p className="text-xs text-muted">{r.course?.title}{r.course ? ", " : ""}{date(r.createdAt)}</p><WatchedBadge watchedPercent={r.watchedPercent} completed={r.completed} className="mt-1" /></div>
               <Stars value={r.rating} size={15} />
             </div>
             <p className="mt-3 max-w-3xl text-ink-2">{r.body || <span className="italic text-muted">Rating only, no written review.</span>}</p>
