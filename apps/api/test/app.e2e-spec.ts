@@ -415,6 +415,54 @@ describe('e2e: buy and learn', () => {
     expect(audit.body.items.every((i: any) => i.actor?.email === 'p-buyer@e2e.example' || JSON.stringify(i).includes('p-buyer'))).toBe(true);
   });
 
+  it('Official DEL Instructors: DEL brand on their courses, own rate and own Stripe payouts (owner 2026-11-26)', async () => {
+    if (!available) return;
+    const teacher = await userAgent('o-teacher@e2e.example', ['student', 'instructor'], {});
+    const indie = await userAgent('o-indie@e2e.example', ['student', 'instructor'], {});
+    const admin = await userAgent('o-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('o-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const buyer = await userAgent('o-buyer@e2e.example', ['student']);
+    const course = await publishedCourse(teacher.user.id, 'o-official', 10000);
+    const other = await publishedCourse(indie.user.id, 'o-indie', 10000);
+
+    // Only a super admin designates; recorded in the audit log.
+    await admin.send('put', `/api/admin/instructors/${teacher.user.id}/terms`, { official: true, commissionBps: 4000, note: 'Official DEL instructor, 60/40' }).expect(403);
+    const t = await boss.send('put', `/api/admin/instructors/${teacher.user.id}/terms`, { official: true, commissionBps: 4000, note: 'Official DEL instructor, 60/40' }).expect(200);
+    expect(t.body).toMatchObject({ official: true, instructorSharePercent: 60, source: 'agreement', payToPlatform: false });
+    const audit = await prisma.auditLog.findFirstOrThrow({ where: { action: 'commission.terms_changed', targetId: teacher.user.id } });
+    expect(audit.meta).toMatchObject({ before: { official: false }, after: { official: true } });
+    expect(await teacher.agent.get('/api/instructor/terms').expect(200).then((r) => r.body.official)).toBe(true);
+
+    // Branding: DEL on the card and the course page, the instructor still credited; independents keep their own name.
+    const list = await request(app.getHttpServer()).get('/api/courses?q=o-&pageSize=48').expect(200);
+    const card = (slug: string) => list.body.items.find((c: any) => c.slug === slug);
+    expect(card(course.course.slug).instructor).toMatchObject({ name: teacher.user.name, brand: 'DevOps Easy Learning' });
+    expect(card(other.course.slug).instructor.brand).toBeNull();
+    const page = await request(app.getHttpServer()).get(`/api/courses/${course.course.slug}`).expect(200);
+    expect(page.body.instructor).toMatchObject({ name: teacher.user.name, brand: 'DevOps Easy Learning', official: true });
+    const prof = await request(app.getHttpServer()).get(`/api/instructors/${teacher.user.id}`).expect(200);
+    expect(prof.body).toMatchObject({ official: true, brand: 'DevOps Easy Learning' });
+
+    // Admin: filter by kind.
+    const official = await boss.agent.get('/api/admin/instructors?kind=official').expect(200);
+    expect(official.body.items.map((i: any) => i.userId)).toEqual([teacher.user.id]);
+    const independent = await boss.agent.get('/api/admin/instructors?kind=independent').expect(200);
+    expect(independent.body.items.some((i: any) => i.userId === teacher.user.id)).toBe(false);
+
+    // Money is unchanged by branding: paid to the instructor (Stripe transfer after the hold) at their own rate.
+    await buyer.send('post', '/api/cart', { courseId: course.course.id }).expect(201);
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
+    await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+    const line = await prisma.orderLine.findFirstOrThrow({ where: { orderId: co.body.orderId } });
+    const [split] = splitOrder(simulatedStripeFee(10000), [{ baseCents: 10000, platformBps: 4000 }]);
+    expect(line).toMatchObject({ payee: 'instructor', commissionBps: 4000, transferStatus: 'pending', instructorShareCents: split!.instructorShareCents });
+
+    // Turning it off brings back the instructor's own name.
+    await boss.send('put', `/api/admin/instructors/${teacher.user.id}/terms`, { official: false, note: 'Now independent' }).expect(200);
+    const again = await request(app.getHttpServer()).get(`/api/courses/${course.course.slug}`).expect(200);
+    expect(again.body.instructor).toMatchObject({ brand: null, official: false });
+  });
+
   it('payments: after-fee split, refund policy, hold + release, netting, super-admin terms', async () => {
     if (!available) return;
     const teacher = await userAgent('m-teacher@e2e.example', ['student', 'instructor'], {});

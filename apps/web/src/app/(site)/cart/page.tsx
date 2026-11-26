@@ -15,6 +15,7 @@ import { Empty, Skeleton } from "@/components/Empty";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { PaymentsClosed, TestModeNotice, usePaymentsMode } from "@/components/TestModeNotice";
+import { courseBy } from "@/lib/brand";
 
 function CanceledNotice() {
   const canceled = useSearchParams().get("canceled");
@@ -77,7 +78,7 @@ export default function CartPage() {
                   <Link href={`/courses/${c.slug}`}><CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" showTitle={false} /></Link>
                   <div className="min-w-0">
                     <Link href={`/courses/${c.slug}`} className="font-display font-bold leading-snug hover:text-violet">{c.title}</Link>
-                    <p className="text-sm text-muted">By {c.instructor.name}</p>
+                    <p className="text-sm text-muted">By {courseBy(c.instructor)}</p>
                     {c.sale ? <div className="mt-1"><SaleTag sale={c.sale} withName /></div> : c.ratingCount ? <div className="mt-1"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div> : null}
                     <p className="mt-1 text-xs text-muted">{hours(c.totalDurationSec)} total</p>
                     <div className="mt-2 flex items-center gap-4 sm:hidden">

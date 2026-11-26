@@ -242,6 +242,10 @@ model InstructorProfile {
   status          InstructorStatus @default(pending)
   reviewNote      String?
   isPlatform      Boolean          @default(false) // the platform's own brand (DEL): no transfers
+  /// Official DevOps Easy Learning Instructor (owner 2026-11-26): courses shown under the DEL brand ("Taught by" the
+  /// instructor); money unchanged: their own rate and their own Stripe account. Set only by a super admin, audited.
+  official        Boolean          @default(false)
+  officialSince   DateTime?
   stripeAccountId String?          @unique
   payoutsEnabled  Boolean          @default(false)
   /// Super-admin override of the platform's share (basis points of the net). null = the platform default.

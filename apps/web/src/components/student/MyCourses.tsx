@@ -17,6 +17,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { PageHead } from "@/components/shell/AppShell";
 import { RefundLine } from "./RefundLine";
+import { courseBy } from "@/lib/brand";
 
 const mapPopular = (r: unknown) => paged(r, toCourseCard).items;
 
@@ -157,7 +158,7 @@ export function MyCourses() {
                 <Link href={resumeHref(i)}><CourseCover slug={i.course.slug} title={i.course.title} thumbnailUrl={i.course.thumbnailUrl} size="sm" className="sm:hidden" /><CourseCover slug={i.course.slug} title={i.course.title} category={i.course.category?.name} thumbnailUrl={i.course.thumbnailUrl} className="hidden sm:block" /></Link>
                 <div className="min-w-0">
                   <Link href={resumeHref(i)} className="font-display text-lg font-bold leading-snug hover:text-violet">{i.course.title}</Link>
-                  <p className="text-sm text-muted">{i.course.instructor.name}{i.course.totalDurationSec ? `, ${hours(i.course.totalDurationSec)}` : ""}</p>
+                  <p className="text-sm text-muted">{courseBy(i.course.instructor)}{i.course.totalDurationSec ? `, ${hours(i.course.totalDurationSec)}` : ""}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
                     <LoopMeter value={i.progressPct} size="sm" />
                     {i.lastActivityAt ? <span className="text-xs text-muted">Last studied {date(i.lastActivityAt)}</span> : null}

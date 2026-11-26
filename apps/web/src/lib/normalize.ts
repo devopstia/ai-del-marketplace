@@ -84,9 +84,9 @@ export function toCategory(x: unknown): Category {
   };
 }
 
-function instructorRef(o: R): { id: string; name: string } {
+function instructorRef(o: R): { id: string; name: string; brand: string | null } {
   const i = obj(o.instructor);
-  return { id: str(i.id ?? i.userId ?? o.instructorId), name: str(i.name ?? o.instructorName, "DevOps Easy Learning") };
+  return { id: str(i.id ?? i.userId ?? o.instructorId), name: str(i.name ?? o.instructorName, "DevOps Easy Learning"), brand: str(i.brand) || null };
 }
 
 export function toSale(x: unknown): SaleInfo | null {
@@ -142,6 +142,8 @@ export function toInstructor(x: unknown): InstructorSummary {
     studentCount: o.studentCount != null ? num(o.studentCount) : undefined,
     ratingAvg: o.ratingAvg != null ? num(o.ratingAvg) : undefined,
     ratingCount: o.ratingCount != null ? num(o.ratingCount) : undefined,
+    brand: str(o.brand) || null,
+    official: Boolean(o.official),
   };
 }
 
@@ -326,6 +328,7 @@ export function toCertificate(x: unknown): Certificate {
       slug: str(c.slug ?? o.courseSlug),
       published: c.published !== false,
       instructorName: str(obj(c.instructor).name ?? c.instructorName) || undefined,
+      brand: str(c.brand) || null,
       totalDurationSec: c.totalDurationSec != null ? num(c.totalDurationSec) : undefined,
       lessons: c.lessons != null ? num(c.lessons) : undefined,
     },
@@ -506,6 +509,7 @@ export function toAdminInstructor(x: unknown): AdminInstructor {
     isPlatform: Boolean(o.isPlatform),
     commissionBps: o.commissionBps == null ? null : num(o.commissionBps),
     payToPlatform: Boolean(o.payToPlatform),
+    official: Boolean(o.official),
   };
 }
 

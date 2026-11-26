@@ -6,6 +6,7 @@ import { CourseCover } from "./CourseCover";
 import { RatingInline } from "./Stars";
 import { SaleEnds } from "./SaleEnds";
 import type { SaleInfo } from "@/lib/types";
+import { courseBy } from "@/lib/brand";
 
 const NEW_FOR_DAYS = 30;
 export const MIN_STUDENTS_SHOWN = 10;
@@ -52,7 +53,7 @@ export function CourseTile({ c, priority = false, coverSeed }: { c: CourseCard; 
     <Link href={`/courses/${c.slug}`} className="group block rounded-tile" data-testid="course-tile" data-priority={priority || undefined}>
       <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} seed={coverSeed} showTitle={false} priority={priority} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
       <h3 className="mt-3 line-clamp-2 font-display text-[1.02rem] font-bold leading-snug text-ink group-hover:text-violet">{c.title}</h3>
-      <p className="mt-1 truncate text-sm text-ink-2">{c.instructor.name}</p>
+      <p className="mt-1 truncate text-sm text-ink-2">{courseBy(c.instructor)}</p>
       <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm empty:hidden"><CourseBadges c={c} /></p>
       <div className="mt-2 flex items-baseline gap-3">
         <Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} className="text-[1.05rem]" />
@@ -71,7 +72,7 @@ export function CourseResultRow({ c }: { c: CourseCard }) {
       <div className="min-w-0">
         <h3 className="font-display text-[1.05rem] font-bold leading-snug text-ink group-hover:text-violet sm:text-lg">{c.title}</h3>
         <p className="mt-1 line-clamp-2 hidden text-[0.95rem] text-ink-2 sm:block">{c.subtitle}</p>
-        <p className="mt-1 text-sm text-muted">{c.instructor.name}</p>
+        <p className="mt-1 text-sm text-muted">{courseBy(c.instructor)}</p>
         <div className="mt-1.5"><RatingInline avg={c.ratingAvg} count={c.ratingCount} /></div>
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
           <span className="inline-flex items-center gap-1"><Clock className="size-3.5" />{hours(c.totalDurationSec)}</span>
@@ -99,7 +100,7 @@ export function CourseResultCard({ c, coverSeed, priority = false }: { c: Course
       {c.subtitle ? <p className="mt-1.5 line-clamp-2 text-[0.95rem] text-ink-2">{c.subtitle}</p> : null}
       {c.outcome ? <p className="mt-2 flex items-start gap-1.5 text-sm text-ink"><Check className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden="true" /><span className="line-clamp-1"><span className="sr-only">You will learn: </span>{c.outcome}</span></p> : null}
       <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-        <span className="text-ink-2">{c.instructor.name}</span>
+        <span className="text-ink-2">{courseBy(c.instructor)}</span>
         <CourseBadges c={c} />
       </p>
       <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-2">

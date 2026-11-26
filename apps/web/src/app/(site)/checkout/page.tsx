@@ -12,6 +12,7 @@ import { refundRule, useRefundPolicy } from "@/lib/refund-policy";
 import { Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { Empty, Skeleton } from "@/components/Empty";
+import { courseBy } from "@/lib/brand";
 
 export default function CheckoutPage() {
   const refundPolicy = useRefundPolicy();
@@ -58,7 +59,7 @@ export default function CheckoutPage() {
                   <div className="w-24 shrink-0"><CourseCover slug={c.slug} title={c.title} thumbnailUrl={c.thumbnailUrl} size="sm" showTitle={false} /></div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold leading-snug">{c.title}</p>
-                    <p className="text-sm text-muted">{c.instructor.name}</p>
+                    <p className="text-sm text-muted">{courseBy(c.instructor)}</p>
                   </div>
                   <span className="text-right tabular-nums"><Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} />{c.sale ? <span className="mt-0.5 block text-xs font-bold text-rose">−{c.sale.percentOff}%</span> : null}</span>
                 </li>

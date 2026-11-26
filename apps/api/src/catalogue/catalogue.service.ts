@@ -12,6 +12,7 @@ import { SettingsService } from '../common/settings.service';
 import { MediaService } from '../media/media.service';
 import { cardInclude, toCard } from './course-card';
 import { priceSelect, SalePricingService, toPriceInput } from '../common/sale-pricing';
+import { brandOf, brandSelect, isOfficial } from '../common/brand';
 
 export interface CourseQuery {
   q?: string;
@@ -152,7 +153,7 @@ export class CatalogueService {
       include: {
         ...cardInclude,
         instructor: {
-          select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true } } },
+          select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, ...brandSelect } } },
         },
         sections: {
           orderBy: { position: 'asc' },
@@ -197,7 +198,7 @@ export class CatalogueService {
     }
 
     const card = toCard(
-      { ...c, instructor: { id: c.instructor.id, name: c.instructor.name, instructorProfile: null }, sections: c.sections.map((s) => ({ lectures: s.lectures })) },
+      { ...c, instructor: { id: c.instructor.id, name: c.instructor.name, instructorProfile: c.instructor.instructorProfile }, sections: c.sections.map((s) => ({ lectures: s.lectures })) },
       (k) => this.media.imageUrl(k),
       (await this.pricing.pricesForIds([c.id])).get(c.id),
     );
@@ -232,6 +233,8 @@ export class CatalogueService {
         avatarUrl: c.instructor.avatarUrl,
         headline: c.instructor.instructorProfile?.headline ?? '',
         bio: c.instructor.instructorProfile?.bio ?? '',
+        brand: brandOf(c.instructor.instructorProfile),
+        official: isOfficial(c.instructor.instructorProfile),
       },
       curriculum: c.sections.map((s) => ({
         id: s.id,
@@ -275,7 +278,7 @@ export class CatalogueService {
   async instructor(id: string) {
     const u = await this.prisma.user.findFirst({
       where: { id, instructorProfile: { status: 'approved' } },
-      select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, website: true } } },
+      select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, website: true, ...brandSelect } } },
     });
     if (!u) throw notFound('Instructor');
     const courses = await this.listCourses({ instructorId: id, sort: 'popular', page: 1, pageSize: 48 });
@@ -287,6 +290,8 @@ export class CatalogueService {
       headline: u.instructorProfile!.headline,
       bio: u.instructorProfile!.bio,
       website: u.instructorProfile!.website,
+      brand: brandOf(u.instructorProfile),
+      official: isOfficial(u.instructorProfile),
       stats: { courses: stats.courseCount, students: stats.studentCount, reviews: stats.reviewCount },
       courses: courses.items,
     };
@@ -333,7 +338,7 @@ export class CatalogueService {
   async featuredInstructors(limit: number) {
     const users = await this.prisma.user.findMany({
       where: { status: 'active', instructorProfile: { status: 'approved' }, courses: { some: { status: 'published' } } },
-      select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, isPlatform: true } } },
+      select: { id: true, name: true, avatarUrl: true, instructorProfile: { select: { headline: true, bio: true, ...brandSelect } } },
     });
     const stats = await this.instructorStats(users.map((u) => u.id));
     const byId = new Map(stats.map((s) => [s.instructorId, s]));
@@ -347,6 +352,7 @@ export class CatalogueService {
           headline: u.instructorProfile?.headline ?? '',
           bio: u.instructorProfile?.bio ?? '',
           isPlatform: !!u.instructorProfile?.isPlatform,
+          official: isOfficial(u.instructorProfile),
           courseCount: s.courseCount,
           studentCount: s.studentCount,
           reviewCount: s.reviewCount,
@@ -386,7 +392,7 @@ export class CatalogueService {
         user: { select: { name: true } },
         course: {
           select: {
-            title: true, slug: true, status: true, objectives: true, instructor: { select: { name: true } },
+            title: true, slug: true, status: true, objectives: true, instructor: { select: { name: true, instructorProfile: { select: brandSelect } } },
             sections: { select: { lectures: { select: { durationSec: true, quiz: { select: { id: true } } } } } },
           },
         },
@@ -407,6 +413,7 @@ export class CatalogueService {
         slug: cert.course.slug,
         published: cert.course.status === 'published',
         instructorName: cert.course.instructor.name,
+        brand: brandOf(cert.course.instructor.instructorProfile),
         totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
         lessons: lectures.length,
       },

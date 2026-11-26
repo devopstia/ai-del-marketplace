@@ -50,7 +50,7 @@ export class FinanceService {
   ) {}
 
   // ---------- instructor terms (super admin) ----------
-  async setInstructorTerms(a: Actor, userId: string, input: { commissionBps?: number | null; payToPlatform?: boolean; note: string }) {
+  async setInstructorTerms(a: Actor, userId: string, input: { commissionBps?: number | null; payToPlatform?: boolean; official?: boolean; note: string }) {
     requireSuper(a);
     const p = await this.prisma.instructorProfile.findUnique({ where: { userId } });
     if (!p) throw notFound('Instructor');
@@ -58,6 +58,8 @@ export class FinanceService {
     const data = {
       ...(input.commissionBps !== undefined ? { commissionBps: input.commissionBps } : {}),
       ...(input.payToPlatform !== undefined ? { payToPlatform: input.payToPlatform } : {}),
+      // Official DEL Instructor: branding only (courses shown under DevOps Easy Learning); rate and payouts are unchanged.
+      ...(input.official !== undefined && input.official !== p.official ? { official: input.official, officialSince: input.official ? new Date() : null } : {}),
       termsNote: input.note.trim(),
     };
     const updated = await this.prisma.instructorProfile.update({ where: { userId }, data });
@@ -67,7 +69,7 @@ export class FinanceService {
       targetType: 'instructor',
       targetId: userId,
       ip: a.ip,
-      meta: { before: { commissionBps: p.commissionBps, payToPlatform: p.payToPlatform }, after: { commissionBps: updated.commissionBps, payToPlatform: updated.payToPlatform }, note: data.termsNote, appliesTo: 'sales from now on' },
+      meta: { before: { commissionBps: p.commissionBps, payToPlatform: p.payToPlatform, official: p.official }, after: { commissionBps: updated.commissionBps, payToPlatform: updated.payToPlatform, official: updated.official }, note: data.termsNote, appliesTo: 'sales from now on' },
     });
     return this.terms(userId);
   }
@@ -81,6 +83,8 @@ export class FinanceService {
     const policy = await this.policy.current();
     return {
       isPlatform: p.isPlatform,
+      official: !p.isPlatform && p.official,
+      officialSince: p.officialSince,
       platformBps,
       instructorSharePercent: (10000 - platformBps) / 100,
       source: p.isPlatform ? 'platform' : p.commissionBps != null ? 'agreement' : 'default',

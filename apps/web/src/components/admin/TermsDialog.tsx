@@ -6,12 +6,16 @@ import type { AdminInstructor } from "@/lib/types";
 import { Modal } from "../Modal";
 import { useToast } from "../Toast";
 
-/** Super admin: an instructor's agreed revenue share and the "pay to DEL" agreement. Applies to new sales; audited. */
+/**
+ * Super admin: the instructor type (Official DEL Instructor or independent), their agreed revenue share and the "pay to DEL"
+ * agreement. Applies to new sales; audited. Official = branding only: their own rate and their own Stripe payouts still apply.
+ */
 export function TermsDialog({ i, defaultSharePercent, onClose, onSaved }: { i: AdminInstructor | null; defaultSharePercent: number; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
   const [custom, setCustom] = useState(i?.commissionBps != null);
   const [share, setShare] = useState(i?.commissionBps != null ? String((10000 - i.commissionBps) / 100) : String(defaultSharePercent));
   const [payDel, setPayDel] = useState(!!i?.payToPlatform);
+  const [official, setOfficial] = useState(!!i?.official);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const pct = Number(share);
@@ -24,11 +28,16 @@ export function TermsDialog({ i, defaultSharePercent, onClose, onSaved }: { i: A
           if (!valid || note.trim().length < 5) return;
           setBusy(true);
           try {
-            await api(`/admin/instructors/${i.userId}/terms`, { method: "PUT", body: { commissionBps: custom ? Math.round((100 - pct) * 100) : null, payToPlatform: payDel, note: note.trim() } });
+            await api(`/admin/instructors/${i.userId}/terms`, { method: "PUT", body: { commissionBps: custom ? Math.round((100 - pct) * 100) : null, payToPlatform: payDel, official, note: note.trim() } });
             toast("ok", "Terms saved. They apply to new sales.");
             onSaved();
           } catch (err) { toast("error", errMsg(err)); } finally { setBusy(false); }
         }}>
+          <fieldset>
+            <legend className="label">Instructor type</legend>
+            <label className="mt-2 flex items-start gap-2.5 text-sm"><input type="radio" name="kind" className="mt-0.5" checked={!official} onChange={() => setOfficial(false)} /><span><b>Independent instructor.</b> Courses are shown under their own name.</span></label>
+            <label className="mt-2 flex items-start gap-2.5 text-sm"><input type="radio" name="kind" className="mt-0.5" checked={official} onChange={() => setOfficial(true)} data-testid="official-instructor" /><span><b>Official DevOps Easy Learning Instructor.</b> Courses are shown under the DevOps Easy Learning brand, with “Taught by {i.name}”. They still earn their share below through their own Stripe account.</span></label>
+          </fieldset>
           <fieldset>
             <legend className="label">Revenue share</legend>
             <label className="mt-2 flex items-center gap-2 text-sm"><input type="radio" name="rate" checked={!custom} onChange={() => setCustom(false)} />Standard: instructor keeps {defaultSharePercent}% after Stripe’s fee</label>

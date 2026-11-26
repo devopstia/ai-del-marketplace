@@ -1,9 +1,10 @@
 import type { Prisma } from '../generated/prisma/client';
 import { type CurrentPrice, toPriceInput } from '../common/sale-pricing';
+import { brandOf, brandSelect } from '../common/brand';
 
 /** Prisma include for the public course card. */
 export const cardInclude = {
-  instructor: { select: { id: true, name: true, instructorProfile: { select: { isPlatform: true } } } },
+  instructor: { select: { id: true, name: true, instructorProfile: { select: brandSelect } } },
   category: { select: { slug: true, name: true } },
   sections: { select: { lectures: { select: { durationSec: true, isPreview: true } } } },
 } satisfies Prisma.CourseInclude;
@@ -23,7 +24,8 @@ export function toCard(c: CardRow, imageUrl: (k: string | null) => string | null
     subtitle: c.subtitle,
     // The generated standard cover (custom uploads are not used: owner 2026-11-25).
     thumbnailUrl: imageUrl(c.coverKey),
-    instructor: { id: c.instructor.id, name: c.instructor.name },
+    // `brand`: "DevOps Easy Learning" for DEL and its official instructors (common/brand.ts); null = the instructor's own name.
+    instructor: { id: c.instructor.id, name: c.instructor.name, brand: brandOf(c.instructor.instructorProfile) },
     category: c.category,
     priceCents: price?.priceCents ?? c.priceCents,
     listPriceCents: c.priceCents,

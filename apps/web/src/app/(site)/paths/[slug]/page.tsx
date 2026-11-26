@@ -9,6 +9,7 @@ import { Markdown } from "@/components/Markdown";
 import { FollowPath } from "@/components/paths/FollowPath";
 import { hours, levelLabel, money, plural } from "@/lib/format";
 import { DEL_PROGRAM, programLink } from "@/lib/del-program";
+import { courseBy } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export default async function PathPage({ params }: { params: Promise<{ slug: str
                     <CourseCover slug={s.course.slug} title={s.course.title} category={s.course.category?.name} thumbnailUrl={s.course.thumbnailUrl} size="sm" className="!rounded-lg" />
                     <div className="min-w-0">
                       <h3 className="font-display text-base font-bold leading-snug sm:text-lg text-ink group-hover:text-violet">{s.course.title}</h3>
-                      <p className="mt-0.5 text-sm text-ink-2">{s.course.instructor.name} · {hours(s.course.totalDurationSec)} · {levelLabel[s.course.level]}</p>
+                      <p className="mt-0.5 text-sm text-ink-2">{courseBy(s.course.instructor)} · {hours(s.course.totalDurationSec)} · {levelLabel[s.course.level]}</p>
                       <p className="mt-2"><Price cents={s.course.priceCents} listCents={s.course.listPriceCents} currency={s.course.currency} /></p>
                     </div>
                   </Link>

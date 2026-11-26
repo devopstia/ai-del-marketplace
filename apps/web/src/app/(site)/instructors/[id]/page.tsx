@@ -9,6 +9,7 @@ import { SocialLinks } from "@/components/SocialLinks";
 import { compact } from "@/lib/format";
 import { JsonLd } from "@/components/JsonLd";
 import { abs, pageMeta, plainText, SAME_AS } from "@/lib/seo";
+import { OfficialBadge } from "@/components/OfficialBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,7 @@ export default async function InstructorPage({ params }: { params: Promise<{ id:
             <div className="min-w-0">
               <p className="text-sm font-bold text-violet">Instructor</p>
               <h1 className="mt-1 font-display text-[clamp(2.2rem,4.6vw,3.4rem)] font-extrabold leading-none tracking-[-0.035em]">{i.name}</h1>
+              {i.official ? <OfficialBadge className="mt-3" /> : null}
               {i.headline ? <p className="mt-3 text-lg text-ink-2">{i.headline}</p> : null}
             </div>
           </div>

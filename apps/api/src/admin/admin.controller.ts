@@ -25,7 +25,7 @@ const usersQuery = z.object({ q: z.string().max(100).optional(), role: z.enum(['
 const userPatch = z
   .object({ status: z.enum(['active', 'suspended']).optional(), roles: z.array(z.enum(['student', 'instructor', 'admin', 'super_admin'])).max(4).optional(), code: z.string().trim().max(12).optional(), reason: z.string().trim().max(500).optional() })
   .refine((v) => v.status || v.roles, 'Nothing to change');
-const instructorsQuery = z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional(), q: z.string().max(100).optional(), ...paging });
+const instructorsQuery = z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional(), kind: z.enum(['official', 'independent']).optional(), q: z.string().max(100).optional(), ...paging });
 const categorySchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: z.string().regex(/^[a-z0-9-]{2,80}$/).optional(),
@@ -60,7 +60,7 @@ const refundPolicySchema = z.object({
   code: z.string().trim().max(12).optional(),
 }).strict();
 /** commissionBps = the platform's share of the net (2000 → instructor keeps 80%); null returns to the default. */
-const termsSchema = z.object({ commissionBps: z.number().int().min(0).max(10000).nullable().optional(), payToPlatform: z.boolean().optional(), note: z.string().trim().min(5).max(1000) });
+const termsSchema = z.object({ commissionBps: z.number().int().min(0).max(10000).nullable().optional(), payToPlatform: z.boolean().optional(), official: z.boolean().optional(), note: z.string().trim().min(5).max(1000) });
 const reviewPatch = z.object({ status: z.enum(['visible', 'hidden']) });
 
 @Roles('admin')

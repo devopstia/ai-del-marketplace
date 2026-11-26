@@ -252,9 +252,10 @@ export class PeopleService {
   }
 
   // ---------- instructor applications ----------
-  async applications(q: { status?: InstructorStatus | 'open'; q?: string; page: number; pageSize: number }) {
+  async applications(q: { status?: InstructorStatus | 'open'; kind?: 'official' | 'independent'; q?: string; page: number; pageSize: number }) {
     const where: Prisma.InstructorProfileWhereInput = {
       isPlatform: false,
+      ...(q.kind ? { official: q.kind === 'official' } : {}),
       ...(q.status === 'open' ? { status: { in: OPEN_APPLICATION } } : q.status ? { status: q.status } : {}),
       ...(q.q ? { OR: [{ user: { name: { contains: q.q, mode: 'insensitive' } } }, { user: { email: { contains: q.q, mode: 'insensitive' } } }, { headline: { contains: q.q, mode: 'insensitive' } }] } : {}),
     };
@@ -273,7 +274,7 @@ export class PeopleService {
         expertise: p.expertise, experience: p.experience, plannedCourses: p.plannedCourses, extraInfo: p.extraInfo,
         status: p.status, reviewNote: p.reviewNote, appliedAt: p.submittedAt ?? p.createdAt, reviewedAt: p.reviewedAt,
         reviewedBy: reviewers.find((r) => r.id === p.reviewedById) ?? null, courses: p.user._count.courses,
-        commissionBps: p.commissionBps, payToPlatform: p.payToPlatform, stripeConnected: !!p.stripeAccountId, payoutsEnabled: p.payoutsEnabled,
+        commissionBps: p.commissionBps, payToPlatform: p.payToPlatform, official: p.official, stripeConnected: !!p.stripeAccountId, payoutsEnabled: p.payoutsEnabled,
       })),
       total, q,
     );

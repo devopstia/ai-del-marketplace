@@ -17,6 +17,8 @@ import { ProgramNote } from "@/components/promo/FullProgram";
 import { PurchaseCard } from "@/components/PurchaseCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import { WatchedBadge } from "@/components/WatchedBadge";
+import { courseBy, taughtBy } from "@/lib/brand";
+import { OfficialBadge } from "@/components/OfficialBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const c = await getCourse(slug);
   if (!c) return { title: "Course not found", robots: { index: false } };
-  const description = plainText(c.subtitle || c.description) || `${c.title}: an online course by ${c.instructor.name} on DevOps Easy Learning.`;
+  const description = plainText(c.subtitle || c.description) || `${c.title}: an online course by ${courseBy(c.instructor)}${taughtBy(c.instructor) ? `, taught by ${c.instructor.name},` : ""} on DevOps Easy Learning.`;
   return pageMeta({ title: c.title, description, path: `/courses/${c.slug}`, image: c.thumbnailUrl, imageAlt: `${c.title} course cover`, type: "article" });
 }
 
@@ -63,7 +65,11 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               ) : <span className="rounded-full bg-white/10 px-2.5 py-0.5 font-bold text-[#9fd9f5]">New course</span>}
               {c.studentCount ? <span className="inline-flex items-center gap-1.5 text-white/80"><Users className="size-4" />{plural(c.studentCount, "learner")}</span> : null}
             </div>
-            <p className="mt-4 text-sm text-white/80">Created by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
+            {taughtBy(c.instructor) ? (
+              <p className="mt-4 text-sm text-white/80" data-testid="course-brand">Created by <b className="text-white">{courseBy(c.instructor)}</b> · Taught by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
+            ) : (
+              <p className="mt-4 text-sm text-white/80">Created by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
+            )}
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/70">
               {c.updatedAt ? <span className="inline-flex items-center gap-1.5"><RefreshCw className="size-4" />Updated {date(c.updatedAt)}</span> : null}
               <span className="inline-flex items-center gap-1.5"><Globe className="size-4" />{languageLabel(c.language)}</span>
@@ -114,6 +120,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               <Avatar name={c.instructor.name} src={c.instructor.avatarUrl} size={88} />
               <div className="min-w-0">
                 <Link href={`/instructors/${c.instructor.id}`} className="font-display text-xl font-bold text-violet hover:underline">{c.instructor.name}</Link>
+                {c.instructor.official ? <OfficialBadge className="mt-1.5" /> : null}
                 {c.instructor.headline ? <p className="text-ink-2">{c.instructor.headline}</p> : null}
                 <p className="mt-2 flex flex-wrap gap-x-5 text-sm text-muted">
                   {c.instructor.ratingAvg ? <span>{c.instructor.ratingAvg.toFixed(1)} instructor rating</span> : null}

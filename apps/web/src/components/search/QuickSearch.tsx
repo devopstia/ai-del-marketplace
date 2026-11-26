@@ -11,6 +11,7 @@ import type { CourseCard, LearningItem } from "@/lib/types";
 import { useDebounced } from "../Pager";
 import { useAuth } from "../AuthProvider";
 import { CourseCover } from "../CourseCover";
+import { courseBy } from "@/lib/brand";
 
 /**
  * Quick search (⌘K / Ctrl+K, or "/" when not typing), owner-approved 2026-11-26. One palette on every page: courses
@@ -166,7 +167,7 @@ function Palette({ onClose }: { onClose: () => void }) {
     const out: Group[] = [];
     const courseItems: Result[] = [];
     if (term.length >= 2 && courses && courses.q === dq) {
-      for (const c of courses.items) courseItems.push({ id: `c-${c.id}`, href: `/courses/${c.slug}`, title: c.title, sub: c.instructor.name, course: c, testId: "qs-course" });
+      for (const c of courses.items) courseItems.push({ id: `c-${c.id}`, href: `/courses/${c.slug}`, title: c.title, sub: courseBy(c.instructor), course: c, testId: "qs-course" });
     }
     courseItems.push(term
       ? { id: "c-all", href: `/courses?q=${encodeURIComponent(term)}`, title: `See all courses for “${term}”`, icon: ArrowRight, sub: courses && courses.q === dq && courses.total > courses.items.length ? `${courses.total} courses` : undefined }
@@ -174,7 +175,7 @@ function Palette({ onClose }: { onClose: () => void }) {
     out.push({ key: "courses", label: "Courses", items: courseItems });
 
     if (me) {
-      const own = rank(mine, term, (m) => `${m.course.title} ${m.course.instructor.name}`, (m) => m.course.title).slice(0, term ? 5 : 4);
+      const own = rank(mine, term, (m) => `${m.course.title} ${courseBy(m.course.instructor)} ${m.course.instructor.name}`, (m) => m.course.title).slice(0, term ? 5 : 4);
       if (own.length) out.push({ key: "mine", label: "Your courses", items: own.map((m) => ({ id: `m-${m.course.id}`, href: `/learn/${m.course.slug}`, title: m.course.title, sub: m.access?.state === "expired" ? "Access ended · renew to continue" : `${m.progressPct}% complete · continue learning`, icon: PlayCircle, testId: "qs-mine" })) });
       const pages = studioPagesFor(me);
       const shown = term

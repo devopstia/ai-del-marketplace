@@ -18,7 +18,7 @@ const map = (r: unknown) => paged(r, toOrder, "orders");
 const STATUSES = ["", "paid", "partially_refunded", "refunded", "pending", "failed"] as const;
 
 type DetailLine = {
-  id: string; title: string; instructor: string; isPlatform: boolean; priceCents: number; commissionBps: number;
+  id: string; title: string; instructor: string; isPlatform: boolean; official: boolean; priceCents: number; commissionBps: number;
   commissionCents: number; instructorShareCents: number; transferStatus: string; refundedAt: string | null; refundable: boolean;
   feeCents: number; payee: string; transferDueAt: string | null; disputeStatus: string | null;
 };
@@ -39,7 +39,7 @@ const toDetail = (x: unknown): Detail => {
       const lo = obj(l);
       return {
         id: String(lo.id), title: String(obj(lo.course).title ?? "Course"), instructor: String(obj(lo.instructor).name ?? ""),
-        isPlatform: !!obj(lo.instructor).isPlatform, priceCents: n(lo.priceCents), commissionBps: n(lo.commissionBps),
+        isPlatform: !!obj(lo.instructor).isPlatform, official: !!obj(lo.instructor).official, priceCents: n(lo.priceCents), commissionBps: n(lo.commissionBps),
         commissionCents: n(lo.commissionCents), instructorShareCents: n(lo.instructorShareCents), transferStatus: String(lo.transferStatus ?? "none"),
         refundedAt: (lo.refundedAt as string) ?? null, refundable: !!lo.refundable,
         feeCents: n(lo.feeCents), payee: String(lo.payee ?? "instructor"), transferDueAt: (lo.transferDueAt as string) ?? null, disputeStatus: (lo.disputeStatus as string) ?? null,
@@ -95,7 +95,7 @@ function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
             {data.lines.map((l) => (
               <tr key={l.id} className={l.refundedAt ? "text-muted" : ""}>
                 <td className="px-3 py-2">{l.refundable ? <input type="checkbox" aria-label={`Refund ${l.title}`} checked={sel.includes(l.id)} onChange={(e) => setSel((s) => e.target.checked ? [...s, l.id] : s.filter((x) => x !== l.id))} /> : null}</td>
-                <td className="px-3 py-2"><span className="block font-bold text-ink">{l.title}</span><span className="text-xs text-muted">{l.instructor}{l.isPlatform ? " (platform)" : ""}</span></td>
+                <td className="px-3 py-2"><span className="block font-bold text-ink">{l.title}</span><span className="text-xs text-muted">{l.instructor}{l.isPlatform ? " (platform)" : l.official ? " (Official DEL)" : " (independent)"}</span></td>
                 <td className="px-3 py-2 text-right tabular-nums">{moneyExact(l.priceCents, data.currency)}</td>
                 <td className="px-3 py-2 text-right tabular-nums text-ink-2">{moneyExact(l.feeCents, data.currency)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{moneyExact(l.commissionCents, data.currency)} <span className="text-xs text-muted">({l.commissionBps / 100}% of net)</span></td>

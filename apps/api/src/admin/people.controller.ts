@@ -29,7 +29,7 @@ const profileSchema = z.object({ name: z.string().trim().min(1).max(120) }).stri
 const emailSchema = z.object({ email: z.string().trim().email().max(254), code, reason: z.string().trim().max(500).optional() }).strict();
 const helpSchema = z.object({ code, reason: reasonReq }).strict();
 const deleteSchema = z.object({ code, reason: reasonReq, confirmEmail: z.string().trim().max(254) }).strict();
-const appQuery = z.object({ status: z.enum(['open', 'pending', 'under_review', 'needs_info', 'approved', 'rejected']).optional(), q: z.string().max(100).optional(), ...paging });
+const appQuery = z.object({ status: z.enum(['open', 'pending', 'under_review', 'needs_info', 'approved', 'rejected']).optional(), kind: z.enum(['official', 'independent']).optional(), q: z.string().max(100).optional(), ...paging });
 const decideSchema = z.object({ decision: z.enum(['under_review', 'needs_info', 'approved', 'rejected']), note: z.string().trim().max(4000).optional() }).strict();
 
 /** Super Admin Studio › User management: users & roles, instructor applications. */

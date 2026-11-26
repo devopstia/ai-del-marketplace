@@ -215,9 +215,11 @@ export class AdminService {
   }
 
   // ---------- instructors ----------
-  async instructors(q: { status?: 'pending' | 'approved' | 'rejected'; q?: string; page: number; pageSize: number }) {
+  async instructors(q: { status?: 'pending' | 'approved' | 'rejected'; kind?: 'official' | 'independent'; q?: string; page: number; pageSize: number }) {
     const where: Prisma.InstructorProfileWhereInput = {
       status: q.status,
+      // Official DEL Instructors vs independent marketplace instructors (DEL's own platform account is neither).
+      ...(q.kind === 'official' ? { official: true, isPlatform: false } : q.kind === 'independent' ? { official: false, isPlatform: false } : {}),
       ...(q.q ? { OR: [{ user: { name: { contains: q.q, mode: 'insensitive' } } }, { user: { email: { contains: q.q, mode: 'insensitive' } } }, { headline: { contains: q.q, mode: 'insensitive' } }] } : {}),
     };
     const [total, rows] = await Promise.all([
@@ -240,6 +242,8 @@ export class AdminService {
         status: p.status,
         reviewNote: p.reviewNote,
         isPlatform: p.isPlatform,
+        official: !p.isPlatform && p.official,
+        officialSince: p.officialSince,
         commissionBps: p.commissionBps,
         payToPlatform: p.payToPlatform,
         stripeConnected: !!p.stripeAccountId,
@@ -361,7 +365,7 @@ export class AdminService {
         user: { select: { id: true, name: true, email: true } },
         lines: {
           orderBy: { id: 'asc' },
-          include: { course: { select: { id: true, title: true, slug: true } }, instructor: { select: { id: true, name: true, instructorProfile: { select: { isPlatform: true } } } } },
+          include: { course: { select: { id: true, title: true, slug: true } }, instructor: { select: { id: true, name: true, instructorProfile: { select: { isPlatform: true, official: true } } } } },
         },
       },
     });
@@ -371,7 +375,7 @@ export class AdminService {
     const lines = o.lines.map((l) => ({
       id: l.id,
       course: l.course,
-      instructor: { id: l.instructor.id, name: l.instructor.name, isPlatform: !!l.instructor.instructorProfile?.isPlatform },
+      instructor: { id: l.instructor.id, name: l.instructor.name, isPlatform: !!l.instructor.instructorProfile?.isPlatform, official: !l.instructor.instructorProfile?.isPlatform && !!l.instructor.instructorProfile?.official },
       priceCents: l.priceCents,
       commissionBps: l.commissionBps,
       feeCents: l.feeCents,

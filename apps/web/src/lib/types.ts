@@ -45,6 +45,10 @@ export interface InstructorSummary {
   studentCount?: number;
   ratingAvg?: number;
   ratingCount?: number;
+  /** "DevOps Easy Learning" when the course is shown under the DEL brand (DEL or an Official DEL Instructor). */
+  brand?: string | null;
+  /** An Official DevOps Easy Learning Instructor (not DEL's own platform account). */
+  official?: boolean;
 }
 
 export interface CourseCard {
@@ -53,7 +57,7 @@ export interface CourseCard {
   title: string;
   subtitle: string;
   thumbnailUrl?: string | null;
-  instructor: { id: string; name: string };
+  instructor: { id: string; name: string; brand?: string | null };
   priceCents: number;
   currency: string;
   ratingAvg: number;
@@ -275,7 +279,7 @@ export interface Certificate {
   code: string;
   issuedAt: string;
   user: { name: string };
-  course: { title: string; slug: string; published?: boolean; instructorName?: string; totalDurationSec?: number; lessons?: number };
+  course: { title: string; slug: string; published?: boolean; instructorName?: string; brand?: string | null; totalDurationSec?: number; lessons?: number };
   skills: string[];
   quizzes: { total: number; passed: number; averageBest: number | null } | null;
   url?: string;
@@ -429,6 +433,8 @@ export interface AdminInstructor {
   /** platform share override in basis points (null = default) */
   commissionBps?: number | null;
   payToPlatform?: boolean;
+  /** Official DevOps Easy Learning Instructor (super admin setting). */
+  official?: boolean;
 }
 
 export interface AuditEntry {

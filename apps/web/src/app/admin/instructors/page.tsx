@@ -14,15 +14,16 @@ import { Pager, useDebounced } from "@/components/Pager";
 import { useToast } from "@/components/Toast";
 import { useAuth } from "@/components/AuthProvider";
 import { TermsDialog } from "@/components/admin/TermsDialog";
+import { OfficialBadge } from "@/components/OfficialBadge";
 import { canDo } from "@/lib/studios";
 import type { AdminInstructor } from "@/lib/types";
 
 interface App {
   userId: string; name: string; email: string; memberSince: string; headline: string; bio: string; website: string | null; expertise: string[]; experience: string; plannedCourses: string; extraInfo: string;
   status: "pending" | "under_review" | "needs_info" | "approved" | "rejected"; reviewNote: string | null; appliedAt: string; reviewedAt: string | null; reviewedBy: { name: string } | null; courses: number;
-  commissionBps: number | null; payToPlatform: boolean; payoutsEnabled: boolean;
+  commissionBps: number | null; payToPlatform: boolean; payoutsEnabled: boolean; official: boolean;
 }
-const TABS = [["open", "To review"], ["approved", "Instructors"], ["rejected", "Rejected"]] as const;
+const TABS = [["open", "To review"], ["approved", "Instructors"], ["official", "Official DEL"], ["rejected", "Rejected"]] as const;
 
 /** Super Admin Studio › People › Instructor applications (owner 2026-11-25). */
 export default function InstructorApplications() {
@@ -34,7 +35,7 @@ export default function InstructorApplications() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const dq = useDebounced(q.trim());
-  const { data, error, reload } = useApi(`/admin/people/applications${qs({ status: tab, q: dq.length > 1 ? dq : undefined, page, pageSize: 20 })}`, (r) => obj(r) as unknown as { items: App[]; total: number; page: number; pageSize: number; counts: Record<string, number> });
+  const { data, error, reload } = useApi(`/admin/people/applications${qs({ status: tab === "official" ? "approved" : tab, kind: tab === "official" ? "official" : undefined, q: dq.length > 1 ? dq : undefined, page, pageSize: 20 })}`, (r) => obj(r) as unknown as { items: App[]; total: number; page: number; pageSize: number; counts: Record<string, number> });
   const [openId, setOpenId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -82,7 +83,7 @@ export default function InstructorApplications() {
                   <button type="button" onClick={() => setOpenId(open ? null : a.userId)} aria-expanded={open} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3.5 text-left">
                     <Avatar name={a.name} size={36} />
                     <span className="min-w-0">
-                      <span className="block truncate font-bold">{a.name} <span className="font-normal text-muted">· {a.email}</span></span>
+                      <span className="flex min-w-0 items-center gap-2"><span className="truncate font-bold">{a.name} <span className="font-normal text-muted">· {a.email}</span></span>{a.official ? <OfficialBadge short className="shrink-0" /> : null}</span>
                       <span className="block truncate text-sm text-ink-2">{a.headline || "No headline"}{a.expertise.length ? ` · ${a.expertise.slice(0, 4).join(", ")}` : ""}</span>
                     </span>
                     <span className="flex items-center gap-3">
@@ -118,8 +119,8 @@ export default function InstructorApplications() {
                         ) : null}
                         {a.status === "approved" ? (
                           <div className="space-y-2 text-sm text-ink-2">
-                            <p>{a.courses} course{a.courses === 1 ? "" : "s"} · payouts {a.payoutsEnabled ? "enabled" : "not set up"} · share {a.commissionBps != null ? `${(10000 - a.commissionBps) / 100}% (agreed)` : `${defaultShare}% (default)`}{a.payToPlatform ? ", paid to DEL" : ""}</p>
-                            {superAdmin ? <button type="button" className="btn btn-outline btn-sm" onClick={() => setTerms({ userId: a.userId, name: a.name, email: a.email, status: "approved", commissionBps: a.commissionBps, payToPlatform: a.payToPlatform } as AdminInstructor)} data-testid="edit-terms">Edit payment terms</button> : null}
+                            <p>{a.courses} course{a.courses === 1 ? "" : "s"} · payouts {a.payoutsEnabled ? "enabled" : "not set up"} · share {a.commissionBps != null ? `${(10000 - a.commissionBps) / 100}% (agreed)` : `${defaultShare}% (default)`}{a.payToPlatform ? ", paid to DEL" : ""}{a.official ? ". Courses shown under the DevOps Easy Learning brand" : ""}</p>
+                            {superAdmin ? <button type="button" className="btn btn-outline btn-sm" onClick={() => setTerms({ userId: a.userId, name: a.name, email: a.email, status: "approved", commissionBps: a.commissionBps, payToPlatform: a.payToPlatform, official: a.official } as AdminInstructor)} data-testid="edit-terms">Edit type and payment terms</button> : null}
                             {reviewer ? <button type="button" className="btn btn-ghost btn-sm ml-1 text-rose" disabled={!!busy} onClick={() => decide(a, "rejected")}>Remove instructor access</button> : null}
                           </div>
                         ) : null}

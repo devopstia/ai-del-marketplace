@@ -15,6 +15,7 @@ import type { CourseCard } from "@/lib/types";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 import { organizationLd, pageMeta, SITE_DESCRIPTION, topicPath, websiteLd } from "@/lib/seo";
+import { courseBy } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ function Spread({ c }: { c: CourseCard }) {
         <span className="text-sm font-bold text-violet">Our pick to start with</span>
         <h3 className="mt-2 font-display text-2xl font-extrabold leading-tight text-ink group-hover:text-violet md:text-[1.75rem]">{c.title}</h3>
         <p className="mt-3 text-ink-2">{c.subtitle}</p>
-        <p className="mt-4 text-sm text-muted">By {c.instructor.name}</p>
+        <p className="mt-4 text-sm text-muted">By {courseBy(c.instructor)}</p>
         <p className="mt-2 flex flex-wrap items-center gap-2 text-sm"><CourseBadges c={c} /></p>
         </div>
         <div className="flex items-end justify-between gap-4 md:flex-col md:items-end md:justify-end md:text-right">
@@ -66,7 +67,7 @@ function RankedRow({ c, rank, fill = false }: { c: CourseCard; rank?: number; fi
         <span className="min-w-0">
           <span className="line-clamp-2 font-display font-bold leading-snug text-ink group-hover:text-violet">{c.title}</span>
           <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-muted">
-            <span className="truncate">{c.instructor.name}</span>
+            <span className="truncate">{courseBy(c.instructor)}</span>
             {c.studentCount >= MIN_STUDENTS_SHOWN ? <span className="tabular-nums">{plural(c.studentCount, "learner")}</span> : null}
           </span>
         </span>
@@ -190,7 +191,7 @@ export default async function Home() {
               <Link href={`/courses/${enrolled[0]!.slug}`} className="group block rounded-panel border border-line bg-surface p-3 transition-colors hover:border-violet">
                 <CourseCover slug={enrolled[0]!.slug} title={enrolled[0]!.title} category={enrolled[0]!.category?.name} thumbnailUrl={enrolled[0]!.thumbnailUrl} showTitle={false} />
                 <span className="mt-3 flex items-baseline gap-3 px-1"><span className="font-display text-3xl font-extrabold text-violet">1</span><span className="min-w-0 font-display font-bold leading-snug text-ink group-hover:text-violet">{enrolled[0]!.title}</span></span>
-                <span className="mt-1 block px-1 pb-1 text-sm text-muted">{enrolled[0]!.instructor.name}{enrolled[0]!.studentCount >= MIN_STUDENTS_SHOWN ? ` · ${plural(enrolled[0]!.studentCount, "learner")}` : ""}</span>
+                <span className="mt-1 block px-1 pb-1 text-sm text-muted">{courseBy(enrolled[0]!.instructor)}{enrolled[0]!.studentCount >= MIN_STUDENTS_SHOWN ? ` · ${plural(enrolled[0]!.studentCount, "learner")}` : ""}</span>
               </Link>
               <Link href="/courses?sort=popular" className="btn btn-outline mt-5 self-start">Browse all popular courses</Link>
             </div>
