@@ -65,7 +65,7 @@ export function Thread({ messages, viewerIsStaff }: { messages: Message[]; viewe
             <Avatar name={m.author?.name ?? "DEL Support"} src={m.author?.avatarUrl} size={28} />
             <b className="text-sm text-ink">{m.author?.name ?? "DEL Support"}</b>
             {m.staff ? <span className="rounded-full bg-violet-soft px-2 py-0.5 text-[0.7rem] font-bold text-violet">Support</span> : null}
-            {m.internal ? <span className="rounded-full bg-amber px-2 py-0.5 text-[0.7rem] font-bold text-[#1f1500]">Internal note</span> : null}
+            {m.internal ? <span className="rounded-full bg-amber px-2 py-0.5 text-[0.7rem] font-bold text-[var(--on-amber)]">Internal note</span> : null}
             <span className="ml-auto text-xs text-muted">{when(m.createdAt)}</span>
           </div>
           <p className="mt-2 whitespace-pre-wrap break-words text-[0.95rem] text-ink">{m.body}</p>

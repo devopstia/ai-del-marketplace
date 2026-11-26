@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import * as argon2 from 'argon2';
 import { Client } from 'pg';
 import request from 'supertest';
+import { OAuthConfigService } from '../src/auth/oauth-config.service';
 import { AppModule } from '../src/app.module';
 import { ARGON2_OPTS } from '../src/auth/auth.service';
 import { configureApp } from '../src/bootstrap';
@@ -705,7 +706,12 @@ describe('e2e: buy and learn', () => {
     // Emails went to the requester for reply, request for information and both resolves; resolved tickets auto-close.
     const templates = jobs.sendEmail.mock.calls.map((c: any[]) => c[0].template);
     expect(templates).toEqual(expect.arrayContaining(['support-reply', 'support-info-requested', 'support-resolved']));
-    expect(jobs.sendEmail.mock.calls.every((c: any[]) => c[0].to === 'sp2-student@e2e.example')).toBe(true);
+    // Opening a ticket: a confirmation to the requester and a notification to the support inbox (owner 2026-11-25).
+    const calls = jobs.sendEmail.mock.calls.map((c: any[]) => c[0]);
+    expect(calls).toContainEqual(expect.objectContaining({ to: 'sp2-student@e2e.example', template: 'support-ticket-received', data: expect.objectContaining({ ticket: no, subject: 'Video stops at 2:10' }) }));
+    const staff = calls.find((j: any) => j.template === 'support-ticket-new' && j.data.ticket === no);
+    expect(staff).toMatchObject({ to: 'support@devopseasylearning.com', replyTo: 'sp2-student@e2e.example', data: { email: 'sp2-student@e2e.example', body: expect.stringContaining('two minutes') } });
+    expect(calls.filter((j: any) => j.template !== 'support-ticket-new').every((j: any) => j.to === 'sp2-student@e2e.example')).toBe(true);
     const old = await sam.send('post', '/api/support/tickets', { subject: 'Certificate name is wrong', category: 'certificates', description: 'My certificate shows an old name.' }).expect(201);
     await admin.send('post', `/api/admin/support/tickets/${old.body.number}/messages`, { kind: 'resolve', body: 'Updated.' }).expect(201);
     await prisma.supportTicket.update({ where: { number: Number(old.body.number.slice(4)) }, data: { resolvedAt: new Date(Date.now() - 8 * 86400000) } });
@@ -1281,6 +1287,35 @@ describe('e2e: buy and learn', () => {
     });
   });
 
+  it('sign-in methods: super admin only, keys checked before saving, secrets never returned, button follows the keys', async () => {
+    if (!available) return;
+    const admin = await userAgent('sim-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('sim-super@e2e.example', ['student', 'admin', 'super_admin']);
+    await admin.agent.get('/api/admin/sign-in-methods').expect(403);
+    const st = (await boss.agent.get('/api/admin/sign-in-methods').expect(200)).body;
+    expect(st.items.map((i: any) => i.key)).toEqual(['google', 'github', 'facebook', 'linkedin']);
+    expect(st.items[0].redirectUri).toMatch(/\/api\/auth\/oauth\/google\/callback$/);
+    // a malformed client ID is refused before anything is stored or sent to the provider
+    const bad = await boss.send('put', '/api/admin/sign-in-methods/google', { clientId: 'not-a-google-id', clientSecret: 'GOCSPX-abcdefgh' }).expect(400);
+    expect(['clientId', 'step_up_required']).toContain(bad.body.error.code);
+    await boss.send('put', '/api/admin/sign-in-methods/myspace', { clientId: 'x1234567', clientSecret: 'abcdefgh' }).expect(400);
+    // keys accepted by the provider (provider check stubbed): saved sealed, the button appears, the secret never comes back
+    const cfg = app.get(OAuthConfigService);
+    const probe = jest.spyOn(cfg, 'probe').mockResolvedValue(null);
+    const stepUp = jest.spyOn(cfg as any, 'stepUp').mockResolvedValue(undefined);
+    try {
+      const saved = (await boss.send('put', '/api/admin/sign-in-methods/github', { clientId: 'Ov23liE2Etest00001', clientSecret: 'e2e-github-secret-value' }).expect(200)).body;
+      expect(saved.items.find((i: any) => i.key === 'github')).toMatchObject({ enabled: true, source: 'settings' });
+      expect(JSON.stringify(saved)).not.toContain('e2e-github-secret-value');
+      const row = await prisma.platformSetting.findUnique({ where: { key: 'oauth_config' } });
+      expect(JSON.stringify(row?.value)).not.toContain('e2e-github-secret-value');
+      expect((await request(app.getHttpServer()).get('/api/auth/providers').expect(200)).body.items.map((i: any) => i.key)).toContain('github');
+      await boss.send('delete', '/api/admin/sign-in-methods/github', {}).expect(200);
+      expect((await request(app.getHttpServer()).get('/api/auth/providers').expect(200)).body.items.map((i: any) => i.key)).not.toContain('github');
+      expect(await prisma.auditLog.count({ where: { action: { in: ['auth.provider_keys_saved', 'auth.provider_keys_removed'] }, actorId: boss.user.id } })).toBe(2);
+    } finally { probe.mockRestore(); stepUp.mockRestore(); }
+  });
+
   it('contact page: message with screenshots reaches DEL support by email; only images, honeypot, staff only', async () => {
     if (!available) return;
     const a = request.agent(app.getHttpServer());
@@ -1292,7 +1327,8 @@ describe('e2e: buy and learn', () => {
     const jobs = app.get(JobsService) as unknown as { sendEmail: jest.Mock };
     const mail = jobs.sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === 'contact-message');
     expect(mail).toMatchObject({ to: 'support@devopseasylearning.com', replyTo: 'ama@e2e.example', attachments: [{ name: 'screen.png', mime: 'image/png' }] });
-    expect(jobs.sendEmail.mock.calls.map((c) => c[0]).some((j) => j.template === 'contact-received' && j.to === 'ama@e2e.example')).toBe(true);
+    expect(jobs.sendEmail.mock.calls.map((c) => c[0]).some((j) => j.template === 'contact-received' && j.to === 'ama@e2e.example' && j.data.ref === mail.data.ref)).toBe(true);
+    expect(mail).toMatchObject({ data: expect.objectContaining({ name: expect.any(String), email: 'ama@e2e.example', subject: expect.any(String), body: expect.any(String) }) });
     // a renamed non-image is refused; the honeypot is refused
     expect((await post().attach('images', Buffer.from('<?php echo 1;'), { filename: 'x.png', contentType: 'image/png' }).expect(400)).body.error.code).toBe('attachment_type');
     await post().field('website', 'http://spam.example').expect(400);

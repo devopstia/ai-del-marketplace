@@ -88,7 +88,7 @@ export function AppShell({ studio, nav, children, banner }: { studio: StudioKey;
                         {mini ? <span className="sr-only">{n.label}</span> : <span className="min-w-0 flex-1 truncate">{n.label}</span>}
                         {n.badge ? (mini
                           ? <span className="absolute right-1 top-1 size-2 rounded-full bg-amber" aria-label={`${n.badge} waiting`} />
-                          : <span className="rounded-full bg-amber px-1.5 text-xs font-bold leading-5 text-[#1f1500] tabular-nums">{n.badge}</span>) : null}
+                          : <span className="rounded-full bg-amber px-1.5 text-xs font-bold leading-5 text-[var(--on-amber)] tabular-nums">{n.badge}</span>) : null}
                       </Link>
                     </li>
                   );

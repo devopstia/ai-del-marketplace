@@ -16,11 +16,23 @@ export interface ProviderDef {
 export const PROVIDER_KEYS = ['google', 'github', 'facebook', 'linkedin', 'test'] as const;
 export type ProviderKey = (typeof PROVIDER_KEYS)[number];
 
-const creds = (k: Exclude<ProviderKey, 'test'>) => {
+export type RealProvider = Exclude<ProviderKey, 'test'>;
+export const REAL_PROVIDERS: RealProvider[] = ['google', 'github', 'facebook', 'linkedin'];
+
+/** Keys a super admin saved in Super Admin › Sign-in methods (sealed in platform_settings, loaded by OAuthConfigService). */
+let saved: Partial<Record<RealProvider, { id: string; secret: string }>> = {};
+export function setSavedCredentials(m: typeof saved) { saved = m; }
+export function credentialSource(k: RealProvider): 'settings' | 'env' | null {
+  if (saved[k]?.id && saved[k]?.secret) return 'settings';
+  const e = envCreds(k); return e.id && e.secret ? 'env' : null;
+}
+const envCreds = (k: RealProvider) => {
   const e = env();
   const map = { google: [e.GOOGLE_CLIENT_ID, e.GOOGLE_CLIENT_SECRET], github: [e.GITHUB_CLIENT_ID, e.GITHUB_CLIENT_SECRET], facebook: [e.FACEBOOK_CLIENT_ID, e.FACEBOOK_CLIENT_SECRET], linkedin: [e.LINKEDIN_CLIENT_ID, e.LINKEDIN_CLIENT_SECRET] } as const;
   return { id: map[k][0], secret: map[k][1] };
 };
+const creds = (k: RealProvider) => (saved[k]?.id && saved[k]?.secret ? saved[k]! : envCreds(k));
+export const publicClientId = (k: RealProvider) => creds(k).id;
 
 async function json(r: Response, what: string) {
   if (!r.ok) throw new Error(`${what} failed (${r.status})`);
@@ -63,11 +75,11 @@ export const PROVIDERS: Record<ProviderKey, ProviderDef> = {
   },
   facebook: {
     key: 'facebook', label: 'Facebook', pkce: true, scope: 'email,public_profile',
-    authorizeUrl: 'https://www.facebook.com/v19.0/dialog/oauth',
+    authorizeUrl: 'https://www.facebook.com/v23.0/dialog/oauth',
     async exchange(code, redirectUri, verifier, fetcher) {
       const c = creds('facebook');
       const q = new URLSearchParams({ code, redirect_uri: redirectUri, client_id: c.id, client_secret: c.secret, code_verifier: verifier });
-      const t = await json(await fetcher(`https://graph.facebook.com/v19.0/oauth/access_token?${q}`, { signal: AbortSignal.timeout(10_000) }), 'token exchange');
+      const t = await json(await fetcher(`https://graph.facebook.com/v23.0/oauth/access_token?${q}`, { signal: AbortSignal.timeout(10_000) }), 'token exchange');
       const token = str(t.access_token);
       if (!token) throw new Error('token exchange failed');
       const u = await json(await fetcher(`https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${encodeURIComponent(token)}`, { signal: AbortSignal.timeout(10_000) }), 'profile');

@@ -20,8 +20,8 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 4. **Every visible control works.** No button, link, menu or form that does nothing. Never present a feature as working unless it is
    implemented and tested end to end. Unfinished features are hidden, not shown as placeholders.
 5. **Exceptional, premium design**: impressive from the first screen; consistent typography, colour, spacing, motion; no excess
-   empty space, no repetitive rectangle grids, no generic template look; every page has a clear purpose. **Dark is the default
-   theme for the whole site** (owner, 2026-11-25); light is available from the toggle and remembered. Light/dark, 390–1440 px,
+   empty space, no repetitive rectangle grids, no generic template look; every page has a clear purpose. **Light is the default
+   theme for the whole site** (owner, 2026-11-25, final review; it replaced the earlier dark default); dark is available from the toggle and remembered. Outgoing emails always use the dark email design. Light/dark, 390–1440 px,
    accessible (keyboard, focus, contrast, reduced motion). Review every changed screen in screenshots at **390, 1440 and 1920 px** (the owner works on a ~1970 px screen) before calling it done; no empty regions or stranded elements (owner, 2026-11-24: homepage hero "empty", instructor band "not good", /teach "not well design").
 6. **Dashboards are organized, not overloaded**: student (engaging learning), instructor (professional business tools), super admin
    (full operational visibility).
@@ -59,10 +59,11 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     Playwright `npm run test:e2e -w apps/web` (wait ~60 s after the API smoke run: register is rate-limited per IP), all green on a
     fresh stack (`docker compose down -v`), then a clean demo: fresh stack, `npm run seed`, `./scripts/import-del.sh`,
     `./scripts/demo-catalogue.sh` (only "AI for DevOps" listed, per the owner).
-16. **Dark mode is the primary design; browser QA is part of "done"** (owner, 2026-11-25: "Dark mode should not look like an
-    afterthought. It must be treated as our primary design experience."). Every agent, for every frontend component, page or
-    feature it creates or changes:
-    1. **Design dark first.** Dark is the site default; build and judge the work in dark, then confirm light still works. Use
+16. **Both themes are first-class; browser QA is part of "done"** (owner, 2026-11-25: "Dark mode should not look like an
+    afterthought"; later the same day, final review: **light is the default** for new visitors). Every agent, for every
+    frontend component, page or feature it creates or changes:
+    1. **Light default, dark equal.** Build and judge the work in light (what visitors see first) and in dark (the stricter
+       contrast check: `scripts/qa-dark.mjs` scans dark by default, `--light` scans light). Use
        the design tokens in `apps/web/src/app/globals.css` (`--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--violet`,
        …); never hard-code a light-only colour (`bg-white`, `text-black`, `#fff` text on a token background, etc.).
     2. **Check readability and consistency**: text contrast at least 4.5:1 (3:1 for large text and icons), the same surfaces,

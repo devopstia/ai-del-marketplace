@@ -16,7 +16,7 @@ app), and a dismissible row at the bottom of My learning (`components/pwa/Instal
 
 ## What makes it an app
 - `app/manifest.ts` → `/manifest.webmanifest`: name, short name "DEL", `display: standalone`, start at My learning,
-  dark background/theme (`#0c0f22`), icons 192/512 plus maskable versions, shortcuts (My learning, Courses, Deals).
+  light background/theme (`#f4f5fa`, the site default since 2026-11-25; the offline page follows a saved dark choice), icons 192/512 plus maskable versions, shortcuts (My learning, Courses, Deals).
 - Icons in `public/icons/` are drawn from the logo by `node scripts/pwa-icons.mjs` (run after a logo change).
 - `app/layout.tsx`: Apple home-screen icon and name, `viewport-fit=cover`, keyboard resizes the page; `globals.css` keeps
   phone form fields at 16 px (no iOS zoom) and content clear of a landscape notch; toasts sit above the home indicator.

@@ -460,7 +460,11 @@ test("12 months of access is disclosed before paying, never lifetime", async ({ 
   await page.goto(`/courses/${PAID_COURSE}`);
   const card = page.locator("[data-testid=purchase-card]:visible").first();
   await expect(card).toContainText("12 months of access");
-  await expect(page.locator("body")).not.toContainText(/lifetime access/i);
+  await expect(page.locator("body")).not.toContainText(/lifetime access|for life\b/i);
+  // the FAQ answer is in a closed <details>: read its text, not just what is visible
+  const faq = await page.locator("#faq-h").locator("..").textContent();
+  expect(faq ?? "").toContain("12 months from the day you buy it");
+  expect(faq ?? "").not.toMatch(/for life|lifetime|less than 25/i);
   await page.goto("/policies/access-and-refunds");
   await expect(page.getByTestId("policy")).toContainText("12 months from the day you buy it");
   await expect(page.getByTestId("policy")).toContainText("25% or less");
@@ -565,5 +569,53 @@ test.describe("review moderation screens", () => {
     await login(page, USERS.admin, PASSWORD, "/admin/payments");
     await expect(page.getByTestId("stripe-mode")).toBeVisible();
     await expect(page.locator("body")).not.toContainText(/sk_(test|live)_[A-Za-z0-9]{12,}/);
+  });
+});
+
+test.describe("final review (owner 2026-11-25)", () => {
+  test("light is the default theme; a dark choice from the toggle is remembered", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveClass(/\blight\b/);
+    await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe("rgb(244, 245, 250)");
+    await page.getByRole("button", { name: "Switch light or dark theme" }).first().click();
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await page.reload();
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await page.getByRole("button", { name: "Switch light or dark theme" }).first().click();
+    await expect(page.locator("html")).toHaveClass(/\blight\b/);
+  });
+
+  test("while card payments are off, no Buy or Checkout button leads to an error", async ({ page }) => {
+    await page.route("**/api/payments/mode", (r) => r.fulfill({ json: { mode: "off", provider: null } }));
+    await page.goto(`/courses/${PAID_COURSE}`);
+    const card = page.locator("[data-testid=purchase-card]:visible").first();
+    await expect(card.getByTestId("payments-closed")).toBeVisible();
+    await expect(card.getByTestId("buy-now")).toHaveCount(0);
+    await card.getByRole("link", { name: "Contact us to enrol" }).click();
+    await expect(page).toHaveURL(/\/contact\?topic=payment/);
+    await expect(page.locator("#c-topic")).toHaveValue("payment");
+  });
+
+  test("terms and privacy pages exist and are linked from the footer and sign-up", async ({ page }) => {
+    await page.goto("/register");
+    await expect(page.locator("main").getByRole("link", { name: "Terms of use" })).toHaveAttribute("href", "/policies/terms");
+    await page.locator("footer").getByRole("link", { name: "Privacy", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy policy");
+    await expect(page.getByTestId("policy-text")).toContainText("never see or store your card number");
+    await page.goto("/policies/terms");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Terms of use");
+    await expect(page.getByTestId("policy-text")).toContainText("12 months");
+    await expect(page.getByTestId("policy-text")).not.toContainText(/lifetime access|for life/i);
+  });
+
+  test("super admin sees Sign-in methods with the redirect URI for each provider", async ({ page }) => {
+    test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run admin flows");
+    await login(page, USERS.admin, PASSWORD, "/admin/sign-in");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign-in methods");
+    for (const k of ["google", "github", "facebook", "linkedin"]) await expect(page.getByTestId(`provider-${k}`)).toBeVisible();
+    await page.getByTestId("setup-google").click();
+    await expect(page.getByTestId("provider-google")).toContainText("/api/auth/oauth/google/callback");
+    await expect(page.getByTestId("save-google")).toBeDisabled();
   });
 });

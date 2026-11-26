@@ -1,5 +1,5 @@
 "use client";
-import { TestModeNotice } from "@/components/TestModeNotice";
+import { PaymentsClosed, TestModeNotice, usePaymentsMode } from "@/components/TestModeNotice";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader2, Lock, ShoppingCart } from "lucide-react";
@@ -12,6 +12,7 @@ import { CourseCover } from "@/components/CourseCover";
 import { Empty, Skeleton } from "@/components/Empty";
 
 export default function CheckoutPage() {
+  const payMode = usePaymentsMode();
   const [cart, setCart] = useState<Cart | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -78,11 +79,12 @@ export default function CheckoutPage() {
                 <span className="font-bold text-ink">12 months of access, not lifetime.</span> Each course is yours for 12 months from today. Renewing is optional and never charged automatically. Refunds: within 14 days if you’ve watched 25% or less. <Link href="/policies/access-and-refunds" className="link">Read the policy</Link>
               </p>
             ) : null}
+            {cart.totalCents > 0 && payMode === "off" ? <PaymentsClosed className="mt-5" /> : (
             <button type="button" className="btn btn-primary mt-5 w-full" onClick={pay} disabled={busy || (cart.totalCents > 0 && !consent)} data-testid="pay">
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}Continue to secure payment
-            </button>
+            </button>)}
             <p className="mt-3 text-xs text-muted">
-              You’ll pay on a Stripe-hosted page. Refunds: within 14 days of purchase, while you’ve watched less than 25% of the course
+              You’ll pay on a Stripe-hosted page. Refunds: within 14 days of purchase, if you’ve watched 25% of the course or less
               and before you get its certificate. Request one from your order page.
             </p>
             <Link href="/cart" className="link mt-4 inline-block text-sm">Back to cart</Link>

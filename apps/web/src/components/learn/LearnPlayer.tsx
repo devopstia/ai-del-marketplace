@@ -347,6 +347,9 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
               {tab === "overview" && course ? (
                 <div className="max-w-3xl">
                   <h1 className="font-display text-2xl font-extrabold">{lecture?.title}</h1>
+                  {access && access.state !== "expiring" ? (
+                    <p className="mt-1 text-sm text-muted" data-testid="access-until">Your access to this course runs until {date(access.expiresAt)} ({access.daysLeft} days left).</p>
+                  ) : null}
                   {lecture?.description ? <Markdown source={lecture.description} className="prose-del mt-3" /> : null}
                   {lecture?.hasResources ? (
                     <section className="mt-6" aria-labelledby="lesson-files-h">

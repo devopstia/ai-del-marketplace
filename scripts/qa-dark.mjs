@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Dark-mode QA scan (AGENTS.md rule 16). Opens pages in a real browser in the default dark theme and reports:
+// Theme QA scan (AGENTS.md rule 16). Opens pages in a real browser in the dark theme (the stricter check; the site
+// default is light since 2026-11-25, pass --light to scan it) and reports:
 //  - text whose contrast against its actual background is under WCAG AA (4.5:1; 3:1 for large text),
 //  - pages that scroll sideways.
 // Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--widths 390,768,1440] [--light] path [path…]
@@ -81,7 +82,7 @@ let bad = 0;
 for (const w of widths) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 900 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
-  if (light) await page.addInitScript(() => { try { localStorage.setItem("del-theme-v2", "light"); } catch {} });
+  await page.addInitScript((t) => { try { localStorage.setItem("del-theme-v2", t); } catch {} }, light ? "light" : "dark");
   if (role) {
     if (trust[role]) await ctx.addCookies([trust[role]]);
     await page.goto(`${base}/login`);

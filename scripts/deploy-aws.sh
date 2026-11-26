@@ -52,6 +52,9 @@ case "$cmd" in
 
   build)
     TAG="${2:-$(tag_default)}"; REG="$(registry)"
+    if aws ecr describe-images --region "$REGION" --repository-name "$APP/api" --image-ids imageTag="$TAG" >/dev/null 2>&1; then
+      echo "images for $TAG already exist (tags are immutable): nothing to build"; exit 0
+    fi
     aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$REG" >/dev/null
     docker build -f apps/api/Dockerfile -t "$REG/$APP/api:$TAG" .
     docker push "$REG/$APP/api:$TAG"

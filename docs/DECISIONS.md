@@ -207,3 +207,15 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   emails screenshots to support@devopseasylearning.com; social links from the DEL website; /install and /help
   ("Platform videos", two columns) redesigned. Tests run on an isolated `del-test` stack (ports 3100/4100) so the
   owner's local site (MFA_REQUIRED=false) is never touched.
+
+## 2026-11-25 — Final review before the next release (checkpoint `checkpoint-2026-11-25-final-review` = 7ae0a6c, branch `backup/pre-final-review-2026-11-25`, work on `feat/final-review`)
+- **Light is the default theme** for every visitor (owner); dark stays one click away and is remembered. Theme script no
+  longer follows the OS preference; manifest, theme-color and offline page are light by default. AGENTS rules 5 and 16 updated.
+- **Emails: one dark design** in every client, independent of the website theme.
+- **Social sign-in:** code was complete but production had no keys. Added Super Admin › Sign-in methods (keys checked with
+  the provider, sealed, step-up code, audited). Creating the apps with Google/GitHub/Facebook/LinkedIn needs the owner's accounts.
+- **Support:** opening a ticket now emails the requester a confirmation and the support inbox a notification (Contact page already did).
+- **Requirement audit fixes:** course FAQ said "For life" (now 12 months, rule 20); "less than 25%" → "25% or less"
+  everywhere; Buy/Checkout replaced by "Contact us to enrol" while card payments are off (rule 4); Terms of use and
+  Privacy policy pages (also needed by the sign-in providers); the player always shows the access end date.
+- Costs: docs/AWS_COSTS.md (≈ $52/month fixed, video traffic is the variable that matters).

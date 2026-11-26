@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard, UserPlus, MessageSquareText, CreditCard } from "lucide-react";
+import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard, UserPlus, MessageSquareText, CreditCard, KeyRound } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
 import { AppShell, type NavItem } from "@/components/shell/AppShell";
@@ -38,6 +38,7 @@ const groups: { label?: string; items: Item[] }[] = [
     { href: "/admin/covers", label: "Cover templates", icon: ImageIcon, perm: "content.manage" },
     { href: "/admin/protection", label: "Video protection", icon: ShieldCheck, perm: "content.manage" },
     { href: "/admin/payments", label: "Payments & Stripe", icon: CreditCard, superOnly: true },
+    { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
     { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },
     { href: "/admin/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
   ] },

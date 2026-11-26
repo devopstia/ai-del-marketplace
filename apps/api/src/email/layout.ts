@@ -4,8 +4,10 @@ import { env } from '../config/env';
  * DEL email layout, adapted from Insurance Hub's notification-service `_base.html` (docs/EMAIL.md): a 560px card on a
  * soft background, a brand rule, the logo with the name in type (images may be blocked), a hidden preheader, and the
  * footer with the support address. Tables and inline styles throughout because email clients strip most CSS.
- * Differences from the Hub: DEL branding and colours, and a dark-mode variant for clients that honour
- * `prefers-color-scheme` (Apple Mail, iOS, Outlook apps); everything still reads well in light-only clients.
+ * Differences from the Hub: DEL branding and colours, and **one dark design for every email** (owner, 2026-11-25),
+ * independent of the website's theme. Colours are inline and repeated as `bgcolor` attributes so Gmail and Outlook
+ * (which ignore <style> blocks or CSS backgrounds) draw the same dark card; `color-scheme: dark` tells clients with a
+ * dark mode that the email is already dark, so they leave it alone.
  */
 export type Block =
   | { h1: string }
@@ -18,7 +20,8 @@ export type Block =
   | { link: string }
   | { note: string };
 
-const C = { bg: '#F3F2FA', card: '#FFFFFF', line: '#E3E1F0', ink: '#141833', ink2: '#3A3D63', muted: '#5A5D80', violet: '#4F3FB0', cyan: '#1E9BD7', soft: '#F6F5FD' };
+// Dark palette (the site's dark tokens). Contrast on the card: ink 14:1, ink2 10:1, muted 5.9:1, link 6.4:1, button text 7.9:1.
+const C = { bg: '#0C0F22', card: '#141834', foot: '#10142B', line: '#262C52', ink: '#E8EAF7', ink2: '#C9CCE3', muted: '#9599B8', violet: '#9D8FFF', cyan: '#58C3F2', soft: '#1B2045', onBtn: '#12143A', fine: '#8A8DAA' };
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 /** Escapes text; `**bold**` becomes <strong> (the only markup the templates use). */
@@ -31,15 +34,15 @@ function html(b: Block): string {
   if ('h1' in b) return `<h1 class="ink" style="margin:0 0 14px;font-size:22px;font-weight:700;line-height:1.28;color:${C.ink};letter-spacing:-0.01em;">${esc(b.h1)}</h1>`;
   if ('p' in b) return `<p class="ink2" style="margin:0 0 14px;color:${C.ink2};">${esc(b.p)}</p>`;
   if ('muted' in b) return `<p class="muted" style="margin:0 0 14px;color:${C.muted};font-size:13.5px;">${esc(b.muted)}</p>`;
-  if ('note' in b) return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;"><tr><td class="soft" style="background:${C.soft};border-left:3px solid ${C.violet};border-radius:6px;padding:12px 14px;color:${C.ink2};font-size:14px;">${esc(b.note)}</td></tr></table>`;
+  if ('note' in b) return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;"><tr><td class="soft" bgcolor="${C.soft}" style="background:${C.soft};border-left:3px solid ${C.violet};border-radius:6px;padding:12px 14px;color:${C.ink2};font-size:14px;">${esc(b.note)}</td></tr></table>`;
   if ('list' in b) return `<ul class="ink2" style="margin:0 0 16px;padding-left:20px;color:${C.ink2};">${b.list.map((x) => `<li style="margin:0 0 6px;">${esc(x)}</li>`).join('')}</ul>`;
   if ('code' in b) return `<p style="margin:4px 0 18px;"><span class="code" style="display:inline-block;padding:12px 18px;border:1px solid ${C.line};border-radius:8px;background:${C.soft};font-family:Menlo,Consolas,monospace;font-size:26px;font-weight:700;letter-spacing:6px;color:${C.ink};">${esc(b.code)}</span></p>`;
   if ('rows' in b) return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;border-top:1px solid ${C.line};" class="rows">${b.rows.map(([k, v]) => `<tr><td class="muted" style="padding:9px 0;border-bottom:1px solid ${C.line};color:${C.muted};font-size:14px;">${esc(k)}</td><td class="ink" align="right" style="padding:9px 0 9px 12px;border-bottom:1px solid ${C.line};color:${C.ink};font-size:14px;font-weight:600;">${esc(v)}</td></tr>`).join('')}</table>`;
-  if ('link' in b) return `<p class="muted" style="margin:0 0 14px;color:${C.muted};font-size:13px;">If the button doesn’t work, paste this link into your browser:<br><span style="font-family:Menlo,Consolas,monospace;font-size:11px;word-break:break-all;">${esc(b.link)}</span></p>`;
+  if ('link' in b) return `<p class="muted" style="margin:0 0 14px;color:${C.muted};font-size:13px;">If the button doesn’t work, paste this link into your browser:<br><span style="font-family:Menlo,Consolas,monospace;font-size:11px;word-break:break-all;color:${C.ink2};">${esc(b.link)}</span></p>`;
   const { href, label } = b.cta;
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 20px;"><tr><td align="center" bgcolor="${C.violet}" class="btn" style="border-radius:8px;">
-<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${esc(href)}" style="height:46px;v-text-anchor:middle;width:280px;" arcsize="16%" fillcolor="${C.violet}" stroke="f"><center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;"><![endif]-->
-<a href="${esc(href)}" class="btn-a" style="display:inline-block;padding:13px 28px;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;border-radius:8px;">${esc(label)}</a>
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 20px;"><tr><td align="center" bgcolor="${C.violet}" class="btn" style="border-radius:8px;background:${C.violet};">
+<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${esc(href)}" style="height:46px;v-text-anchor:middle;width:280px;" arcsize="16%" fillcolor="${C.violet}" stroke="f"><center style="color:${C.onBtn};font-family:Arial,sans-serif;font-size:15px;font-weight:bold;"><![endif]-->
+<a href="${esc(href)}" class="btn-a" style="display:inline-block;padding:13px 28px;color:${C.onBtn};text-decoration:none;font-weight:700;font-size:15px;border-radius:8px;">${esc(label)}</a>
 <!--[if mso]></center></v:roundrect><![endif]--></td></tr></table>`;
 }
 
@@ -70,33 +73,23 @@ export function layout(input: { subject: string; preheader?: string; blocks: Blo
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="x-apple-disable-message-reformatting">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
 <title>${esc(input.subject)}</title>
 <style>
-  @media (prefers-color-scheme: dark) {
-    .bg { background:#0C0F22 !important; }
-    .card { background:#141834 !important; border-color:#262C52 !important; }
-    .foot { background:#10142B !important; border-color:#262C52 !important; }
-    .ink, .ink strong, h1 { color:#E8EAF7 !important; }
-    .ink2, .ink2 strong { color:#C9CCE3 !important; }
-    .muted { color:#9599B8 !important; }
-    .soft, .code { background:#1B2045 !important; color:#E8EAF7 !important; border-color:#262C52 !important; }
-    .btn { background:#9D8FFF !important; }
-    .btn-a { color:#12143A !important; }
-    .link { color:#9D8FFF !important; }
-    .rows, .rows td, .divider { border-color:#262C52 !important; }
-  }
+  :root { color-scheme: dark; supported-color-schemes: dark; }
+  body, .bg { background:${C.bg} !important; }
+  a { color:${C.violet}; }
   @media (max-width: 600px) { .pad { padding-left:20px !important; padding-right:20px !important; } }
 </style>
 <!--[if mso]><style>body,table,td{font-family:Arial,Helvetica,sans-serif!important}</style><![endif]-->
 </head>
-<body class="bg" style="margin:0;padding:0;background:${C.bg};-webkit-font-smoothing:antialiased;">
+<body class="bg" bgcolor="${C.bg}" style="margin:0;padding:0;background:${C.bg};color:${C.ink2};-webkit-font-smoothing:antialiased;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(input.preheader ?? input.subject)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg" style="background:${C.bg};padding:32px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg" bgcolor="${C.bg}" style="background:${C.bg};padding:32px 12px;">
 <tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" style="max-width:560px;background:${C.card};border:1px solid ${C.line};border-radius:12px;overflow:hidden;font-family:${FONT};">
-<tr><td style="height:4px;background:${C.violet};background-image:linear-gradient(90deg,${C.violet},${C.cyan});font-size:0;line-height:0;">&nbsp;</td></tr>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="card" bgcolor="${C.card}" style="max-width:560px;background:${C.card};border:1px solid ${C.line};border-radius:12px;overflow:hidden;font-family:${FONT};">
+<tr><td bgcolor="${C.violet}" style="height:4px;background:${C.violet};background-image:linear-gradient(90deg,${C.violet},${C.cyan});font-size:0;line-height:0;">&nbsp;</td></tr>
 <tr><td class="pad" style="padding:24px 32px 0;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
 <td style="padding-right:12px;vertical-align:middle;"><img src="${web}/icons/icon-192.png" width="40" height="40" alt="" style="display:block;border:0;border-radius:10px;"></td>
@@ -107,12 +100,12 @@ export function layout(input: { subject: string; preheader?: string; blocks: Blo
 <tr><td class="pad ink2" style="padding:22px 32px 26px;color:${C.ink2};font-size:15px;line-height:1.62;">
 ${body}
 </td></tr>
-<tr><td class="pad foot muted" style="border-top:1px solid ${C.line};padding:20px 32px;background:#FAFAFE;color:${C.muted};font-size:12px;line-height:1.6;">
+<tr><td class="pad foot muted" bgcolor="${C.foot}" style="border-top:1px solid ${C.line};padding:20px 32px;background:${C.foot};color:${C.muted};font-size:12px;line-height:1.6;">
 Questions? Write to <a class="link" href="mailto:${esc(support)}" style="color:${C.violet};text-decoration:none;">${esc(support)}</a> or reply to this email.
-<div class="divider" style="margin-top:12px;padding-top:12px;border-top:1px solid ${C.line};"><strong class="ink" style="color:${C.ink2};">DevOps Easy Learning</strong><br>Learn AI and DevOps the way production works.<br><a class="link" href="${web}" style="color:${C.violet};text-decoration:none;">${esc(host)}</a></div>
+<div class="divider" style="margin-top:12px;padding-top:12px;border-top:1px solid ${C.line};"><strong class="ink" style="color:${C.ink};">DevOps Easy Learning</strong><br>Learn AI and DevOps the way production works.<br><a class="link" href="${web}" style="color:${C.violet};text-decoration:none;">${esc(host)}</a></div>
 </td></tr>
 </table>
-<div class="muted" style="max-width:560px;margin:14px auto 0;color:#8A8DAA;font-size:11px;line-height:1.55;text-align:center;font-family:${FONT};">${esc(why)}</div>
+<div class="muted" style="max-width:560px;margin:14px auto 0;color:${C.fine};font-size:11px;line-height:1.55;text-align:center;font-family:${FONT};">${esc(why)}</div>
 </td></tr>
 </table>
 </body>

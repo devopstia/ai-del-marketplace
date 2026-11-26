@@ -3,7 +3,7 @@
 /*
   DevOps Easy Learning — design tokens.
   Palette is drawn from the DEL infinity mark: Loop Violet + Pipeline Cyan on cool paper, with deep navy ink.
-  Light is the default; dark applies by OS preference unless the reader picked a theme (class on <html>).
+  Light is the default for every visitor (owner, 2026-11-25); dark when the reader picks it with the toggle (class on <html>).
 */
 @custom-variant dark {
   &:where(.dark, .dark *) { @slot; }
@@ -29,6 +29,7 @@
   --cyan-ink: #0b6d9e;
   --cyan-soft: #def1fb;
   --amber: #94650a;
+  --on-amber: #ffffff;
   --amber-soft: #fdf1d6;
   --mint: #0b6b45;
   --mint-soft: #ddf4e9;
@@ -60,6 +61,7 @@
     --cyan-ink: #7fd2f6;
     --cyan-soft: #0f2b44;
     --amber: #f2b53c;
+    --on-amber: #1f1500;
     --amber-soft: #3a2c0c;
     --mint: #3fcf92;
     --mint-soft: #0f3326;
@@ -90,6 +92,7 @@
   --cyan-ink: #7fd2f6;
   --cyan-soft: #0f2b44;
   --amber: #f2b53c;
+  --on-amber: #1f1500;
   --amber-soft: #3a2c0c;
   --mint: #3fcf92;
   --mint-soft: #0f3326;

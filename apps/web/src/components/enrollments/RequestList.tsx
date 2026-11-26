@@ -57,7 +57,7 @@ export function RequestList({ mode, refreshKey }: { mode: "instructor" | "super_
         <div role="tablist" className="flex gap-1 overflow-x-auto">
           {TABS.map(([k, l]) => (
             <button key={k || "all"} role="tab" type="button" aria-selected={tab === k} onClick={() => { setTab(k); setPage(1); }} className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-bold ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
-              {l}{k === "open" && waiting ? <span className="ml-1.5 rounded-full bg-amber px-1.5 text-xs text-[#1f1500]">{waiting}</span> : null}
+              {l}{k === "open" && waiting ? <span className="ml-1.5 rounded-full bg-amber px-1.5 text-xs text-[var(--on-amber)]">{waiting}</span> : null}
             </button>
           ))}
         </div>

@@ -20,7 +20,11 @@ describe('email templates', () => {
       expect(part).not.toMatch(/Insurance|Life &amp; Health/);
     }
     expect(r.html).toContain('DevOps Easy Learning');
-    expect(r.html).toContain('prefers-color-scheme: dark');
+    // one dark design in every client (owner, 2026-11-25): declared dark, colours inline and as bgcolor for Outlook
+    expect(r.html).toContain('<meta name="color-scheme" content="dark">');
+    expect(r.html).toContain('bgcolor="#0C0F22"');
+    expect(r.html).toContain('bgcolor="#141834"');
+    expect(r.html).not.toMatch(/#FFFFFF|#F3F2FA|#FAFAFE/i);
     expect(r.html).toContain('https://learn.example.test/icons/icon-192.png');
     expect(r.text).toContain('DevOps Easy Learning');
   });

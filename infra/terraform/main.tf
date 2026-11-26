@@ -88,7 +88,7 @@ resource "aws_s3_bucket_cors_configuration" "media" {
 resource "aws_ecr_repository" "app" {
   for_each             = toset(["api", "web"])
   name                 = "${local.name}/${each.key}"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE" # a version is never overwritten (owner 2026-11-25); rollback = redeploy an older tag
   image_scanning_configuration { scan_on_push = true }
   encryption_configuration { encryption_type = "AES256" }
 }

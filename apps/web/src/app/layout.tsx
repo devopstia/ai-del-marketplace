@@ -15,14 +15,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.WEB_URL || "http://127.0.0.1:3000"),
   icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
   manifest: "/manifest.webmanifest",
-  // Installed on an iPhone or iPad: the home-screen name and a dark status bar.
-  appleWebApp: { capable: true, title: "DEL", statusBarStyle: "black" },
+  // Installed on an iPhone or iPad: the home-screen name; the status bar follows the page (light by default).
+  appleWebApp: { capable: true, title: "DEL", statusBarStyle: "default" },
   applicationName: "DevOps Easy Learning",
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c0f22",
+  themeColor: "#f4f5fa",
   width: "device-width",
   initialScale: 1,
   // Content can use the whole screen in the installed app; fixed elements keep clear with env(safe-area-inset-*).
@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`dark ${display.variable} ${body.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`light ${display.variable} ${body.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
