@@ -74,7 +74,7 @@ export default async function InstructorPage({ params }: { params: Promise<{ id:
       <section className="mt-16">
         <h2 className="mb-6 font-display text-2xl font-extrabold">Courses by {isDel ? i.name : i.name.split(" ")[0]} ({courses.length})</h2>
         {courses.length ? (
-          <div className={`grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 ${courses.length % 3 === 0 && courses.length % 4 !== 0 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>{courses.map((c) => <CourseTile key={c.slug} c={c} />)}</div>
+          <div className={`grid grid-cols-1 gap-x-4 min-[400px]:grid-cols-2 gap-y-8 sm:gap-x-6 ${courses.length % 3 === 0 && courses.length % 4 !== 0 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>{courses.map((c) => <CourseTile key={c.slug} c={c} />)}</div>
         ) : <p className="text-ink-2">No published courses yet.</p>}
       </section>
     </div>

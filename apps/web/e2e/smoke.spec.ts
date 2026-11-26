@@ -713,13 +713,13 @@ test.describe.serial("manual enrollment and the invitation link (owner 2026-11-2
     await row.getByRole("button", { name: "Revoke invitation" }).click();
     await expect(page.getByText("Invitation revoked.")).toBeVisible();
     await visitor.reload();
-    await expect(visitor.getByRole("alert")).toContainText("This invitation can’t be used");
-    await expect(visitor.getByRole("alert")).toContainText(/replaced by a newer one or cancelled/);
+    await expect(visitor.getByRole("alert").filter({ hasText: "This invitation can’t be used" })).toBeVisible();
+    await expect(visitor.getByRole("alert").filter({ hasText: "This invitation" })).toContainText(/replaced by a newer one or cancelled/);
 
     await visitor.goto("/invite/not-a-real-invitation-token");
-    await expect(visitor.getByRole("alert")).toContainText("This invitation can’t be used");
-    await expect(visitor.getByRole("alert")).toContainText(/not valid/);
-    await expect(visitor.getByRole("alert").getByRole("link", { name: "Contact DEL" })).toHaveAttribute("href", "/contact");
+    await expect(visitor.getByRole("alert").filter({ hasText: "This invitation can’t be used" })).toBeVisible();
+    await expect(visitor.getByRole("alert").filter({ hasText: "This invitation" })).toContainText(/not valid/);
+    await expect(visitor.getByRole("alert").filter({ hasText: "This invitation" }).getByRole("link", { name: "Contact DEL" })).toHaveAttribute("href", "/contact");
     await guest.close();
   });
 });

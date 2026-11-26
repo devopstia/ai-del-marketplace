@@ -372,9 +372,9 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
           </div>
 
           <div className="px-4 sm:px-8">
-            <div role="tablist" aria-label="Lecture" className="flex gap-1 overflow-x-auto border-b border-line">
+            <div role="tablist" aria-label="Lecture" className="flex gap-1 overflow-x-auto border-b border-line [mask-image:linear-gradient(to_right,black_calc(100%-2rem),transparent)] sm:[mask-image:none]" onFocus={(e) => (e.target as HTMLElement).scrollIntoView?.({ block: "nearest", inline: "center" })}>
               {tabs.map(([k, l]) => (
-                <button key={k} role="tab" type="button" aria-selected={activeTab === k} onClick={() => setTab(k)}
+                <button key={k} role="tab" type="button" aria-selected={activeTab === k} onClick={(e) => { setTab(k); e.currentTarget.scrollIntoView({ block: "nearest", inline: "center" }); }}
                   className={`-mb-px shrink-0 border-b-2 px-3 py-3 text-sm font-bold sm:px-4 ${k === "content" ? "lg:hidden" : ""} ${activeTab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
                   {l}
                 </button>

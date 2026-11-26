@@ -206,6 +206,8 @@ function Palette({ onClose }: { onClose: () => void }) {
   }, [onClose, router]);
 
   const onKey = (e: React.KeyboardEvent) => {
+    // Esc closes at once, even with text typed (a search field would otherwise only clear itself first)
+    if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => (flat.length ? (i + 1) % flat.length : 0)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => (flat.length ? (i - 1 + flat.length) % flat.length : 0)); }
     else if (e.key === "Home" && e.ctrlKey) { e.preventDefault(); setActive(0); }

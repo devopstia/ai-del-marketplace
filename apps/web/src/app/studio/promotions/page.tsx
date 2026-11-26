@@ -109,8 +109,8 @@ function CourseRow({ c, rules, share, isPlatform, promos, reload }: { c: Row; ru
           c.platformOwned ? (
             <span className="text-sm text-muted">Always part of marketplace promotions (DevOps Easy Learning course).</span>
           ) : (
-            <label className="flex items-center gap-2 text-sm text-ink-2">
-              <input type="checkbox" className="size-4 accent-[var(--violet)]" checked={!c.promoOptOut} disabled={busy} onChange={(e) => optOut(!e.target.checked)} data-testid="promo-optin" />
+            <label className="flex min-h-10 cursor-pointer items-center gap-2.5 text-sm text-ink-2">
+              <input type="checkbox" className="size-5 accent-[var(--violet)]" checked={!c.promoOptOut} disabled={busy} onChange={(e) => optOut(!e.target.checked)} data-testid="promo-optin" />
               Include in marketplace promotions
             </label>
           )

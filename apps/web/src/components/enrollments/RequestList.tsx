@@ -12,6 +12,7 @@ import { Pager, useDebounced } from "../Pager";
 import { useToast } from "../Toast";
 import { ListFilters, type FilterOptions } from "../ListFilters";
 import { useUrlFilters } from "@/lib/url-filters";
+import { StackTable } from "@/components/StackTable";
 
 function fmtAmount(minor: number, currency: string) {
   try {
@@ -136,7 +137,7 @@ function RequestRow({ r, mode, open, onToggle, onChanged }: { r: Req; mode: "ins
         <div className="space-y-5 border-t border-line px-4 py-5">
           {r.reviewNote ? <p className="rounded-tile bg-amber-soft px-3 py-2 text-sm text-ink"><b>Note from DEL:</b> {r.reviewNote}</p> : null}
           {r.note ? <p className="whitespace-pre-line text-sm text-ink-2"><b className="text-ink">Request note:</b> {r.note}</p> : null}
-          <div className="overflow-x-auto rounded-tile border border-line">
+          <StackTable className="overflow-x-auto rounded-tile border border-line">
             <table className="w-full min-w-[620px] text-left text-sm">
               <thead className="bg-surface-2/60 text-muted"><tr><th className="px-3 py-2 font-bold">Course</th><th className="px-3 py-2 font-bold">Instructor</th><th className="px-3 py-2 font-bold">Price</th><th className="px-3 py-2 font-bold">Access until</th><th className="px-3 py-2 font-bold">Earnings</th>{isSuper ? <th className="px-3 py-2"><span className="sr-only">Actions</span></th> : null}</tr></thead>
               <tbody className="divide-y divide-line">
@@ -155,7 +156,7 @@ function RequestRow({ r, mode, open, onToggle, onChanged }: { r: Req; mode: "ins
                 })}
               </tbody>
             </table>
-          </div>
+          </StackTable>
 
           {isSuper && r.payments.length ? (
             <div>

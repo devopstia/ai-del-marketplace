@@ -3,6 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 
 export const MEDIA_QUEUE = 'media';
+/** Encrypted HLS packaging (long re-encodes) has its own queue, so a new upload never waits behind it. */
+export const HLS_QUEUE = 'hls';
 export const EMAIL_QUEUE = 'email';
 /** Money jobs (fee lookup retries, hourly payout release). Processed inside the API process (CommerceModule). */
 export const PAYMENTS_QUEUE = 'payments';
@@ -32,6 +34,7 @@ export class JobsService {
   private readonly logger = new Logger('Jobs');
   constructor(
     @InjectQueue(MEDIA_QUEUE) private readonly media: Queue,
+    @InjectQueue(HLS_QUEUE) private readonly hls: Queue,
     @InjectQueue(EMAIL_QUEUE) private readonly email: Queue,
     @InjectQueue(PAYMENTS_QUEUE) private readonly payments: Queue,
   ) {}
@@ -48,7 +51,7 @@ export class JobsService {
 
   /** Content protection: package a ready video as encrypted HLS. One queued job per asset at a time. */
   async packageHls(assetId: string, opts: { repackage?: boolean } = {}) {
-    await this.media.add('package-hls', { assetId, ...(opts.repackage ? { repackage: true } : {}) } satisfies ProcessVideoJob, {
+    await this.hls.add('package-hls', { assetId, ...(opts.repackage ? { repackage: true } : {}) } satisfies ProcessVideoJob, {
       jobId: opts.repackage ? `hls-re-${assetId}` : `hls-${assetId}`,
       attempts: 3,
       backoff: { type: 'exponential', delay: 30_000 },

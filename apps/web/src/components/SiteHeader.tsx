@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useOverlay } from "@/lib/useOverlay";
 import { createPortal } from "react-dom";
 import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Shield, ShoppingCart, User, X, GraduationCap, Mail } from "lucide-react";
 import { Logo } from "./Logo";
@@ -77,6 +78,8 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
   const { installed } = usePwa();
   const { me, loading, cartCount, has } = useAuth();
   const [mobile, setMobile] = useState(false);
+  const closeMobile = useCallback(() => setMobile(false), []);
+  useOverlay(mobile, closeMobile);
   const pathname = usePathname();
   const teachHref = has("instructor") ? "/studio" : "/teach";
   const nav = "rounded-lg px-3 py-2 text-[0.92rem] font-bold text-ink-2 hover:bg-surface-2 hover:text-ink";

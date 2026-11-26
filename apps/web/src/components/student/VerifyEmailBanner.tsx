@@ -15,7 +15,7 @@ export function VerifyEmailBanner() {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-cyan-soft px-4 py-2.5 text-sm text-ink sm:px-6 lg:px-8" role="status" data-testid="verify-email">
       <MailCheck className="size-4 shrink-0 text-cyan-ink" aria-hidden="true" />
-      <span className="min-w-0 flex-1">{sent ? <>We sent a confirmation link to <b>{me.email}</b>. Check your inbox and spam folder.</> : <>Please confirm your email address, <b>{me.email}</b>, so receipts and password resets reach you.</>}</span>
+      <span className="min-w-[12rem] flex-1 [overflow-wrap:anywhere]">{sent ? <>We sent a confirmation link to <b>{me.email}</b>. Check your inbox and spam folder.</> : <>Please confirm your email address, <b>{me.email}</b>, so receipts and password resets reach you.</>}</span>
       {!sent ? (
         <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={async () => {
           setBusy(true);

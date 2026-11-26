@@ -4,6 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, LogOut, Menu, Store, X } from "lucide-react";
 import { LoopMark } from "../Logo";
+import { StackTable } from "../StackTable";
+import { useOverlay } from "@/lib/useOverlay";
 import { ThemeToggle } from "../ThemeToggle";
 import { useAuth } from "../AuthProvider";
 import { Avatar } from "../Avatar";
@@ -46,6 +48,8 @@ export function AppShell({ studio, nav, children, banner }: { studio: StudioKey;
   });
   // eslint-disable-next-line react-hooks/set-state-in-effect -- close the phone drawer after navigating
   useEffect(() => { setOpen(false); }, [pathname]);
+  const closeDrawer = useCallback(() => setOpen(false), []);
+  useOverlay(open, closeDrawer);
 
   const studios = studiosFor(me);
   const current = studios.find((s) => s.key === studio) ?? studios[0];
@@ -233,10 +237,13 @@ export function PageHead({ title, sub, actions }: { title: string; sub?: string;
 
 /** KPI strip: one bordered band with dividers, not a row of floating cards. */
 export function Kpis({ items }: { items: { label: string; value: string; note?: string }[] }) {
+  const n = items.length;
+  // every row is full: no empty grey cell whatever the count (mobile QA 2026-11-26)
+  const md = n <= 4 ? ["", "md:grid-cols-1", "md:grid-cols-2", "md:grid-cols-3", "md:grid-cols-4"][n] : n === 5 ? "md:grid-cols-6 lg:grid-cols-5" : n % 3 === 0 ? "md:grid-cols-3" : "md:grid-cols-4";
   return (
-    <dl className="grid grid-cols-2 overflow-hidden rounded-panel border border-line bg-surface md:grid-cols-4">
+    <dl className={`grid grid-cols-2 gap-px overflow-hidden rounded-panel border border-line bg-line ${md}`}>
       {items.map((k, i) => (
-        <div key={k.label} className={`p-5 ${i % 2 ? "border-l border-line" : ""} ${i >= 2 ? "border-t border-line md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}>
+        <div key={k.label} className={`bg-surface p-5 ${n % 2 && i === n - 1 ? "col-span-2" : ""} ${n === 5 ? (i < 3 ? "md:col-span-2 lg:col-span-1" : "md:col-span-3 lg:col-span-1") : n % 2 && i === n - 1 ? "md:col-span-1" : ""}`}>
           <dt className="text-sm text-muted">{k.label}</dt>
           <dd className="mt-1 font-display text-[1.75rem] font-extrabold leading-none tabular-nums">{k.value}</dd>
           {k.note ? <p className="mt-1.5 text-xs text-muted">{k.note}</p> : null}
@@ -248,7 +255,7 @@ export function Kpis({ items }: { items: { label: string; value: string; note?: 
 
 export function DataTable({ head, children, min = 640, empty }: { head: string[]; children: React.ReactNode; min?: number; empty?: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-tile border border-line bg-surface">
+    <StackTable className="overflow-x-auto rounded-tile border border-line bg-surface">
       <table className="w-full text-left text-sm" style={{ minWidth: min }}>
         <thead className="border-b border-line bg-surface-2/60 text-muted">
           <tr>{head.map((h, i) => <th key={i} className="px-4 py-3 font-bold">{h}</th>)}</tr>
@@ -256,6 +263,6 @@ export function DataTable({ head, children, min = 640, empty }: { head: string[]
         <tbody className="divide-y divide-line">{children}</tbody>
       </table>
       {empty}
-    </div>
+    </StackTable>
   );
 }

@@ -198,6 +198,8 @@ body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
   .btn-danger { background: var(--rose); color: var(--on-rose); }
   .btn-danger:hover:not(:disabled) { filter: brightness(1.08); }
   .btn-sm { min-height: 2.25rem; padding: 0 .8rem; font-size: .875rem; }
+  /* touch screens: small buttons (header icons, studio actions) are at least 40 px (mobile QA 2026-11-26) */
+  @media (pointer: coarse) { .btn-sm { min-height: 2.5rem; min-width: 2.5rem; } }
 
   .field {
     width: 100%; min-height: 2.75rem; padding: .55rem .85rem; border-radius: var(--radius-control);
@@ -257,3 +259,18 @@ body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
 
 /* Fieldsets default to min-width: min-content, which pushes forms wider than a phone. */
 fieldset { min-width: 0; }
+
+/* Phones: wide tables become labelled cards (components/StackTable.tsx; mobile QA 2026-11-26). */
+@media (max-width: 639.98px) {
+  .stack-table { overflow: visible !important; }
+  .stack-table table { min-width: 0 !important; display: block; }
+  .stack-table thead { display: none; }
+  .stack-table tbody { display: block; }
+  .stack-table tr { display: block; padding: 0.75rem 1rem; }
+  .stack-table td { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.2rem 0 !important; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .stack-table td::before { content: attr(data-label); color: var(--muted); font-size: 0.8125rem; font-weight: 600; text-align: left; flex-shrink: 0; max-width: 45%; }
+  .stack-table td:first-child { display: block; text-align: left; padding-bottom: 0.35rem !important; }
+  .stack-table td:first-child::before, .stack-table td[data-label=""]::before { content: none; }
+  .stack-table td[data-label=""] { justify-content: flex-end; }
+  .stack-table td:empty { display: none; }
+}

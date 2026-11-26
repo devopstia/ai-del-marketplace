@@ -223,7 +223,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
 
       {overlay}
 
-      <div data-player-controls className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-10 transition-opacity duration-200 ${idle && playing ? "opacity-0" : "opacity-100"}`}>
+      <div data-player-controls className={`pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-10 transition-opacity duration-200 [&>*]:pointer-events-auto ${idle && playing ? "opacity-0" : "opacity-100"}`}>
         <input
           type="range"
           min={0}

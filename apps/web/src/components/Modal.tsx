@@ -10,6 +10,14 @@ export function Modal({ open, onClose, title, children, wide = false }: { open: 
     if (open && !d.open) d.showModal();
     if (!open && d.open) d.close();
   }, [open]);
+  // the page behind a dialog doesn't scroll on phones (mobile QA 2026-11-26)
+  useEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const before = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => { html.style.overflow = before; };
+  }, [open]);
   return (
     <dialog
       ref={ref}

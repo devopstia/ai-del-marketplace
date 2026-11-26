@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { JobsService, MEDIA_QUEUE, ProcessVideoJob } from '../common/jobs';
+import { HLS_QUEUE, JobsService, MEDIA_QUEUE, ProcessVideoJob } from '../common/jobs';
 import { env } from '../config/env';
 import { packageHls, UnsupportedVideo } from '../protection/hls-packager';
 import { PrismaService } from '../common/prisma.service';
@@ -92,4 +92,11 @@ export class VideoProcessor extends WorkerHost {
       throw e;
     }
   }
+}
+
+/** The HLS queue (packaging and re-packaging, one at a time): same handler, separate lane from uploads and study notes. */
+@Processor(HLS_QUEUE)
+export class HlsProcessor extends WorkerHost {
+  constructor(private readonly video: VideoProcessor) { super(); }
+  process(job: Job<ProcessVideoJob>) { return this.video.process(job); }
 }

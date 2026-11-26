@@ -82,6 +82,10 @@ export function CourseEditor({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [processing, reload]);
 
+  // phones: keep the current step visible in the scrolling step strip (mobile QA 2026-11-26)
+  useEffect(() => {
+    document.querySelector('nav[aria-label="Course setup steps"] [aria-current="step"]')?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [step]);
   const goto = useCallback((s: Step) => router.push(`/studio/courses/${id}?step=${s}`, { scroll: true }), [id, router]);
 
   if (err) return <p className="text-rose">{err}</p>;
@@ -158,7 +162,7 @@ export function CourseEditor({ id }: { id: string }) {
 /** `blocked`: the form has an error the learner must fix first (both buttons disabled, no spinner). */
 export function StepFooter({ onSave, saving, next, goto, disabled, nextLabel, blocked }: { onSave?: () => Promise<boolean> | boolean; saving?: boolean; next?: Step; goto: (s: Step) => void; disabled?: boolean; nextLabel?: string; blocked?: boolean }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-4 mt-10 flex items-center justify-end gap-2 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
+    <div className="sticky bottom-0 z-10 -mx-4 mt-10 flex items-center justify-end gap-2 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       {onSave ? <button type="button" className="btn btn-outline" onClick={onSave} disabled={saving || disabled || blocked}>{saving ? <Loader2 className="size-4 animate-spin" /> : null}Save</button> : null}
       {next ? (
         <button type="button" className="btn btn-primary" disabled={saving || (blocked && !disabled)}

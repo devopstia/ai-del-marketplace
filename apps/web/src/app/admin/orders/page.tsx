@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/Empty";
 import { Modal } from "@/components/Modal";
 import { Pager, useDebounced } from "@/components/Pager";
 import { useToast } from "@/components/Toast";
+import { StackTable } from "@/components/StackTable";
 
 const map = (r: unknown) => paged(r, toOrder, "orders");
 const STATUSES = ["", "paid", "partially_refunded", "refunded", "pending", "failed"] as const;
@@ -87,7 +88,7 @@ function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
         <span className="text-ink-2">{data.user ? `${data.user.name} · ${data.user.email}` : "—"}</span>
         <span className="text-muted">Paid {dateTime(data.paidAt)} · {data.provider === "test" ? "development test payment" : data.provider}</span>
       </div>
-      <div className="overflow-x-auto rounded-tile border border-line">
+      <StackTable className="overflow-x-auto rounded-tile border border-line">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="border-b border-line bg-surface-2/60 text-muted"><tr><th className="px-3 py-2"><span className="sr-only">Select</span></th><th className="px-3 py-2">Course</th><th className="px-3 py-2 text-right">Price</th><th className="px-3 py-2 text-right">Stripe fee</th><th className="px-3 py-2 text-right">Platform</th><th className="px-3 py-2 text-right">Instructor</th><th className="px-3 py-2">Payout</th></tr></thead>
           <tbody className="divide-y divide-line">
@@ -104,7 +105,7 @@ function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </StackTable>
       <p className="text-sm text-ink-2">Total {moneyExact(data.totalCents, data.currency)}{data.refundedCents ? `, refunded ${moneyExact(data.refundedCents, data.currency)}` : ""}.</p>
       <p className="text-sm text-ink-2" data-testid="order-terms">
         {data.terms

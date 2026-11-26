@@ -96,7 +96,7 @@ export function EnrollmentForm({ mode, onDone }: { mode: "instructor" | "super_a
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]" data-testid="enrollment-form">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]" data-testid="enrollment-form">
       <div className="space-y-6">
         <section className="rounded-panel border border-line bg-surface p-5 sm:p-6" aria-labelledby="st-h">
           <h2 id="st-h" className="font-display text-lg font-bold">1. Student</h2>
@@ -127,7 +127,7 @@ export function EnrollmentForm({ mode, onDone }: { mode: "instructor" | "super_a
                   <button type="button" role="option" aria-selected={on} disabled={owned} onClick={() => toggle(c)} data-testid="me-course"
                     className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm ${on ? "bg-violet-soft" : "hover:bg-surface-2"} disabled:opacity-60`}>
                     <span className={`grid size-5 shrink-0 place-items-center rounded border ${on ? "border-violet bg-violet text-on-violet" : "border-line-strong"}`}>{on ? <Check className="size-3.5" strokeWidth={3} /> : null}</span>
-                    <span className="min-w-0 flex-1"><span className="block truncate font-bold text-ink">{c.title}</span><span className="text-xs text-muted">{c.instructor.name}{owned ? " · already enrolled" : ""}</span></span>
+                    <span className="min-w-0 flex-1"><span className="block font-bold text-ink [overflow-wrap:anywhere]">{c.title}</span><span className="text-xs text-muted">{c.instructor.name}{owned ? " · already enrolled" : ""}</span></span>
                     <span className="tabular-nums text-ink-2">{money(c.priceCents, c.currency)}</span>
                   </button>
                 </li>

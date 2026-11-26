@@ -5,11 +5,11 @@ import { CaptionIndexService } from '../study/caption-index.service';
 import { LEARNING_AI, StudyNotesService } from '../study/study-notes.service';
 import { CaptionBackfill } from './caption-backfill';
 import { EmailProcessor } from './email.processor';
-import { VideoProcessor } from './video.processor';
+import { HlsProcessor, VideoProcessor } from './video.processor';
 import { HlsBackfill } from './hls-backfill';
 
 @Module({
   imports: [CommonModule],
-  providers: [VideoProcessor, EmailProcessor, HlsBackfill, CaptionIndexService, StudyNotesService, CaptionBackfill, { provide: LEARNING_AI, useValue: anthropicLearningAi }],
+  providers: [VideoProcessor, HlsProcessor, EmailProcessor, HlsBackfill, CaptionIndexService, StudyNotesService, CaptionBackfill, { provide: LEARNING_AI, useValue: anthropicLearningAi }],
 })
 export class WorkerModule {}
