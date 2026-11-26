@@ -15,7 +15,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx.Provider value={push}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[80] flex flex-col items-center gap-2 px-4" aria-live="polite">
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(1rem,env(safe-area-inset-bottom))+var(--assist-bar,0px))] z-[80] flex flex-col items-center gap-2 px-4" aria-live="polite">
         {items.map((t) => (
           <div key={t.id} className="pop-in pointer-events-auto flex max-w-md items-start gap-3 rounded-tile border border-line bg-surface px-4 py-3 text-sm shadow-float">
             {t.kind === "ok" ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-mint" /> : <AlertTriangle className="mt-0.5 size-4 shrink-0 text-rose" />}

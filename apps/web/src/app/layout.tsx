@@ -7,6 +7,7 @@ import { themeScript } from "@/components/ThemeToggle";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { SITE_DESCRIPTION, SITE_URL, siteIndexable } from "@/lib/seo";
 import { QuickSearchProvider } from "@/components/search/QuickSearch";
+import { SupportBanner } from "@/components/assist/SupportBanner";
 
 const display = Schibsted_Grotesk({ subsets: ["latin"], variable: "--font-schibsted", weight: ["500", "600", "700", "800"], display: "swap" });
 const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-atkinson", weight: ["400", "500", "700"], display: "swap" });
@@ -45,10 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-dvh">
+      <body className="min-h-dvh pb-[var(--assist-bar,0px)]">
         <AuthProvider>
           <ToastProvider><QuickSearchProvider>{children}</QuickSearchProvider></ToastProvider>
           <PwaRegister />
+          <SupportBanner />
         </AuthProvider>
       </body>
     </html>

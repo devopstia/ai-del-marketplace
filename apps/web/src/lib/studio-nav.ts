@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BadgeDollarSign, BookOpen, ChartNoAxesColumnIncreasing, ClipboardCheck, Clapperboard, CreditCard, FolderTree, Gauge, GraduationCap,
   Image as ImageIcon, KeyRound, Landmark, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw, Route,
-  ScrollText, Settings, ShieldCheck, Tag, UserPlus, UserRound, Users, Wallet,
+  ScrollText, Settings, ShieldCheck, Tag, UserPlus, UserRound, Users, Wallet, Bot,
 } from "lucide-react";
 import type { Me } from "./types";
 import { canDo, studiosFor } from "./studios";
@@ -74,6 +74,7 @@ const adminGroups: { label?: string; items: AdminItem[] }[] = [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
     { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
     { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
+    { href: "/admin/agents", label: "AI agents", icon: Bot, superOnly: true },
     { href: "/admin/enrollments", label: "Manual enrollments", icon: UserPlus, perm: "enrollments.manage" },
   ] },
   { label: "Money", items: [
