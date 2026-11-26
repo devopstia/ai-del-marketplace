@@ -197,6 +197,8 @@ export class CommerceService {
     const session = await this.stripe.client.checkout.sessions.create(
       {
         mode: 'payment',
+        // Staging: card only, so Stripe Link never asks testers to confirm a code (owner 2026-11-26). Production unchanged.
+        ...(env().DEPLOY_ENV === 'staging' ? { payment_method_types: ['card' as const] } : {}),
         customer_email: user.email,
         client_reference_id: userId,
         // Stripe charges exactly the order lines (sale prices included).
