@@ -7,39 +7,27 @@ build, test and release without breaking anything. Details live in the linked do
 
 | Environment | URL | Version | Data |
 | --- | --- | --- | --- |
-| Production | https://ai-devopseasylearning.com | tag `release-2026-11-26-final-review-r4`, images `4b5706c24617` | empty catalogue; only 2 accounts: DEL platform instructor + Super Admin `support@devopseasylearning.com` |
-| Staging | https://staging.ai-devopseasylearning.com (noindex) | same images | synthetic demo data (`seed-staging`), simulated payments, demo accounts `student@del.example`, `nadia@instructor.example`, `admin@del.example` (password + authenticator seed in SSM `/del-marketplace/staging/SEED_PASSWORD`, `SEED_MFA_SECRET`) |
+| Production | https://ai-devopseasylearning.com | tag `release-2026-11-26-admin-security-refunds`, images `d8288394b46c` (2026-11-26) | indexed by search engines (robots/sitemap live); empty catalogue; only 2 accounts: DEL platform instructor + Super Admin `support@devopseasylearning.com` |
+| Staging | https://staging.ai-devopseasylearning.com (noindex) | same images (`d8288394b46c`) | synthetic demo data (`seed-staging`), simulated payments, demo accounts `student@del.example`, `nadia@instructor.example`, `admin@del.example` (password + authenticator seed in SSM `/del-marketplace/staging/SEED_PASSWORD`, `SEED_MFA_SECRET`) |
 | Owner's local | http://127.0.0.1:3000 (api :4000, Mailpit :8025) | `main` | `MFA_REQUIRED=false` on purpose: **never change the owner's `.env` or reseed their stack** |
 | Test stack | http://127.0.0.1:3100 (api :4100, Mailpit :8125) | whatever you build | `COMPOSE_PROJECT_NAME=del-test COMPOSE_FILE=docker-compose.yml:docker-compose.test.yml`, MFA on; run all suites here |
 
 Both cloud environments share **one EC2 t3a.medium and one RDS instance** (separate databases `marketplace` /
 `marketplace_staging`, buckets, secrets). This is accepted: the owner will delete staging once production is stable.
-Previous stable production version (rollback target): `release-2026-11-26-launch-prep`, images `80a2549306af`.
-Pre-release snapshot of the last release: `pre-release-4b5706c24617-20261126-0254`.
+Previous stable production version (rollback target): `release-2026-11-26-final-review-r4`, images `4b5706c24617`.
+Pre-release snapshot of the last release: `pre-release-d8288394b46c-20261126-1451`.
 
 Git: `main` is current and pushed (`origin` = github.com/devopstia/ai-del-marketplace). `prompts.md` (the owner's prompt
 history) is deliberately untracked. Restore points: tags `checkpoint-*`, `release-*`, branches `backup/*`.
 
 ## 2. Waiting on the owner (do not do these yourself)
 
-0. **Production release of `feat/improvements-2026-11-26`** (images `dac6ceaac1c1`, live on staging since 2026-11-26): the
-   owner was shown a review page (https://claude.ai/artifact/LNvmWMpUsJB1wpoWgs9hdA) and asked for "OK for production".
-   On OK: merge into `main`, tag `release-<date>-improvements`, RDS snapshot, `deploy-aws.sh release production <tag>`,
-   verify, GitHub release. Full mobile QA (64 routes × 5 viewports) was done on staging and its findings fixed.
-   **Built on top of it: `feat/seo-standout-2026-11-26`** (owner: "Go with all recommendations and improvements"):
-   SEO (docs/SEO.md), measured watch share on reviews + verified certificate with LinkedIn (docs/TRUST.md), data saver
-   360p/audio only + instructor insights (docs/VIDEO_DELIVERY.md, API.md), career paths (docs/CAREER_PATHS.md); merges
-   feat/seo, feat/trust-reviews-certificates, feat/datasaver-insights, feat/career-paths. Releasing it releases both
-   batches. Open owner items for it: Google Search Console / Bing token (Route 53 TXT), OK for the homepage career-paths
-   band (shows only once a path is published), whether to add "Career paths" to the top menu, certificate revocation.
-   After deploying, run the super-admin "Update N videos" (Admin › Video protection) so existing videos get 360p + audio.
-   **Then `feat/admin-security-refunds-2026-11-26`** (owner's prompts.md; on staging as images `d8288394b46c`): Super Admin
-   portal (docs/SUPER_ADMIN.md), support sessions + AI agent tokens + MCP server (docs/SUPPORT_SESSIONS_AND_AGENTS.md,
-   tools/mcp-server), email codes + session security (docs/AUTH.md §7, AGENTS rule 19 updated), versioned refund policy,
-   notifications, Stripe-confirmed refunds (docs/ACCESS_AND_REFUNDS.md). Verified on a fresh test stack: API 387/387,
-   smoke 148/148 (144 before videos were packaged), Playwright 67 passed / 1 skipped, contrast scans clean. Releasing
-   production releases all three batches. At deploy: idle >30 min / older than 24 h sessions are signed out; staging and
-   production use one-browser-per-account (test stacks set `AUTH_SESSION_LIMITS=off`).
+0. **Released 2026-11-26** (owner: "please cut a new release and release it to production"): improvements, SEO and
+   stand-out, and the prompts.md batch, as `release-2026-11-26-admin-security-refunds` (GitHub release published).
+   Follow-ups for the owner: Google Search Console / Bing token (Route 53 TXT), OK for the homepage career-paths band
+   (shows once a path is published), "Career paths" in the top menu?, certificate revocation, dashboards tune-up
+   (owner asked; one dashboard at a time with screenshots: Super Admin, instructor, student). After videos exist on
+   production, run Admin › Video protection › "Update N videos" so they get 360p + audio-only.
 
 1. **Cost question (open, 2026-11-26).** The owner wrote "I don't want this now please Cost: about $52 a month". Asked which
    they mean: (1) just stop mentioning cost, (2) cut cost but keep the site up (remove staging, smaller server, budget
