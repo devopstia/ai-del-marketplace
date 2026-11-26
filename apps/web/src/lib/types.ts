@@ -20,6 +20,8 @@ export interface Me {
   emailVerified?: boolean;
   mfaEnabled?: boolean;
   signupMethod?: string;
+  /** A super admin set a temporary password: the account must choose its own before anything else works. */
+  mustChangePassword?: boolean;
   /** Super admin working in the studio as DEL ("DEL Studio"); null otherwise. */
   actingAs?: { id: string; name: string } | null;
 }

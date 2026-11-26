@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /** Private areas, account pages and the shopping flow stay out of search results. */
 const PRIVATE = [
   "/admin", "/studio", "/student", "/learn", "/checkout", "/cart", "/api/",
-  "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/invite", "/support",
+  "/login", "/register", "/forgot-password", "/reset-password", "/change-password", "/verify-email", "/invite", "/support",
   // Not /certificates: those pages carry their own noindex, which crawlers can only read if they may fetch the page.
 ];
 

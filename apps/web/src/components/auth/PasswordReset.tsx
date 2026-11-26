@@ -32,6 +32,43 @@ export function ForgotForm() {
   );
 }
 
+/**
+ * After a super admin set a temporary password (Super Admin › Users): the person types it once more and picks their own.
+ * Until then the API refuses everything else (password_change_required). Other sessions end when it is changed.
+ */
+export function ForcedChangeForm() {
+  const [current, setCurrent] = useState("");
+  const [pw, setPw] = useState("");
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <form className="space-y-5" data-testid="forced-change" onSubmit={async (e) => {
+      e.preventDefault(); setBusy(true); setErr(null);
+      // A full navigation, so no page cached under the temporary password is reused (AGENTS.md pitfalls).
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      try { await api("/auth/password", { method: "POST", body: { currentPassword: current, newPassword: pw } }); window.location.assign("/student"); }
+      catch (e2) { setErr(errMsg(e2)); setBusy(false); }
+    }}>
+      {err ? <p role="alert" className="rounded-tile border border-rose/40 bg-rose-soft px-4 py-3 text-sm font-bold text-rose">{err}</p> : null}
+      <div>
+        <label className="label" htmlFor="temp-password">Temporary password</label>
+        <input id="temp-password" type="password" className="field" autoComplete="current-password" required maxLength={128} value={current} onChange={(e) => setCurrent(e.target.value)} />
+        <p className="hint">The one DevOps Easy Learning gave you.</p>
+      </div>
+      <div>
+        <label className="label" htmlFor="forced-new">New password</label>
+        <div className="relative">
+          <input id="forced-new" type={show ? "text" : "password"} className="field pr-12" autoComplete="new-password" required minLength={12} maxLength={128} value={pw} onChange={(e) => setPw(e.target.value)} />
+          <button type="button" className="absolute right-1.5 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-muted hover:text-ink" onClick={() => setShow((s) => !s)} aria-label={show ? "Hide password" : "Show password"}>{show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button>
+        </div>
+        <p className="hint">At least 12 characters with letters and numbers, not your email or name, and not a password from a data breach.</p>
+      </div>
+      <button className="btn btn-primary w-full" disabled={busy} data-testid="forced-submit">{busy ? <Loader2 className="size-4 animate-spin" /> : null}Save my new password</button>
+    </form>
+  );
+}
+
 export function ResetForm() {
   const sp = useSearchParams();
   const token = sp.get("token") ?? "";

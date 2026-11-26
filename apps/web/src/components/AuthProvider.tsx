@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const m = toMe(r);
       meRef.current = m;
       setMe(m);
+      // Temporary password from a super admin: nothing else works until they choose their own.
+      if (m?.mustChangePassword) {
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full navigation away from any cached page
+        if (typeof window !== "undefined" && window.location.pathname !== "/change-password") window.location.assign("/change-password");
+        return m;
+      }
       // Just signed in (any method): move the guest cart into the account, then forget it in this browser.
       const ids = m ? guestCart() : [];
       if (ids.length) { try { await api("/cart/merge", { method: "POST", body: { courseIds: ids } }); clearGuest(); } catch { /* kept for the next try */ } }

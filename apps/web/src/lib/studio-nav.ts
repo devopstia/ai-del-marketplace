@@ -1,8 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BadgeDollarSign, BookOpen, ChartNoAxesColumnIncreasing, ClipboardCheck, Clapperboard, CreditCard, FolderTree, Gauge, GraduationCap,
+  Activity, Archive, BadgeDollarSign, BookOpen, ChartNoAxesColumnIncreasing, ClipboardCheck, Clapperboard, CreditCard, FolderTree, Gauge, GraduationCap,
   Image as ImageIcon, KeyRound, Landmark, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw, Route,
-  ScrollText, Settings, ShieldCheck, Tag, UserPlus, UserRound, Users, Wallet,
+  ScrollText, Settings, ShieldCheck, ShieldHalf, Tag, UserPlus, UserRound, Users, Wallet,
 } from "lucide-react";
 import type { Me } from "./types";
 import { canDo, studiosFor } from "./studios";
@@ -66,12 +66,14 @@ const adminGroups: { label?: string; items: AdminItem[] }[] = [
   { items: [{ href: "/admin", label: "Overview", icon: Gauge, exact: true }] },
   { label: "Marketplace", items: [
     { href: "/admin/review", label: "Review queue", icon: ClipboardCheck, perm: "courses.review" },
-    { href: "/admin/courses", label: "Courses", icon: BookOpen, perm: "courses.review" },
+    { href: "/admin/courses", label: "Courses", icon: BookOpen, perm: "courses.review", exact: true },
+    { href: "/admin/courses/archived", label: "Archived courses", icon: Archive, perm: "courses.review" },
     { href: "/admin/course-reviews", label: "Course reviews", icon: MessageSquareText, perm: "reviews.moderate" },
     { href: "/admin/paths", label: "Career paths", icon: Route, perm: "content.manage" },
   ] },
   { label: "People", items: [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
+    { href: "/admin/roles", label: "Role management", icon: ShieldHalf, perm: "users.view" },
     { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
     { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
     { href: "/admin/enrollments", label: "Manual enrollments", icon: UserPlus, perm: "enrollments.manage" },
@@ -95,6 +97,7 @@ const adminGroups: { label?: string; items: AdminItem[] }[] = [
     { href: "/admin/payments", label: "Payments & Stripe", icon: CreditCard, superOnly: true },
     { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },
     { href: "/admin/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
+    { href: "/admin/system", label: "System health", icon: Activity, superOnly: true },
   ] },
 ];
 

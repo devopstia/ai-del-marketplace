@@ -297,6 +297,36 @@ type AdminOrder = { id; status; provider; currency; totalCents; refundedCents; p
   history: { id; action; at; meta; actor: { id; name } | null }[] };
 ```
 
+### Super Admin portal (2026-11-26, docs/SUPER_ADMIN.md)
+`code` = the acting super admin's authenticator code (step-up; `400 step_up_required` without it, `401 invalid_code`).
+
+| Method & path | Who | Body / notes |
+| --- | --- | --- |
+| GET `/admin/people/roles` | `users.view` | `{ roles: [{ key, label, description, system, members, permissions?: [{ key, description, allowed, default }], capabilities?: [{ key, description, enabled }], alwaysIncluded? }] }` |
+| PUT `/admin/people/roles` | super admin | `{ adminAllowed: string[], adminDefaults: string[], disabled: Capability[], code, reason? }` |
+| PATCH `/admin/people/users/:id/profile` | `users.manage` | `{ name }` |
+| PUT `/admin/people/users/:id/email` | super admin | `{ email, code, reason? }` → 409 `email_taken` |
+| POST `/admin/people/users/:id/status` | `users.manage` | `{ status: 'active'|'suspended'|'disabled', reason?, until?: ISO date }` (reason required unless active) |
+| POST `/admin/people/users/:id/password-reset` | `users.manage` | sends the reset email; 429 after 3 per hour |
+| POST `/admin/people/users/:id/verification` | `users.manage` | resends the verification email |
+| POST `/admin/people/users/:id/recovery-link` | super admin | `{ reason, code }` → `{ link, expiresAt }` (shown once, 30 min, single use) |
+| POST `/admin/people/users/:id/temporary-password` | super admin | `{ reason, code }` → `{ password, mustChangePassword: true }` (shown once) |
+| POST `/admin/people/users/:id/sessions/revoke` | `users.manage` | `{ revoked }` |
+| POST `/admin/people/users/:id/delete` | super admin | `{ reason, confirmEmail, code }` → 409 `has_live_courses`, `last_super_admin` |
+| GET `/admin/people/users?status=disabled|deleted` | `users.view` | deleted accounts are left out unless asked for |
+| GET `/admin/courses?view=active|archived|deleting|purged|all&featured=true` | `courses.review` | rows add `lifecycle, featured, archivedAt, archiveReason, deleteRequestedAt, deleteAfter, daysLeft, purgedAt` |
+| GET `/admin/courses/:id/state` | `courses.review` | lifecycle facts + `learners: { paidAccessRunning, accessWithoutEndDate, lastPaidAccessEnds }` |
+| PATCH `/admin/courses/:id` | super admin | `{ title?, subtitle?, description?, objectives?, requirements?, categoryId?, level?, language?, priceCents?, coverTemplateId?, reason? }` |
+| POST `/admin/courses/:id/publish` | super admin | `{ note? }` → 409 `course_archived`, `course_empty` |
+| POST `/admin/courses/:id/feature` | super admin | `{ on }` (published only) |
+| POST `/admin/courses/:id/archive` · `/restore` | super admin | archive `{ reason }`; restore → previous status; 409 `course_purged` |
+| POST `/admin/courses/:id/delete` · `/cancel-deletion` | super admin | delete `{ reason, confirmTitle, code }`; content removed ≥ 30 days later once no paid access runs |
+| GET `/admin/system` | super admin | `{ checkedAt, environment, checks[], queues[], attention }` |
+
+Errors added elsewhere: `403 capability_disabled` (a role capability turned off), `403 password_change_required`
+(temporary password: only `/auth/me`, `/auth/password`, `/auth/logout`, `/auth/csrf`, `/auth/security`,
+`/auth/password-policy` work). `/auth/me` returns `user.mustChangePassword`.
+
 ## Sales and promotions (owner decisions 2026-11-25)
 Prices are worked out at request time: an instructor's sale (fixed sale price) and marketplace promotions (% off) apply only
 between `startsAt` and `endsAt`; the lowest price wins and discounts never stack; free courses never change; nothing is

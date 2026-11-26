@@ -6,6 +6,7 @@ import { AdminService } from './admin.service';
 import { FinanceService } from './finance.service';
 import { PeopleService } from './people.service';
 import { CourseAdminService } from './course-admin.service';
+import { SystemService } from './system.service';
 
 const paging = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 const noteSchema = z.object({ note: z.string().trim().max(4000).optional() });
@@ -56,6 +57,7 @@ export class AdminController {
     private readonly finance: FinanceService,
     private readonly people: PeopleService,
     private readonly courseAdmin: CourseAdminService,
+    private readonly system: SystemService,
   ) {}
 
   @Get('stats') stats() { return this.svc.stats(); }
@@ -140,6 +142,9 @@ export class AdminController {
 
   @Perm('reviews.moderate') @Patch('reviews/:id')
   review(@Param('id') id: string, @ZBody(reviewPatch) b: z.infer<typeof reviewPatch>, @ActorCtx() a: Actor) { return this.svc.setReviewStatus(a, id, b.status); }
+
+  // Super Admin › System health: database, queues, storage, email, things waiting (no secrets).
+  @Roles('super_admin') @Get('system') systemHealth() { return this.system.health(); }
 
   @Perm('audit.view') @Get('audit') audit(@ZQuery(auditQuery) q: z.infer<typeof auditQuery>) { return this.svc.auditLog(q); }
 }
