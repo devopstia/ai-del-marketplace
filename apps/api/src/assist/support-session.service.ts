@@ -48,12 +48,9 @@ export class SupportSessionService {
     // One support session at a time per admin browser: replace any open one.
     if (req.support) await this.close(req.support.id, 'returned');
     const minutes = Math.min(SUPPORT_MAX_MINUTES, Math.max(5, input.minutes ?? SUPPORT_DEFAULT_MINUTES));
-    const token = randomToken(32);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + minutes * 60_000);
-    const s = await this.prisma.supportSession.create({
-      data: { id: sha256(token), actorId: admin.id, subjectId: target.id, adminSessionId: req.sessionId, reason, expiresAt, ip: req.ip ?? null, userAgent: String(req.headers['user-agent'] ?? '').slice(0, 300) || null },
-    });
+    const { token, s } = await this.createSupportRecord({ actorId: admin.id, subjectId: target.id, adminSessionId: req.sessionId, reason, expiresAt, ip: req.ip ?? null, userAgent: String(req.headers['user-agent'] ?? '').slice(0, 300) || null });
     res.cookie(SUPPORT_COOKIE, token, supportCookieOptions(minutes * 60_000));
     await this.audit.log({ actorId: admin.id, action: 'support.session_started', targetType: 'user', targetId: target.id, ip: req.ip ?? null, onBehalfOfId: target.id, supportSessionId: s.id, meta: { reason, minutes, expiresAt: expiresAt.toISOString() } });
     await this.jobs.sendEmail({
@@ -121,6 +118,21 @@ export class SupportSessionService {
     return { ended: true };
   }
 
+  /**
+   * MERGE POINT (auth fork, feat/auth-sessions): the ONLY place a support session is created. When sessions gain
+   * `kind`, also create the session row here with `SignInService.createSession(subjectId, ctx, { kind: 'support',
+   * ttlMs })` so it never counts toward or ends the person's own sessions and only its own expiresAt applies.
+   */
+  private async createSupportRecord(data: { actorId: string; subjectId: string; adminSessionId: string; reason: string; expiresAt: Date; ip: string | null; userAgent: string | null }) {
+    const token = randomToken(32);
+    const s = await this.prisma.supportSession.create({ data: { id: sha256(token), ...data } });
+    return { token, s };
+  }
+
+  /**
+   * MERGE POINT (auth fork): the ONLY place a support session ends. After the merge, end the matching
+   * `kind: 'support'` session through `SessionPolicyService.end()` here as well.
+   */
   private async close(id: string, why: 'returned' | 'revoked') {
     const s = await this.prisma.supportSession.findUnique({ where: { id } });
     if (!s || s.endedAt) return;
