@@ -18,6 +18,8 @@ Code: `apps/api/src/enrollments/` (service, controller), web `components/enrollm
 - **Instructor**: Instructor Studio › Manual enrollments › *New enrollment request*. Only their own published
   courses (checked in the API, whatever the request says), up to 12 months, a note. Status: pending → approved /
   rejected / needs information (they answer and it returns to pending). They never activate access.
+- **Finding a request** (both studios): status tabs, search (student, email or ME-number), and filters for course,
+  created between two days and, for DEL, instructor. Filters are applied by the API and kept in the page URL.
 
 ## Rules (enforced in `ManualEnrollmentService`)
 

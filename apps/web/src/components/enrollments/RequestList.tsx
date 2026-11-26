@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Check, ChevronDown, Copy, Gift, Loader2, Mail, RotateCcw, ShieldCheck, Wallet } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
@@ -10,6 +10,8 @@ import { StatusBadge } from "../StatusBadge";
 import { Skeleton } from "../Empty";
 import { Pager, useDebounced } from "../Pager";
 import { useToast } from "../Toast";
+import { ListFilters, type FilterOptions } from "../ListFilters";
+import { useUrlFilters } from "@/lib/url-filters";
 
 function fmtAmount(minor: number, currency: string) {
   try {
@@ -43,35 +45,54 @@ const ACTION: Record<string, string> = {
   "invitation.sent": "Invitation emailed", "invitation.link_created": "Invitation link copied", "invitation.revoked": "Invitation revoked", "invitation.accepted": "Student created the account", "invitation.claimed": "Student added the courses to their account",
 };
 
-export function RequestList({ mode, refreshKey }: { mode: "instructor" | "super_admin" | "viewer"; refreshKey?: number }) {
-  const [tab, setTab] = useState<(typeof TABS)[number][0]>("open");
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
+const FILTER_KEYS = ["status", "q", "instructor", "course", "from", "to", "page"] as const;
+
+/** Requests with status tabs, search and filters (instructor for DEL, course, created between); all kept in the URL. */
+export function RequestList(props: { mode: "instructor" | "super_admin" | "viewer"; refreshKey?: number }) {
+  return <Suspense fallback={<Skeleton className="mt-5 h-60" />}><RequestListInner {...props} /></Suspense>;
+}
+
+function RequestListInner({ mode, refreshKey }: { mode: "instructor" | "super_admin" | "viewer"; refreshKey?: number }) {
+  const [f, setF] = useUrlFilters(FILTER_KEYS);
+  // No status in the URL = the "Waiting" tab; "all" = every status.
+  const tab = (TABS.some(([k]) => k === f.status && k) ? f.status : f.status === "all" ? "" : "open") as (typeof TABS)[number][0];
+  const page = Math.max(1, Number(f.page) || 1);
+  const [q, setQ] = useState(f.q);
   const dq = useDebounced(q.trim());
-  const { data, error, reload } = useApi(`/enrollments/manual${qs({ status: tab || undefined, q: dq.length > 1 ? dq : undefined, page, pageSize: 20, k: refreshKey })}`, (r) => obj(r) as unknown as { items: Req[]; total: number; page: number; pageSize: number; counts: Record<string, number> });
+  useEffect(() => {
+    const v = dq.length > 1 ? dq : "";
+    if (v !== f.q) setF({ q: v, page: null });
+  }, [dq, f.q, setF]);
+  const staff = mode !== "instructor";
+  const opts = useApi("/enrollments/manual/filters", (r) => obj(r) as unknown as FilterOptions);
+  const { data, error, reload } = useApi(`/enrollments/manual${qs({ status: tab || undefined, q: f.q || undefined, instructorId: staff ? f.instructor || undefined : undefined, courseId: f.course || undefined, from: f.from || undefined, to: f.to || undefined, page, pageSize: 20, k: refreshKey })}`, (r) => obj(r) as unknown as { items: Req[]; total: number; page: number; pageSize: number; counts: Record<string, number> });
   const [open, setOpen] = useState<string | null>(null);
   const waiting = (data?.counts.pending ?? 0) + (data?.counts.needs_info ?? 0);
+  const filtered = !!(f.q || f.instructor || f.course || f.from || f.to);
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line">
         <div role="tablist" className="flex gap-1 overflow-x-auto">
           {TABS.map(([k, l]) => (
-            <button key={k || "all"} role="tab" type="button" aria-selected={tab === k} onClick={() => { setTab(k); setPage(1); }} className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-bold ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
+            <button key={k || "all"} role="tab" type="button" aria-selected={tab === k} onClick={() => setF({ status: k === "open" ? null : k || "all", page: null })} className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-bold ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
               {l}{k === "open" && waiting ? <span className="ml-1.5 rounded-full bg-amber px-1.5 text-xs text-[var(--on-amber)]">{waiting}</span> : null}
             </button>
           ))}
         </div>
-        <input type="search" aria-label="Search requests" className="field mb-2 !w-64 max-w-full" placeholder="Student, email or ME-number" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+        <input type="search" aria-label="Search requests" className="field mb-2 !w-64 max-w-full" placeholder="Student, email or ME-number" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
+      <ListFilters label="Filter requests" dates options={opts.data ? { courses: opts.data.courses, instructors: staff ? opts.data.instructors : undefined } : null}
+        values={{ instructor: staff ? f.instructor : "", course: f.course, from: f.from, to: f.to }}
+        onChange={(v) => setF({ instructor: v.instructor, course: v.course, from: v.from, to: v.to, page: null })} />
       {error ? <p className="mt-4 text-rose">{error}</p> : null}
       {!data && !error ? <Skeleton className="mt-5 h-60" /> : null}
       {data ? (
         <>
           <ul className="mt-5 space-y-3">
             {data.items.map((r) => <RequestRow key={r.id} r={r} mode={mode} open={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} onChanged={reload} />)}
-            {!data.items.length ? <li className="rounded-tile border border-line bg-surface px-4 py-10 text-center text-ink-2">{tab === "open" ? "Nothing waiting." : "No requests here yet."}</li> : null}
+            {!data.items.length ? <li className="rounded-tile border border-line bg-surface px-4 py-10 text-center text-ink-2">{filtered ? "No requests match these filters." : tab === "open" ? "Nothing waiting." : "No requests here yet."}</li> : null}
           </ul>
-          <Pager page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} noun="requests" />
+          <Pager page={data.page} pageSize={data.pageSize} total={data.total} onPage={(n) => setF({ page: n > 1 ? n : null })} noun="requests" />
         </>
       ) : null}
     </div>

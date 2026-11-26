@@ -32,6 +32,15 @@ export class ModerationService {
     return { id: rep.id, status: rep.status };
   }
 
+  async filterOptions() {
+    const courses = await this.prisma.course.findMany({
+      where: { reviews: { some: {} } }, orderBy: { title: 'asc' }, take: 1000,
+      select: { id: true, title: true, instructor: { select: { id: true, name: true } } },
+    });
+    const instructors = [...new Map(courses.map((c) => [c.instructor.id, c.instructor])).values()].sort((a, b) => a.name.localeCompare(b.name));
+    return { courses: courses.map((c) => ({ id: c.id, title: c.title, instructorId: c.instructor.id })), instructors };
+  }
+
   async list(q: { q?: string; courseId?: string; instructorId?: string; rating?: number; status?: 'visible' | 'hidden'; reported?: boolean; page: number; pageSize: number }) {
     const openReports = q.reported ? await this.prisma.reviewReport.findMany({ where: { status: 'open' }, select: { reviewId: true } }) : [];
     const where: Prisma.ReviewWhereInput = {

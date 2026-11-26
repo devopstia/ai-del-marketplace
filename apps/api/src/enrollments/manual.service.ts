@@ -483,15 +483,22 @@ export class ManualEnrollmentService {
   }
 
   // ---------- lists and detail ----------
-  async list(u: AuthUser, q: { status?: string; instructorId?: string; courseId?: string; q?: string; from?: Date; to?: Date; page: number; pageSize: number }) {
+  async list(u: AuthUser, q: { status?: string; instructorId?: string; courseId?: string; q?: string; from?: string; to?: string; page: number; pageSize: number }) {
     const isSuper = u.roles.includes('super_admin') || can(u, 'enrollments.manage');
     if (!isSuper && !u.roles.includes('instructor')) throw forbidden();
+    // Instructor and course filter the same request lines: one line must match both.
+    const line: Prisma.ManualEnrollmentItemWhereInput = {
+      ...(isSuper && q.instructorId ? { instructorId: q.instructorId } : {}),
+      ...(q.courseId ? { courseId: q.courseId } : {}),
+    };
+    // Calendar days in UTC, both included: [from 00:00, the day after `to` 00:00).
+    const from = q.from ? new Date(`${q.from}T00:00:00.000Z`) : undefined;
+    const to = q.to ? new Date(Date.parse(`${q.to}T00:00:00.000Z`) + 86_400_000) : undefined;
     const where: Prisma.ManualEnrollmentWhereInput = {
       ...(isSuper ? {} : { requestedById: u.id }),
       ...(q.status === 'open' ? { status: { in: OPEN } } : q.status ? { status: q.status } : {}),
-      ...(q.instructorId ? { items: { some: { instructorId: q.instructorId } } } : {}),
-      ...(q.courseId ? { items: { some: { courseId: q.courseId } } } : {}),
-      ...(q.from || q.to ? { createdAt: { gte: q.from, lte: q.to } } : {}),
+      ...(Object.keys(line).length ? { items: { some: line } } : {}),
+      ...(from || to ? { createdAt: { gte: from, lt: to } } : {}),
       ...(q.q ? { OR: [{ studentEmail: { contains: q.q, mode: 'insensitive' } }, { studentName: { contains: q.q, mode: 'insensitive' } }, ...(/^ME-?\d+$/i.test(q.q) ? [{ number: Number(q.q.replace(/\D/g, '')) }] : [])] } : {}),
     };
     const [total, rows, counts] = await Promise.all([
@@ -501,6 +508,21 @@ export class ManualEnrollmentService {
     ]);
     const items = await Promise.all(rows.map((r) => this.detail(u, r.id, false)));
     return { ...paged(items, total, q), counts: Object.fromEntries(counts.map((c) => [c.status, c._count])) };
+  }
+
+  /** Filter options: the courses (and, for DEL, the instructors) found in the requests this person can see. */
+  async filterOptions(u: AuthUser) {
+    const isSuper = u.roles.includes('super_admin') || can(u, 'enrollments.manage');
+    if (!isSuper && !u.roles.includes('instructor')) throw forbidden();
+    const lines = await this.prisma.manualEnrollmentItem.findMany({
+      where: isSuper ? {} : { request: { requestedById: u.id } },
+      distinct: ['courseId', 'instructorId'], select: { courseId: true, instructorId: true }, take: 2000,
+    });
+    const [courses, instructors] = await Promise.all([
+      this.prisma.course.findMany({ where: { id: { in: [...new Set(lines.map((l) => l.courseId))] } }, select: { id: true, title: true, instructorId: true }, orderBy: { title: 'asc' } }),
+      isSuper ? this.prisma.user.findMany({ where: { id: { in: [...new Set(lines.map((l) => l.instructorId))] } }, select: { id: true, name: true }, orderBy: { name: 'asc' } }) : Promise.resolve([]),
+    ]);
+    return { courses, instructors };
   }
 
   async detail(u: AuthUser, id: string, withHistory = true) {
