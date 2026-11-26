@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { Prisma } from '../generated/prisma/client';
 import { HLS_QUEUE, JobsService, MEDIA_QUEUE, ProcessVideoJob } from '../common/jobs';
 import { env } from '../config/env';
 import { packageHls, UnsupportedVideo } from '../protection/hls-packager';
@@ -71,7 +72,7 @@ export class VideoProcessor extends WorkerHost {
       const p = await packageHls(src, (key, body) => this.storage.put(key, body, 'video/mp2t'));
       await this.prisma.videoAsset.update({
         where: { id: asset.id },
-        data: { hlsStatus: 'ready', hlsPrefix: p.prefix, hlsPlaylist: p.playlist, hlsVariants: p.variants.map((v) => ({ ...v })), hlsKey: p.keyWrapped, hlsIv: p.ivHex, hlsPackagedAt: new Date(), hlsError: null },
+        data: { hlsStatus: 'ready', hlsPrefix: p.prefix, hlsPlaylist: p.playlist, hlsVariants: p.variants.map((v) => ({ ...v })), hlsSizes: p.sizes ? { ...p.sizes } : Prisma.DbNull, hlsKey: p.keyWrapped, hlsIv: p.ivHex, hlsPackagedAt: new Date(), hlsError: null },
       });
       // a re-packaging (extra qualities) replaces the previous copy: remove its segments once the new one is live
       if (asset.hlsPrefix && asset.hlsPrefix !== p.prefix) {

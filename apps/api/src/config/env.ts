@@ -22,7 +22,9 @@ const schema = z.object({
   /** Re-encode video to 2-second keyframes while packaging: faster start on slow links, more CPU, small quality cost. */
   HLS_REENCODE: z.string().default('false').transform((v) => v === 'true' || v === '1'),
   /** Lower qualities added under the original (heights, comma-separated; empty = original only). */
-  HLS_RENDITIONS: z.string().default('720,480'),
+  HLS_RENDITIONS: z.string().default('720,480,360'),
+  /** Data saver (owner 2026-11-26): also package an audio-only copy (AAC 64 kbit/s, encrypted with the video's key). */
+  HLS_AUDIO_ONLY: z.string().default('true').transform((v) => v === 'true' || v === '1'),
   /** CloudFront for lesson video segments (docs/VIDEO_DELIVERY.md): https://<distribution>.cloudfront.net; empty = signed S3 links. */
   CDN_URL: z.string().default(''),
   CDN_KEY_PAIR_ID: z.string().default(''),

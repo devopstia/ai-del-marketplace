@@ -18,6 +18,11 @@ export interface Playback {
   captionsUrl?: string;
   /** Content protection: encrypted HLS through a playback session (no file link to the original). */
   protected?: boolean;
+  /**
+   * Data saver (protected HLS with several qualities): playlists for Low (360p) and Audio only, and about how many bytes
+   * the lesson takes at each setting. Absent when the video has one quality.
+   */
+  dataSaver?: { low?: string; audio?: string; sizes?: { auto: number; low: number | null; audio: number | null } };
 }
 
 /** The only surface the rest of the app uses for video. Swap providers without touching callers. */

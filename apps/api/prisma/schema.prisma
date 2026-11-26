@@ -389,6 +389,8 @@ model VideoAsset {
   hlsPackagedAt DateTime?
   /// Qualities for adaptive playback: [{ name, height, width, bandwidth, playlist }] (source first). Null = single quality (packaged before 2026-11-26).
   hlsVariants   Json?
+  /// Data saver (owner 2026-11-26): bytes per setting { config, auto, low, audio } (protection/data-saver.ts); config differs = re-package.
+  hlsSizes      Json?
   playbackSessions PlaybackSession[]
   helpVideo     HelpVideo?
   captionIndex    CaptionIndex?

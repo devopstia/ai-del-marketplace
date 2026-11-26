@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, type VideoAsset } from '../generated/prisma/client';
+import type { VideoAsset } from '../generated/prisma/client';
 import type { AuthUser } from '../common/auth-context';
 import { notFound } from '../common/errors';
 import { JobsService } from '../common/jobs';
@@ -8,10 +8,12 @@ import { StorageService } from '../common/storage.service';
 import { env } from '../config/env';
 import type { Playback } from '../media/video-provider';
 import { cdnBase, cdnEnabled, cdnPolicyQuery } from './cdn-signer';
+import { AUDIO, audioVariant, lowVariant, needsRepackaging, packagingConfig, sizesOf } from './data-saver';
 import { KEY_PLACEHOLDER, type Variant } from './hls-packager';
 import { unwrapKey, sessionRef } from './media-keys';
 
 const SESSION_HOURS = 6;
+
 
 function variantsOf(raw: unknown): Variant[] {
   return Array.isArray(raw) ? (raw as Variant[]).filter((v) => v && typeof v.name === 'string' && /^[0-9a-z]+$/.test(v.name) && typeof v.playlist === 'string') : [];
@@ -46,12 +48,19 @@ export class ProtectionService {
     const s = await this.prisma.playbackSession.create({
       data: { ref: sessionRef(), userId: user.id, assetId: asset.id, lectureId: ctx.lectureId ?? null, ip: ctx.ip ?? null, userAgent: ctx.userAgent?.slice(0, 300) ?? null, expiresAt },
     });
+    const base = `${env().API_URL}/api/playback/${s.id}`;
+    const variants = variantsOf(asset.hlsVariants);
+    const low = lowVariant(variants);
+    const audio = audioVariant(variants);
+    const sizes = sizesOf(asset.hlsSizes);
     return {
-      url: `${env().API_URL}/api/playback/${s.id}/index.m3u8`,
+      url: `${base}/index.m3u8`,
       expiresAt: expiresAt.toISOString(),
       format: 'hls',
       protected: true,
       captionsUrl: asset.captionsKey ? await this.storage.presignGet(asset.captionsKey, SESSION_HOURS * 3600) : undefined,
+      // data saver: Low and Audio only are single-quality playlists of the same session (docs/VIDEO_DELIVERY.md)
+      ...(low || audio ? { dataSaver: { low: low ? `${base}/q/${low.name}/index.m3u8` : undefined, audio: audio ? `${base}/q/${AUDIO}/index.m3u8` : undefined, sizes } } : {}),
     };
   }
 
@@ -69,7 +78,8 @@ export class ProtectionService {
    */
   async manifest(sessionId: string, user: AuthUser): Promise<string> {
     const s = await this.live(sessionId, user);
-    const variants = variantsOf(s.asset.hlsVariants);
+    // the audio-only copy is never part of Auto: it is chosen only by the learner (data saver)
+    const variants = variantsOf(s.asset.hlsVariants).filter((v) => v.name !== AUDIO);
     if (variants.length < 2) return this.playlist(s, variants[0]?.playlist ?? s.asset.hlsPlaylist!);
     const base = `${env().API_URL}/api/playback/${s.id}/q`;
     const lines = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-INDEPENDENT-SEGMENTS'];
@@ -107,20 +117,27 @@ export class ProtectionService {
   }
 
 
+  /** Packaged videos made with other settings than now: one quality only, or without 360p / audio only (data saver). */
+  private async outdated() {
+    const config = packagingConfig(env().HLS_RENDITIONS, env().HLS_AUDIO_ONLY);
+    const rows = await this.prisma.videoAsset.findMany({ where: { provider: 'local', status: 'ready', hlsStatus: 'ready' }, select: { id: true, hlsSizes: true } });
+    return rows.filter((r) => needsRepackaging(r.hlsSizes, config)).map((r) => r.id);
+  }
+
   /**
-   * Super admin: package again every video made before adaptive playback (one quality), so learners on slow connections
-   * get 720p/480p too. The current copy keeps playing until the new one is ready (it is only then replaced).
+   * Super admin: package again every video made with older settings, so learners on slow connections get every quality
+   * and the data-saver copies. The current copy keeps playing until the new one is ready (it is only then replaced).
    */
   async repackageSingleQuality(): Promise<{ queued: number }> {
-    const assets = await this.prisma.videoAsset.findMany({ where: { provider: 'local', status: 'ready', hlsStatus: 'ready', hlsVariants: { equals: Prisma.DbNull } }, select: { id: true } });
-    for (const a of assets) await this.jobs.packageHls(a.id, { repackage: true });
-    return { queued: assets.length };
+    const ids = await this.outdated();
+    for (const id of ids) await this.jobs.packageHls(id, { repackage: true });
+    return { queued: ids.length };
   }
 
   /** Packaging progress for the admin page. */
   async status() {
     const rows = await this.prisma.videoAsset.groupBy({ by: ['hlsStatus'], where: { provider: 'local', status: 'ready' }, _count: { _all: true } });
-    const singleQuality = await this.prisma.videoAsset.count({ where: { provider: 'local', status: 'ready', hlsStatus: 'ready', hlsVariants: { equals: Prisma.DbNull } } });
-    return { enabled: env().PROTECTED_PLAYBACK, cdn: cdnEnabled(), renditions: env().HLS_RENDITIONS, singleQuality, counts: Object.fromEntries(rows.map((r) => [r.hlsStatus, r._count._all])) };
+    const singleQuality = (await this.outdated()).length;
+    return { enabled: env().PROTECTED_PLAYBACK, cdn: cdnEnabled(), renditions: env().HLS_RENDITIONS, audioOnly: env().HLS_AUDIO_ONLY, singleQuality, counts: Object.fromEntries(rows.map((r) => [r.hlsStatus, r._count._all])) };
   }
 }

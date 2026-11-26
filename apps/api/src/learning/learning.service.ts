@@ -2,6 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { accessState, daysLeft, hasAccess } from '../access/access';
 import { mergeRanges, parseRanges, rangeSeconds, reviewerWatch, watchOf } from '../access/consumption';
 import { QUIZ_PASS_PERCENT } from '../catalogue/certificate-share';
+import { sizesOf } from '../protection/data-saver';
 import { ProtectionService } from '../protection/protection.service';
 import { AuditService } from '../common/audit.service';
 import { AuthUser, isAdmin } from '../common/auth-context';
@@ -136,7 +137,7 @@ export class LearningService {
               include: {
                 resources: { select: { id: true, title: true, sizeBytes: true, mime: true } },
                 quiz: { select: { id: true } },
-                videoAsset: { select: { status: true, captionsKey: true } },
+                videoAsset: { select: { status: true, captionsKey: true, hlsStatus: true, hlsSizes: true } },
               },
             },
           },
@@ -187,6 +188,8 @@ export class LearningService {
           articleMd: l.type === 'article' ? l.articleMd : undefined,
           videoStatus: l.videoAsset?.status ?? null,
           hasCaptions: !!l.videoAsset?.captionsKey,
+          // data saver: about how many bytes the lesson takes at each setting (packaged videos only)
+          sizes: l.videoAsset?.hlsStatus === 'ready' ? sizesOf(l.videoAsset.hlsSizes) ?? null : null,
           hasQuiz: !!l.quiz,
           resources: l.resources,
           progress: { positionSec: byLecture.get(l.id)?.positionSec ?? 0, completed: byLecture.get(l.id)?.completed ?? false },
