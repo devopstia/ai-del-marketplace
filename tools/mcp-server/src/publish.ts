@@ -264,7 +264,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
 }
 
 // CLI
-if (process.argv[1] && basename(process.argv[1]).startsWith('publish')) {
+if (process.argv[1] && ['publish.js', 'del-publish-course'].includes(basename(process.argv[1]))) {
   const args = process.argv.slice(2);
   const planPath = args.find((a) => !a.startsWith('--'));
   const wait = args.includes('--wait') ? Number(args[args.indexOf('--wait') + 1]) : undefined;
