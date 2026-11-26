@@ -59,6 +59,11 @@ staging release + checks → `production` environment approval → RDS snapshot 
 keep 5 snapshots. Rollback: run `release` with `commit` = an earlier release (its images stay in ECR); data rollback =
 restore the pre-release snapshot.
 
+Versions: images are tagged with the 12-character commit and ECR tags are **immutable** (a version is never
+overwritten; the image build reuses images that already exist). Each production release also gets an annotated git tag
+`release-<date>-<topic>` and a GitHub release; tags are never moved or reused (a superseded tag gets a `-r2` successor).
+The deploy role trusts both GitHub OIDC subject formats (classic and the immutable `owner@id/repo@id` this repository uses).
+
 Repository settings used by the workflows (variables, not secrets): `PRODUCTION_ENABLED`, `AWS_ACCOUNT_ID`,
 `AWS_REGION`; environments `staging` and `production` (owner as required reviewer).
 

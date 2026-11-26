@@ -42,15 +42,16 @@ jobs:
       - name: API and worker
         if: steps.have.outputs.skip != 'true'
         uses: docker/build-push-action@v6
-        with: { context: ., file: apps/api/Dockerfile, push: true, tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/api:${{ steps.t.outputs.tag }}", cache-from: type=gha, cache-to: "type=gha,mode=max" }
+        with: { context: ., file: apps/api/Dockerfile, push: true, tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/api:${{ steps.t.outputs.tag }}", provenance: false, sbom: false, cache-from: type=gha, cache-to: "type=gha,mode=max" }
       - name: Web (staging)
         if: steps.have.outputs.skip != 'true'
         uses: docker/build-push-action@v6
-        with: { context: ., file: apps/web/Dockerfile, push: true, build-args: "NEXT_PUBLIC_API_URL=https://staging.ai-devopseasylearning.com/api", tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/web:${{ steps.t.outputs.tag }}-staging", cache-from: type=gha, cache-to: "type=gha,mode=max" }
+        with: { context: ., file: apps/web/Dockerfile, push: true, build-args: "NEXT_PUBLIC_API_URL=https://staging.ai-devopseasylearning.com/api", tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/web:${{ steps.t.outputs.tag }}-staging", provenance: false, sbom: false, cache-from: type=gha, cache-to: "type=gha,mode=max" }
       - name: Web (production)
         if: steps.have.outputs.skip != 'true'
         uses: docker/build-push-action@v6
-        with: { context: ., file: apps/web/Dockerfile, push: true, build-args: "NEXT_PUBLIC_API_URL=https://ai-devopseasylearning.com/api", tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/web:${{ steps.t.outputs.tag }}-production", cache-from: type=gha, cache-to: "type=gha,mode=max" }
+        with: { context: ., file: apps/web/Dockerfile, push: true, build-args: "NEXT_PUBLIC_API_URL=https://ai-devopseasylearning.com/api", tags: "${{ steps.ecr.outputs.registry }}/del-marketplace/web:${{ steps.t.outputs.tag }}-production", provenance: false, sbom: false, cache-from: type=gha, cache-to: "type=gha,mode=max" }
+      # plain single-platform images (provenance/sbom off): ECR basic scanning cannot scan an image index
       - name: Image scan (block on CRITICAL)
         run: |
           for repo in api; do
