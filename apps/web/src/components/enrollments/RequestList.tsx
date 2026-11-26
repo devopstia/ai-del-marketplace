@@ -64,7 +64,7 @@ function RequestListInner({ mode, refreshKey }: { mode: "instructor" | "super_ad
     if (v !== f.q) setF({ q: v, page: null });
   }, [dq, f.q, setF]);
   const staff = mode !== "instructor";
-  const opts = useApi("/enrollments/manual/filters", (r) => obj(r) as unknown as FilterOptions);
+  const opts = useApi(`/enrollments/manual/filters${qs({ k: refreshKey })}`, (r) => obj(r) as unknown as FilterOptions);
   const { data, error, reload } = useApi(`/enrollments/manual${qs({ status: tab || undefined, q: f.q || undefined, instructorId: staff ? f.instructor || undefined : undefined, courseId: f.course || undefined, from: f.from || undefined, to: f.to || undefined, page, pageSize: 20, k: refreshKey })}`, (r) => obj(r) as unknown as { items: Req[]; total: number; page: number; pageSize: number; counts: Record<string, number> });
   const [open, setOpen] = useState<string | null>(null);
   const waiting = (data?.counts.pending ?? 0) + (data?.counts.needs_info ?? 0);
