@@ -252,4 +252,4 @@ Owner: "Please work on this prompts.md, skip the ones we have already". Checkpoi
 = 95d1098, branch `backup/pre-admin-security-refunds-2026-11-26`; integration branch `feat/admin-security-refunds-2026-11-26`
 (merges feat/admin-portal, feat/auth-sessions, feat/support-sessions-agents, feat/refund-management). Built on the SEO and
 stand-out batch (still awaiting production approval). Email OTP for students/instructors changes AGENTS rule 19 at the
-owner's request; privileged roles keep the authenticator. Government ID verification is documented, not built.
+owner's request; privileged roles keep the authenticator. Government ID verification: not offered (owner: "We do not need this").
