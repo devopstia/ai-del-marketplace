@@ -9,7 +9,9 @@ import { Avatar } from "@/components/Avatar";
 import { Markdown } from "@/components/Markdown";
 import { Curriculum } from "@/components/Curriculum";
 import { PreviewProvider } from "@/components/PreviewContext";
-import { CourseFaq } from "@/components/CourseFaq";
+import { CourseFaq, courseFaqItems } from "@/components/CourseFaq";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbLd, courseLd, faqLd, pageMeta, plainText, topicPath } from "@/lib/seo";
 import { ProgramNote } from "@/components/promo/FullProgram";
 import { PurchaseCard } from "@/components/PurchaseCard";
 import { ReviewForm } from "@/components/ReviewForm";
@@ -19,7 +21,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const c = await getCourse(slug);
-  return c ? { title: c.title, description: c.subtitle } : { title: "Course not found" };
+  if (!c) return { title: "Course not found", robots: { index: false } };
+  const description = plainText(c.subtitle || c.description) || `${c.title}: an online course by ${c.instructor.name} on DevOps Easy Learning.`;
+  return pageMeta({ title: c.title, description, path: `/courses/${c.slug}`, image: c.thumbnailUrl, imageAlt: `${c.title} course cover`, type: "article" });
 }
 
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -31,21 +35,19 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const previews = c.hasPromo ? [{ id: "promo", title: "Course trailer", type: "video" as const, durationSec: 0, isPreview: true }, ...lecturePreviews] : lecturePreviews;
   const maxBar = Math.max(1, ...Object.values(reviews.breakdown));
   const totalB = Object.values(reviews.breakdown).reduce((a, b) => a + b, 0) || 1;
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "Course", name: c.title, description: c.subtitle,
-    provider: { "@type": "Organization", name: "DevOps Easy Learning" },
-    ...(c.ratingCount ? { aggregateRating: { "@type": "AggregateRating", ratingValue: c.ratingAvg.toFixed(1), ratingCount: c.ratingCount } } : {}),
-  };
+  const crumbs: [string, string][] = [["Courses", "/courses"], ...(c.category ? [[c.category.name, topicPath(c.category.slug)] as [string, string]] : []), [c.title, `/courses/${c.slug}`]];
 
   return (
     <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <JsonLd data={courseLd(c)} />
+      <JsonLd data={breadcrumbLd(crumbs)} />
+      <JsonLd data={faqLd(courseFaqItems(c))} />
       <section className="bg-stage text-white">
         <div className="container-x py-10 md:py-14">
           <div className="lg:max-w-[calc(100%-420px)]">
             <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm font-bold text-[#9fd9f5]">
               <Link href="/courses" className="hover:underline">Courses</Link>
-              {c.category ? <><ChevronRight className="size-3.5 opacity-60" /><Link href={`/courses?category=${c.category.slug}`} className="hover:underline">{c.category.name}</Link></> : null}
+              {c.category ? <><ChevronRight className="size-3.5 opacity-60" /><Link href={topicPath(c.category.slug)} className="hover:underline">{c.category.name}</Link></> : null}
             </nav>
             <h1 className="mt-4 font-display text-[clamp(1.9rem,4vw,2.9rem)] font-extrabold leading-[1.06] tracking-[-0.03em]">{c.title}</h1>
             <p className="mt-4 max-w-2xl text-lg text-white/80">{c.subtitle}</p>

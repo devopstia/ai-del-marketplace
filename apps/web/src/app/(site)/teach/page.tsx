@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 import { ArrowRight, BadgeDollarSign, CheckCircle2, ShieldCheck, Upload } from "lucide-react";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
 import { getTerms } from "@/lib/catalog";
@@ -8,7 +9,7 @@ import { EarningsCalculator } from "@/components/EarningsCalculator";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Teach on DevOps Easy Learning" };
+export const metadata: Metadata = pageMeta({ title: "Teach on DevOps Easy Learning", description: "Publish your AI or DevOps course on DevOps Easy Learning and get paid through Stripe for every sale. Apply online.", path: "/teach" });
 
 const steps = [
   ["Apply", "Tell us what you run in production and what you want to teach. An admin approves new instructors."],

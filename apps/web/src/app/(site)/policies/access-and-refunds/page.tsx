@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Access and refunds", description: "How long you can use a course you buy on DevOps Easy Learning, how renewal works, and when you can get a refund." };
+export const metadata: Metadata = pageMeta({ title: "Access and refunds", description: "How long you can use a course you buy on DevOps Easy Learning, how renewal works, and when you can get a refund.", path: "/policies/access-and-refunds" });
 
 const ROWS: [string, string][] = [
   ["How long you can use a course", "12 months from the day you buy it, not lifetime."],

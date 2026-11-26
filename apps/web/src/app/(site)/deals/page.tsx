@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { ArrowRight, Tag } from "lucide-react";
 import { getCourses, getDeals } from "@/lib/catalog";
 import { CourseResultCard } from "@/components/CourseViews";
 import { coverSeeds } from "@/components/CourseCover";
 import { SaleEnds } from "@/components/SaleEnds";
 
-export const metadata: Metadata = { title: "Deals", description: "AI and DevOps courses on sale right now." };
+export const metadata: Metadata = pageMeta({ title: "Course deals", description: "AI and DevOps courses on sale right now on DevOps Easy Learning.", path: "/deals" });
 export const dynamic = "force-dynamic";
 
 export default async function DealsPage() {
@@ -41,7 +42,7 @@ export default async function DealsPage() {
 
       {res.items.length ? (
         <div className="mt-8 grid gap-x-8 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
-          {res.items.map((c, i) => <CourseResultCard key={c.slug} c={c} coverSeed={seeds[i]} />)}
+          {res.items.map((c, i) => <CourseResultCard key={c.slug} c={c} coverSeed={seeds[i]} priority={i < 2} />)}
         </div>
       ) : (
         <div className="py-20 text-center">

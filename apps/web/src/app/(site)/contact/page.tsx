@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import { Mail, MessageCircleQuestion, Phone } from "lucide-react";
 import { ContactForm } from "@/components/ContactForm";
 import { SocialLinks, SUPPORT_EMAIL } from "@/components/SocialLinks";
 
-export const metadata: Metadata = { title: "Contact us", description: "Write to DevOps Easy Learning support. Attach screenshots if something looks wrong." };
+export const metadata: Metadata = pageMeta({ title: "Contact us", description: "Write to DevOps Easy Learning support. Attach screenshots if something looks wrong.", path: "/contact" });
 
 export default function ContactPage() {
   return (

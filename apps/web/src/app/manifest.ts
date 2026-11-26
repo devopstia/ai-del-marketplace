@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_DESCRIPTION } from "@/lib/seo";
 
 /** The installable app (PWA). Served as /manifest.webmanifest. Dark is the brand default, so the splash and bars are dark. */
 export default function manifest(): MetadataRoute.Manifest {
@@ -6,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/?app=del",
     name: "DevOps Easy Learning",
     short_name: "DEL",
-    description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs and real cloud demos.",
+    description: SITE_DESCRIPTION,
     start_url: "/student?source=pwa",
     scope: "/",
     display: "standalone",
