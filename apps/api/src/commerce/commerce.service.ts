@@ -198,9 +198,9 @@ export class CommerceService {
       {
         mode: 'payment',
         // Staging: no Stripe Link, so testers are never asked to confirm a Link code (owner 2026-11-26). Production unchanged.
-        // `payment_method_types` is retired for Checkout Sessions (Stripe 2026-09-30); `excluded_payment_method_types`
-        // removes one method from the Dashboard defaults (not yet in the SDK's types).
-        ...(env().DEPLOY_ENV === 'staging' ? ({ excluded_payment_method_types: ['link'] } as Record<string, unknown>) : {}),
+        // `payment_method_types` is retired for Checkout Sessions (Stripe 2026-09-30) and Link can't be excluded per session,
+        // so staging allows cards only (`allowed_payment_method_types`, not yet in the SDK's types).
+        ...(env().DEPLOY_ENV === 'staging' ? ({ allowed_payment_method_types: ['card'] } as Record<string, unknown>) : {}),
         customer_email: user.email,
         client_reference_id: userId,
         // Stripe charges exactly the order lines (sale prices included).
