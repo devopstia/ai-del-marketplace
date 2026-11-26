@@ -20,7 +20,7 @@ export function SiteFooter({ careerPaths = false }: { careerPaths?: boolean }) {
             <LoopMark className="h-7 w-14" />
             <span className="font-display text-lg font-extrabold tracking-tight">DevOps Easy Learning</span>
           </div>
-          <p className="mt-4 text-sm text-muted">Hands-on AI and DevOps courses from engineers who run these systems in production. Every lesson ships with a lab you can run yourself.</p>
+          <p className="mt-4 text-sm text-muted">Hands-on AI and DevOps courses from engineers who run these systems in production. Many lessons come with lab files you can run yourself.</p>
           <SocialLinks className="-ml-2 mt-4" />
         </div>
         {columns.map(([title, links]) => (
