@@ -72,7 +72,7 @@ export default function RoleManagement() {
                 <div className="min-w-0">
                   <h2 id={`role-${r.key}`} className="flex items-center gap-2 font-display text-lg font-bold">
                     {r.system ? <Lock className="size-4 text-muted" aria-hidden="true" /> : null}{r.label}
-                    {r.system ? <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-bold text-muted">System role · locked</span> : null}
+                    {r.system ? <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-bold text-ink-2">System role · locked</span> : null}
                   </h2>
                   <p className="mt-0.5 text-sm text-ink-2">{r.description}</p>
                 </div>
