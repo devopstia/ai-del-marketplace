@@ -901,7 +901,8 @@ test.describe("quick search: ⌘K / Ctrl+K on every page (owner 2026-11-26)", ()
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByTestId("search-open-icon").click();
     await expect(dialog).toBeVisible();
-    expect(Math.round((await dialog.boundingBox())!.width)).toBe(390);
+    // measured after the opening animation (pop-in scales from 98%)
+    await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(390);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   });
 

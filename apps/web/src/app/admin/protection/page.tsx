@@ -56,7 +56,7 @@ export default function ProtectionPage() {
 
       {s ? (
         <section className="mt-6 divide-y divide-line rounded-panel border border-line bg-surface" aria-labelledby="delivery" data-testid="video-delivery">
-          <h2 id="delivery" className="px-5 pt-5 font-display text-lg font-bold">Delivery</h2>
+          <h2 id="delivery" className="px-5 pb-3 pt-5 font-display text-lg font-bold">Delivery</h2>
           <div className="flex items-start gap-3 px-5 py-4">
             <Globe2 className="mt-0.5 size-5 shrink-0 text-violet" aria-hidden="true" />
             <div className="min-w-0">

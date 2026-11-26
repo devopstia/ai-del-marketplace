@@ -73,8 +73,9 @@ export default function UsersAndRoles() {
       <PageHead title="Users and roles" sub={superAdmin ? "Everyone who registered, their roles and how they signed up. Role changes need your authenticator code and are kept in each account’s history." : "Everyone who registered. Only a super admin changes roles."} />
       {stats ? (
         <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-panel border border-line bg-line sm:grid-cols-4 xl:grid-cols-7" data-testid="user-stats">
-          {stats.map(([l, v]) => (
-            <div key={l} className="bg-surface p-4">
+          {stats.map(([l, v], i) => (
+            // 7 tiles: the last one fills the row on phones (2 columns) and tablets (4 columns), so no empty cell shows
+            <div key={l} className={`bg-surface p-4 ${i === stats.length - 1 && stats.length % 2 ? "col-span-2 xl:col-span-1" : ""}`}>
               <dt className="text-xs text-muted">{l}</dt>
               <dd className="mt-1 font-display text-2xl font-extrabold tabular-nums">{v ?? 0}</dd>
             </div>
