@@ -93,14 +93,14 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
           <Link href="/courses" className={`${nav} ${active("/courses")}`}>Browse courses</Link>
           {dealsCount > 0 ? <Link href="/deals" className={`${nav} ${active("/deals")} inline-flex items-center gap-1.5`}>Deals<span className="rounded-full bg-rose-soft px-1.5 text-xs font-extrabold tabular-nums text-rose">{dealsCount}</span></Link> : null}
         </nav>
-        <SearchField className="mx-2 hidden max-w-md flex-1 md:flex" />
+        <SearchField className="mx-2 hidden max-w-md flex-1 lg:flex" />
         <div className="ml-auto flex items-center gap-1">
           <nav className="hidden items-center lg:flex" aria-label="Account">
             <Link href={teachHref} className={nav}>{has("instructor") ? "Studio" : "Teach on DEL"}</Link>
             {has("admin") ? <Link href="/admin" className={nav}>{has("super_admin") ? "Super Admin" : "Admin"}</Link> : null}
             {me ? <Link href="/student" className={`${nav} ${active("/student")}`} data-testid="nav-my-learning">My learning</Link> : null}
           </nav>
-          <SearchButton compact className="md:hidden" />
+          <SearchButton compact className="lg:hidden" />
           <ThemeToggle className="hidden sm:inline-flex" />
           <Link href="/cart" className="btn btn-ghost btn-sm relative !px-2.5" aria-label={`Cart, ${cartCount} items`}>
             <ShoppingCart className="size-[19px]" />
