@@ -246,3 +246,10 @@ Checkpoint `checkpoint-2026-11-26-seo-standout` = 9062adc, branch `backup/pre-se
 - Stand-out first wave (https://claude.ai/artifact/CMYLXDQBiozEt4GjR5m7u7): 1 data-saver mode (360p, audio only, MB per
   lesson), 2 reviews show measured watch share, 4 career paths, 5 instructor insights, 8 verified certificate + LinkedIn.
   Labs (6–7) deliberately deferred until sales start (recommendation the owner accepted with "all recommendations").
+
+## 2026-11-26 — prompts.md batch: Super Admin portal, support sessions + AI agents, email OTP + session security, refunds
+Owner: "Please work on this prompts.md, skip the ones we have already". Checkpoint `checkpoint-2026-11-26-admin-security-refunds`
+= 95d1098, branch `backup/pre-admin-security-refunds-2026-11-26`; integration branch `feat/admin-security-refunds-2026-11-26`
+(merges feat/admin-portal, feat/auth-sessions, feat/support-sessions-agents, feat/refund-management). Built on the SEO and
+stand-out batch (still awaiting production approval). Email OTP for students/instructors changes AGENTS rule 19 at the
+owner's request; privileged roles keep the authenticator. Government ID verification is documented, not built.
