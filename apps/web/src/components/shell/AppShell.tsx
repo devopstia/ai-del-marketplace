@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, LogOut, Menu, Store, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Loader2, LogOut, Menu, Store, X } from "lucide-react";
 import { LoopMark } from "../Logo";
 import { ThemeToggle } from "../ThemeToggle";
 import { useAuth } from "../AuthProvider";
@@ -11,8 +11,9 @@ import { useToast } from "../Toast";
 import { api, errMsg } from "@/lib/api";
 import { studiosFor, type Studio, type StudioKey } from "@/lib/studios";
 
-export type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean; badge?: number; testId?: string };
-export type NavGroup = { label?: string; items: NavItem[] };
+import type { NavGroup, NavItem } from "@/lib/studio-nav";
+import { SearchButton } from "../search/QuickSearch";
+export type { NavGroup, NavItem };
 
 /* ---------- breadcrumbs: pages may name their own last step (a course title, a ticket number) ---------- */
 const CrumbCtx = createContext<(label: string | null) => void>(() => {});
@@ -131,8 +132,8 @@ export function AppShell({ studio, nav, children, banner }: { studio: StudioKey;
                 {trail.map((t, i) => {
                   const last = i === trail.length - 1;
                   return (
-                    <li key={i} className={`flex min-w-0 items-center gap-1 ${!last && i === 0 && trail.length > 2 ? "max-sm:hidden" : ""}`}>
-                      {i ? <ChevronRight className="size-3.5 shrink-0 text-muted" aria-hidden="true" /> : null}
+                    <li key={i} className={`flex min-w-0 items-center gap-1 ${!last && i === 0 ? "max-sm:hidden" : ""}`}>
+                      {i ? <ChevronRight className={`size-3.5 shrink-0 text-muted ${i === 1 ? "max-sm:hidden" : ""}`} aria-hidden="true" /> : null}
                       {last || !t.href ? <span aria-current={last ? "page" : undefined} className="truncate font-bold text-ink">{t.label}</span>
                         : <Link href={t.href} className="truncate text-muted hover:text-ink">{t.label}</Link>}
                     </li>
@@ -140,6 +141,7 @@ export function AppShell({ studio, nav, children, banner }: { studio: StudioKey;
                 })}
               </ol>
             </nav>
+            <SearchButton />
             <Link href="/" className="btn btn-ghost btn-sm max-sm:!px-2" data-testid="topbar-marketplace" aria-label="Back to marketplace"><Store className="size-4" /><span className="max-sm:hidden">Marketplace</span></Link>
             <ThemeToggle />
           </header>

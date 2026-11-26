@@ -96,7 +96,7 @@ check "merge skips what is already in the cart" "$(j '.merge.skipped[0].reason')
 check "cart has both" "$(j .count)" 2
 req stu GET "/courses/$PAID_SLUG"; check "viewer block: in cart" "$(j '"\(.viewer.signedIn) \(.viewer.inCart) \(.viewer.enrolled)"')" "true true false"
 req stu POST "/lectures/$LOCKED_LECTURE/playback"; check "playback before buying → 403" "$code" 403
-req stu POST /checkout "{\"immediateAccessConsent\":true}"; check "checkout" "$(j .mode)" test
+req stu POST /checkout "{\"immediateAccessConsent\":true,\"acceptTerms\":true,\"termsVersion\":\"2026-11-25\"}"; check "checkout" "$(j .mode)" test
 ORDER="$(j .orderId)"
 req stu POST "/dev/test-payments/$ORDER/complete"; check "dev test payment fulfils" "$(j .alreadyFulfilled)" false
 req stu POST "/dev/test-payments/$ORDER/complete"; check "second completion is a no-op (idempotent)" "$(j .alreadyFulfilled)" true

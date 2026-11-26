@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Policy } from "../_Policy";
+import { TERMS_UPDATED } from "@/lib/terms";
 
 export const metadata: Metadata = { title: "Privacy policy", description: "What personal data DevOps Easy Learning collects, why, who processes it and how to reach us about it." };
 
@@ -9,7 +10,7 @@ export default function PrivacyPolicy() {
   return (
     <Policy
       title="Privacy policy"
-      updated="25 November 2026"
+      updated={TERMS_UPDATED}
       intro="DevOps Easy Learning runs this marketplace. We collect only what we need to give you your courses, keep your account safe, take payments and answer you. We don’t sell personal data and the site has no advertising or tracking scripts."
       sections={[
         ["What we collect", <>

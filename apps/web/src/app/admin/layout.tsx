@@ -1,48 +1,12 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, ClipboardCheck, FolderTree, Gauge, GraduationCap, Landmark, Receipt, ScrollText, Settings, Users, Tag, Image as ImageIcon, LifeBuoy, ShieldCheck, MonitorPlay, RotateCcw, Mail, Clapperboard, UserPlus, MessageSquareText, CreditCard, KeyRound } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
-import { AppShell, type NavItem } from "@/components/shell/AppShell";
+import { AppShell } from "@/components/shell/AppShell";
+import { adminNav } from "@/lib/studio-nav";
 import { canDo } from "@/lib/studios";
 import { useAuth } from "@/components/AuthProvider";
 import { Skeleton } from "@/components/Empty";
-
-type Item = NavItem & { perm?: string; superOnly?: boolean };
-const groups: { label?: string; items: Item[] }[] = [
-  { items: [{ href: "/admin", label: "Overview", icon: Gauge, exact: true }] },
-  { label: "Marketplace", items: [
-    { href: "/admin/review", label: "Review queue", icon: ClipboardCheck, perm: "courses.review" },
-    { href: "/admin/courses", label: "Courses", icon: BookOpen, perm: "courses.review" },
-    { href: "/admin/course-reviews", label: "Course reviews", icon: MessageSquareText, perm: "reviews.moderate" },
-  ] },
-  { label: "People", items: [
-    { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
-    { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
-    { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
-    { href: "/admin/enrollments", label: "Manual enrollments", icon: UserPlus, perm: "enrollments.manage" },
-  ] },
-  { label: "Money", items: [
-    { href: "/admin/orders", label: "Orders", icon: Receipt, perm: "orders.view" },
-    { href: "/admin/finance", label: "Money", icon: Landmark, perm: "finance.view" },
-    { href: "/admin/refunds", label: "Refunds", icon: RotateCcw, perm: "finance.view" },
-    { href: "/admin/promotions", label: "Promotions", icon: Tag, perm: "promotions.view" },
-  ] },
-  { label: "Support", items: [
-    { href: "/admin/support", label: "Support requests", icon: LifeBuoy, perm: "support.manage" },
-    { href: "/admin/contact", label: "Contact messages", icon: Mail, perm: "support.manage" },
-    { href: "/admin/help", label: "Manage platform videos", icon: Clapperboard, perm: "content.manage" },
-    { href: "/help", label: "Platform videos", icon: MonitorPlay, testId: "nav-platform-videos" },
-  ] },
-  { label: "Platform", items: [
-    { href: "/admin/categories", label: "Categories", icon: FolderTree, perm: "content.manage" },
-    { href: "/admin/covers", label: "Cover templates", icon: ImageIcon, perm: "content.manage" },
-    { href: "/admin/protection", label: "Video protection", icon: ShieldCheck, perm: "content.manage" },
-    { href: "/admin/payments", label: "Payments & Stripe", icon: CreditCard, superOnly: true },
-    { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },
-    { href: "/admin/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
-  ] },
-];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { me, loading, has } = useAuth();
@@ -70,8 +34,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
   const badge: Record<string, number | undefined> = { "/admin/finance": attention || undefined, "/admin/refunds": requests.data || undefined, "/admin/support": support.data || undefined, "/admin/contact": contact.data || undefined, "/admin/enrollments": manual.data || undefined, "/admin/course-reviews": reported.data || undefined };
-  const nav = groups
-    .map((g) => ({ label: g.label, items: g.items.filter((n) => (n.superOnly ? has("super_admin") : !n.perm || canDo(me, n.perm))).map(({ perm: _p, superOnly: _s, ...n }) => ({ ...n, badge: badge[n.href] })) }))
-    .filter((g) => g.items.length);
+  const nav = adminNav(me).map((g) => ({ ...g, items: g.items.map((n) => ({ ...n, badge: badge[n.href] })) }));
   return <AppShell studio="admin" nav={nav}>{children}</AppShell>;
 }

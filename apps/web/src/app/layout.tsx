@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { ToastProvider } from "@/components/Toast";
 import { themeScript } from "@/components/ThemeToggle";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
+import { QuickSearchProvider } from "@/components/search/QuickSearch";
 
 const display = Schibsted_Grotesk({ subsets: ["latin"], variable: "--font-schibsted", weight: ["500", "600", "700", "800"], display: "swap" });
 const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-atkinson", weight: ["400", "500", "700"], display: "swap" });
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh">
         <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ToastProvider><QuickSearchProvider>{children}</QuickSearchProvider></ToastProvider>
           <PwaRegister />
         </AuthProvider>
       </body>

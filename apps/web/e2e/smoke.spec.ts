@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, type Page } from "@playwright/test";
 import { apiFromPage, expect, freshCode, login, logout, PASSWORD, rememberSeed, tinyVideo, USERS, visible, watchApiBase } from "./helpers";
 
 const PAID_COURSE = process.env.E2E_COURSE_SLUG || "ai-for-devops";
@@ -98,7 +98,13 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page).toHaveURL(new RegExp(`/courses/${PAID_COURSE}`));
     await visible(page, "buy-now").click();
     await expect(page).toHaveURL(/\/checkout$/);
+    // Terms acceptance (owner 2026-11-26): nothing can be paid before the box is ticked; the API records the version.
+    const consent = page.locator("label").filter({ has: page.getByTestId("consent") });
+    await expect(consent).toContainText("Terms of use");
+    await expect(consent).toContainText("Access and refunds policy");
+    await expect(page.getByTestId("pay")).toBeDisabled();
     await page.getByTestId("consent").check();
+    await expect(page.getByTestId("pay")).toBeEnabled();
     await page.getByTestId("pay").click();
     // Without Stripe keys the API returns the dev test-payment page
     await expect(page).toHaveURL(/\/checkout\/test|checkout\.stripe\.com/);
@@ -107,6 +113,10 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page.getByTestId("checkout-success")).toHaveText("You’re enrolled");
     await page.goto("/student/courses");
     await expect(page.getByTestId("learning-item").first()).toBeVisible();
+    // The receipt shows which terms were accepted and when.
+    await page.goto("/student/purchases");
+    await page.locator('a[href^="/student/purchases/"]').filter({ visible: true }).first().click();
+    await expect(page.getByTestId("receipt-terms")).toContainText(/version \d{4}-\d{2}-\d{2}/);
   });
 
   test("play a lecture with a signed URL", async ({ page }) => {
@@ -843,5 +853,80 @@ test.describe("lesson player", () => {
     expect(new URL(page.url()).pathname).toMatch(/^\/learn\/[\w-]+\/[\w-]+$/);
     expect(await page.evaluate(() => (window as unknown as { __e2eStay?: boolean }).__e2eStay === true)).toBe(true);
     expect(await page.evaluate(() => (document.querySelector(".player-stage") as HTMLElement & { __e2eStay?: boolean }).__e2eStay === true)).toBe(true);
+  });
+});
+
+test.describe("quick search: ⌘K / Ctrl+K on every page (owner 2026-11-26)", () => {
+  /** A word from a real course title, so this works on any catalogue (local demo or staging). */
+  async function courseWord(page: Page) {
+    await page.goto("/courses");
+    const title = (await page.getByTestId("course-row").first().innerText()).split("\n").find((l) => l.trim().length > 12) ?? "";
+    return title.split(/\s+/).find((w) => /^[A-Za-z]{5,}$/.test(w)) ?? "DevOps";
+  }
+
+  test("keyboard: open, find a course, Enter opens it; Esc and / work; signed out sees no studio pages", async ({ page }) => {
+    const word = await courseWord(page);
+    await page.goto("/");
+    const dialog = page.getByRole("dialog", { name: "Quick search" });
+    // Retried until the page has hydrated and listens for the shortcut.
+    await expect(async () => { await page.keyboard.press("ControlOrMeta+k"); await expect(dialog).toBeVisible({ timeout: 1000 }); }).toPass();
+    const input = dialog.getByRole("combobox");
+    await expect(input).toBeFocused();
+    await expect(dialog.getByTestId("qs-group-pages")).toHaveCount(0);
+    await input.fill(word);
+    const first = dialog.getByTestId("qs-course").first();
+    await expect(first).toBeVisible();
+    await expect(first).toHaveAttribute("aria-selected", "true");
+    await expect(input).toHaveAttribute("aria-activedescendant", (await first.getAttribute("id"))!);
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/courses\/[\w-]+$/);
+    await expect(dialog).toHaveCount(0);
+    // "/" opens it when not typing; Esc closes it and the page stays.
+    await page.keyboard.press("/");
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(page).toHaveURL(/\/courses\/[\w-]+$/);
+  });
+
+  test("the header search field opens it; Help results; full screen on a phone", async ({ page }) => {
+    await page.goto("/courses");
+    await page.getByTestId("search-open").click();
+    const dialog = page.getByRole("dialog", { name: "Quick search" });
+    await dialog.getByRole("combobox").fill("refund");
+    await expect(dialog.getByTestId("qs-group-help")).toContainText("Access and refunds policy");
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByTestId("search-open-icon").click();
+    await expect(dialog).toBeVisible();
+    expect(Math.round((await dialog.boundingBox())!.width)).toBe(390);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  });
+
+  test("studio pages are role-aware: a student never sees admin pages, an admin does", async ({ page }) => {
+    test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
+    await login(page, USERS.student, PASSWORD, "/student");
+    await visible(page, "search-open").click();
+    const dialog = page.getByRole("dialog", { name: "Quick search" });
+    const input = dialog.getByRole("combobox");
+    await expect(dialog.getByTestId("qs-group-mine")).toBeVisible();
+    await input.fill("purchase");
+    await expect(dialog.getByTestId("qs-page").filter({ hasText: "Purchase history" })).toBeVisible();
+    await input.fill("audit log");
+    await expect(dialog.getByTestId("qs-page")).toHaveCount(0);
+    await input.fill("payouts");
+    await expect(dialog.getByTestId("qs-page")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await logout(page);
+
+    await login(page, USERS.admin, PASSWORD, "/admin");
+    await expect(async () => { await page.keyboard.press("ControlOrMeta+k"); await expect(dialog).toBeVisible({ timeout: 1000 }); }).toPass();
+    await dialog.getByRole("combobox").fill("audit log");
+    const audit = dialog.getByTestId("qs-page").filter({ hasText: "Audit log" });
+    await expect(audit).toBeVisible();
+    await audit.click();
+    await expect(page).toHaveURL(/\/admin\/audit$/);
   });
 });

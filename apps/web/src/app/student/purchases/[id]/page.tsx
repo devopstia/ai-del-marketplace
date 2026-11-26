@@ -47,7 +47,13 @@ export default function ReceiptPage({ params }: { params: Promise<{ id: string }
             </tbody>
             <tfoot><tr className="border-t-2 border-ink"><td className="py-3 font-bold">Total</td><td className="py-3 text-right font-display text-xl font-extrabold tabular-nums">{moneyExact(o.totalCents, o.currency)}</td></tr></tfoot>
           </table>
-          <p className="mt-8 text-xs text-muted">Payment processed by Stripe. Keep this receipt for your records.</p>
+          {o.terms ? (
+            <p className="mt-8 text-sm text-ink-2" data-testid="receipt-terms">
+              You accepted the <Link href="/policies/terms" className="link">Terms of use</Link> and
+              the <Link href="/policies/access-and-refunds" className="link">Access and refunds policy</Link> (version {o.terms.version}) on {dateTime(o.terms.acceptedAt)}.
+            </p>
+          ) : null}
+          <p className={`${o.terms ? "mt-2" : "mt-8"} text-xs text-muted`}>Payment processed by Stripe. Keep this receipt for your records.</p>
         </article>
       ) : null}
       {o && (o.status === "paid" || o.status === "partially_refunded" || o.status === "refunded") ? <RefundPanel orderId={o.id} onRefunded={() => setN((x) => x + 1)} /> : null}

@@ -26,12 +26,15 @@ import { resetEnvCache } from '../src/config/env';
 import { PayoutsService } from '../src/commerce/payouts.service';
 import { RefundsService } from '../src/commerce/refunds.service';
 import { simulatedStripeFee, splitLine, splitOrder } from '../src/commerce/money';
+import { TERMS_VERSION } from '../src/commerce/terms';
 import { AuditService } from '../src/common/audit.service';
 import { StorageService } from '../src/common/storage.service';
 import { packageHls } from '../src/protection/hls-packager';
 import { createDecipheriv } from 'node:crypto';
 import { tmpdir } from 'node:os';
 
+/** What the checkout page sends when the learner ticks the terms box (owner 2026-11-26). */
+const TERMS = { acceptTerms: true, termsVersion: TERMS_VERSION };
 const API_DIR = join(__dirname, '..');
 const ROOT_ENV = join(API_DIR, '..', '..', '.env');
 
@@ -194,9 +197,9 @@ describe('e2e: buy and learn', () => {
     const cart = await agent.post('/api/cart').set('X-CSRF-Token', csrf).send({ courseId: ids.course }).expect(201);
     expect(cart.body).toMatchObject({ count: 1, totalCents: 2500 });
 
-    const noConsent = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).expect(400);
+    const noConsent = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).send(TERMS).expect(400);
     expect(noConsent.body.error.code).toBe('consent_required');
-    const checkout = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).send({ immediateAccessConsent: true }).expect(200);
+    const checkout = await agent.post('/api/checkout').set('X-CSRF-Token', csrf).send({ immediateAccessConsent: true, ...TERMS }).expect(200);
     expect(checkout.body.mode).toBe('test');
     expect(checkout.body.url).toBe(`http://127.0.0.1:3000/checkout/test-payment?order=${checkout.body.orderId}`);
     const orderId = checkout.body.orderId;
@@ -264,6 +267,44 @@ describe('e2e: buy and learn', () => {
     const lecture = await prisma.lecture.create({ data: { sectionId: section.id, title: 'L1', position: 0, type: 'video', videoAssetId: asset.id, durationSec: 20 } });
     return { course, section, lecture };
   }
+
+  it('terms acceptance at purchase: refused without the current version, recorded on the order, shown on receipt and admin detail', async () => {
+    if (!available) return;
+    const teacher = await userAgent('terms-teacher@e2e.example', ['student', 'instructor'], {});
+    const buyer = await userAgent('terms-buyer@e2e.example', ['student']);
+    const admin = await userAgent('terms-admin@e2e.example', ['student', 'admin']);
+    const paid = await publishedCourse(teacher.user.id, 'terms-paid', 1500);
+    const free = await publishedCourse(teacher.user.id, 'terms-free', 0);
+    await buyer.send('post', '/api/cart', { courseId: paid.course.id }).expect(201);
+
+    const none = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(400);
+    expect(none.body.error).toMatchObject({ code: 'terms_required', details: { currentVersion: TERMS_VERSION } });
+    const declined = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, acceptTerms: false, termsVersion: TERMS_VERSION }).expect(400);
+    expect(declined.body.error.code).toBe('terms_required');
+    const old = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, acceptTerms: true, termsVersion: '2020-01-01' }).expect(400);
+    expect(old.body.error.code).toBe('terms_outdated');
+    expect(await prisma.order.count({ where: { userId: buyer.user.id } })).toBe(0);
+
+    const before = Date.now();
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: co.body.orderId } });
+    expect(order).toMatchObject({ termsVersion: TERMS_VERSION, termsAcceptedAt: expect.any(Date), termsAcceptedIp: expect.any(String) });
+    expect(order.termsAcceptedAt!.getTime()).toBeGreaterThanOrEqual(before - 1000);
+    await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+
+    const receipt = await buyer.agent.get(`/api/orders/${co.body.orderId}`).expect(200);
+    expect(receipt.body.terms).toEqual({ version: TERMS_VERSION, acceptedAt: order.termsAcceptedAt!.toISOString() });
+    expect(receipt.body.terms.ip).toBeUndefined();
+    const detail = await admin.agent.get(`/api/admin/orders/${co.body.orderId}`).expect(200);
+    expect(detail.body.terms).toEqual({ version: TERMS_VERSION, acceptedAt: order.termsAcceptedAt!.toISOString(), ip: order.termsAcceptedIp });
+
+    // A free enrolment goes through checkout too and records the acceptance (no immediate-access consent needed).
+    await buyer.send('post', '/api/cart', { courseId: free.course.id }).expect(201);
+    await buyer.send('post', '/api/checkout', {}).expect(400);
+    const fco = await buyer.send('post', '/api/checkout', TERMS).expect(200);
+    expect(fco.body.mode).toBe('free');
+    expect(await prisma.order.findUniqueOrThrow({ where: { id: fco.body.orderId } })).toMatchObject({ termsVersion: TERMS_VERSION, termsAcceptedAt: expect.any(Date), status: 'paid' });
+  });
 
   it('revisions: a published course changes only when an admin approves, all at once', async () => {
     if (!available) return;
@@ -336,7 +377,7 @@ describe('e2e: buy and learn', () => {
     expect(preview.body).toMatchObject({ count: 2, totalCents: 6998, unavailableIds: [] });
     const merged = await buyer.send('post', '/api/cart/merge', { courseIds: [a.course.id, d.course.id, b.course.id] }).expect(200);
     expect(merged.body.merge.added).toHaveLength(3);
-    const checkout = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    const checkout = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
     await buyer.send('post', `/api/dev/test-payments/${checkout.body.orderId}/complete`).expect(200);
     // A second learner in two of the teacher's courses: featured counts distinct learners.
     const other = await userAgent('p-other@e2e.example', ['student']);
@@ -397,7 +438,7 @@ describe('e2e: buy and learn', () => {
     // Buy both courses in one checkout: one fee, split by price, 80% of each line's net.
     await buyer.send('post', '/api/cart', { courseId: c100.course.id }).expect(201);
     await buyer.send('post', '/api/cart', { courseId: c50.course.id }).expect(201);
-    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
     await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
     const order = await prisma.order.findUniqueOrThrow({ where: { id: co.body.orderId }, include: { lines: { orderBy: { priceCents: 'desc' } } } });
     const expected = splitOrder(simulatedStripeFee(15000), [{ baseCents: 10000, platformBps: 2000 }, { baseCents: 5000, platformBps: 2000 }]);
@@ -453,7 +494,7 @@ describe('e2e: buy and learn', () => {
     await refundsSvc.refund(order.id, [lc50.id], 'exception: duplicate purchase', { id: admin.user.id, ip: null });
     expect(await payouts.owedBy(teacher.user.id)).toBe(lc50.instructorShareCents);
     await buyer.send('post', '/api/cart', { courseId: c100.course.id }).expect(201);
-    const co2 = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    const co2 = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
     await buyer.send('post', `/api/dev/test-payments/${co2.body.orderId}/complete`).expect(200);
     await prisma.order.update({ where: { id: co2.body.orderId }, data: { stripeChargeId: 'ch_m2' } });
     const line2 = await prisma.orderLine.findFirstOrThrow({ where: { orderId: co2.body.orderId } });
@@ -537,7 +578,7 @@ describe('e2e: buy and learn', () => {
     // Checkout charges the sale price; the split is 80% of the sale price's net; the line keeps the regular price.
     await buyer.send('post', '/api/cart', { courseId: c.id }).expect(201);
     expect((await buyer.agent.get('/api/cart').expect(200)).body).toMatchObject({ totalCents: 2999, items: [{ priceCents: 2999, listPriceCents: 5000 }] });
-    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
     await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
     const order = await prisma.order.findUniqueOrThrow({ where: { id: co.body.orderId }, include: { lines: true } });
     const [expected] = splitOrder(simulatedStripeFee(2999), [{ baseCents: 2999, platformBps: 2000 }]);
@@ -1046,7 +1087,7 @@ describe('e2e: buy and learn', () => {
     const DAY = 86_400_000;
     async function buy(u: Awaited<ReturnType<typeof userAgent>>, courseId: string) {
       await u.send('post', '/api/cart', { courseId }).expect(201);
-      const co = await u.send('post', '/api/checkout', { immediateAccessConsent: true }).expect(200);
+      const co = await u.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
       await u.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
       return co.body.orderId as string;
     }

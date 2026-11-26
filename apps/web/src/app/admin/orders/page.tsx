@@ -23,7 +23,8 @@ type DetailLine = {
 };
 type Detail = {
   id: string; status: string; provider: string; currency: string; totalCents: number; refundedCents: number; paidAt: string | null;
-  user: { name: string; email: string } | null; lines: DetailLine[]; history: { id: string; action: string; at: string; actor: string | null }[];
+  user: { name: string; email: string } | null; lines: DetailLine[];
+  terms: { version: string; acceptedAt: string | null; ip: string | null } | null; history: { id: string; action: string; at: string; actor: string | null }[];
 };
 const toDetail = (x: unknown): Detail => {
   const o = obj(x);
@@ -32,6 +33,7 @@ const toDetail = (x: unknown): Detail => {
     id: String(o.id ?? ""), status: String(o.status ?? ""), provider: String(o.provider ?? ""), currency: String(o.currency ?? "usd"),
     totalCents: n(o.totalCents), refundedCents: n(o.refundedCents), paidAt: (o.paidAt as string) ?? null,
     user: o.user ? { name: String(obj(o.user).name ?? ""), email: String(obj(o.user).email ?? "") } : null,
+    terms: obj(o.terms).version ? { version: String(obj(o.terms).version), acceptedAt: (obj(o.terms).acceptedAt as string) ?? null, ip: (obj(o.terms).ip as string) ?? null } : null,
     lines: (Array.isArray(o.lines) ? o.lines : []).map((l) => {
       const lo = obj(l);
       return {
@@ -104,6 +106,11 @@ function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
         </table>
       </div>
       <p className="text-sm text-ink-2">Total {moneyExact(data.totalCents, data.currency)}{data.refundedCents ? `, refunded ${moneyExact(data.refundedCents, data.currency)}` : ""}.</p>
+      <p className="text-sm text-ink-2" data-testid="order-terms">
+        {data.terms
+          ? <>Terms accepted: version <b className="text-ink">{data.terms.version}</b> on {dateTime(data.terms.acceptedAt)}{data.terms.ip ? <> from IP <span className="font-mono text-xs">{data.terms.ip}</span></> : null}.</>
+          : "Terms acceptance: not recorded (order placed before acceptance was recorded)."}
+      </p>
       {refundable.length ? (
         <div className="rounded-tile border border-line p-4">
           <h3 className="font-display font-bold">Refund</h3>

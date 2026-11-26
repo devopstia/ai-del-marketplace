@@ -12,6 +12,7 @@ import { usd } from '../common/pricing';
 import { MediaService } from '../media/media.service';
 import { FulfilmentService } from './fulfilment.service';
 import { splitLine } from './money';
+import { TERMS_VERSION, termsAcceptance, type TermsInput } from './terms';
 import { StripeService } from './stripe.service';
 
 @Injectable()
@@ -106,8 +107,15 @@ export class CommerceService {
    * Creates Order(pending) + OrderLines from the cart (commission from settings), then:
    *  - total 0 → fulfils right away;  - Stripe configured → Checkout Session;  - else dev test payment URL (non-prod only).
    */
-  async checkout(a: Actor, opts: { immediateAccessConsent?: boolean } = {}) {
+  async checkout(a: Actor, opts: { immediateAccessConsent?: boolean } & TermsInput = {}) {
     const userId = a.user.id;
+    // Every order (free ones too) records the accepted version of the Terms of use and the Access and refunds policy.
+    const terms = termsAcceptance(opts, a.ip);
+    if (!terms) {
+      throw opts.acceptTerms === true
+        ? badRequest('Our terms were updated. Reload the page, read them and accept the current version.', 'terms_outdated', { currentVersion: TERMS_VERSION })
+        : badRequest('Accept the Terms of use and the Access and refunds policy before continuing', 'terms_required', { currentVersion: TERMS_VERSION });
+    }
     const items = await this.prisma.cartItem.findMany({
       where: { userId },
       include: { course: { select: { id: true, title: true, priceCents: true, currency: true, status: true, instructorId: true } } },
@@ -145,6 +153,7 @@ export class CommerceService {
         currency: 'usd',
         provider: mode,
         immediateAccessConsentAt: opts.immediateAccessConsent ? new Date() : null,
+        ...terms,
         lines: {
           create: buy.map((i) => {
             const p = profiles.get(i.course.instructorId);
@@ -238,7 +247,8 @@ export class CommerceService {
 
   private orderView(o: {
     id: string; status: string; totalCents: number; currency: string; provider: string; paidAt: Date | null; createdAt: Date;
-    lines: { id: string; courseId: string; priceCents: number; listPriceCents: number | null; saleKind: string | null; refundedAt: Date | null; course: { slug: string; title: string } }[];
+    termsVersion: string | null; termsAcceptedAt: Date | null;
+    lines:{ id: string; courseId: string; priceCents: number; listPriceCents: number | null; saleKind: string | null; refundedAt: Date | null; course: { slug: string; title: string } }[];
   }) {
     return {
       id: o.id,
@@ -248,6 +258,8 @@ export class CommerceService {
       provider: o.provider,
       paidAt: o.paidAt,
       createdAt: o.createdAt,
+      // The buyer's own receipt shows the accepted terms version and time (the IP stays for admins).
+      terms: o.termsVersion ? { version: o.termsVersion, acceptedAt: o.termsAcceptedAt } : null,
       lines: o.lines.map((l) => ({ id: l.id, courseId: l.courseId, slug: l.course.slug, title: l.course.title, priceCents: l.priceCents, listPriceCents: l.listPriceCents ?? l.priceCents, saleKind: l.saleKind, refundedAt: l.refundedAt })),
     };
   }

@@ -345,7 +345,7 @@ dispute after a transfer is reversed in Stripe, or recorded in `ledger_entries` 
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/checkout` | body `{ immediateAccessConsent: true }` required for paid carts (`400 consent_required`) |
+| POST | `/checkout` | body `{ acceptTerms: true, termsVersion: "2026-11-25" }` required for every cart (`400 terms_required` / `terms_outdated`, details.currentVersion; stored on the order as termsVersion, termsAcceptedAt, termsAcceptedIp), plus `immediateAccessConsent: true` for paid carts (`400 consent_required`) |
 | GET | `/orders/:id/refund` | own order: `{ eligibleUntil, policy: { windowDays: 14, maxWatchedPercent: 25, selfServicePerYear: 3 }, selfServiceLeft, pendingRequest, lines: [{ lineId, courseId, title, eligible, reason, watchedPercent }] }`; reasons `already_refunded`, `free_course`, `not_paid`, `window_closed`, `certificate_issued`, `watched_too_much`, `disputed` |
 | POST | `/orders/:id/refund` | `{ lineIds?, reason? }` → `{ status: 'refunded' }` or, over 3 self-service refunds in 12 months, `{ status: 'pending_review', requestId }`; `400 <reason>` when not eligible. A refund revokes access and the course certificate |
 | GET | `/instructor/terms` | `{ instructorSharePercent, platformBps, source: default\|agreement\|platform, defaultInstructorSharePercent, payToPlatform, note, formula, holdDays: 16, refundWindowDays: 14 }` |
