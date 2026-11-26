@@ -6,6 +6,7 @@ import { EMAIL_QUEUE, HLS_QUEUE, JobsService, MEDIA_QUEUE, PAYMENTS_QUEUE } from
 import { PrismaService } from './prisma.service';
 import { SalePricingService } from './sale-pricing';
 import { SettingsService } from './settings.service';
+import { SessionPolicyService } from './session-policy.service';
 import { StorageService } from './storage.service';
 
 export function redisConnection() {
@@ -25,7 +26,7 @@ export function redisConnection() {
     BullModule.forRootAsync({ useFactory: () => ({ connection: redisConnection() }) }),
     BullModule.registerQueue({ name: MEDIA_QUEUE }, { name: HLS_QUEUE }, { name: EMAIL_QUEUE }, { name: PAYMENTS_QUEUE }),
   ],
-  providers: [PrismaService, AuditService, StorageService, SettingsService, JobsService, SalePricingService],
-  exports: [PrismaService, AuditService, StorageService, SettingsService, JobsService, SalePricingService, BullModule],
+  providers: [PrismaService, AuditService, StorageService, SettingsService, JobsService, SalePricingService, SessionPolicyService],
+  exports: [PrismaService, AuditService, StorageService, SettingsService, JobsService, SalePricingService, SessionPolicyService, BullModule],
 })
 export class CommonModule {}

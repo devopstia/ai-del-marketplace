@@ -5,6 +5,8 @@ import { OAuthService } from './oauth.service';
 import { OAuthConfigController } from './oauth-config.controller';
 import { OAuthConfigService } from './oauth-config.service';
 import { SignInService } from './signin.service';
+import { SessionAdminController } from './session-admin.controller';
+import { SessionAdminService } from './session-admin.service';
 
-@Module({ controllers: [AuthController, OAuthConfigController], providers: [AuthService, SignInService, OAuthService, OAuthConfigService], exports: [AuthService, SignInService] })
+@Module({ controllers: [AuthController, OAuthConfigController, SessionAdminController], providers: [AuthService, SignInService, OAuthService, OAuthConfigService, SessionAdminService], exports: [AuthService, SignInService] })
 export class AuthModule {}

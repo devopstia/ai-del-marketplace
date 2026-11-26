@@ -98,8 +98,15 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     docs/AUTH.md). Every agent keeps these true:
     - Sign-in methods: email + password, Google, GitHub, Facebook, LinkedIn. A provider's button exists only when its
       keys are set (Super Admin › People › Sign-in methods, `/admin/sign-in`: keys checked with the provider, sealed,
-      step-up code, audited; `.env` keys also work). Every method ends in the same two-step flow: **no session before a Google Authenticator code**
-      (or a recovery code, or a trusted device of an enrolled account). New accounts set it up before their first session.
+      step-up code, audited; `.env` keys also work). Every method ends in the same two-step flow: **no session before a second step**: a Google Authenticator
+      code, a recovery code, a trusted device of an enrolled account, or (students and instructors only, when the Super
+      Admin allows it; owner 2026-11-26) a code sent to their email. **Admin and Super Admin always need the
+      authenticator**; email codes are never enough for them (enforced in the API, the settings can't be saved otherwise).
+    - Session security (owner 2026-11-26; docs/AUTH.md §7, Super Admin › People › Authentication & security): inactivity
+      timeout with a warning (watching a video counts as activity), maximum lifetime, one signed-in browser per account
+      (a completed sign-in ends the older one; a failed code never does), all enforced in the API. Sessions have a `kind`:
+      only `user` sessions count; super admin support sessions (`support`) never disconnect the person. End sessions only
+      through `SessionPolicyService.end()` (reason, audit, stops video playback). Government ID verification: not offered.
     - Accounts are matched by the provider's account id, **never merged by email**; linking happens only from a
       signed-in account (Account › Security) through the provider. One person = one account (courses, purchases,
       progress, roles).

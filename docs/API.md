@@ -389,8 +389,12 @@ Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
 | Method | Path | Who | Notes |
 |---|---|---|---|
 | POST | `/auth/register`, `/auth/login` | public | `{ mfa: 'enroll' \| 'verify' }` (ticket cookie), or `{ user }` on a trusted device |
-| GET | `/auth/mfa/pending` | ticket | stage, method, masked email |
-| POST | `/auth/mfa/enroll` · `/auth/mfa/complete` · `/auth/mfa/cancel` | ticket | seed + otpauth URL · `{ code \| recoveryCode, trustDevice }` → session (+ `recoveryCodes` after set-up) |
+| GET | `/auth/mfa/pending` | ticket | stage, method, masked email, `methods { authenticator, email, recovery }`, `emailCode { length, ttlMinutes, sent, resendAfter }`, `prefers` |
+| POST | `/auth/mfa/enroll` · `/auth/mfa/complete` · `/auth/mfa/cancel` | ticket | seed + otpauth URL · `{ code \| recoveryCode \| emailCode, trustDevice }` → session (+ `recoveryCodes` after set-up); 409 `session_limit` when the account is at its limit and the setting is "refuse" |
+| POST | `/auth/mfa/email/send` | ticket | email sign-in code (students/instructors when allowed; 403 `email_code_not_allowed`, 429 `email_code_cooldown` / `email_code_limit`) → `{ sentTo, expiresAt, resendAfter }` |
+| POST | `/auth/step-up/email` | signed in, no authenticator | email code for a sensitive change (then send it as `code`) |
+| GET | `/auth/session` · POST `/auth/session/heartbeat` | signed in | `{ kind, inactivityMinutes, warningMinutes, idleAt, endsAt }`; the heartbeat records activity (at most once a minute) |
+| — | any signed-in route | — | 401 `session_replaced` \| `session_idle` \| `session_lifetime` \| `session_admin` when this browser's session was ended; `/auth/me` then returns `{ user: null, sessionEnded, sessionEndedMessage }` once |
 | GET | `/auth/providers` · `/auth/password-policy` | public | enabled providers, rules |
 | GET | `/auth/oauth/:provider/start?mode=login\|link&next=` · `/auth/oauth/:provider/callback` | public / provider | redirects; `link` needs a session |
 | POST | `/auth/password/forgot` · `/auth/password/reset` | public | same answer for every address · `{ token, password }` |
@@ -400,6 +404,9 @@ Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
 | DELETE | `/auth/trusted-devices` | signed in | forget all |
 | POST | `/auth/identities/:id/unlink` | signed in | needs a code; not the last way in |
 | POST | `/admin/users/:id/mfa/reset` | super_admin | never one's own; audited |
+| GET · PUT | `/admin/auth-settings` · POST `/admin/auth-settings/reset` | super_admin | Authentication & security settings (`{ settings, code }`; step-up code; audited with the changed fields) |
+| GET | `/admin/users/:id/sessions` | super_admin | live sessions (device, IP, last activity, end time), recent sign-ins, session ends; viewing is audited |
+| DELETE | `/admin/users/:id/sessions/:sid` · POST `/admin/users/:id/sessions/end-all` | super_admin | `{ reason? }`; the browser is told "ended by support" |
 
 ## AI learning (2026-11-27, docs/AI_LEARNING.md)
 Access = an active enrolment, the course owner or an admin (checked in `StudyService`). The assistant and notes

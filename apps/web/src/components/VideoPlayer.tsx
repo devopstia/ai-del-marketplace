@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Captions, Gauge, Headphones, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { DATA_MODES, type DataMode } from "@/lib/data-saver";
 import { clock } from "@/lib/format";
+import { markActivity } from "@/lib/session-end";
 import { API_URL } from "@/lib/config";
 
 export interface PlayerHandle {
@@ -212,6 +213,8 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
           const el = e.currentTarget;
           setT(el.currentTime);
           onTime?.(el.currentTime, el.duration || 0);
+          // A playing lesson is activity: the learner is never signed out for inactivity mid-video (docs/AUTH.md §7).
+          if (!el.paused) markActivity();
         }}
         onPlay={() => { setPlaying(true); poke(); }}
         onPause={(e) => { setPlaying(false); setIdle(false); onPause?.(e.currentTarget.currentTime); }}

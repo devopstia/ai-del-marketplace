@@ -10,6 +10,7 @@ import { CSRF_COOKIE, SESSION_COOKIE, sessionCookieOptions } from '../common/coo
 import { ZBody } from '../common/zod';
 import { env } from '../config/env';
 import { CommerceService } from '../commerce/commerce.service';
+import { IDLE_MESSAGE, LIFETIME_MESSAGE, ADMIN_MESSAGE, REPLACED_MESSAGE, SessionPolicyService } from '../common/session-policy.service';
 import { AuthService } from './auth.service';
 import { OAuthService } from './oauth.service';
 import { PASSWORD_POLICY } from './password-policy';
@@ -30,7 +31,9 @@ const profileSchema = z.object({
   avatarUrl: z.string().url().max(500).nullable().optional(),
 });
 const passwordSchema = z.object({ currentPassword: z.string().max(200).optional(), newPassword: password, code });
-const completeSchema = z.object({ code, recoveryCode: z.string().trim().max(40).optional(), trustDevice: z.boolean().optional() });
+const completeSchema = z.object({ code, recoveryCode: z.string().trim().max(40).optional(), emailCode: z.string().trim().max(12).optional(), trustDevice: z.boolean().optional() });
+/** What a signed-out browser is told about its ended session (the web app shows it on the sign-in page). */
+const ENDED: Record<string, string> = { replaced: REPLACED_MESSAGE, idle: IDLE_MESSAGE, lifetime: LIFETIME_MESSAGE, admin: ADMIN_MESSAGE };
 const codeSchema = z.object({ code });
 const replaceSchema = z.object({ pending: z.string().min(10).max(2000), code: z.string().trim().max(20) });
 const forgotSchema = z.object({ email });
@@ -48,6 +51,7 @@ export class AuthController {
     private readonly oauth: OAuthService,
     private readonly commerce: CommerceService,
     private readonly audit: AuditService,
+    private readonly sessionPolicy: SessionPolicyService,
   ) {}
 
   private async mergeGuestCart(userId: string, ids?: string[]) {
@@ -93,7 +97,8 @@ export class AuthController {
   @HttpCode(200)
   @Post('auth/login')
   async login(@ZBody(loginSchema) body: z.infer<typeof loginSchema>, @Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
-    if (req.sessionId) await this.auth.revokeSession(req.sessionId); // no session fixation
+    // The browser's current session (if any) ends only when the new sign-in has passed every step (createSession),
+    // so a failed code never signs anyone out (owner 2026-11-26; docs/AUTH.md §7).
     return this.afterFirstStep(await this.auth.login(body, req, res, this.ctx(req)), req);
   }
 
@@ -119,6 +124,35 @@ export class AuthController {
     const r = await this.signIn.complete(req, res, this.ctx(req), body);
     const cart = await this.mergeGuestCart(r.userId, r.cartCourseIds);
     return { user: await this.auth.me(r.userId), csrf: req.cookies[CSRF_COOKIE], recoveryCodes: r.recoveryCodes, recoveryCodesLeft: r.recoveryCodesLeft, next: r.next, ...(cart ? { cart } : {}) };
+  }
+
+  /** "Send a code to my email" on the code screen (students and instructors, when allowed; docs/AUTH.md §7). */
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle(authLimit)
+  @HttpCode(200)
+  @Post('auth/mfa/email/send')
+  sendEmailCode(@Req() req: AppRequest) { return this.signIn.sendEmailCode(req, this.ctx(req)); }
+
+  /** Signed in, no authenticator: an email code to confirm a sensitive change (step-up). */
+  @UseGuards(ThrottlerGuard)
+  @Throttle(authLimit)
+  @HttpCode(200)
+  @Post('auth/step-up/email')
+  stepUpEmail(@Req() req: AppRequest) { return this.signIn.sendStepUpCode(req.user!.id, this.ctx(req)); }
+
+  // ---- Session security: inactivity timeout and heartbeat (docs/AUTH.md §7) ----
+
+  /** The current session's limits, for the inactivity warning. Doesn't count as activity. */
+  @Get('auth/session')
+  session(@Req() req: AppRequest) { return this.auth.sessionStatus(req.sessionId!); }
+
+  /** The browser saw real activity (typing, clicking, scrolling, a playing video) or "Stay signed in". */
+  @HttpCode(200)
+  @Post('auth/session/heartbeat')
+  async heartbeat(@Req() req: AppRequest) {
+    await this.sessionPolicy.touch(req.sessionId!);
+    return this.auth.sessionStatus(req.sessionId!);
   }
 
   @Public()
@@ -186,7 +220,7 @@ export class AuthController {
   @HttpCode(200)
   @Post('auth/logout')
   async logout(@Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
-    if (req.sessionId) await this.auth.revokeSession(req.sessionId);
+    if (req.sessionId && req.user) await this.sessionPolicy.end({ ids: [req.sessionId], userId: req.user.id }, 'logout', { ip: req.ip ?? null });
     const { maxAge: _m, ...opts } = sessionCookieOptions();
     res.clearCookie(SESSION_COOKIE, opts);
     res.clearCookie(ACT_AS_COOKIE, opts);
@@ -196,9 +230,12 @@ export class AuthController {
   /** Public: returns { user: null, csrf } when signed out, so the web app can bootstrap its CSRF token. */
   @Public()
   @Get('auth/me')
-  async me(@Req() req: AppRequest) {
+  async me(@Req() req: AppRequest, @Res({ passthrough: true }) res: Response) {
+    // Report an ended session once, then forget the dead cookie.
+    if (!req.user && req.sessionEnded) { const { maxAge: _m, ...opts } = sessionCookieOptions(); res.clearCookie(SESSION_COOKIE, opts); }
     const actingAs = req.user?.roles.includes('super_admin') && req.cookies?.[ACT_AS_COOKIE] === ACT_AS_PLATFORM ? await this.auth.platformInstructor() : null;
-    return { user: req.user ? { ...(await this.auth.me(req.user.id)), actingAs } : null, csrf: req.cookies[CSRF_COOKIE] };
+    const ended = !req.user && req.sessionEnded ? { sessionEnded: req.sessionEnded, sessionEndedMessage: ENDED[req.sessionEnded] ?? null } : {};
+    return { user: req.user ? { ...(await this.auth.me(req.user.id)), actingAs } : null, csrf: req.cookies[CSRF_COOKIE], ...ended };
   }
 
   /** Super admin: switch the instructor studio between DEL's account ("del") and their own ("self"). Audited. */

@@ -2,6 +2,7 @@
 import { clearGuest, guestCart, onGuestCart } from "@/lib/guest-cart";
 import { createContext, useRef, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, setCsrf } from "@/lib/api";
+import { announceSessionEnded, rememberSessionEnded } from "@/lib/session-end";
 import { list, toMe, obj } from "@/lib/normalize";
 import type { Me, Role } from "@/lib/types";
 
@@ -41,6 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const o = obj(r);
       setCsrf((o.csrf ?? o.csrfToken) as string | undefined);
       const m = toMe(r);
+      // The session this browser had was ended (signed in elsewhere, inactivity, support): say why on the sign-in page.
+      if (!m && typeof o.sessionEnded === "string") { if (meRef.current) announceSessionEnded(o.sessionEnded); else rememberSessionEnded(o.sessionEnded); }
       meRef.current = m;
       setMe(m);
       // Just signed in (any method): move the guest cart into the account, then forget it in this browser.

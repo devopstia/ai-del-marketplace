@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { ToastProvider } from "@/components/Toast";
 import { themeScript } from "@/components/ThemeToggle";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
+import { SessionGuard } from "@/components/SessionGuard";
 import { SITE_DESCRIPTION, SITE_URL, siteIndexable } from "@/lib/seo";
 import { QuickSearchProvider } from "@/components/search/QuickSearch";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <ToastProvider><QuickSearchProvider>{children}</QuickSearchProvider></ToastProvider>
           <PwaRegister />
+          <SessionGuard />
         </AuthProvider>
       </body>
     </html>

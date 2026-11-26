@@ -12,7 +12,8 @@ export interface AuthUser {
   adminPermissions?: string[];
 }
 
-export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; rawBody?: Buffer };
+/** sessionKind: 'user' or 'support' (docs/AUTH.md §7); sessionEnded: why the cookie's session ended (replaced, idle, …). */
+export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; sessionKind?: string; sessionEnded?: string; rawBody?: Buffer };
 
 export const IS_PUBLIC = 'isPublic';
 export const ROLES = 'roles';

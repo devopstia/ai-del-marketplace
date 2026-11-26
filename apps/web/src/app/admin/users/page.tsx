@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { BadgeCheck, CircleAlert, KeyRound, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { UserSessions } from "@/components/admin/UserSessions";
 import { obj } from "@/lib/normalize";
 import { qs } from "@/lib/qs";
 import { date, dateTime } from "@/lib/format";
@@ -263,6 +264,8 @@ function ManageUser({ id, catalogue, onClose, onChanged }: { id: string; catalog
               </div>
             </section>
           ) : null}
+
+          {superAdmin ? <UserSessions userId={u.id} self={self} /> : null}
 
           <section aria-labelledby="hist-h">
             <h3 id="hist-h" className="font-display text-lg font-bold">History</h3>

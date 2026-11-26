@@ -39,6 +39,8 @@ x-api-env: &api-env
   LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
   OAUTH_TEST_PROVIDER: ${OAUTH_TEST_PROVIDER:-false}
   MFA_REQUIRED: ${MFA_REQUIRED:-true}
+  # Session limits (docs/AUTH.md §7): "off" relaxes the default single-session/idle rules on test stacks only.
+  AUTH_SESSION_LIMITS: ${AUTH_SESSION_LIMITS:-on}
   PASSWORD_BREACH_CHECK: ${PASSWORD_BREACH_CHECK:-true}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   REFUND_AI_MODEL: ${REFUND_AI_MODEL:-claude-opus-5-5}

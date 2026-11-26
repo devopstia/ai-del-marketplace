@@ -22,6 +22,8 @@ services:
       # the whole browser suite signs in ~40 times from one IP
       AUTH_RATE_LIMIT: "300"
       OAUTH_TEST_PROVIDER: "true"
+      # parallel browser tests sign the same demo accounts in several times (docs/AUTH.md §7)
+      AUTH_SESSION_LIMITS: "off"
   worker:
     image: ai-del-marketplace-api:test
     environment:

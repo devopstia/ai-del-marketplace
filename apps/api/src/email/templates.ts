@@ -48,6 +48,29 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { p: `Hi ${first(d)}, DevOps Easy Learning removed the Google Authenticator from your account after confirming who you are. You set up a new one at your next sign-in.` },
     { note: 'If you didn’t ask for this, write to support@devopseasylearning.com right away.' },
   ]),
+  // Email sign-in code (docs/AUTH.md §7): the code is the first thing in the preheader and the email.
+  'auth-email-code': (d) => mk(d.purpose === 'confirm' ? `${s(d.code)} is your DevOps Easy Learning confirmation code` : `${s(d.code)} is your DevOps Easy Learning sign-in code`, [
+    { h1: d.purpose === 'confirm' ? 'Confirm it’s you' : 'Your sign-in code' },
+    { p: `Hi ${first(d)}, enter this code ${d.purpose === 'confirm' ? 'to confirm the change in your account' : 'to finish signing in'}. It works once and expires in ${Number(d.minutes ?? 5)} minutes.` },
+    { code: s(d.code) },
+    { rows: [['Requested from', s(d.device, 'Unknown device')]] },
+    { note: 'If you didn’t try to sign in, ignore this email and change your password: someone may know it. Never share this code, not even with DevOps Easy Learning staff.' },
+  ], `${s(d.code)} · expires in ${Number(d.minutes ?? 5)} minutes`),
+  'security-new-device': (d) => mk('New sign-in to your DevOps Easy Learning account', [
+    { h1: 'New sign-in from a new device' },
+    { p: `Hi ${first(d)}, your account was just signed in from a browser or device it hasn’t used before.` },
+    { rows: [['When', d.at ? `${new Date(String(d.at)).toUTCString().replace(' GMT', ' UTC')}` : ''], ['Device', s(d.device, 'Unknown device')], ['IP address', s(d.ip, 'not available')], ['Location', 'Location unavailable']] },
+    { p: 'If this was you, there is nothing to do.' },
+    { note: 'If it wasn’t you: reset your password now (this signs out every device) and write to support@devopseasylearning.com.' },
+    { cta: { href: `${web()}/forgot-password`, label: 'Reset my password' } },
+  ]),
+  'security-account-locked': (d) => mk('Your DevOps Easy Learning account was locked for a few minutes', [
+    { h1: 'Too many wrong attempts' },
+    { p: `Hi ${first(d)}, someone entered a wrong ${d.what === 'password' ? 'password' : 'code'} for your account several times in a row, so sign-in is paused for ${Number(d.minutes ?? 15)} minutes.` },
+    { rows: [['IP address', s(d.ip, 'not available')]] },
+    { note: 'If this wasn’t you, reset your password and write to support@devopseasylearning.com. Your two-step sign-in still protects the account.' },
+    { cta: { href: `${web()}/forgot-password`, label: 'Reset my password' } },
+  ]),
   'security-identity-linked': (d) => mk(`${s(d.provider, 'A sign-in method')} was linked to your account`, [
     { h1: 'New way to sign in' },
     { p: `**${s(d.provider)}** can now be used to sign in to your DevOps Easy Learning account. Google Authenticator is still asked every time.` },
