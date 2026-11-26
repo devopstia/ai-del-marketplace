@@ -98,6 +98,12 @@ export class InstructorController {
     return this.svc.courseDetail(a.user.id, id, q.version);
   }
 
+  /** Preview a lesson of the version the studio edits (draft revision included): course owner or course-reviewing admin. */
+  @Roles('instructor', 'admin') @Get('courses/:id/lectures/:lectureId/preview')
+  previewLecture(@Param('id') id: string, @Param('lectureId') lectureId: string, @ActorCtx() a: Actor) {
+    return this.svc.previewLecture(a, id, lectureId);
+  }
+
   /** Discard the draft changes of a published course (live course untouched). */
   @Roles('instructor') @Delete('courses/:id/revision')
   discardRevision(@Param('id') id: string, @ActorCtx() a: Actor) {

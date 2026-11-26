@@ -197,6 +197,7 @@ type Order = { id; status: 'pending'|'paid'|'failed'|'refunded'|'partially_refun
 | PUT | `/instructor/courses/:id/sections/:sectionId/lectures/order` | `{ ids: [lectureId, ...] }` |
 | PATCH / DELETE | `/instructor/courses/:id/lectures/:lectureId` | `{ title?, type?, isPreview?, articleMd?, summary?, videoAssetId? (null detaches), sectionId? (move) }` |
 | PUT / DELETE | `/instructor/courses/:id/lectures/:lectureId/quiz` | `{ questions: [{ q, options: string[3..5], correct: index, why }] }` |
+| GET | `/instructor/courses/:id/lectures/:lectureId/preview` | Preview one lesson of the version the studio edits (the draft revision of a published course): `{ version, section, lecture: { id, title, type, durationSec, articleMd, summary }, video: { status, durationSec, playback: { url, expiresAt, format, captionsUrl? } \| null } \| null, quiz: [{ q, options, correct, why }] \| null, resources: [{ id, title, sizeBytes, mime }] }`. Course owner, or an admin with `courses.review` (audited `course.draft_preview`); everyone else `404`. Signed URL lives 5 minutes |
 | POST | `/instructor/courses/:id/lectures/:lectureId/resources` | `{ title, storageKey }` (step 2 of a resource upload) |
 | DELETE | `/instructor/courses/:id/resources/:resourceId` | |
 | GET | `/instructor/sales?from&to` | `{ totals: { grossCents, commissionCents, earningsCents, refundedCents, paidOutCents, pendingPayoutCents, sales }, byCourse: [...], items: [{ orderLineId, orderId, paidAt, course, priceCents, commissionBps, instructorShareCents, transferStatus, refundedAt }] }` |
@@ -281,6 +282,8 @@ All paginated admin lists return `{ items, page, pageSize, total, totalPages }` 
 | GET | `/admin/orders/:id` | AdminOrder (below) |
 | POST | `/admin/orders/:id/refund` | `{ lineIds?: string[], reason? }` (omit `lineIds` for a full refund; partial refunds can be repeated until everything is refunded) → AdminOrder. `400 invalid_line` if a line is not in this order. Refunds the Stripe charge, cancels/reverses instructor transfers, revokes those enrolments. |
 | PATCH | `/admin/reviews/:id` | `{ status: 'visible'\|'hidden' }` |
+| GET | `/admin/reviews` | `q, courseId, instructorId, rating, status, reported, page, pageSize` (zod-validated, server-side). `GET /admin/reviews/filters` → `{ courses: [{ id, title, instructorId }], instructors: [{ id, name }] }` (only courses that have reviews) |
+| GET | `/enrollments/manual?status&q&instructorId&courseId&from&to&page&pageSize` | Manual enrollment requests (instructors: their own; `instructorId` only for DEL). Instructor and course must match the same request line; `from`/`to` are calendar days `YYYY-MM-DD`, both included. `GET /enrollments/manual/filters` → `{ courses: [{ id, title, instructorId }], instructors: [{ id, name }] }` from the requests this person can see (instructors get no instructor list) |
 | GET | `/admin/audit?action&actorId&targetType&targetId&q&from&to&page&pageSize` | server-side: `action` prefix (e.g. `course.`, `order.`), `q` searches action, target and actor name/email, `from`/`to` ISO dates |
 
 ```ts

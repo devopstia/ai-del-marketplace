@@ -19,6 +19,7 @@ import type { QuizQuestion, ResourceItem, StudioLecture, StudioSection } from "@
 import type { EditorCtx } from "./CourseEditor";
 import { StepFooter } from "./CourseEditor";
 import { UploadBox } from "./UploadBox";
+import { DraftPreview } from "./DraftPreview";
 import { uploadResource, uploadVideo } from "./upload";
 import { StatusBadge } from "../StatusBadge";
 import { useToast } from "../Toast";
@@ -58,6 +59,7 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
   const [uploads, setUploads] = useState<Uploads>({});
   const [active, setActive] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
   const before = useRef<StudioSection[] | null>(null);
   if (synced !== course.sections) {
     // Server copy changed (after a save or reload): adopt it, and open any section that just appeared.
@@ -168,6 +170,7 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
   const numbering = useMemo(() => { let n = 0; const m = new Map<string, number>(); sections.forEach((s) => s.lectures.forEach((l) => m.set(l.id, ++n))); return m; }, [sections]);
   const needle = q.trim().toLowerCase();
   const dragging = active ? (active.startsWith("sec:") ? sections.find((s) => sid(s.id) === active)?.title : sections.flatMap((s) => s.lectures).find((l) => lid(l.id) === active)?.title) : null;
+  // The live course opens in the player; draft changes of a live course open in the studio preview (owner only).
   const canPreview = course.version !== "draft";
 
   return (
@@ -215,7 +218,7 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
                   <ul className="divide-y divide-line" data-testid="lesson-list">
                     {s.lectures.filter((l) => !needle || l.title.toLowerCase().includes(needle)).map((l) => (
                       <LessonRow key={l.id} courseId={course.id} slug={course.slug} l={l} n={numbering.get(l.id) ?? 0} editing={edit === l.id} canPreview={canPreview} locked={locked}
-                        upload={uploads[l.id]} onEdit={() => setEdit((x) => (x === l.id ? null : l.id))} onVideo={(f) => void uploadLessonVideo(l.id, f)} run={run} />
+                        onPreview={() => setPreview(l.id)} upload={uploads[l.id]} onEdit={() => setEdit((x) => (x === l.id ? null : l.id))} onVideo={(f) => void uploadLessonVideo(l.id, f)} run={run} />
                     ))}
                     {!s.lectures.length ? <EmptyDrop sectionId={s.id} /> : null}
                   </ul>
@@ -229,6 +232,7 @@ export function CurriculumStep({ course, reload, goto, locked }: EditorCtx) {
       </fieldset>
 
       <CoursePackage courseId={course.id} locked={locked} />
+      {!canPreview ? <DraftPreview courseId={course.id} lectureId={preview} onClose={() => setPreview(null)} /> : null}
       <StepFooter next="pricing" goto={goto} />
     </div>
   );
@@ -288,8 +292,8 @@ function AddLecture({ onAdd, onFiles }: { onAdd: (t: string, type: StudioLecture
   );
 }
 
-function LessonRow({ courseId, slug, l, n, editing, canPreview, locked, upload, onEdit, onVideo, run }: {
-  courseId: string; slug: string; l: StudioLecture; n: number; editing: boolean; canPreview: boolean; locked: boolean; upload?: Uploads[string];
+function LessonRow({ courseId, slug, l, n, editing, canPreview, locked, upload, onEdit, onVideo, onPreview, run }: {
+  courseId: string; slug: string; l: StudioLecture; n: number; editing: boolean; canPreview: boolean; locked: boolean; upload?: Uploads[string]; onPreview: () => void;
   onEdit: () => void; onVideo: (f: File) => void; run: (fn: () => Promise<unknown>, ok?: string) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: lid(l.id), disabled: locked });
@@ -319,7 +323,8 @@ function LessonRow({ courseId, slug, l, n, editing, canPreview, locked, upload, 
             <input ref={video} type="file" accept={VIDEO_TYPES} className="sr-only" tabIndex={-1} aria-label={`Video for ${l.title}`} onChange={(e) => { const f = e.target.files?.[0]; if (f) onVideo(f); e.target.value = ""; }} />
           </>
         ) : null}
-        {canPreview && (l.type !== "video" || l.videoStatus === "ready") ? <Link href={`/learn/${slug}/${l.id}`} target="_blank" className="btn btn-ghost btn-sm !px-2 max-sm:hidden" aria-label={`Preview ${l.title}`} title="Preview as a student"><ExternalLink className="size-4" /></Link> : null}
+        {canPreview && (l.type !== "video" || l.videoStatus === "ready") ? <Link href={`/learn/${slug}/${l.id}`} target="_blank" className="btn btn-ghost btn-sm !px-2 max-sm:hidden" aria-label={`Preview ${l.title}`} title="Preview as a student"><ExternalLink className="size-4" /></Link>
+          : !canPreview ? <button type="button" onClick={onPreview} className="btn btn-ghost btn-sm !px-2" aria-label={`Preview ${l.title} (draft)`} title="Preview your changes" data-testid="draft-preview-lesson"><Eye className="size-4" /></button> : null}
         <button type="button" onClick={onEdit} className="btn btn-ghost btn-sm !px-2" aria-label={editing ? `Close ${l.title}` : `Edit ${l.title}`}><ChevronDown className={`size-4 transition-transform ${editing ? "rotate-180" : ""}`} /></button>
       </div>
       {upload ? (
