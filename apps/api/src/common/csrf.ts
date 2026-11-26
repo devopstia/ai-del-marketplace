@@ -3,7 +3,8 @@ import { Reflector } from '@nestjs/core';
 import type { NextFunction, Response } from 'express';
 import { timingSafeEqual } from 'node:crypto';
 import { AppRequest, SKIP_CSRF } from './auth-context';
-import { CSRF_COOKIE, CSRF_HEADER, csrfCookieOptions } from './cookies';
+import { CSRF_COOKIE, CSRF_HEADER, csrfCookieOptions, SESSION_COOKIE } from './cookies';
+import { agentBearer } from '../assist/assist-context';
 import { forbidden } from './errors';
 import { randomToken } from './util';
 
@@ -38,6 +39,8 @@ export class CsrfGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<AppRequest>();
     if (SAFE.has(req.method)) return true;
     if (this.reflector.getAllAndOverride<boolean>(SKIP_CSRF, [ctx.getHandler(), ctx.getClass()])) return true;
+    // AI agent API: a Bearer token with no session cookie can't be forged cross-site (browsers never add that header).
+    if (!req.cookies?.[SESSION_COOKIE] && agentBearer(req)) return true;
     // A cookie minted on this very request cannot have been echoed back, so it never counts.
     const cookie = req.cookies?.__csrfFresh ? undefined : req.cookies?.[CSRF_COOKIE];
     if (!csrfTokensMatch(cookie, req.headers[CSRF_HEADER])) {

@@ -436,6 +436,20 @@ bought on its own. Slugs `summary`, `new` and `course-options` are reserved.
 | POST | `/admin/paths/:id/publish` · `/unpublish` | super_admin | publish needs a summary and ≥2 courses, all published (`too_few_steps`, `course_not_published`, `summary_required`); audited |
 | DELETE | `/admin/paths/:id` | super_admin | drafts only (409 `published`); audited |
 
+## Support sessions and AI agents (2026-11-26, docs/SUPPORT_SESSIONS_AND_AGENTS.md)
+- `GET /support-session` (public: `{active:false}` or who/why/until for the banner) · `POST /support-session/start`
+  `{userId, reason, code, minutes?}` (super admin; sets the httpOnly `support_sid` cookie) · `POST /support-session/end`
+  · `GET /support-session/history?userId=` · `POST /support-session/:id/revoke`. During a session `req.user` is the
+  person, `req.realUser` the super admin; account security, money, learning records and `/admin` writes answer
+  `403 support_restricted`.
+- `GET|POST /admin/agents/tokens` (issue: `{instructorId, name, scopes[], days?, reason, code}`, token returned once) ·
+  `POST /admin/agents/tokens/:id/revoke` · `GET /admin/agents/scopes|activity?tokenId=|pending` (super admin).
+- `/agent/*` with `Authorization: Bearer del_agent_…` (no cookies/CSRF): whoami, categories, courses (read, create,
+  edit, sections, lessons, curriculum, quiz, cover), videos, resumable uploads (`POST /agent/uploads`,
+  `GET /agent/uploads/:id/parts`, `POST /agent/uploads/:id/complete|abort`), `GET /agent/courses/:id/validation|preview`,
+  `POST /agent/courses/:id/submit`. Full list in the doc.
+- Audit rows carry `onBehalfOfId`, `agentTokenId`, `supportSessionId` and `status` (ok/failed).
+
 ## Access and refunds (2026-11-25, docs/ACCESS_AND_REFUNDS.md)
 | Method | Path | Who | Notes |
 |---|---|---|---|

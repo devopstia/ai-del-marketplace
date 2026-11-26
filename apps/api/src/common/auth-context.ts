@@ -12,8 +12,32 @@ export interface AuthUser {
   adminPermissions?: string[];
 }
 
+/** A super admin's support session (docs/SUPPORT_SESSIONS_AND_AGENTS.md). */
+export interface SupportInfo {
+  id: string;
+  reason: string;
+  startedAt: Date;
+  expiresAt: Date;
+  actor: { id: string; name: string; email: string };
+  subject: { id: string; name: string; email: string; roles: Role[] };
+}
+/** An AI agent calling /api/agent/* with a scoped token. */
+export interface AgentInfo {
+  tokenId: string;
+  name: string;
+  issuedById: string;
+  instructorId: string;
+  scopes: string[];
+  expiresAt: Date;
+}
+
+/**
+ * Identity contract: `user` is always the EFFECTIVE user (whose data and permissions apply). `realUser` is the person
+ * at the keyboard when that differs (DEL Studio mode, support session). `support` / `agent` say why. Audit entries
+ * always name the real person (common/audit.service.ts).
+ */
 /** sessionKind: 'user' or 'support' (docs/AUTH.md §7); sessionEnded: why the cookie's session ended (replaced, idle, …). */
-export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; sessionKind?: string; sessionEnded?: string; rawBody?: Buffer };
+export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; sessionKind?: string; sessionEnded?: string; rawBody?: Buffer; support?: SupportInfo; agent?: AgentInfo };
 
 export const IS_PUBLIC = 'isPublic';
 export const ROLES = 'roles';

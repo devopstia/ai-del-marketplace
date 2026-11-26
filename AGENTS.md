@@ -175,6 +175,16 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     Not in the top menu bar (owner). Enrolment and payment for the program happen only on that site, never through
     the marketplace checkout. Social links (YouTube, Facebook, X, TikTok, LinkedIn) live in `components/SocialLinks.tsx`.
 
+28. **Support sessions and AI agents** (owner, 2026-11-26; docs/SUPPORT_SESSIONS_AND_AGENTS.md). A super admin may
+    open a non-super-admin's dashboard only through a support session (step-up code, reason, time limit, the person
+    is emailed, banner on every page, Return without signing in again). AI agents work only through scoped,
+    expiring, revocable agent tokens for ONE instructor on `/api/agent/*` (MCP server `tools/mcp-server`, skill
+    `.claude/skills/del-course-agent`): never publish, never payments, never other accounts. `req.user` is always the
+    effective user, `req.realUser` the person at the keyboard; audit entries always name the real person
+    (`onBehalfOfId`, `agentTokenId`, `supportSessionId`, `status`). Nothing is ever attributed to the student or
+    instructor. Account security, money, learning records and admin writes stay blocked in support sessions; a new
+    session-security rule must not end or count support sessions.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
@@ -191,4 +201,4 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 `docs/ROADMAP.md` (2026-11-24 roadmap, historical) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
 `docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md` · **`docs/HANDOFF.md`** ·
 `docs/FINAL_REVIEW_2026-11-26.md` (latest audit + release) · `docs/AWS_COSTS.md` · `docs/STORAGE.md` · `docs/PAYMENTS.md` ·
-`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md`. Local email inbox: http://127.0.0.1:8025.
+`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md`. Local email inbox: http://127.0.0.1:8025.

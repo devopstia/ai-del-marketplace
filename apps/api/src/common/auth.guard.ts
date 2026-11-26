@@ -9,6 +9,7 @@ import { ACT_AS_COOKIE, ACT_AS_PLATFORM, acting, STUDIO_PATH } from './acting';
 import { forbidden, unauthorized } from './errors';
 import { PrismaService } from './prisma.service';
 import { ADMIN_MESSAGE, IDLE_MESSAGE, LIFETIME_MESSAGE, REPLACED_MESSAGE, SessionPolicyService } from './session-policy.service';
+import { AssistResolver } from '../assist/assist-resolver';
 
 /** Ends a browser is told about (401 `session_<reason>`); a plain logout or a password change just reads as signed out. */
 const ENDED_MESSAGES: Record<string, string> = { replaced: REPLACED_MESSAGE, idle: IDLE_MESSAGE, lifetime: LIFETIME_MESSAGE, admin: ADMIN_MESSAGE };
@@ -18,15 +19,19 @@ export const hashSessionToken = (token: string) => createHash('sha256').update(t
 
 /**
  * Global guard: resolves the `sid` cookie to a live session and user (attached to every request, public or not),
- * then enforces sign-in (unless @Public) and @Roles.
+ * then enforces sign-in (unless @Public) and @Roles. Support sessions and AI agent tokens are resolved by
+ * AssistResolver (docs/SUPPORT_SESSIONS_AND_AGENTS.md); `req.user` is always the effective user.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private readonly assist: AssistResolver;
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
     private readonly policy: SessionPolicyService,
-  ) {}
+  ) {
+    this.assist = new AssistResolver(prisma);
+  }
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest<AppRequest>();
@@ -46,11 +51,14 @@ export class AuthGuard implements CanActivate {
           req.sessionKind = session.kind;
           // Watching a lesson is activity: the player saves progress every few seconds while it plays.
           if (req.method === 'PUT' && PROGRESS_PATH.test(req.path ?? req.url ?? '')) await this.policy.touch(session.id);
-          await this.maybeActAsPlatform(req);
+          // A super admin in a support session works as the user; otherwise maybe "DEL Studio".
+          if (!(await this.assist.support(req))) await this.maybeActAsPlatform(req);
         }
       } else if (session?.revokedAt && session.endedReason && ENDED_MESSAGES[session.endedReason]) {
         req.sessionEnded = session.endedReason;
       }
+    } else {
+      await this.assist.agent(req);
     }
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [ctx.getHandler(), ctx.getClass()]);
@@ -61,7 +69,8 @@ export class AuthGuard implements CanActivate {
     if (roles?.length && !roles.some((r) => hasRole(req.user, r))) throw forbidden();
     const perm = this.reflector.getAllAndOverride<AdminPermission | undefined>(PERMISSION, [ctx.getHandler(), ctx.getClass()]);
     // In "DEL Studio" mode req.user is DEL's instructor account; permissions are always the real person's.
-    if (perm && !can(req.realUser ?? req.user, perm)) throw forbidden('Your admin account does not have this permission', 'permission_required');
+    // In a support session they are the USER's: viewing someone's dashboard never widens what it can do.
+    if (perm && !can(req.support || req.agent ? req.user : (req.realUser ?? req.user), perm)) throw forbidden('Your admin account does not have this permission', 'permission_required');
     return true;
   }
 

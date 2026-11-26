@@ -1,0 +1,26 @@
+{
+  "name": "del-courses-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for AI agents building DevOps Easy Learning courses for one instructor (docs/SUPPORT_SESSIONS_AND_AGENTS.md)",
+  "type": "module",
+  "bin": {
+    "del-courses-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/*.test.js",
+    "check": "npm run build && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -17,6 +17,7 @@ import { Pager, useDebounced } from "@/components/Pager";
 import { useToast } from "@/components/Toast";
 import { useAuth } from "@/components/AuthProvider";
 import { canDo } from "@/lib/studios";
+import { SwitchToUser } from "@/components/assist/SwitchToUser";
 
 interface Row {
   id: string; name: string; email: string; roles: Role[]; status: "active" | "suspended"; createdAt: string; signupMethod: string;
@@ -31,6 +32,8 @@ const ACTION: Record<string, string> = {
   "user.access_changed": "Roles changed", "user.updated": "Account changed", "user.suspended": "Suspended", "user.reactivated": "Reactivated",
   "instructor.applied": "Applied to teach", "instructor.approved": "Instructor approved", "instructor.rejected": "Application rejected",
   "instructor.needs_info": "More information requested", "instructor.under_review": "Application under review", "auth.register": "Registered", "auth.mfa_reset": "Two-step sign-in reset",
+  "support.session_started": "Support session started", "support.session_ended": "Support session ended", "support.session_revoked": "Support session ended by a super admin",
+  "agent.token_issued": "AI agent access given", "agent.token_revoked": "AI agent access revoked",
 };
 const toRow = (x: unknown): Row => {
   const o = obj(x);
@@ -63,6 +66,12 @@ export default function UsersAndRoles() {
   const summary = useApi("/admin/people/summary", (r) => obj(r) as Record<string, number>);
   const catalogue = useApi("/admin/people/catalogue", (r) => r as Catalogue);
   const [open, setOpen] = useState<string | null>(null);
+  // ?open=<id>: back from a support session, the account opens again.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("open");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read once from the address
+    if (id && /^[0-9a-f-]{36}$/i.test(id)) setOpen(id);
+  }, []);
   const s = summary.data;
   const stats = s ? [
     ["Registered users", s.total], ["Students", s.students], ["Instructors", s.instructors], ["Admins", s.admins + (s.superAdmins ?? 0)],
@@ -265,6 +274,7 @@ function ManageUser({ id, catalogue, onClose, onChanged }: { id: string; catalog
             </section>
           ) : null}
 
+          {superAdmin && !self ? <SwitchToUser user={u} /> : null}
           {superAdmin ? <UserSessions userId={u.id} self={self} /> : null}
 
           <section aria-labelledby="hist-h">

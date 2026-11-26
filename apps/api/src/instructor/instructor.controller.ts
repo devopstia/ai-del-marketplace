@@ -33,11 +33,11 @@ const courseFields = z.object({
   thumbnailKey: z.string().max(300).nullable(),
   promoVideoAssetId: z.string().uuid().nullable(),
 });
-const createSchema = courseFields.partial().extend({ title: str(120).min(3) });
-const updateSchema = courseFields.partial();
-const titleSchema = z.object({ title: str(200).min(1) });
+export const createSchema = courseFields.partial().extend({ title: str(120).min(3) });
+export const updateSchema = courseFields.partial();
+export const titleSchema = z.object({ title: str(200).min(1) });
 const idsSchema = z.object({ ids: z.array(z.string().uuid()).max(500) });
-const arrangeSchema = z.object({ sections: z.array(z.object({ id: z.string().uuid(), lectureIds: z.array(z.string().uuid()).max(1000) })).max(200) });
+export const arrangeSchema = z.object({ sections: z.array(z.object({ id: z.string().uuid(), lectureIds: z.array(z.string().uuid()).max(1000) })).max(200) });
 const packageSchema = z.object({ title: z.string().trim().min(1).max(200), storageKey: z.string().max(400) });
 const lectureFields = z.object({
   title: str(200).min(1),
@@ -48,15 +48,15 @@ const lectureFields = z.object({
   videoAssetId: z.string().uuid().nullable(),
   sectionId: z.string().uuid(),
 });
-const lectureCreate = lectureFields.omit({ sectionId: true }).partial().extend({ title: str(200).min(1) });
-const lectureUpdate = lectureFields.partial();
-const quizSchema = z.object({
+export const lectureCreate = lectureFields.omit({ sectionId: true }).partial().extend({ title: str(200).min(1) });
+export const lectureUpdate = lectureFields.partial();
+export const quizSchema = z.object({
   questions: z
     .array(z.object({ q: str(500).min(3), options: z.array(str(300).min(1)).min(3).max(5), correct: z.number().int().min(0).max(4), why: str(1000).min(1) }))
     .min(1)
     .max(50),
 });
-const resourceSchema = z.object({ title: str(200).min(1), storageKey: z.string().min(1).max(400) });
+export const resourceSchema = z.object({ title: str(200).min(1), storageKey: z.string().min(1).max(400) });
 const salesQuery = z.object({ from: z.coerce.date().optional(), to: z.coerce.date().optional() });
 const studentsQuery = z.object({ courseId: z.string().uuid().optional() });
 const replySchema = z.object({ reply: str(4000) });
