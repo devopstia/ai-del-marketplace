@@ -1,6 +1,7 @@
 "use client";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Captions, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { Captions, Gauge, Headphones, Maximize, Minimize, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { DATA_MODES, type DataMode } from "@/lib/data-saver";
 import { clock } from "@/lib/format";
 import { API_URL } from "@/lib/config";
 
@@ -32,13 +33,19 @@ interface Props {
   onNext?: () => void;
   prevTitle?: string;
   nextTitle?: string;
+  /** Data saver (lib/data-saver.ts): the settings this video offers, the current one, and the change handler. */
+  dataModes?: DataMode[];
+  dataMode?: DataMode;
+  onDataMode?: (m: DataMode) => void;
+  /** Sizes per setting, shown in the menu ("about 12 MB"). */
+  dataSizes?: Partial<Record<DataMode, string | null>>;
 }
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
 
 /** Custom-control player over native <video>: speed, captions, ±10 s, fullscreen, keyboard shortcuts. */
 export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
-  { src, format, captionsUrl, startAt = 0, autoPlay = false, title, onTime, onPause, onEnded, onError, overlay, protectedStream = false, fullscreenRef, onPrev, onNext, prevTitle, nextTitle },
+  { src, format, captionsUrl, startAt = 0, autoPlay = false, title, onTime, onPause, onEnded, onError, overlay, protectedStream = false, fullscreenRef, onPrev, onNext, prevTitle, nextTitle, dataModes, dataMode = "auto", onDataMode, dataSizes },
   ref,
 ) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -53,6 +60,8 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
   const [cc, setCc] = useState(false);
   const [full, setFull] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
+  const [dataOpen, setDataOpen] = useState(false);
+  const audioOnly = dataMode === "audio";
   const [idle, setIdle] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onErrorRef = useRef(onError);
@@ -221,6 +230,16 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
       ) : null}
 
 
+      {audioOnly ? (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center text-center text-white" data-qa-on-media data-testid="audio-only">
+          <div>
+            <Headphones className="mx-auto size-10 text-white/80" aria-hidden="true" />
+            <p className="mt-2 font-display text-lg font-bold">Audio only</p>
+            <p className="text-sm text-white/75">Picture off to save data. Choose Auto under Data saver to see the video.</p>
+          </div>
+        </div>
+      ) : null}
+
       {overlay}
 
       <div data-player-controls className={`pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-2 pt-10 transition-opacity duration-200 [&>*]:pointer-events-auto ${idle && playing ? "opacity-0" : "opacity-100"}`}>
@@ -260,7 +279,7 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
           <span className="ml-1 whitespace-nowrap text-xs tabular-nums text-white/85">{clock(t)} / {clock(dur)}</span>
           <span className="ml-auto" />
           <div className="relative">
-            <button type="button" className={`${ctl} !w-auto px-2 text-sm font-bold`} onClick={() => setSpeedOpen((o) => !o)} aria-haspopup="menu" aria-expanded={speedOpen} aria-label={`Playback speed ${speed}x`}>
+            <button type="button" className={`${ctl} !w-auto px-2 text-sm font-bold`} onClick={() => { setSpeedOpen((o) => !o); setDataOpen(false); }} aria-haspopup="menu" aria-expanded={speedOpen} aria-label={`Playback speed ${speed}x`}>
               {speed}×
             </button>
             {speedOpen ? (
@@ -275,6 +294,27 @@ export const VideoPlayer = forwardRef<PlayerHandle, Props>(function VideoPlayer(
               </div>
             ) : null}
           </div>
+          {dataModes && dataModes.length > 1 && onDataMode ? (
+            <div className="relative">
+              <button type="button" className={`${ctl} ${dataMode !== "auto" ? "bg-white/15" : ""}`} onClick={() => { setDataOpen((o) => !o); setSpeedOpen(false); }}
+                aria-haspopup="menu" aria-expanded={dataOpen} aria-label={`Data saver: ${DATA_MODES.find((m) => m.value === dataMode)?.label ?? "Auto"}`} data-testid="data-saver">
+                <Gauge className="size-[18px]" />
+              </button>
+              {dataOpen ? (
+                <div role="menu" aria-label="Data saver" className="absolute bottom-11 right-0 z-10 w-60 rounded-lg bg-[#141833]/95 p-1 shadow-float">
+                  <p className="px-3 pb-1 pt-1.5 text-xs font-bold text-white/70">Data saver</p>
+                  {DATA_MODES.filter((m) => dataModes.includes(m.value)).map((m) => (
+                    <button key={m.value} role="menuitemradio" aria-checked={m.value === dataMode} type="button"
+                      className={`block w-full rounded-md px-3 py-1.5 text-left text-sm ${m.value === dataMode ? "bg-white/15" : "hover:bg-white/10"}`}
+                      onClick={() => { setDataOpen(false); if (m.value !== dataMode) onDataMode(m.value); }}>
+                      <span className="flex items-baseline justify-between gap-2"><span className={m.value === dataMode ? "font-bold" : ""}>{m.label}</span>{dataSizes?.[m.value] ? <span className="text-xs tabular-nums text-white/70">{dataSizes[m.value]}</span> : null}</span>
+                      <span className="block text-xs text-white/70">{m.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {captionsUrl ? (
             <button type="button" className={`${ctl} ${cc ? "bg-white/15" : ""}`} onClick={toggleCc} aria-pressed={cc} aria-label="Captions">
               <Captions className="size-5" />

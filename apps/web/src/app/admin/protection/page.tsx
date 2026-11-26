@@ -11,7 +11,7 @@ import { useToast } from "@/components/Toast";
 
 const LABELS: [string, string][] = [["ready", "Protected"], ["queued", "Waiting"], ["processing", "Packaging now"], ["failed", "Failed"], ["unsupported", "Needs re-encoding"], ["none", "Not started"]];
 
-interface Status { enabled: boolean; cdn: boolean; renditions: string; singleQuality: number; counts: Record<string, number> }
+interface Status { enabled: boolean; cdn: boolean; renditions: string; audioOnly: boolean; singleQuality: number; counts: Record<string, number> }
 
 /** Admin › Platform › Video protection: encryption, delivery (CloudFront) and qualities (docs/VIDEO_DELIVERY.md). */
 export default function ProtectionPage() {
@@ -20,7 +20,7 @@ export default function ProtectionPage() {
   const [busy, setBusy] = useState(false);
   const status = useApi("/admin/playback/status", (r) => {
     const o = obj(r);
-    return { enabled: o.enabled === true, cdn: o.cdn === true, renditions: String(o.renditions ?? ""), singleQuality: Number(o.singleQuality ?? 0), counts: obj(o.counts) as Record<string, number> } as Status;
+    return { enabled: o.enabled === true, cdn: o.cdn === true, renditions: String(o.renditions ?? ""), audioOnly: o.audioOnly === true, singleQuality: Number(o.singleQuality ?? 0), counts: obj(o.counts) as Record<string, number> } as Status;
   });
   const s = status.data;
   const qualities = s?.renditions ? s.renditions.split(",").map((h) => `${h.trim()}p`).join(" and ") : "";
@@ -68,11 +68,11 @@ export default function ProtectionPage() {
             <Layers className="mt-0.5 size-5 shrink-0 text-violet" aria-hidden="true" />
             <div className="min-w-[13rem] flex-1">
               <p className="font-bold">Qualities</p>
-              <p className="text-sm text-ink-2">{qualities ? `Every new video gets ${qualities} in addition to the original, and the player picks what the connection can carry.` : "Only the original quality is kept."}{s.singleQuality ? ` ${s.singleQuality} video${s.singleQuality === 1 ? " was" : "s were"} packaged before this and ${s.singleQuality === 1 ? "has" : "have"} one quality.` : ""}</p>
+              <p className="text-sm text-ink-2">{qualities ? `Every new video gets ${qualities} in addition to the original, and the player picks what the connection can carry.` : "Only the original quality is kept."}{s.audioOnly ? " Learners can also choose Low (360p) or Audio only to save mobile data, and see each lesson’s size." : ""}{s.singleQuality ? ` ${s.singleQuality} video${s.singleQuality === 1 ? " was" : "s were"} packaged with older settings and ${s.singleQuality === 1 ? "is" : "are"} missing some of these.` : ""}</p>
             </div>
-            {superAdmin && s.singleQuality && qualities ? (
+            {superAdmin && s.singleQuality ? (
               <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void repackage()} data-testid="repackage">
-                {busy ? <Loader2 className="size-4 animate-spin" /> : null}Add {qualities} to {s.singleQuality} video{s.singleQuality === 1 ? "" : "s"}
+                {busy ? <Loader2 className="size-4 animate-spin" /> : null}Update {s.singleQuality} video{s.singleQuality === 1 ? "" : "s"}
               </button>
             ) : null}
           </div>

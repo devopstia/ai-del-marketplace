@@ -21,6 +21,7 @@ import { StudyNotesPanel } from "./StudyNotesPanel";
 import { ReviewPanel, toReviewInfo, type ReviewInfo } from "./ReviewPanel";
 import { RatingInline } from "@/components/Stars";
 import { useToast } from "../Toast";
+import { aboutSize, readDataMode, saveDataMode, sizeFor, type DataMode } from "@/lib/data-saver";
 
 const SAVE_EVERY_MS = 10_000;
 const AUTOPLAY_SECONDS = 5;
@@ -59,6 +60,13 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
   const lastSaved = useRef(0);
   const posRef = useRef(0);
   const retried = useRef(false);
+  // Data saver (owner 2026-11-26): Auto, Low (360p) or Audio only, remembered in this browser
+  const [dataMode, setDataMode] = useState<DataMode>("auto");
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setDataMode(readDataMode()); }, []);
+  /** Where to continue after switching data saver (the video reloads at the other quality). */
+  const [switchAt, setSwitchAt] = useState<number | null>(null);
+  const changeDataMode = useCallback((m: DataMode) => { setSwitchAt(posRef.current); setDataMode(m); saveDataMode(m); }, []);
 
   // Course outline with this learner's progress
   useEffect(() => {
@@ -96,7 +104,10 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
     try {
       const r = obj(await api(`/lectures/${lectureId}/playback`, { method: "POST" }));
       const serverPos = r.positionSec != null ? Number(r.positionSec) : undefined;
-      setPlayback({ url: String(r.url), format: r.format === "hls" ? "hls" : "mp4", expiresAt: r.expiresAt as string, captionsUrl: (r.captionsUrl as string) ?? null, protected: r.protected === true, positionSec: resumeAt > 0 ? resumeAt : serverPos ?? 0 });
+      const ds = obj(r.dataSaver);
+      setSwitchAt(null);
+      setPlayback({ url: String(r.url), format: r.format === "hls" ? "hls" : "mp4", expiresAt: r.expiresAt as string, captionsUrl: (r.captionsUrl as string) ?? null, protected: r.protected === true, positionSec: resumeAt > 0 ? resumeAt : serverPos ?? 0,
+        dataSaver: r.dataSaver ? { low: typeof ds.low === "string" ? ds.low : undefined, audio: typeof ds.audio === "string" ? ds.audio : undefined } : undefined });
     } catch (e) {
       setPlayErr(errMsg(e));
     }
@@ -255,7 +266,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                       </button>
                       <Link href={`/learn/${slug}/${l.id}`} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); go(l); }} aria-current={current ? "page" : undefined} className="min-w-0 flex-1">
                         <span className={`block leading-snug ${current ? "font-bold text-ink" : "text-ink-2"}`}>{l.title}</span>
-                        <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted"><Icon className="size-3.5" />{l.durationSec ? clock(l.durationSec) : l.type === "quiz" ? "Quiz" : "Reading"}</span>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted"><Icon className="size-3.5" />{l.durationSec ? clock(l.durationSec) : l.type === "quiz" ? "Quiz" : "Reading"}{l.type === "video" && aboutSize(sizeFor(l.sizes, dataMode)) ? <span data-testid="lesson-size" title={`Data this lesson uses at your data saver setting (${dataMode === "auto" ? "Auto, at the best picture" : dataMode === "low" ? "Low" : "Audio only"})`}>· {aboutSize(sizeFor(l.sizes, dataMode))}</span> : null}</span>
                       </Link>
                     </li>
                   );
@@ -304,8 +315,12 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   <VideoPlayer
                     ref={playerRef}
                     key={playback.url}
-                    src={playback.url}
+                    src={(dataMode === "audio" && playback.dataSaver?.audio) || (dataMode !== "auto" && playback.dataSaver?.low) || playback.url}
                     format={playback.format}
+                    dataModes={playback.dataSaver ? (["auto", ...(playback.dataSaver.low ? ["low"] : []), ...(playback.dataSaver.audio ? ["audio"] : [])] as DataMode[]) : undefined}
+                    dataMode={playback.dataSaver ? ((dataMode === "audio" && playback.dataSaver.audio) ? "audio" : (dataMode !== "auto" && playback.dataSaver.low) ? "low" : "auto") : "auto"}
+                    onDataMode={changeDataMode}
+                    dataSizes={{ auto: aboutSize(sizeFor(lecture.sizes, "auto")), low: aboutSize(sizeFor(lecture.sizes, "low")), audio: aboutSize(sizeFor(lecture.sizes, "audio")) }}
                     captionsUrl={playback.captionsUrl}
                     protectedStream={playback.protected}
                     autoPlay
@@ -315,7 +330,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                     onNext={next ? () => go(next) : undefined}
                     prevTitle={prev?.title}
                     nextTitle={next?.title}
-                    startAt={playback.positionSec ?? 0}
+                    startAt={switchAt ?? playback.positionSec ?? 0}
                     onTime={(t, d) => {
                       posRef.current = t;
                       track(t);

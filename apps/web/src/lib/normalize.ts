@@ -6,6 +6,7 @@ import type { SaleInfo, SaleRow, StudioRevision,
   InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, Review, ReviewSummary, Role,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
 } from "./types";
+import { toSizes } from "./data-saver";
 
 type R = Record<string, unknown>;
 export const obj = (x: unknown): R => (x && typeof x === "object" ? (x as R) : {});
@@ -158,6 +159,7 @@ export function toLecture(x: unknown): LectureOutline {
     hasResources: Boolean(o.hasResources ?? (num(o.resourceCount) > 0 || arr(o.resources).length > 0)),
     hasQuiz: Boolean(o.hasQuiz ?? o.quiz ?? str(o.type) === "quiz"),
     hasCaptions: Boolean(o.hasCaptions),
+    sizes: toSizes(o.sizes),
     articleMd: (o.articleMd as string) ?? null,
     // the API sends the lecture's short description as `summary`
     description: ((o.description ?? o.summary) as string) || null,

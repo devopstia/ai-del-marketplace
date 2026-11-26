@@ -1,3 +1,4 @@
+import type { LessonSizes } from "./data-saver";
 // Shapes the web app works with. Raw API payloads pass through the normalizers in normalize.ts first,
 // so small differences in the API's field names do not leak into components.
 
@@ -107,6 +108,8 @@ export interface LectureOutline {
   hasQuiz?: boolean;
   /** The lesson video has captions (search inside videos, AI study notes). */
   hasCaptions?: boolean;
+  /** Data saver: about how many bytes the lesson takes per setting (packaged videos, learner view only). */
+  sizes?: LessonSizes | null;
   articleMd?: string | null;
   description?: string | null;
 }
@@ -214,6 +217,8 @@ export interface Playback {
   positionSec?: number;
   /** Encrypted HLS through a playback session (content protection). */
   protected?: boolean;
+  /** Data saver playlists of the same session (lib/data-saver.ts). */
+  dataSaver?: { low?: string; audio?: string };
 }
 
 export interface ResourceItem {
