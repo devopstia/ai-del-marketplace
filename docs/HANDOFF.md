@@ -7,20 +7,27 @@ build, test and release without breaking anything. Details live in the linked do
 
 | Environment | URL | Version | Data |
 | --- | --- | --- | --- |
-| Production | https://ai-devopseasylearning.com | tag `release-2026-11-26-admin-security-refunds`, images `d8288394b46c` (2026-11-26) | indexed by search engines (robots/sitemap live); empty catalogue; only 2 accounts: DEL platform instructor + Super Admin `support@devopseasylearning.com` |
-| Staging | https://staging.ai-devopseasylearning.com (noindex) | `f86e969e51d3` (branch `feat/staging-no-2fa`, not merged yet): **no sign-in or confirmation codes on staging** (owner 2026-11-26, SSM `staging/MFA_REQUIRED=false`; production always asks) | synthetic demo data (`seed-staging`), simulated payments, demo accounts `student@del.example`, `nadia@instructor.example`, `admin@del.example` (password + authenticator seed in SSM `/del-marketplace/staging/SEED_PASSWORD`, `SEED_MFA_SECRET`) |
+| Production | https://ai-devopseasylearning.com | tag `release-2026-11-26-official-instructors-checkout`, images `2f7adaccdb41` (2026-11-26) | indexed by search engines (robots/sitemap live); empty catalogue; only 2 accounts: DEL platform instructor + Super Admin `support@devopseasylearning.com` |
+| Staging | https://staging.ai-devopseasylearning.com (noindex) | same images (`2f7adaccdb41`); **no sign-in or confirmation codes on staging** (owner 2026-11-26, SSM `staging/MFA_REQUIRED=false`; production always asks); Stripe test keys saved by the owner | synthetic demo data (`seed-staging`), simulated payments, demo accounts `student@del.example`, `nadia@instructor.example`, `admin@del.example` (password + authenticator seed in SSM `/del-marketplace/staging/SEED_PASSWORD`, `SEED_MFA_SECRET`) |
 | Owner's local | http://127.0.0.1:3000 (api :4000, Mailpit :8025) | `main` | `MFA_REQUIRED=false` on purpose: **never change the owner's `.env` or reseed their stack** |
 | Test stack | http://127.0.0.1:3100 (api :4100, Mailpit :8125) | whatever you build | `COMPOSE_PROJECT_NAME=del-test COMPOSE_FILE=docker-compose.yml:docker-compose.test.yml`, MFA on; run all suites here |
 
 Both cloud environments share **one EC2 t3a.medium and one RDS instance** (separate databases `marketplace` /
 `marketplace_staging`, buckets, secrets). This is accepted: the owner will delete staging once production is stable.
-Previous stable production version (rollback target): `release-2026-11-26-final-review-r4`, images `4b5706c24617`.
-Pre-release snapshot of the last release: `pre-release-d8288394b46c-20261126-1451`.
+Previous stable production version (rollback target): `release-2026-11-26-admin-security-refunds`, images `d8288394b46c`.
+Pre-release snapshot of the last release: `pre-release-2f7adaccdb41-20261126-2021`.
 
 Git: `main` is current and pushed (`origin` = github.com/devopstia/ai-del-marketplace). `prompts.md` (the owner's prompt
 history) is deliberately untracked. Restore points: tags `checkpoint-*`, `release-*`, branches `backup/*`.
 
 ## 2. Waiting on the owner (do not do these yourself)
+
+00. **Released 2026-11-26 evening** (owner: "please deploy"): Official DevOps Easy Learning Instructors, simpler checkout,
+    no yellow notices (docs/DECISIONS.md). Next for the owner: live payments (Stripe activation, Managed Payments OFF in
+    live mode, Connect, live webhook for the production URL, SES production access, rehearse with test keys on production,
+    then Super Admin › Payments & Stripe › Authorise live payments). Open offers: checkout "safety net" (confirm the payment
+    with Stripe on the success page), Connected-accounts webhook secret, access length as a Super Admin setting. Staging
+    Stripe: its webhook must point at the staging URL with its own secret.
 
 0. **Released 2026-11-26** (owner: "please cut a new release and release it to production"): improvements, SEO and
    stand-out, and the prompts.md batch, as `release-2026-11-26-admin-security-refunds` (GitHub release published).
