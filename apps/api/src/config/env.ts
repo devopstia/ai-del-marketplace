@@ -134,5 +134,13 @@ export const isProd = () => env().NODE_ENV === 'production';
  */
 export const signinCodeSkipped = () => !env().MFA_REQUIRED && (!isProd() || env().DEPLOY_ENV === 'staging');
 
+/**
+ * Confirmation codes for sensitive actions (Stripe keys, roles, refund policy, support sessions, …): skipped only on
+ * staging with MFA_REQUIRED=false (owner 2026-11-26: "can you turn it off here for stage only"), or locally for an account
+ * without an authenticator. Never on production.
+ */
+export const stepUpSkipped = (hasAuthenticator: boolean) =>
+  !env().MFA_REQUIRED && (env().DEPLOY_ENV === 'staging' || (!hasAuthenticator && !isProd()));
+
 /** Dev test payments are allowed only when explicitly enabled AND never in production. */
 export const devPaymentsEnabled = () => env().DEV_TEST_PAYMENTS && (env().NODE_ENV !== 'production' || env().DEPLOY_ENV === 'staging');

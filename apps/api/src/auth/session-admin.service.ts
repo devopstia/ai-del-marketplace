@@ -1,3 +1,4 @@
+import { stepUpSkipped } from '../config/env';
 import { Injectable } from '@nestjs/common';
 import type { Actor } from '../common/auth-context';
 import { AuditService } from '../common/audit.service';
@@ -36,7 +37,7 @@ export class SessionAdminService {
   }
 
   async saveSettings(a: Actor, input: { settings: unknown; code?: string }) {
-    await this.signIn.checkCode(a.user.id, input.code, a.ip);
+    if (!stepUpSkipped(true)) await this.signIn.checkCode(a.user.id, input.code, a.ip);
     const parsed = authSettingsSchema.safeParse(input.settings);
     if (!parsed.success) throw new AppError(400, 'invalid_settings', parsed.error.issues.map((i) => i.message).join('; '), { issues: parsed.error.issues });
     const next: AuthSettings = parsed.data;
@@ -49,7 +50,7 @@ export class SessionAdminService {
   }
 
   async resetSettings(a: Actor, code?: string) {
-    await this.signIn.checkCode(a.user.id, code, a.ip);
+    if (!stepUpSkipped(true)) await this.signIn.checkCode(a.user.id, code, a.ip);
     const before = await this.policy.settings();
     await this.policy.reset();
     await this.audit.log({ actorId: a.user.id, action: 'auth.security_settings_reset', targetType: 'platform_setting', targetId: 'auth_security', ip: a.ip, meta: { changes: diff(before, await this.policy.settings()) } });

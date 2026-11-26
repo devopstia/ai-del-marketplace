@@ -6,7 +6,7 @@ import { badRequest, conflict, forbidden, notFound } from '../common/errors';
 import { JobsService } from '../common/jobs';
 import { PrismaService } from '../common/prisma.service';
 import { randomToken } from '../common/util';
-import { env, isProd } from '../config/env';
+import { env, isProd, stepUpSkipped } from '../config/env';
 import { SignInService } from '../auth/signin.service';
 import { minutesLabel, sha256, SUPPORT_COOKIE, SUPPORT_DEFAULT_MINUTES, SUPPORT_MAX_MINUTES, supportCookieOptions } from './assist-context';
 
@@ -146,7 +146,7 @@ export class SupportSessionService {
   private async stepUp(a: Actor, code?: string) {
     const me = await this.prisma.user.findUnique({ where: { id: a.user.id }, select: { mfaEnabledAt: true } });
     // Same rule as every other privileged change: local development without an authenticator only.
-    if (!me?.mfaEnabledAt && !env().MFA_REQUIRED && !isProd()) return;
+    if (stepUpSkipped(!!me?.mfaEnabledAt)) return;
     if (!code) throw badRequest('Enter the six-digit code from your Google Authenticator app to open this dashboard.', 'step_up_required');
     await this.signIn.checkCode(a.user.id, code, a.ip);
   }

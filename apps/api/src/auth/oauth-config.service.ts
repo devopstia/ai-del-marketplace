@@ -4,7 +4,7 @@ import type { Actor } from '../common/auth-context';
 import { badRequest, forbidden } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { seal, unseal } from '../common/seal';
-import { env, isProd } from '../config/env';
+import { env, isProd, stepUpSkipped } from '../config/env';
 import { credentialSource, publicClientId, REAL_PROVIDERS, type RealProvider, setSavedCredentials } from './oauth.providers';
 import { SignInService } from './signin.service';
 
@@ -139,7 +139,7 @@ export class OAuthConfigService implements OnModuleInit, OnModuleDestroy {
   private superOnly(a: Actor) { if (!a.user.roles.includes('super_admin')) throw forbidden('Only a super admin can change sign-in methods', 'super_admin_required'); }
   private async stepUp(a: Actor, code?: string) {
     const me = await this.prisma.user.findUnique({ where: { id: a.user.id }, select: { mfaEnabledAt: true } });
-    if (!me?.mfaEnabledAt && !env().MFA_REQUIRED && !isProd()) return;
+    if (stepUpSkipped(!!me?.mfaEnabledAt)) return;
     if (!code) throw badRequest('Enter the six-digit code from your Google Authenticator app to confirm this change.', 'step_up_required');
     await this.signIn.checkCode(a.user.id, code, a.ip);
   }
