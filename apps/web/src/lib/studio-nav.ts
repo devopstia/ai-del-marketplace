@@ -41,6 +41,7 @@ export const instructorNav: NavGroup[] = [
   { label: "Teach", items: [
     { href: "/studio/courses", label: "Courses", icon: BookOpen },
     { href: "/studio/students", label: "Students", icon: Users },
+    { href: "/studio/insights", label: "Insights", icon: ChartNoAxesColumnIncreasing },
     { href: "/studio/enrollments", label: "Manual enrollments", icon: UserPlus },
     { href: "/studio/reviews", label: "Reviews", icon: MessageSquareText },
   ] },

@@ -97,7 +97,9 @@ type CourseDetail = CourseCard & {
 };
 type FeaturedInstructor = { id: string; name: string; avatarUrl: string | null; headline: string; bio: string; isPlatform: boolean;
   courseCount: number /* published */; studentCount: number /* DISTINCT learners with an active enrolment */; reviewCount: number; ratingAvg: number | null /* null = no reviews yet */ };
-type Playback = { url: string; expiresAt: string; format: 'mp4' | 'hls'; captionsUrl?: string /* WebVTT */ };
+type Playback = { url: string; expiresAt: string; format: 'mp4' | 'hls'; captionsUrl?: string /* WebVTT */; protected?: boolean;
+  // data saver (protected HLS with several qualities): single-quality playlists of the same session, and bytes per setting
+  dataSaver?: { low?: string /* 360p */; audio?: string /* audio only */; sizes?: { auto: number; low: number | null; audio: number | null } } };
 ```
 
 **Captions are available but OFF by default** (owner, 2026-11-24): load `captionsUrl` as `<track kind="captions">` without
@@ -163,7 +165,7 @@ type Order = { id; status: 'pending'|'paid'|'failed'|'refunded'|'partially_refun
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/me/learning` | `{ items: [{ course: { id, slug, title, thumbnailUrl, instructor: { name } }, enrolledAt, progress: { total, completed, percent }, lastLecture: { id, title, positionSec, at } \| null, certificateCode }] }` |
-| GET | `/me/courses/:slug` | Player data: `{ id, slug, title, subtitle, instructor, thumbnailUrl, access: 'enrolled'\|'owner'\|'admin', progress, lastLectureId, certificate, myReview, sections: [{ id, title, lectures: [{ id, title, summary, type, durationSec, isPreview, articleMd?, videoStatus, hasCaptions, hasQuiz, resources: [{ id, title, sizeBytes, mime }], progress: { positionSec, completed } }] }] }`. `403 not_enrolled` otherwise. |
+| GET | `/me/courses/:slug` | Player data: `{ id, slug, title, subtitle, instructor, thumbnailUrl, access: 'enrolled'\|'owner'\|'admin', progress, lastLectureId, certificate, myReview, sections: [{ id, title, lectures: [{ id, title, summary, type, durationSec, isPreview, articleMd?, videoStatus, hasCaptions, sizes: { auto, low, audio } (bytes per data-saver setting) \| null, hasQuiz, resources: [{ id, title, sizeBytes, mime }], progress: { positionSec, completed } }] }] }`. `403 not_enrolled` otherwise. |
 | GET | `/me/certificates` | `{ items: [{ code, issuedAt, course: { slug, title } }] }` |
 | POST | `/lectures/:id/playback` | → Playback. Previews are allowed for anyone signed in. |
 | PUT | `/lectures/:id/progress` | `{ positionSec, completed? }` → `{ lectureId, positionSec, completed, courseProgress: { total, completed, percent } }`. Completion is sticky. Send every ~10 s and on pause/end. |
@@ -201,6 +203,7 @@ type Order = { id; status: 'pending'|'paid'|'failed'|'refunded'|'partially_refun
 | POST | `/instructor/courses/:id/lectures/:lectureId/resources` | `{ title, storageKey }` (step 2 of a resource upload) |
 | DELETE | `/instructor/courses/:id/resources/:resourceId` | |
 | GET | `/instructor/sales?from&to` | `{ totals: { grossCents, commissionCents, earningsCents, refundedCents, paidOutCents, pendingPayoutCents, sales }, byCourse: [...], items: [{ orderLineId, orderId, paidAt, course, priceCents, commissionBps, instructorShareCents, transferStatus, refundedAt }] }` |
+| GET | `/instructor/courses/:id/insights` | Studio › Insights: `{ course, minSample: 5, totals: { learners, viewers, averageWatchedPct \| null, aiQuestions, aiQuestionsWithoutLesson }, attention: [{ id, title, at, drop }], lectures: [{ id, title, section, type, durationSec, viewers, enoughData, averageWatchedPct \| null, retention: number[10] \| null (share of viewers who watched at least half of each tenth), biggestDrop: { at, drop } \| null, aiQuestions, quiz: { learners, enoughData, hardest: [{ index, q, wrongPct, answered }] } \| null }] }`. Course owner; a super admin any course (audited `course.insights_viewed`); everyone else `404`. Nothing per lesson or quiz below 5 learners; no learner ids; the instructor's own viewing excluded; AI questions are counts only (their text isn't stored) |
 | GET | `/instructor/students?courseId` | `{ items: [{ student: { id, name }, course: { id, title }, enrolledAt, source, progressPercent }] }` |
 | GET | `/instructor/reviews` | `{ items: [{ id, rating, body, status, instructorReply, createdAt, author: { name }, course }] }` |
 | POST | `/instructor/reviews/:id/reply` | `{ reply }` |
@@ -375,7 +378,7 @@ Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
 | POST/PATCH | `/admin/support/tickets/:number/messages`, `/admin/support/tickets/:number` | admin | reply, note, request_info, resolve; priority, topic, assignee, close (super admin) |
 | POST | `/lectures/:id/playback` | access | encrypted HLS session when packaged, else signed MP4 |
 | GET | `/playback/:sid/index.m3u8`, `/playback/:sid/key` | session owner | `no-store`; others 404 |
-| GET | `/admin/playback/status` | admin | packaging counts |
+| GET | `/admin/playback/status` | admin | packaging counts, `cdn`, `renditions`, `audioOnly`, `singleQuality` (videos packaged with other settings than now) |
 | GET | `/help/videos`, `/help/videos/:slug` | public | published, ready videos; 1-hour signed link, chapters, up next |
 | GET | `/admin/help/videos`, `/admin/help/videos/:slug/preview` | admin | all videos; preview drafts |
 | PUT/DELETE | `/admin/help/videos/:slug` | admin | create or update by address; delete |

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ActorCtx, type Actor, Roles } from '../common/auth-context';
 import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
+import { InsightsService } from './insights.service';
 import { InstructorService } from './instructor.service';
 
 const baseProfile = z.object({
@@ -63,7 +64,13 @@ const versionQuery = z.object({ version: z.enum(['live', 'draft']).optional() })
 
 @Controller('instructor')
 export class InstructorController {
-  constructor(private readonly svc: InstructorService) {}
+  constructor(private readonly svc: InstructorService, private readonly insights: InsightsService) {}
+
+  /** Insights for one course: retention per lesson, hardest quiz questions, AI questions (own course; super admin any). */
+  @Roles('instructor', 'admin') @Get('courses/:id/insights')
+  courseInsights(@Param('id') id: string, @ActorCtx() a: Actor) {
+    return this.insights.course(a, id);
+  }
 
   /** Any signed-in user can apply. */
   @Post('apply')
