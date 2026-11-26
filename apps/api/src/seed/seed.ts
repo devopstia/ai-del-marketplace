@@ -206,6 +206,17 @@ async function main() {
       await prisma.course.update({ where: { id: free.id }, data: { studentCount: { increment: 1 } } });
     }
   }
+  // One example career path as a DRAFT (docs/CAREER_PATHS.md): a super admin can open, edit and publish it; it is
+  // never public by itself and never created on the real marketplace (see the guard above).
+  if (courses.length >= 2 && !(await prisma.careerPath.findUnique({ where: { slug: 'demo-devops-engineer' } }))) {
+    await prisma.careerPath.create({
+      data: {
+        slug: 'demo-devops-engineer', title: 'Demo: DevOps engineer', createdById: admin.id,
+        summary: 'Demo path from the seeded courses. Edit or delete it before publishing anything real.',
+        steps: { create: courses.slice(0, 3).map((c, i) => ({ courseId: c.id, position: i, skills: [] })) },
+      },
+    });
+  }
   await prisma.auditLog.create({ data: { actorId: admin.id, action: 'seed.run', targetType: 'system', meta: { courses: courses.length } } });
   log(`done: ${courses.length} courses, ${CATEGORIES.length} categories`);
 }

@@ -20,6 +20,7 @@ import { CommerceModule } from './commerce/commerce.module';
 import { InstructorModule } from './instructor/instructor.module';
 import { LearningModule } from './learning/learning.module';
 import { MediaModule } from './media/media.module';
+import { PathsModule } from './paths/paths.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { MediaModule } from './media/media.module';
     LearningModule,
     InstructorModule,
     AdminModule,
+    PathsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
