@@ -109,6 +109,11 @@ if [ "$(j .format)" = hls ]; then
   check "paid lesson streams encrypted (no file link)" "$(j '.protected')" true
   PL="$(j .url)"; check "playlist only with the student's session" "$(curl -s -o /dev/null -w '%{http_code}' "$PL")" 401
   check "playlist for the student" "$(curl -s -b "$TMP/stu.jar" -o "$TMP/pl.m3u8" -w '%{http_code}' "$PL")" 200
+  # several qualities: index.m3u8 is a master playlist; read the first quality's playlist (docs/VIDEO_DELIVERY.md)
+  if grep -q '#EXT-X-STREAM-INF' "$TMP/pl.m3u8"; then
+    check "master playlist lists qualities" "$(grep -c '#EXT-X-STREAM-INF' "$TMP/pl.m3u8" | awk '{print ($1>=2)}')" 1
+    curl -s -b "$TMP/stu.jar" -o "$TMP/pl.m3u8" "$(grep -v '^#' "$TMP/pl.m3u8" | grep . | head -1)"
+  fi
   check "playlist is encrypted HLS" "$(grep -c 'METHOD=AES-128' "$TMP/pl.m3u8")" 1
   check "key for the student only" "$(curl -s -o /dev/null -w '%{http_code}' "${PL%/index.m3u8}/key")" 401
 else
