@@ -50,6 +50,8 @@ locals {
       SESSION_SECRET    = random_password.session["production"].result
       S3_BUCKET         = aws_s3_bucket.media["production"].bucket
       DEV_TEST_PAYMENTS = "false"
+      CDN_URL           = "https://${aws_cloudfront_distribution.media["production"].domain_name}"
+      CDN_KEY_PAIR_ID   = aws_cloudfront_public_key.media.id
     })
     staging = merge(local.common, {
       DEPLOY_ENV        = "staging"
@@ -60,6 +62,8 @@ locals {
       SESSION_SECRET    = random_password.session["staging"].result
       S3_BUCKET         = aws_s3_bucket.media["staging"].bucket
       DEV_TEST_PAYMENTS = "true"
+      CDN_URL           = "https://${aws_cloudfront_distribution.media["staging"].domain_name}"
+      CDN_KEY_PAIR_ID   = aws_cloudfront_public_key.media.id
       SEED_PASSWORD     = random_password.seed.result
       SEED_MFA_SECRET   = local.seed_mfa
       AUTH_RATE_LIMIT   = "300"

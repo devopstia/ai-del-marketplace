@@ -8,6 +8,8 @@ export const EMAIL_QUEUE = 'email';
 export const PAYMENTS_QUEUE = 'payments';
 
 export interface ProcessVideoJob {
+  /** package-hls only: package again although a copy exists (adds qualities); the current copy plays until replaced. */
+  repackage?: boolean;
   assetId: string;
 }
 export interface EmailJob {
@@ -43,9 +45,9 @@ export class JobsService {
   }
 
   /** Content protection: package a ready video as encrypted HLS. One queued job per asset at a time. */
-  async packageHls(assetId: string) {
-    await this.media.add('package-hls', { assetId } satisfies ProcessVideoJob, {
-      jobId: `hls-${assetId}`,
+  async packageHls(assetId: string, opts: { repackage?: boolean } = {}) {
+    await this.media.add('package-hls', { assetId, ...(opts.repackage ? { repackage: true } : {}) } satisfies ProcessVideoJob, {
+      jobId: opts.repackage ? `hls-re-${assetId}` : `hls-${assetId}`,
       attempts: 3,
       backoff: { type: 'exponential', delay: 30_000 },
       removeOnComplete: true,

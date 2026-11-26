@@ -11,3 +11,8 @@ variable "acme_email" {
 
 # GitHub immutable OIDC subject prefix (owner@owner_id/repo@repo_id), from `gh api repos/<repo>/actions/oidc/customization/sub`.
 variable "github_repo_immutable" { default = "devopstia@116234952/ai-del-marketplace@1470488285" }
+
+# Monthly cost alert for the marketplace's own resources (fixed cost is about $52 before video traffic: docs/AWS_COSTS.md).
+variable "monthly_budget_usd" { default = 75 }
+# DEL's support address receives budget alerts (not a personal address).
+variable "alert_email" { default = "support@devopseasylearning.com" }

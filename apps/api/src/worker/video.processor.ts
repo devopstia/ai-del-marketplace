@@ -57,19 +57,26 @@ export class VideoProcessor extends WorkerHost {
   private async packageHls(job: Job<ProcessVideoJob>) {
     const asset = await this.prisma.videoAsset.findUnique({ where: { id: job.data.assetId } });
     if (!asset || asset.provider !== 'local' || asset.status !== 'ready' || !asset.storageKey) return { skipped: true };
-    if (asset.hlsStatus === 'ready') return { skipped: 'already packaged' };
-    await this.prisma.videoAsset.update({ where: { id: asset.id }, data: { hlsStatus: 'processing', hlsAttempts: { increment: 1 }, hlsError: null } });
+    const re = job.data.repackage === true && asset.hlsStatus === 'ready';
+    if (asset.hlsStatus === 'ready' && !re) return { skipped: 'already packaged' };
+    // a re-packaging leaves the current copy 'ready' (learners keep watching it) until the new one replaces it
+    if (!re) await this.prisma.videoAsset.update({ where: { id: asset.id }, data: { hlsStatus: 'processing', hlsAttempts: { increment: 1 }, hlsError: null } });
     const started = Date.now();
     try {
       const src = await this.storage.presignInternalGet(asset.storageKey, 6 * 3600);
       const p = await packageHls(src, (key, body) => this.storage.put(key, body, 'video/mp2t'));
       await this.prisma.videoAsset.update({
         where: { id: asset.id },
-        data: { hlsStatus: 'ready', hlsPrefix: p.prefix, hlsPlaylist: p.playlist, hlsKey: p.keyWrapped, hlsIv: p.ivHex, hlsPackagedAt: new Date(), hlsError: null },
+        data: { hlsStatus: 'ready', hlsPrefix: p.prefix, hlsPlaylist: p.playlist, hlsVariants: p.variants.map((v) => ({ ...v })), hlsKey: p.keyWrapped, hlsIv: p.ivHex, hlsPackagedAt: new Date(), hlsError: null },
       });
-      this.logger.log(`asset ${asset.id} packaged: ${p.segments} encrypted segments in ${Math.round((Date.now() - started) / 1000)}s`);
+      // a re-packaging (extra qualities) replaces the previous copy: remove its segments once the new one is live
+      if (asset.hlsPrefix && asset.hlsPrefix !== p.prefix) {
+        try { await this.storage.deletePrefix(`hls/${asset.hlsPrefix}/`); } catch (e) { this.logger.warn(`old HLS copy of ${asset.id} not removed: ${(e as Error).message}`); }
+      }
+      this.logger.log(`asset ${asset.id} packaged: ${p.variants.map((v) => v.name).join(', ')}, ${p.segments} encrypted segments in ${Math.round((Date.now() - started) / 1000)}s`);
       return { segments: p.segments };
     } catch (e) {
+      if (re) { this.logger.warn(`re-packaging ${asset.id} failed, the current copy stays: ${(e as Error).message}`); throw e; }
       const unsupported = e instanceof UnsupportedVideo;
       const last = unsupported || job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
       await this.prisma.videoAsset.update({
