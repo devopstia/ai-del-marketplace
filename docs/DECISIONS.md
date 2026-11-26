@@ -236,3 +236,13 @@ Checkpoint `checkpoint-2026-11-26-improvements` = 2393eef, branch `backup/pre-im
   8: browser tests. 9: ⌘K quick search; terms acceptance recorded on orders (version, time, IP). 10: AI learning
   (Postgres FTS caption search; Claude assistant with timestamp citations; cached study notes), hidden without a key.
 - Owner also asked for a full mobile responsive check (staging review, fixes in this batch).
+
+## 2026-11-26 — SEO and stand-out batch approved by the owner ("Go with all recommendations and improvements")
+Checkpoint `checkpoint-2026-11-26-seo-standout` = 9062adc, branch `backup/pre-seo-standout-2026-11-26`; integration branch
+`feat/seo-standout-2026-11-26` (built on the improvement batch, which is still awaiting production approval).
+- SEO list 1–5 and 8–12: robots/sitemap, Course rich results, share previews, canonical URLs, honest homepage description
+  (no "labs" claim), category pages, breadcrumbs/FAQ, Organization/WebSite data, speed, server-rendered course text.
+  6–7 (Google Search Console, Bing) need the owner's account; DNS verification added when the owner provides the token.
+- Stand-out first wave (https://claude.ai/artifact/CMYLXDQBiozEt4GjR5m7u7): 1 data-saver mode (360p, audio only, MB per
+  lesson), 2 reviews show measured watch share, 4 career paths, 5 instructor insights, 8 verified certificate + LinkedIn.
+  Labs (6–7) deliberately deferred until sales start (recommendation the owner accepted with "all recommendations").
