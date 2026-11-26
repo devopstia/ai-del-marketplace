@@ -5,15 +5,22 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { ToastProvider } from "@/components/Toast";
 import { themeScript } from "@/components/ThemeToggle";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
+import { SITE_DESCRIPTION, SITE_URL, siteIndexable } from "@/lib/seo";
 import { QuickSearchProvider } from "@/components/search/QuickSearch";
 
 const display = Schibsted_Grotesk({ subsets: ["latin"], variable: "--font-schibsted", weight: ["500", "600", "700", "800"], display: "swap" });
 const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-atkinson", weight: ["400", "500", "700"], display: "swap" });
 
+const indexable = siteIndexable();
+
 export const metadata: Metadata = {
   title: { default: "DevOps Easy Learning: AI and DevOps courses", template: "%s · DevOps Easy Learning" },
-  description: "Practical AI and DevOps courses taught by working engineers. Hands-on labs and real cloud demos.",
-  metadataBase: new URL(process.env.WEB_URL || "http://127.0.0.1:3000"),
+  description: SITE_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  // Search engines and link previews (docs/SEO.md). Only production is indexed; pages set their own canonical address.
+  robots: indexable ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } } : { index: false, follow: false },
+  openGraph: { type: "website", siteName: "DevOps Easy Learning", locale: "en_US", title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION },
+  twitter: { card: "summary_large_image", site: "@devopseasylearn", title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION },
   icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
   manifest: "/manifest.webmanifest",
   // Installed on an iPhone or iPad: the home-screen name; the status bar follows the page (light by default).

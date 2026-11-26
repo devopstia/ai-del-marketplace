@@ -69,7 +69,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
   return (
     <div className="overflow-hidden rounded-panel border border-line bg-surface shadow-float" data-testid="purchase-card">
       <div className="relative" data-qa-on-media>
-        <CourseCover slug={course.slug} title={course.title} category={course.category?.name} thumbnailUrl={course.thumbnailUrl} className="!rounded-none" />
+        <CourseCover slug={course.slug} title={course.title} category={course.category?.name} thumbnailUrl={course.thumbnailUrl} className="!rounded-none" priority />
         {firstPreviewId ? (
           <PreviewButton lectureId={firstPreviewId} className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/45 font-bold text-white transition-colors hover:bg-black/55">
             <span className="grid size-16 place-items-center rounded-full bg-white text-[#141833] shadow-float"><PlayCircle className="size-8" /></span>

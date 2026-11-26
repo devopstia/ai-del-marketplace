@@ -80,9 +80,23 @@ export function coverSeeds(slugs: string[], avoid: number[] = [1, 2]): number[] 
   return out;
 }
 
+/**
+ * Smaller WebP copies of a cover for phones and grids (app/media/images route, ?w=). Only for covers served by the
+ * site's own image route; the browser picks the smallest copy that is sharp enough for the slot.
+ */
+function coverSrcSet(url: string, size: "sm" | "md" | "lg"): { srcSet?: string; sizes?: string } {
+  if (!url.startsWith("/media/images/") || url.includes("?")) return {};
+  const sizes = size === "sm" ? "160px" : size === "lg" ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 420px, (min-width: 640px) 50vw, 100vw";
+  return { srcSet: `${url}?w=320 320w, ${url}?w=480 480w, ${url}?w=640 640w, ${url}?w=960 960w, ${url} 1280w`, sizes };
+}
+
 export function CourseCover({
-  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = false,
-}: { slug: string; title: string; category?: string | null; thumbnailUrl?: string | null; size?: "sm" | "md" | "lg"; className?: string; seed?: number; showTitle?: boolean }) {
+  slug, title, category, thumbnailUrl, size = "md", className = "", seed: seedOverride, showTitle = false, priority = false,
+}: {
+  slug: string; title: string; category?: string | null; thumbnailUrl?: string | null; size?: "sm" | "md" | "lg"; className?: string; seed?: number; showTitle?: boolean;
+  /** The cover is the first big image on screen (course page, first result): load it at once instead of lazily (speed, docs/SEO.md). */
+  priority?: boolean;
+}) {
   const seed = seedOverride ?? hash(slug || title);
   const g = grounds[seed % grounds.length]!;
   const titleCls = size === "lg" ? "text-[clamp(1.4rem,3vw,2.1rem)]" : size === "sm" ? "text-[0.78rem]" : "text-[1.02rem]";
@@ -90,7 +104,9 @@ export function CourseCover({
     <div className={`relative aspect-video w-full overflow-hidden rounded-tile ${className}`} style={{ background: g.bg }}>
       {thumbnailUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumbnailUrl} alt="" className="absolute inset-0 size-full object-cover" loading="lazy" />
+        <img src={thumbnailUrl} alt="" className="absolute inset-0 size-full object-cover" width={1280} height={720} decoding="async"
+          {...coverSrcSet(thumbnailUrl, size)}
+          loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} />
       ) : (
         <>
           <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full" aria-hidden="true">

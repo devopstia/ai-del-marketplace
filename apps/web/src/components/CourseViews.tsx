@@ -50,7 +50,7 @@ export function SaleTag({ sale, withName = false, className = "" }: { sale: Sale
 export function CourseTile({ c, priority = false, coverSeed }: { c: CourseCard; priority?: boolean; coverSeed?: number }) {
   return (
     <Link href={`/courses/${c.slug}`} className="group block rounded-tile" data-testid="course-tile" data-priority={priority || undefined}>
-      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} seed={coverSeed} showTitle={false} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} seed={coverSeed} showTitle={false} priority={priority} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
       <h3 className="mt-3 line-clamp-2 font-display text-[1.02rem] font-bold leading-snug text-ink group-hover:text-violet">{c.title}</h3>
       <p className="mt-1 truncate text-sm text-ink-2">{c.instructor.name}</p>
       <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm empty:hidden"><CourseBadges c={c} /></p>
@@ -88,10 +88,10 @@ export function CourseResultRow({ c }: { c: CourseCard }) {
 
 
 /** Result card for the two-column catalogue grid: cover on top, then the facts that help choose. */
-export function CourseResultCard({ c, coverSeed }: { c: CourseCard; coverSeed?: number }) {
+export function CourseResultCard({ c, coverSeed, priority = false }: { c: CourseCard; coverSeed?: number; priority?: boolean }) {
   return (
     <Link href={`/courses/${c.slug}`} className="group flex flex-col rounded-tile" data-testid="course-row">
-      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} seed={coverSeed} showTitle={false} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+      <CourseCover slug={c.slug} title={c.title} category={c.category?.name} thumbnailUrl={c.thumbnailUrl} seed={coverSeed} showTitle={false} priority={priority} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
       <div className="mt-4 flex items-start justify-between gap-4">
         <h3 className="font-display text-lg font-bold leading-snug text-ink group-hover:text-violet">{c.title}</h3>
         <span className="shrink-0 text-right"><Price cents={c.priceCents} listCents={c.listPriceCents} currency={c.currency} className="text-xl" /></span>

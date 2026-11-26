@@ -10,8 +10,16 @@ import { CourseCover, coverSeeds } from "@/components/CourseCover";
 import { categoryIcon } from "@/components/CategoryIcon";
 import { hours, levelLabel, plural } from "@/lib/format";
 import type { CourseCard } from "@/lib/types";
+import type { Metadata } from "next";
+import { JsonLd } from "@/components/JsonLd";
+import { organizationLd, pageMeta, SITE_DESCRIPTION, topicPath, websiteLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  ...pageMeta({ title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION, path: "/" }),
+  title: { absolute: "DevOps Easy Learning: AI and DevOps courses" },
+};
 
 
 function SectionHead({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {
@@ -97,6 +105,8 @@ export default async function Home() {
 
   return (
     <>
+      <JsonLd data={organizationLd()} />
+      <JsonLd data={websiteLd()} />
       {/* Hero: the DEL loop as the learning pipeline */}
       <section className="relative overflow-hidden border-b border-line">
         <div className="container-x grid items-center gap-10 pb-16 pt-12 lg:items-stretch md:pt-16 lg:grid-cols-[1fr_1.05fr] lg:gap-6 lg:pb-24 lg:pt-20">
@@ -125,7 +135,7 @@ export default async function Home() {
               const I = categoryIcon(c.slug, c.icon);
               const n = c.courseCount ?? countFor(c.slug);
               return (
-                <Link key={c.slug} href={`/courses?category=${c.slug}`} className="group flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 hover:bg-surface-2">
+                <Link key={c.slug} href={topicPath(c.slug)} className="group flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 hover:bg-surface-2">
                   <I className="size-5 text-violet" aria-hidden="true" />
                   <span className="font-bold text-ink">{c.name}</span>
                   {n ? <span className="text-sm tabular-nums text-muted">{n}</span> : null}

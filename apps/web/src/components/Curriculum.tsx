@@ -28,6 +28,7 @@ export function Curriculum({ sections }: { sections: SectionOutline[] }) {
                 <button
                   type="button"
                   aria-expanded={isOpen}
+                  aria-controls={`sec-${s.id}`}
                   className="flex w-full items-center gap-3 bg-surface-2/60 px-4 py-3.5 text-left hover:bg-surface-2"
                   onClick={() => setOpen((o) => { const n = new Set(o); if (n.has(s.id)) n.delete(s.id); else n.add(s.id); return n; })}
                 >
@@ -36,8 +37,8 @@ export function Curriculum({ sections }: { sections: SectionOutline[] }) {
                   <span className="hidden text-sm text-muted sm:inline">{plural(s.lectures.length, "lecture")}, {hours(dur)}</span>
                 </button>
               </h3>
-              {isOpen ? (
-                <ul className="py-1.5">
+              {/* Every lesson title is in the page's HTML (search engines read the whole outline); closed sections are only hidden. */}
+              <ul className="py-1.5" id={`sec-${s.id}`} hidden={!isOpen}>
                   {s.lectures.map((l) => {
                     const Icon = l.type === "article" ? FileText : l.type === "quiz" ? ListChecks : PlayCircle;
                     return (
@@ -50,7 +51,6 @@ export function Curriculum({ sections }: { sections: SectionOutline[] }) {
                     );
                   })}
                 </ul>
-              ) : null}
             </div>
           );
         })}

@@ -1,10 +1,11 @@
 /* eslint-disable react/jsx-key -- section bodies are values of [title, body] pairs; <Policy> renders each with its own key */
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { Policy } from "../_Policy";
 import { TERMS_UPDATED } from "@/lib/terms";
 
-export const metadata: Metadata = { title: "Terms of use", description: "The rules for learning, buying and teaching on the DevOps Easy Learning marketplace." };
+export const metadata: Metadata = pageMeta({ title: "Terms of use", description: "The rules for learning, buying and teaching on the DevOps Easy Learning marketplace.", path: "/policies/terms" });
 
 export default function Terms() {
   return (

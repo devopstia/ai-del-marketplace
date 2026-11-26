@@ -7,13 +7,23 @@ import { Markdown } from "@/components/Markdown";
 import { CourseTile } from "@/components/CourseViews";
 import { SocialLinks } from "@/components/SocialLinks";
 import { compact } from "@/lib/format";
+import { JsonLd } from "@/components/JsonLd";
+import { abs, pageMeta, plainText, SAME_AS } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const r = await getInstructor(id);
-  return { title: r ? r.instructor.name : "Instructor" };
+  if (!r) return { title: "Instructor", robots: { index: false } };
+  const i = r.instructor;
+  const n = r.courses.length;
+  const description = plainText(i.headline ? `${i.headline}. ${i.bio ?? ""}` : i.bio) || `${i.name} teaches ${n === 1 ? "1 course" : `${n} courses`} on DevOps Easy Learning.`;
+  return {
+    ...pageMeta({ title: `${i.name}, instructor`, description, path: `/instructors/${i.id}`, image: r.courses[0]?.thumbnailUrl, imageAlt: i.name, type: "website" }),
+    // Profiles without a published course are reachable but not listed in search.
+    ...(n ? {} : { robots: { index: false, follow: true } }),
+  };
 }
 
 export default async function InstructorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,8 +43,25 @@ export default async function InstructorPage({ params }: { params: Promise<{ id:
   ];
   const topics = Array.from(new Set(courses.map((c) => c.category?.name).filter((x): x is string => !!x)));
   const isDel = /devopseasylearning/i.test(i.website ?? "") || i.name === "DevOps Easy Learning";
+  const url = abs(`/instructors/${i.id}`);
+  // The instructor as a schema.org Person (ProfilePage), with the site's own facts only.
+  const personLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url,
+    mainEntity: {
+      "@type": "Person",
+      "@id": `${url}#person`,
+      name: i.name,
+      url,
+      ...(i.headline ? { jobTitle: i.headline } : {}),
+      ...(i.avatarUrl ? { image: abs(i.avatarUrl) } : {}),
+      ...(isDel ? { sameAs: SAME_AS } : i.website ? { sameAs: [i.website] } : {}),
+    },
+  };
   return (
     <div className="container-x pt-12">
+      <JsonLd data={personLd} />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">

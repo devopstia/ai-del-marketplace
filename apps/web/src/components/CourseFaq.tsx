@@ -4,7 +4,7 @@ import type { CourseDetail } from "@/lib/types";
  * "Questions before you buy": answers come from the platform's published policies and this course's own data,
  * so every answer is true for this course. Items without a true answer for the course are left out.
  */
-export function CourseFaq({ c }: { c: CourseDetail }) {
+export function courseFaqItems(c: CourseDetail): [string, string][] {
   const free = c.priceCents === 0;
   const items: [string, string][] = [
     free
@@ -15,6 +15,12 @@ export function CourseFaq({ c }: { c: CourseDetail }) {
   ];
   if (c.resourceCount > 0) items.push(["What do I need for the labs?", c.requirements.length ? `The labs run on your own computer or cloud account with the downloadable files. You’ll need: ${c.requirements.join("; ")}.` : "The labs run on your own computer or cloud account with the downloadable files."]);
   if (c.hasCaptions) items.push(["Are there captions?", "Yes, English captions on the lessons. They are off by default; turn them on with the CC button in the player."]);
+  return items;
+}
+
+/** The same questions and answers go to search engines as FAQPage data (course page), so the two always match. */
+export function CourseFaq({ c }: { c: CourseDetail }) {
+  const items = courseFaqItems(c);
   return (
     <section className="mt-12" aria-labelledby="faq-h">
       <h2 id="faq-h" className="font-display text-2xl font-extrabold">Questions before you buy</h2>
