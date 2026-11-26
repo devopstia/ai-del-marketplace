@@ -91,7 +91,7 @@ export function SecuritySection() {
       <div className="mt-5 divide-y divide-line rounded-tile border border-line bg-surface" data-testid="security-mfa">
         <div className={row}>
           <ShieldCheck className="size-6 text-mint" />
-          <div className="min-w-0 flex-1">
+          <div className="min-w-[13rem] flex-1">
             <p className="font-bold">Two-step sign-in with Google Authenticator</p>
             <p className="text-sm text-muted">{sec.mfa.enabledAt ? `On since ${date(sec.mfa.enabledAt)}. Required for every account.` : "Set up at your next sign-in."}</p>
           </div>
@@ -108,7 +108,7 @@ export function SecuritySection() {
                 toast("ok", "Your new phone is set up. Other devices were signed out."); setOpen(null); setReplace(null); load();
               }); }}>
                 <span className="block size-36 shrink-0 overflow-hidden rounded-lg bg-white p-1.5" role="img" aria-label="QR code for your new phone" dangerouslySetInnerHTML={{ __html: replace.qr }} />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-[13rem] flex-1">
                   <p className="text-sm text-ink-2">Scan this with Google Authenticator on the new phone (or enter <span className="break-all font-mono font-bold text-ink">{replace.secret.match(/.{1,4}/g)?.join(" ")}</span>), then type the code it shows.</p>
                   <div className="mt-3 flex flex-wrap items-end gap-2"><div className="w-44"><CodeInput id="new-phone-code" value={newCode} onChange={setNewCode} /></div><button className="btn btn-primary btn-sm" disabled={busy || newCode.length !== 6}>Switch to this phone</button></div>
                 </div>
@@ -118,7 +118,7 @@ export function SecuritySection() {
         ) : null}
         <div className={row}>
           <KeyRound className="size-6 text-muted" />
-          <div className="min-w-0 flex-1"><p className="font-bold">Recovery codes</p><p className="text-sm text-muted" data-testid="codes-left">{sec.mfa.recoveryCodesLeft} of 10 left. Use one if you lose your phone.</p></div>
+          <div className="min-w-[13rem] flex-1"><p className="font-bold">Recovery codes</p><p className="text-sm text-muted" data-testid="codes-left">{sec.mfa.recoveryCodesLeft} of 10 left. Use one if you lose your phone.</p></div>
           {sec.mfa.enabledAt ? <button type="button" className="btn btn-outline btn-sm" onClick={() => { setOpen(open === "codes" ? null : "codes"); setCodes(null); }} data-testid="new-codes">Get new codes</button> : null}
         </div>
         {open === "codes" ? (
@@ -130,7 +130,7 @@ export function SecuritySection() {
         ) : null}
         <div className={row}>
           <MonitorSmartphone className="size-6 text-muted" />
-          <div className="min-w-0 flex-1"><p className="font-bold">Trusted devices</p><p className="text-sm text-muted">{sec.trustedDevices ? `${sec.trustedDevices} device${sec.trustedDevices === 1 ? "" : "s"} skip the code for 30 days.` : "No device skips the code."}</p></div>
+          <div className="min-w-[13rem] flex-1"><p className="font-bold">Trusted devices</p><p className="text-sm text-muted">{sec.trustedDevices ? `${sec.trustedDevices} device${sec.trustedDevices === 1 ? "" : "s"} skip the code for 30 days.` : "No device skips the code."}</p></div>
           {sec.trustedDevices ? <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void run(async () => { await api("/auth/trusted-devices", { method: "DELETE" }); toast("ok", "Every device will ask for a code again."); load(); })}>Forget all</button> : null}
         </div>
       </div>
@@ -139,7 +139,7 @@ export function SecuritySection() {
       <ul className="mt-3 divide-y divide-line rounded-tile border border-line bg-surface" data-testid="sign-in-methods">
         <li className={row}>
           <KeyRound className="size-5 text-muted" />
-          <div className="min-w-0 flex-1"><p className="font-bold">Email and password</p><p className="text-sm text-muted">{sec.hasPassword ? (sec.passwordChangedAt ? `Last changed ${date(sec.passwordChangedAt)}` : "Set") : "Not set. Add one to also log in with your email."}</p></div>
+          <div className="min-w-[13rem] flex-1"><p className="font-bold">Email and password</p><p className="text-sm text-muted">{sec.hasPassword ? (sec.passwordChangedAt ? `Last changed ${date(sec.passwordChangedAt)}` : "Set") : "Not set. Add one to also log in with your email."}</p></div>
           <button type="button" className="btn btn-outline btn-sm" onClick={() => setOpen(open === "password" ? null : "password")} aria-expanded={open === "password"}>{sec.hasPassword ? "Change" : "Set a password"}</button>
           {open === "password" ? <div className="w-full"><PasswordBox hasPassword={sec.hasPassword} onDone={() => { setOpen(null); load(); }} /></div> : null}
         </li>
@@ -149,7 +149,7 @@ export function SecuritySection() {
           return (
             <li key={k} className={row}>
               <ProviderIcon k={k} />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[13rem] flex-1">
                 <p className="font-bold">{LABEL[k] ?? k}</p>
                 <p className="text-sm text-muted">{linked.length ? linked.map((i) => `${i.email ?? "Linked"}${i.lastUsedAt ? `, last used ${dateTime(i.lastUsedAt)}` : ""}`).join(" · ") : "Not linked"}</p>
               </div>

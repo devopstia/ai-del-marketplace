@@ -85,7 +85,7 @@ function CoursesInner() {
                 </div>
                 <dl className="flex gap-6 px-1 text-sm sm:flex-col sm:gap-1 sm:text-right">
                   <div><dt className="sr-only">Price</dt><dd className="font-display font-bold">{money(c.priceCents, c.currency)}</dd></div>
-                  <div><dt className="sr-only">Students</dt><dd className="text-muted">{compact(c.studentCount ?? 0)} students</dd></div>
+                  <div><dt className="sr-only">Students</dt><dd className="text-muted">{compact(c.studentCount ?? 0)} {(c.studentCount ?? 0) === 1 ? "student" : "students"}</dd></div>
                 </dl>
               </Link>
             </li>

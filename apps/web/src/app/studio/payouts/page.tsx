@@ -4,7 +4,7 @@ import { BadgeCheck, CircleAlert, ExternalLink, Loader2, Building2 } from "lucid
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
-import { money } from "@/lib/format";
+import { moneyExact as money } from "@/lib/format";
 import type { StripeStatus } from "@/lib/types";
 import Link from "next/link";
 import { Kpis, PageHead } from "@/components/shell/AppShell";
@@ -48,7 +48,7 @@ export default function PayoutsPage() {
         <div className="mb-8 max-w-4xl"><Kpis items={[
           { label: "Earned (card sales)", value: money(earn.earningsCents), note: `${earn.sales} sale${earn.sales === 1 ? "" : "s"}, after fees and commission` },
           { label: "Paid out", value: money(earn.paidOutCents), note: "Confirmed by Stripe" },
-          { label: "Pending", value: money(earn.pendingPayoutCents + earn.heldCents), note: "Inside the 14-day refund window or waiting for your Stripe setup" },
+          { label: "Pending", value: money(earn.pendingPayoutCents), note: "Inside the 14-day refund window or waiting for your Stripe setup" },
           { label: "Manual enrollments", value: money(earn.manualCents), note: earn.manualPaidCents ? `${money(earn.manualPaidCents)} paid out by DEL` : "Recorded by DEL, paid outside Stripe" },
         ]} /><p className="mt-2 text-sm text-muted">Every sale and transfer is listed in <Link href="/studio/sales" className="link">Sales</Link>.</p></div>
       ) : null}

@@ -38,6 +38,11 @@ export class LearningService {
     return hasAccess(e) ? 'enrolled' : null;
   }
 
+  async accessBySlug(user: AuthUser, slug: string): Promise<Access | null> {
+    const c = await this.prisma.course.findUnique({ where: { slug }, select: { id: true, instructorId: true } });
+    return c ? this.access(user, c) : null;
+  }
+
   private async lectureWithCourse(lectureId: string) {
     const l = await this.prisma.lecture.findUnique({
       where: { id: lectureId },

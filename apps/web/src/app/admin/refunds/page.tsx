@@ -49,7 +49,7 @@ export default function AdminRefunds() {
   }
 
   return (
-    <div className="max-w-6xl">
+    <div className="max-w-[1600px]">
       <PageHead title="Refunds" sub="Every refund request with the facts from purchase and playback records. Policy: within 14 days and 25% or less watched; eligible requests are refunded automatically (3 a year per student). Only Super Admins can overturn an automatic decline." />
       <div role="group" aria-label="Filter requests" className="mb-4 flex flex-wrap gap-2">
         {TABS.map(([k, l]) => (

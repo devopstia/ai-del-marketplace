@@ -20,7 +20,7 @@ export default function LearningProgress() {
   const doneLessons = (items ?? []).reduce((n, i) => n + (i.completedLectures ?? 0), 0);
   const issue = (slug: string) => (code: string) => setItems((xs) => xs?.map((x) => (x.course.slug === slug ? { ...x, certificateCode: code } : x)) ?? null);
   return (
-    <div className="max-w-6xl">
+    <div className="max-w-[1600px]">
       <PageHead title="Learning progress" sub="Completed lessons and completion for every course you are enrolled in." />
       {err ? <p className="text-rose">{err}</p> : null}
       {!items && !err ? <Skeleton className="h-64" /> : null}

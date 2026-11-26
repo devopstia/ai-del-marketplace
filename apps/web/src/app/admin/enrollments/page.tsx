@@ -17,7 +17,7 @@ export default function AdminEnrollments() {
   const [k, setK] = useState(0);
   const earn = useApi(superAdmin ? `/enrollments/earnings?k=${k}` : null, (r) => obj(obj(r).totals) as Record<string, number>);
   return (
-    <div className="max-w-6xl">
+    <div className="max-w-[1600px]">
       <PageHead title="Manual enrollments" sub="Students who pay outside the checkout. Verify the payment (or record a complimentary reason), then approve: existing accounts get the courses at once, new students get an invitation."
         actions={superAdmin ? (!creating ? <button type="button" className="btn btn-primary" onClick={() => setCreating(true)} data-testid="new-enrollment"><Plus className="size-4" />Enroll a student</button> : <button type="button" className="btn btn-ghost" onClick={() => setCreating(false)}>Back to requests</button>) : null} />
       {creating ? <EnrollmentForm mode="super_admin" onDone={() => { setCreating(false); setK((x) => x + 1); }} /> : (

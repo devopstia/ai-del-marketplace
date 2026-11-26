@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
+import { obj } from "@/lib/normalize";
 import { api, errMsg } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./Toast";
@@ -19,7 +20,7 @@ export function ReviewForm({ slug, enrolled: enrolledProp }: { slug: string; enr
 
   useEffect(() => {
     if (!me || enrolledProp) return;
-    api(`/me/courses/${slug}`).then(() => setEnrolled(true)).catch(() => {});
+    api(`/me/access/${slug}`).then((r) => { if (obj(r).access) setEnrolled(true); }).catch(() => {});
   }, [me, slug, enrolledProp]);
 
   if (!me || !enrolled || done) return null;

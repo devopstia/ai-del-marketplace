@@ -19,6 +19,12 @@ export class LearningController {
     return this.svc.myLearning(u.id);
   }
 
+  /** Can I open this course? Always 200 (the course page asks for every signed-in visitor; a 403 would be noise). */
+  @Get('me/access/:slug')
+  async accessFor(@Param('slug') slug: string, @CurrentUser() u: AuthUser) {
+    return { access: await this.svc.accessBySlug(u, slug) };
+  }
+
   @Get('me/courses/:slug')
   course(@Param('slug') slug: string, @CurrentUser() u: AuthUser) {
     return this.svc.courseForLearner(u, slug);

@@ -47,8 +47,8 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="max-w-6xl">
-      <PageHead title={me ? `Welcome back, ${me.name.split(" ")[0]}` : "Dashboard"} sub="Your learning at a glance." />
+    <div className="max-w-[1600px]">
+      <PageHead title={me ? `Welcome, ${me.name.split(" ")[0]}` : "Dashboard"} sub="Your learning at a glance." />
       {err ? <p className="text-rose">{err}</p> : null}
       {!items && !err ? <div className="grid gap-6"><Skeleton className="h-28" /><Skeleton className="h-64" /></div> : null}
       {items ? (

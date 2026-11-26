@@ -121,7 +121,7 @@ export function MyCourses() {
               {current.lastLectureTitle ? <p className="mt-2 text-white/75">Continue where you left off: {current.lastLectureTitle}</p> : null}
               <div className="mt-5 flex flex-wrap items-center gap-6">
                 <span className="[&_span]:!text-white"><LoopMeter value={current.progressPct} size="lg" /></span>
-                {current.totalLectures ? <span className="text-sm text-white/70">{current.completedLectures ?? 0} of {current.totalLectures} lectures done</span> : null}
+                {current.totalLectures ? <span className="text-sm text-white/70">{current.completedLectures ?? 0} of {current.totalLectures} lessons done</span> : null}
               </div>
               <Link href={resumeHref(current)} className="btn btn-cyan mt-6" data-testid="resume">Resume course</Link>
             </div>
@@ -199,7 +199,7 @@ export function MyCourses() {
           <p className="mt-1 text-ink-2">Most enrolled courses you haven’t started yet.</p>
           {/* A full row of tiles only when there are enough courses; fewer are listed, so no empty grid slots. */}
           {suggestions.length >= 4
-            ? <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">{suggestions.map((c) => <CourseTile key={c.slug} c={c} />)}</div>
+            ? <div className="mt-6 grid grid-cols-1 gap-x-4 gap-y-8 min-[480px]:grid-cols-2 sm:gap-x-6 lg:grid-cols-4">{suggestions.map((c) => <CourseTile key={c.slug} c={c} />)}</div>
             : <div className="mt-4 divide-y divide-line border-y border-line">{suggestions.map((c) => <CourseResultRow key={c.slug} c={c} />)}</div>}
         </section>
       ) : null}

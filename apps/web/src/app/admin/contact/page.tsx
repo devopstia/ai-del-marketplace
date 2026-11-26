@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, ImageOff, Mail, RotateCcw } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
@@ -18,6 +18,13 @@ const TOPIC: Record<string, string> = { general: "General", courses: "Courses", 
 /** Screenshot preview; a file that can't be shown as an image becomes a named file tile (still opens). */
 function Attachment({ href, name, size }: { href: string; name: string; size: number }) {
   const [broken, setBroken] = useState(false);
+  const img = useRef<HTMLImageElement>(null);
+  // an image that failed before React attached onError (fast 404) is caught here too
+  useEffect(() => {
+    const el = img.current;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (el && el.complete && el.naturalWidth === 0) setBroken(true);
+  }, []);
   return (
     <a href={href} target="_blank" rel="noopener" title={name} className="group block w-36">
       {broken ? (
@@ -28,7 +35,7 @@ function Attachment({ href, name, size }: { href: string; name: string; size: nu
         </span>
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={href} alt={name} onError={() => setBroken(true)} className="h-24 w-36 rounded-lg border border-line object-cover group-hover:border-violet" />
+        <img ref={img} src={href} alt={name} onError={() => setBroken(true)} className="h-24 w-36 rounded-lg border border-line object-cover group-hover:border-violet" />
       )}
     </a>
   );

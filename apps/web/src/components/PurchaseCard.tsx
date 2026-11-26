@@ -32,7 +32,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
     // The course payload already carries the viewer block when the server saw the session: no extra probes.
     if (!me || course.enrolled || course.viewerSignedIn) return;
     let alive = true;
-    api(`/me/courses/${course.slug}`).then(() => alive && setEnrolled(true)).catch(() => {});
+    api(`/me/access/${course.slug}`).then((r) => alive && obj(r).access && setEnrolled(true)).catch(() => {});
     api("/cart").then((c) => alive && setInCart(list(c, "items").some((i) => {
       const o = obj(i);
       return o.courseId === course.id || obj(o.course).id === course.id || obj(o.course).slug === course.slug;
@@ -120,7 +120,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
               </button>
             </div>}
             <p className="mt-3 text-center text-xs text-muted">{!free && payMode === "off" ? "" : "Secure checkout with Stripe."}{free ? "" : " 12 months of access, not lifetime."}</p>
-            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5" aria-hidden="true" />Refund within 14 days if you’ve watched 25% or less · <Link href="/policies/access-and-refunds" className="link">Policy</Link></p> : null}
+            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5 shrink-0" aria-hidden="true" /><span>Refund within 14 days if you’ve watched 25% or less <span className="whitespace-nowrap">· <Link href="/policies/access-and-refunds" className="link">Policy</Link></span></span></p> : null}
           </>
         )}
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>

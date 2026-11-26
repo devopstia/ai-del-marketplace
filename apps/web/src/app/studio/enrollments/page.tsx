@@ -14,7 +14,7 @@ export default function InstructorEnrollments() {
   const [k, setK] = useState(0);
   const earn = useApi(`/enrollments/earnings?k=${k}`, (r) => obj(obj(r).totals) as Record<string, number>);
   return (
-    <div className="max-w-6xl">
+    <div className="max-w-[1600px]">
       <PageHead title="Manual enrollments" sub="For students who paid you outside the checkout (mobile money, bank transfer…). Choose your courses and send the request; DevOps Easy Learning verifies the payment, approves it and invites the student."
         actions={!creating ? <button type="button" className="btn btn-primary" onClick={() => setCreating(true)} data-testid="new-enrollment"><Plus className="size-4" />New enrollment request</button> : <button type="button" className="btn btn-ghost" onClick={() => setCreating(false)}>Back to requests</button>} />
       {creating ? <EnrollmentForm mode="instructor" onDone={() => { setCreating(false); setK((x) => x + 1); }} /> : (

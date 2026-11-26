@@ -90,7 +90,7 @@ test.describe.serial("learner buys and studies a course", () => {
     await page.getByTestId("codes-saved").check();
     await page.getByTestId("codes-continue").click();
     await expect(page).toHaveURL(/\/student$/);
-    await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Welcome/ })).toBeVisible();
   });
 
   test("buy with the local test payment and land in My learning", async ({ page }) => {
@@ -476,7 +476,7 @@ test.describe("studios, contact and platform videos (owner 2026-11-25)", () => {
 
   test("Student Studio: real dashboard, collapsible sidebar, breadcrumbs, back to the marketplace", async ({ page }) => {
     await login(page, USERS.student, PASSWORD, "/student");
-    await expect(page.getByRole("heading", { name: /Welcome back/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Welcome/ })).toBeVisible();
     await expect(page.getByTestId("nav-platform-videos").first()).toHaveAttribute("href", "/help");
     await visible(page, "nav-my-courses").click();
     await expect(page).toHaveURL(/\/student\/courses$/);
