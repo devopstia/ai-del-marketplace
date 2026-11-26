@@ -3,38 +3,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Search, Shield, ShoppingCart, User, X, GraduationCap, Mail } from "lucide-react";
+import { LifeBuoy, Download, Tag, BookOpen, ChevronDown, LayoutDashboard, LogOut, Menu, Receipt, Shield, ShoppingCart, User, X, GraduationCap, Mail } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "./AuthProvider";
 import { Avatar } from "./Avatar";
 import { usePwa } from "@/lib/pwa";
-
-function SearchBox({ className = "", onDone }: { className?: string; onDone?: () => void }) {
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  return (
-    <form
-      role="search"
-      className={`relative ${className}`}
-      onSubmit={(e) => {
-        e.preventDefault();
-        router.push(q.trim() ? `/courses?q=${encodeURIComponent(q.trim())}` : "/courses");
-        onDone?.();
-      }}
-    >
-      <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        type="search"
-        aria-label="Search courses"
-        placeholder="Search Kubernetes, MCP agents, Bedrock…"
-        className="h-11 w-full rounded-full border-[1.5px] border-line bg-surface-2 pl-10 pr-4 text-[0.95rem] text-ink placeholder:text-muted focus:border-violet focus:bg-surface focus:outline-none"
-      />
-    </form>
-  );
-}
+import { SearchButton, SearchField } from "./search/QuickSearch";
 
 function UserMenu() {
   const { installed } = usePwa();
@@ -115,13 +90,14 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
           <Link href="/courses" className={`${nav} ${active("/courses")}`}>Browse courses</Link>
           {dealsCount > 0 ? <Link href="/deals" className={`${nav} ${active("/deals")} inline-flex items-center gap-1.5`}>Deals<span className="rounded-full bg-rose-soft px-1.5 text-xs font-extrabold tabular-nums text-rose">{dealsCount}</span></Link> : null}
         </nav>
-        <SearchBox className="mx-2 hidden max-w-md flex-1 md:block" />
+        <SearchField className="mx-2 hidden max-w-md flex-1 md:flex" />
         <div className="ml-auto flex items-center gap-1">
           <nav className="hidden items-center lg:flex" aria-label="Account">
             <Link href={teachHref} className={nav}>{has("instructor") ? "Studio" : "Teach on DEL"}</Link>
             {has("admin") ? <Link href="/admin" className={nav}>{has("super_admin") ? "Super Admin" : "Admin"}</Link> : null}
             {me ? <Link href="/student" className={`${nav} ${active("/student")}`} data-testid="nav-my-learning">My learning</Link> : null}
           </nav>
+          <SearchButton compact className="md:hidden" />
           <ThemeToggle className="hidden sm:inline-flex" />
           <Link href="/cart" className="btn btn-ghost btn-sm relative !px-2.5" aria-label={`Cart, ${cartCount} items`}>
             <ShoppingCart className="size-[19px]" />
@@ -153,7 +129,6 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
               <span className="flex items-center gap-2"><span className="font-display text-lg font-bold">Menu</span><ThemeToggle /></span>
               <button type="button" className="btn btn-ghost btn-sm !px-2" aria-label="Close menu" onClick={() => setMobile(false)}><X className="size-5" /></button>
             </div>
-            <SearchBox className="mb-3" onDone={() => setMobile(false)} />
             {[
               ["/courses", "Browse courses", GraduationCap],
               ...(dealsCount > 0 ? [["/deals", `Deals (${dealsCount})`, Tag]] : []),
