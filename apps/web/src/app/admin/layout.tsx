@@ -18,6 +18,7 @@ const groups: { label?: string; items: Item[] }[] = [
   ] },
   { label: "People", items: [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
+    { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
     { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
     { href: "/admin/enrollments", label: "Manual enrollments", icon: UserPlus, perm: "enrollments.manage" },
   ] },
@@ -38,7 +39,6 @@ const groups: { label?: string; items: Item[] }[] = [
     { href: "/admin/covers", label: "Cover templates", icon: ImageIcon, perm: "content.manage" },
     { href: "/admin/protection", label: "Video protection", icon: ShieldCheck, perm: "content.manage" },
     { href: "/admin/payments", label: "Payments & Stripe", icon: CreditCard, superOnly: true },
-    { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
     { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },
     { href: "/admin/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
   ] },
