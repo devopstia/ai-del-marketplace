@@ -1,4 +1,5 @@
 import { ownsResourceKey } from '../common/storage-keys';
+import { reviewerWatch, watchOf } from '../access/consumption';
 import { env } from '../config/env';
 import { JobsService } from '../common/jobs';
 import { Injectable, Optional } from '@nestjs/common';
@@ -710,7 +711,8 @@ export class InstructorService {
       take: 500,
       include: { user: { select: { name: true } }, course: { select: { id: true, title: true, slug: true } } },
     });
-    return { items: rows.map((r) => ({ id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt, author: r.user, course: r.course })) };
+    const watch = await reviewerWatch(this.prisma, rows.map((r) => ({ userId: r.userId, courseId: r.courseId })));
+    return { items: rows.map((r) => ({ id: r.id, rating: r.rating, body: r.body, status: r.status, instructorReply: r.instructorReply, createdAt: r.createdAt, ...watchOf(watch, r.userId, r.courseId), author: r.user, course: r.course })) };
   }
 
   async reply(a: Actor, reviewId: string, reply: string) {

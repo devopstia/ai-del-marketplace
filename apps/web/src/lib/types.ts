@@ -147,6 +147,9 @@ export interface Review {
   instructorReply?: string | null;
   course?: { slug: string; title: string } | null;
   status?: string;
+  /** Share of the course's video the reviewer actually watched (unique seconds); null when the course has no video. */
+  watchedPercent?: number | null;
+  completed?: boolean;
 }
 
 export interface ReviewSummary {
@@ -249,7 +252,11 @@ export interface Certificate {
   code: string;
   issuedAt: string;
   user: { name: string };
-  course: { title: string; slug: string; instructorName?: string; totalDurationSec?: number };
+  course: { title: string; slug: string; published?: boolean; instructorName?: string; totalDurationSec?: number; lessons?: number };
+  skills: string[];
+  quizzes: { total: number; passed: number; averageBest: number | null } | null;
+  url?: string;
+  linkedInUrl?: string;
 }
 
 /* Instructor studio */

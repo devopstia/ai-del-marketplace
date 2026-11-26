@@ -213,6 +213,8 @@ export function toReview(x: unknown): Review {
     instructorReply: (str(o.instructorReply) || null),
     course: c.slug || c.title ? { slug: str(c.slug), title: str(c.title) } : null,
     status: str(o.status) || undefined,
+    watchedPercent: o.watchedPercent == null ? null : num(o.watchedPercent),
+    completed: o.completed === true,
   };
 }
 
@@ -308,9 +310,15 @@ export function toCertificate(x: unknown): Certificate {
     course: {
       title: str(c.title ?? o.courseTitle),
       slug: str(c.slug ?? o.courseSlug),
+      published: c.published !== false,
       instructorName: str(obj(c.instructor).name ?? c.instructorName) || undefined,
       totalDurationSec: c.totalDurationSec != null ? num(c.totalDurationSec) : undefined,
+      lessons: c.lessons != null ? num(c.lessons) : undefined,
     },
+    skills: Array.isArray(o.skills) ? o.skills.map((s) => str(s)).filter(Boolean) : [],
+    quizzes: o.quizzes && typeof o.quizzes === "object" ? { total: num(obj(o.quizzes).total), passed: num(obj(o.quizzes).passed), averageBest: obj(o.quizzes).averageBest == null ? null : num(obj(o.quizzes).averageBest) } : null,
+    url: str(o.url) || undefined,
+    linkedInUrl: str(o.linkedInUrl).startsWith("https://www.linkedin.com/") ? str(o.linkedInUrl) : undefined,
   };
 }
 

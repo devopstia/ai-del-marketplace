@@ -1,21 +1,47 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { BadgeCheck, SearchX } from "lucide-react";
+import { BadgeCheck, Check, SearchX } from "lucide-react";
 import { serverGet } from "@/lib/server-api";
 import { toCertificate } from "@/lib/normalize";
 import { date, hours } from "@/lib/format";
 import { LoopMark, LOOP_FULL } from "@/components/Logo";
 import { PrintButton } from "@/components/PrintButton";
+import { CertificateShare } from "@/components/CertificateShare";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Certificate verification" };
+
+async function load(code: string) {
+  const r = code ? await serverGet(`/certificates/${encodeURIComponent(code)}`) : null;
+  return r?.ok ? toCertificate(r.data) : null;
+}
+
+/**
+ * Public by link, never listed in search engines (a learner's name is personal data; docs/TRUST.md).
+ * The Open Graph card makes a shared link (LinkedIn, WhatsApp) show the certificate; image: ./opengraph-image.tsx.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const { code } = await params;
+  const cert = code === "verify" ? null : await load(code);
+  const robots = { index: false, follow: false };
+  if (!cert) return { title: "Certificate verification", robots };
+  const title = `${cert.user.name}: ${cert.course.title}`;
+  const description = `Verified certificate of completion from DevOps Easy Learning, issued ${date(cert.issuedAt)}. Certificate ${cert.code}.`;
+  return {
+    title: `Certificate: ${title}`,
+    description,
+    robots,
+    alternates: cert.url ? { canonical: cert.url } : undefined,
+    openGraph: { type: "website", title, description, url: cert.url, siteName: "DevOps Easy Learning" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function CertificatePage({ params, searchParams }: { params: Promise<{ code: string }>; searchParams: Promise<{ code?: string }> }) {
   const { code: raw } = await params;
   const sp = await searchParams;
   const code = raw === "verify" ? (sp.code ?? "").trim() : raw;
-  const r = code ? await serverGet(`/certificates/${encodeURIComponent(code)}`) : null;
-  const cert = r?.ok ? toCertificate(r.data) : null;
+  const cert = await load(code);
+  const quiz = cert?.quizzes && cert.quizzes.averageBest != null ? cert.quizzes : null;
 
   return (
     <div className="container-x max-w-5xl pt-12">
@@ -29,7 +55,7 @@ export default async function CertificatePage({ params, searchParams }: { params
 
       {cert ? (
         <>
-          <p className="mb-4 flex items-center gap-2 font-bold text-mint print:hidden"><BadgeCheck className="size-5" />Verified: this certificate was issued by DevOps Easy Learning.</p>
+          <p className="mb-4 flex items-center gap-2 font-bold text-mint print:hidden" data-testid="cert-valid"><BadgeCheck className="size-5" />Verified: this certificate was issued by DevOps Easy Learning.</p>
           <article className="relative overflow-hidden rounded-panel border border-line bg-surface px-6 py-12 shadow-lift sm:px-14 sm:py-16" aria-label="Certificate of completion">
             <svg viewBox="0 0 120 60" className="pointer-events-none absolute -right-16 -top-6 w-[60%] opacity-[0.08]" fill="none" aria-hidden="true"><path d={LOOP_FULL} stroke="var(--violet)" strokeWidth="6" /></svg>
             <div className="flex items-center gap-3"><LoopMark className="h-8 w-16" /><span className="font-display font-extrabold">DevOps Easy Learning</span></div>
@@ -41,13 +67,24 @@ export default async function CertificatePage({ params, searchParams }: { params
               <div><dt className="text-muted">Issued</dt><dd className="font-bold">{date(cert.issuedAt)}</dd></div>
               {cert.course.instructorName ? <div><dt className="text-muted">Instructor</dt><dd className="font-bold">{cert.course.instructorName}</dd></div> : null}
               <div><dt className="text-muted">Certificate code</dt><dd className="font-bold tracking-wide">{cert.code}</dd></div>
-              {cert.course.totalDurationSec ? <div><dt className="text-muted">Course length</dt><dd className="font-bold">{hours(cert.course.totalDurationSec)}</dd></div> : null}
+              {cert.course.totalDurationSec ? <div><dt className="text-muted">Course length</dt><dd className="font-bold">{hours(cert.course.totalDurationSec)}{cert.course.lessons ? `, ${cert.course.lessons} lessons` : ""}</dd></div> : null}
+              {quiz ? <div><dt className="text-muted">Quizzes</dt><dd className="font-bold">{quiz.passed} of {quiz.total} passed, best scores average {quiz.averageBest} %</dd></div> : null}
             </dl>
+            {cert.skills.length ? (
+              <div className="mt-8 border-t border-line pt-6" data-testid="cert-skills">
+                <h2 className="text-sm font-bold text-muted">What this course covered</h2>
+                <ul className="mt-3 grid gap-x-8 gap-y-2 text-sm text-ink-2 sm:grid-cols-2">
+                  {cert.skills.map((s) => <li key={s} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-mint" aria-hidden="true" /><span className="min-w-0">{s}</span></li>)}
+                </ul>
+              </div>
+            ) : null}
           </article>
           <div className="mt-6 flex flex-wrap gap-3 print:hidden">
+            {cert.url ? <CertificateShare url={cert.url} linkedInUrl={cert.linkedInUrl} /> : null}
             <PrintButton />
-            {cert.course.slug ? <Link href={`/courses/${cert.course.slug}`} className="btn btn-ghost">View the course</Link> : null}
+            {cert.course.slug && cert.course.published ? <Link href={`/courses/${cert.course.slug}`} className="btn btn-ghost">View the course</Link> : null}
           </div>
+          <p className="mt-4 max-w-2xl text-sm text-muted print:hidden">Anyone with this link can check the certificate. It shows only the learner&apos;s name and the course, and it isn&apos;t listed in search engines.</p>
         </>
       ) : code ? (
         <div className="panel p-10 text-center">

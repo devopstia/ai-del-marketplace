@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Eye, EyeOff, Flag, Loader2, MessageSquareText, Trash2 } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
+import { WatchedBadge } from "@/components/WatchedBadge";
 import { qs } from "@/lib/qs";
 import { obj } from "@/lib/normalize";
 import { date } from "@/lib/format";
@@ -18,7 +19,7 @@ import { ListFilters, type FilterOptions } from "@/components/ListFilters";
 import { useUrlFilters } from "@/lib/url-filters";
 
 interface Rep { id: string; reasonLabel: string; details: string; status: string; createdAt: string; reporter: string | null; resolvedBy: string | null; resolution: string | null }
-interface Row { id: string; rating: number; body: string; status: "visible" | "hidden"; createdAt: string; instructorReply: string | null; author: { name: string; email: string }; course: { title: string; slug: string; instructor: { name: string } }; reports: Rep[] }
+interface Row { id: string; rating: number; body: string; status: "visible" | "hidden"; createdAt: string; instructorReply: string | null; watchedPercent?: number | null; completed?: boolean; author: { name: string; email: string }; course: { title: string; slug: string; instructor: { name: string } }; reports: Rep[] }
 type Act = { kind: "hidden" | "visible" | "delete"; row: Row } | { kind: "dismiss"; row: Row; report: Rep };
 
 /**
@@ -96,6 +97,7 @@ function CourseReviewsInner() {
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-2"><Stars value={r.rating} size={15} /><span className="text-sm font-bold">{r.author.name}</span><span className="text-xs text-muted">{r.author.email} · {date(r.createdAt)}</span>{r.status === "hidden" ? <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-bold text-ink-2">Hidden</span> : null}</p>
                       <p className="mt-1 text-sm text-muted"><Link href={`/courses/${r.course.slug}`} className="link">{r.course.title}</Link> · {r.course.instructor.name}</p>
+                      <WatchedBadge watchedPercent={r.watchedPercent} completed={r.completed} className="mt-1" />
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {r.status === "visible"
