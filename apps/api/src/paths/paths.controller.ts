@@ -1,6 +1,6 @@
 import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import { z } from 'zod';
-import { ActorCtx, type Actor, CurrentUser, type AuthUser, Perm, Public, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, CurrentUser, type AuthUser, Perm, Public, Roles, Cap } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { MAX_HOURS_PER_WEEK, MIN_HOURS_PER_WEEK } from './plan';
 import { MAX_STEPS, PathsService } from './paths.service';
@@ -45,7 +45,7 @@ export class MyPathsController {
   @Get(':slug') one(@Param('slug') s: string, @CurrentUser() u: AuthUser) { return this.svc.myPath(u.id, s); }
 
   /** Follow a path, or change the hours per week of one already followed. */
-  @Put(':slug') follow(@Param('slug') s: string, @ZBody(followSchema) b: z.infer<typeof followSchema>, @CurrentUser() u: AuthUser) {
+  @Cap('student.paths.follow') @Put(':slug') follow(@Param('slug') s: string, @ZBody(followSchema) b: z.infer<typeof followSchema>, @CurrentUser() u: AuthUser) {
     return this.svc.follow(u.id, s, b.hoursPerWeek);
   }
 

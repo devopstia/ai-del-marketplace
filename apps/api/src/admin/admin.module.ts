@@ -5,6 +5,9 @@ import { PeopleController } from './people.controller';
 import { PeopleService } from './people.service';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { CourseAdminService } from './course-admin.service';
+import { UserAdminService } from './user-admin.service';
+import { SystemService } from './system.service';
 
-@Module({ imports: [InstructorModule, AuthModule], controllers: [AdminController, PeopleController], providers: [AdminService, PeopleService] })
+@Module({ imports: [InstructorModule, AuthModule], controllers: [AdminController, PeopleController], providers: [AdminService, PeopleService, UserAdminService, CourseAdminService, SystemService] })
 export class AdminModule {}

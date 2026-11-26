@@ -32,6 +32,9 @@ refund declines, activating manual enrollments and verifying external payments.
   admin permissions needs a **fresh Google Authenticator code** (step-up); the last active super admin can't be
   removed or suspended; suspensions need a reason.
 - Every change is audited with before/after and shown in the user's history (Users and roles › Manage).
+- **Role management** (owner 2026-11-26, Super Admin › People › Role management; docs/SUPER_ADMIN.md): Super Admin is a
+  locked system role; the super admin sets which permissions admins may hold at all (and what new admins start with) and
+  which Student/Instructor capabilities are on. Enforced by the API guard (`@Perm` + ceiling, `@Cap`), not by menus.
 
 ## Instructor applications
 

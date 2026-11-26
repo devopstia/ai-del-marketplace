@@ -27,7 +27,8 @@ export interface CourseQuery {
 }
 
 const ORDER: Record<Exclude<CourseQuery['sort'], 'discount'>, Prisma.CourseOrderByWithRelationInput[]> = {
-  popular: [{ studentCount: 'desc' }, { ratingAvg: 'desc' }],
+  // Featured courses (Super Admin › Courses) lead the popular order, most recently featured first.
+  popular: [{ featuredAt: { sort: 'desc', nulls: 'last' } }, { studentCount: 'desc' }, { ratingAvg: 'desc' }],
   newest: [{ publishedAt: 'desc' }],
   rating: [{ ratingAvg: 'desc' }, { ratingCount: 'desc' }],
   price_asc: [{ priceCents: 'asc' }],

@@ -1,6 +1,6 @@
 import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Put } from '@nestjs/common';
 import { z } from 'zod';
-import { ActorCtx, type Actor, Roles, Perm } from '../common/auth-context';
+import { ActorCtx, type Actor, Roles, Perm, Cap } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { PromotionsService } from './promotions.service';
 
@@ -36,9 +36,11 @@ export class InstructorPromotionsController {
   @Get('courses/:id/sales')
   list(@Param('id', uuid) id: string, @ActorCtx() a: Actor) { return this.svc.listSales(a.user.id, id); }
 
+  @Cap('instructor.sales.manage')
   @Post('courses/:id/sales')
   create(@Param('id', uuid) id: string, @ZBody(saleSchema) b: z.infer<typeof saleSchema>, @ActorCtx() a: Actor) { return this.svc.createSale(a, id, b); }
 
+  @Cap('instructor.sales.manage')
   @Patch('courses/:id/sales/:saleId')
   update(@Param('id', uuid) id: string, @Param('saleId', uuid) saleId: string, @ZBody(saleSchema) b: z.infer<typeof saleSchema>, @ActorCtx() a: Actor) {
     return this.svc.updateSale(a, id, saleId, b);

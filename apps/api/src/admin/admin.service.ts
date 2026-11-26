@@ -12,6 +12,7 @@ import { RefundsService } from '../commerce/refunds.service';
 import { RevisionsService } from '../instructor/revisions.service';
 import { recalcRating } from '../learning/learning.service';
 import { MediaService } from '../media/media.service';
+import { daysUntilDeletion, lifecycle } from './course-lifecycle';
 
 type Decision = 'approve' | 'request-changes' | 'reject' | 'unpublish';
 const TRANSITIONS: Record<Decision, { from: CourseStatus[]; to: CourseStatus; noteRequired: boolean }> = {
@@ -90,8 +91,23 @@ export class AdminService {
     return { items };
   }
 
-  async courses(q: { status?: CourseStatus; q?: string; page: number; pageSize: number }) {
-    const where: Prisma.CourseWhereInput = { status: q.status, ...(q.q ? { title: { contains: q.q, mode: 'insensitive' } } : {}) };
+  /**
+   * view: active (default: not archived), archived (kept for later), deleting (deletion scheduled), purged, all.
+   * q matches the title or the instructor's name or email.
+   */
+  async courses(q: { status?: CourseStatus; view?: 'active' | 'archived' | 'deleting' | 'purged' | 'all'; featured?: boolean; q?: string; page: number; pageSize: number }) {
+    const view: Prisma.CourseWhereInput =
+      q.view === 'all' ? {}
+      : q.view === 'archived' ? { archivedAt: { not: null }, deleteRequestedAt: null, purgedAt: null }
+      : q.view === 'deleting' ? { deleteRequestedAt: { not: null }, purgedAt: null }
+      : q.view === 'purged' ? { purgedAt: { not: null } }
+      : { archivedAt: null, purgedAt: null };
+    const where: Prisma.CourseWhereInput = {
+      ...view,
+      status: q.status,
+      ...(q.featured ? { featuredAt: { not: null } } : {}),
+      ...(q.q ? { OR: [{ title: { contains: q.q, mode: 'insensitive' } }, { instructor: { name: { contains: q.q, mode: 'insensitive' } } }, { instructor: { email: { contains: q.q, mode: 'insensitive' } } }] } : {}),
+    };
     const [total, rows] = await Promise.all([
       this.prisma.course.count({ where }),
       this.prisma.course.findMany({
@@ -106,7 +122,10 @@ export class AdminService {
       }),
     ]);
     return paged(
-      rows.map((c) => ({ id: c.id, slug: c.slug, title: c.title, status: c.status, priceCents: c.priceCents, instructor: c.instructor, students: c._count.enrollments, reviewNote: c.reviewNote, updatedAt: c.updatedAt, publishedAt: c.publishedAt, revision: c.revisions[0] ?? null })),
+      rows.map((c) => ({
+        id: c.id, slug: c.slug, title: c.title, status: c.status, priceCents: c.priceCents, instructor: c.instructor, students: c._count.enrollments, reviewNote: c.reviewNote, updatedAt: c.updatedAt, publishedAt: c.publishedAt, revision: c.revisions[0] ?? null,
+        lifecycle: lifecycle(c), featured: !!c.featuredAt, archivedAt: c.archivedAt, archiveReason: c.archiveReason, deleteRequestedAt: c.deleteRequestedAt, deleteAfter: c.deleteAfter, daysLeft: daysUntilDeletion(c), purgedAt: c.purgedAt,
+      })),
       total,
       q,
     );
@@ -151,6 +170,7 @@ export class AdminService {
     if (t.noteRequired && !note?.trim()) throw badRequest('A note for the instructor is required', 'note_required');
     const c = await this.prisma.course.findUnique({ where: { id: courseId } });
     if (!c) throw notFound('Course');
+    if (c.archivedAt && decision === 'approve') throw conflict('This course is archived. Restore it first.', 'course_archived');
     // A published course with changes in review: the decision applies to the revision; the live course stays.
     if (c.status === 'published' && decision !== 'unpublish') {
       const rev = await this.revisions.open(courseId);

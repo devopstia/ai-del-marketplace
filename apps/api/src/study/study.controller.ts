@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { z } from 'zod';
-import { ActorCtx, CurrentUser, Roles, type Actor, type AuthUser } from '../common/auth-context';
+import { ActorCtx, CurrentUser, Roles, type Actor, type AuthUser, Cap } from '../common/auth-context';
 import { ZBody } from '../common/zod';
 import { StudyService } from './study.service';
 
@@ -29,6 +29,7 @@ export class StudyController {
 
   /** "Ask about this course": answered only from this course's lessons, with timestamp citations. 404 without a key. */
   @HttpCode(200)
+  @Cap('student.ai.ask')
   @Post('me/courses/:slug/ask')
   ask(@Param('slug') slug: string, @ZBody(askSchema) body: z.infer<typeof askSchema>, @CurrentUser() u: AuthUser) {
     return this.svc.ask(u, slug, body);

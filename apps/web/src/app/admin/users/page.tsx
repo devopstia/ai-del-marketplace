@@ -18,12 +18,17 @@ import { useToast } from "@/components/Toast";
 import { useAuth } from "@/components/AuthProvider";
 import { canDo } from "@/lib/studios";
 import { SwitchToUser } from "@/components/assist/SwitchToUser";
+import { UserAccountTools } from "@/components/admin/UserAccountTools";
 
+type Status = "active" | "suspended" | "disabled" | "deleted";
 interface Row {
-  id: string; name: string; email: string; roles: Role[]; status: "active" | "suspended"; createdAt: string; signupMethod: string;
+  id: string; name: string; email: string; roles: Role[]; status: Status; createdAt: string; signupMethod: string; suspendedUntil?: string | null;
   emailVerified: boolean; mfaEnabled: boolean; adminPermissions: string[]; instructorProfile?: { status: string } | null;
 }
-interface Detail extends Row { history: { id: string; action: string; at: string; actor: { id: string; name: string } | null; meta: Record<string, unknown> }[]; identities: { provider: string }[] }
+interface Detail extends Row {
+  history: { id: string; action: string; at: string; actor: { id: string; name: string } | null; meta: Record<string, unknown> }[]; identities: { provider: string }[];
+  lastLoginAt: string | null; activeSessions: number; statusReason: string | null; hasPassword: boolean; locked: boolean; mustChangePassword: boolean; suspensionEnded: boolean;
+}
 interface Catalogue { roles: { key: Role; label: string; description: string }[]; permissions: { key: string; description: string }[]; defaultAdminPermissions: string[]; superAdminOnly: string[] }
 
 const ROLE_LABEL: Record<Role, string> = { student: "Student", instructor: "Instructor", admin: "Admin", super_admin: "Super Admin" };
@@ -34,10 +39,14 @@ const ACTION: Record<string, string> = {
   "instructor.needs_info": "More information requested", "instructor.under_review": "Application under review", "auth.register": "Registered", "auth.mfa_reset": "Two-step sign-in reset",
   "support.session_started": "Support session started", "support.session_ended": "Support session ended", "support.session_revoked": "Support session ended by a super admin",
   "agent.token_issued": "AI agent access given", "agent.token_revoked": "AI agent access revoked",
+  "user.disabled": "Disabled", "user.deleted": "Deleted", "user.email_changed": "Email changed", "user.password_reset_sent": "Password reset email sent",
+  "user.verification_sent": "Verification email sent", "user.recovery_link_created": "Recovery link created", "user.temporary_password_set": "Temporary password set",
+  "user.sessions_revoked": "Signed out everywhere", "auth.password_reset": "Password reset", "auth.password_changed": "Password changed",
 };
+const STATUSES: Status[] = ["active", "suspended", "disabled", "deleted"];
 const toRow = (x: unknown): Row => {
   const o = obj(x);
-  return { id: String(o.id), name: String(o.name ?? ""), email: String(o.email ?? ""), roles: (o.roles as Role[]) ?? ["student"], status: o.status === "suspended" ? "suspended" : "active", createdAt: String(o.createdAt ?? ""), signupMethod: String(o.signupMethod ?? "email"), emailVerified: !!o.emailVerified || !!o.emailVerifiedAt, mfaEnabled: !!o.mfaEnabled, adminPermissions: (o.adminPermissions as string[]) ?? [], instructorProfile: (o.instructorProfile as Row["instructorProfile"]) ?? null };
+  return { id: String(o.id), name: String(o.name ?? ""), email: String(o.email ?? ""), roles: (o.roles as Role[]) ?? ["student"], status: (STATUSES as string[]).includes(String(o.status)) ? (o.status as Status) : "active", suspendedUntil: (o.suspendedUntil as string | null) ?? null, createdAt: String(o.createdAt ?? ""), signupMethod: String(o.signupMethod ?? "email"), emailVerified: !!o.emailVerified || !!o.emailVerifiedAt, mfaEnabled: !!o.mfaEnabled, adminPermissions: (o.adminPermissions as string[]) ?? [], instructorProfile: (o.instructorProfile as Row["instructorProfile"]) ?? null };
 };
 
 function RoleChips({ roles }: { roles: Role[] }) {
@@ -75,7 +84,7 @@ export default function UsersAndRoles() {
   const s = summary.data;
   const stats = s ? [
     ["Registered users", s.total], ["Students", s.students], ["Instructors", s.instructors], ["Admins", s.admins + (s.superAdmins ?? 0)],
-    ["Pending applications", s.pendingApplications], ["New this week", s.newThisWeek], ["Suspended", s.suspended],
+    ["Pending applications", s.pendingApplications], ["New this week", s.newThisWeek], ["Suspended or disabled", s.suspended],
   ] as [string, number][] : null;
 
   return (
@@ -99,7 +108,7 @@ export default function UsersAndRoles() {
           <option value="">All roles</option><option value="student_only">Students only</option><option value="instructor">Instructors</option><option value="admin">Admins</option><option value="super_admin">Super Admins</option>
         </select>
         <select aria-label="Status" className="field !w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-          <option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option>
+          <option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="disabled">Disabled</option><option value="deleted">Deleted</option>
         </select>
         <select aria-label="Sign-up method" className="field !w-auto" value={method} onChange={(e) => { setMethod(e.target.value); setPage(1); }}>
           <option value="">Any sign-up</option>{Object.entries(METHOD).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
@@ -121,9 +130,9 @@ export default function UsersAndRoles() {
                     <span className={`mr-3 inline-flex items-center gap-1 font-bold ${u.emailVerified ? "text-mint" : "text-muted"}`}><BadgeCheck className="size-3.5" />{u.emailVerified ? "Email verified" : "Not verified"}</span>
                     <span className={`inline-flex items-center gap-1 font-bold ${u.mfaEnabled ? "text-mint" : "text-amber"}`}><KeyRound className="size-3.5" />{u.mfaEnabled ? "2-step on" : "2-step not set"}</span>
                   </td>
-                  <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={u.status} />{u.status === "suspended" && u.suspendedUntil ? <span className="mt-0.5 block text-xs text-muted">until {date(u.suspendedUntil)}</span> : null}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-ink-2">{date(u.createdAt)}</td>
-                  <td className="px-4 py-3 text-right"><button type="button" className="btn btn-outline btn-sm" onClick={() => setOpen(u.id)} data-testid="manage-user" aria-label={`Manage ${u.name}`}>{superAdmin ? "Manage roles" : "View"}</button></td>
+                  <td className="px-4 py-3 text-right"><button type="button" className="btn btn-outline btn-sm" onClick={() => setOpen(u.id)} data-testid="manage-user" aria-label={`Manage ${u.name}`}>{u.status === "deleted" ? "View" : canDo(me, "users.manage") ? "Manage" : "View"}</button></td>
                 </tr>
               ))}
             </DataTable>
@@ -141,13 +150,15 @@ function ManageUser({ id, catalogue, onClose, onChanged }: { id: string; catalog
   const toast = useToast();
   const superAdmin = !!me?.roles.includes("super_admin");
   const self = me?.id === id;
-  const { data: u, reload } = useApi(`/admin/people/users/${id}`, (r) => ({ ...toRow(r), history: (obj(r).history as Detail["history"]) ?? [], identities: (obj(r).identities as Detail["identities"]) ?? [] }) as Detail);
+  const { data: u, reload } = useApi(`/admin/people/users/${id}`, (r) => {
+    const o = obj(r);
+    return { ...toRow(r), history: (o.history as Detail["history"]) ?? [], identities: (o.identities as Detail["identities"]) ?? [], lastLoginAt: (o.lastLoginAt as string | null) ?? null, activeSessions: Number(o.activeSessions ?? 0), statusReason: (o.statusReason as string | null) ?? null, hasPassword: o.hasPassword !== false, locked: !!o.locked, mustChangePassword: !!o.mustChangePassword, suspensionEnded: !!o.suspensionEnded } as Detail;
+  });
   const [roles, setRoles] = useState<Role[]>([]);
   const [perms, setPerms] = useState<string[]>([]);
   const [reason, setReason] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [suspendReason, setSuspendReason] = useState("");
   useEffect(() => {
     if (!u) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- start the editor from the saved roles
@@ -176,20 +187,6 @@ function ManageUser({ id, catalogue, onClose, onChanged }: { id: string; catalog
       setCode(""); setReason(""); reload(); onChanged();
     } catch (e) { toast("error", errMsg(e)); } finally { setBusy(null); }
   }
-  async function setStatus(next: "active" | "suspended") {
-    setBusy("status");
-    try {
-      await api(`/admin/people/users/${id}/status`, { method: "POST", body: { status: next, reason: suspendReason.trim() || undefined } });
-      toast("ok", next === "suspended" ? "Account suspended and signed out everywhere." : "Account reactivated.");
-      setSuspendReason(""); reload(); onChanged();
-    } catch (e) { toast("error", errMsg(e)); } finally { setBusy(null); }
-  }
-  async function resetMfa() {
-    if (!window.confirm("Remove this person’s authenticator? Only do this after confirming who they are. They set it up again at their next sign-in.")) return;
-    setBusy("mfa");
-    try { await api(`/admin/users/${id}/mfa/reset`, { method: "POST" }); toast("ok", "Two-step sign-in reset."); reload(); onChanged(); } catch (e) { toast("error", errMsg(e)); } finally { setBusy(null); }
-  }
-
   return (
     <Modal open onClose={onClose} title={u ? u.name : "User"} wide>
       {!u ? <div className="p-6"><Skeleton className="h-60" /></div> : (
@@ -202,6 +199,22 @@ function ManageUser({ id, catalogue, onClose, onChanged }: { id: string; catalog
             </div>
             <StatusBadge status={u.status} />
           </div>
+          <dl className="grid grid-cols-2 gap-3 rounded-tile border border-line p-3 text-sm sm:grid-cols-4" data-testid="user-facts">
+            <div><dt className="text-xs text-muted">Last sign-in</dt><dd className="font-bold">{u.lastLoginAt ? dateTime(u.lastLoginAt) : "Never"}</dd></div>
+            <div><dt className="text-xs text-muted">Signed in on</dt><dd className="font-bold tabular-nums">{u.activeSessions} device{u.activeSessions === 1 ? "" : "s"}</dd></div>
+            <div><dt className="text-xs text-muted">Email</dt><dd className={`font-bold ${u.emailVerified ? "text-mint" : "text-amber"}`}>{u.emailVerified ? "Verified" : "Not verified"}</dd></div>
+            <div><dt className="text-xs text-muted">Two-step sign-in</dt><dd className={`font-bold ${u.mfaEnabled ? "text-mint" : "text-amber"}`}>{u.mfaEnabled ? "On" : "Not set up"}</dd></div>
+          </dl>
+          {u.status !== "active" || u.locked || u.mustChangePassword ? (
+            <p className="rounded-tile bg-amber-soft px-3 py-2 text-sm text-amber" data-testid="user-status-note">
+              {u.status === "suspended" ? <>Suspended{u.suspendedUntil ? ` until ${dateTime(u.suspendedUntil)}${u.suspensionEnded ? " (ended: active again at the next sign-in)" : ""}` : " until reactivated"}. </> : null}
+              {u.status === "disabled" ? <>Disabled until turned on again. </> : null}
+              {u.status === "deleted" ? <>This account was deleted. Its orders and records are kept. </> : null}
+              {u.statusReason ? <>Reason: “{u.statusReason}”. </> : null}
+              {u.locked ? <>Locked for a few minutes after too many wrong passwords. </> : null}
+              {u.mustChangePassword ? <>Must choose a new password at the next sign-in. </> : null}
+            </p>
+          ) : null}
 
           <section aria-labelledby="roles-h">
             <h3 id="roles-h" className="font-display text-lg font-bold">Roles</h3>
@@ -259,19 +272,8 @@ function ManageUser({ id, catalogue, onClose, onChanged }: { id: string; catalog
             </section>
           ) : null}
 
-          {!self && canDo(me, "users.manage") && !(u.roles.some((r) => r === "admin" || r === "super_admin") && !superAdmin) ? (
-            <section aria-labelledby="acct-h">
-              <h3 id="acct-h" className="font-display text-lg font-bold">Account</h3>
-              <div className="mt-3 flex flex-wrap items-end gap-3">
-                {u.status === "active" ? (
-                  <>
-                    <div className="min-w-0 flex-1"><label className="label" htmlFor="sus">Suspension reason</label><input id="sus" className="field" maxLength={500} value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} placeholder="Kept in the account history" /></div>
-                    <button type="button" className="btn btn-danger" disabled={!!busy || suspendReason.trim().length < 3} onClick={() => setStatus("suspended")}>{busy === "status" ? <Loader2 className="size-4 animate-spin" /> : null}Suspend</button>
-                  </>
-                ) : <button type="button" className="btn btn-outline" disabled={!!busy} onClick={() => setStatus("active")}>{busy === "status" ? <Loader2 className="size-4 animate-spin" /> : null}Reactivate</button>}
-                {superAdmin ? <button type="button" className="btn btn-ghost" disabled={!!busy || !u.mfaEnabled} onClick={resetMfa} data-testid="reset-mfa">Reset 2-step</button> : null}
-              </div>
-            </section>
+          {!self && u.status !== "deleted" && canDo(me, "users.manage") && !(u.roles.some((r) => r === "admin" || r === "super_admin") && !superAdmin) ? (
+            <UserAccountTools user={u} superAdmin={superAdmin} onChanged={() => { reload(); onChanged(); }} onDeleted={() => { onChanged(); onClose(); }} />
           ) : null}
 
           {superAdmin && !self ? <SwitchToUser user={u} /> : null}

@@ -68,6 +68,7 @@ export function toMe(x: unknown): Me | null {
     emailVerified: !!u.emailVerifiedAt,
     mfaEnabled: u.mfaEnabled === true,
     signupMethod: str(u.signupMethod) || undefined,
+    mustChangePassword: u.mustChangePassword === true,
   };
 }
 

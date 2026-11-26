@@ -89,6 +89,8 @@ export class JobsService {
     await this.payments.upsertJobScheduler('release-transfers', { every: 60 * 60 * 1000 }, { name: 'release-transfers', data: {} });
     // One-year access: expiry reminders and notices (docs/ACCESS_AND_REFUNDS.md).
     await this.payments.upsertJobScheduler('access-reminders', { every: 60 * 60 * 1000 }, { name: 'access-reminders', data: {} });
+    // Course soft deletion: content is removed after the 30-day window (docs/SUPER_ADMIN.md).
+    await this.payments.upsertJobScheduler('course-purge', { every: 60 * 60 * 1000 }, { name: 'course-purge', data: {} });
   }
 
   async sendEmail(job: EmailJob) {

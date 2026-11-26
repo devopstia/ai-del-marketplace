@@ -29,7 +29,7 @@ Owner, 2026-11-25: reuse Insurance Hub's email approach and templates, with the 
 | --- | --- |
 | Email sign-up (welcome + confirm address) / provider sign-up | `verify-email` / `welcome` |
 | Password reset, password changed | `password-reset`, `security-password-changed` |
-| Two-step sign-in reset, sign-in method linked/removed, roles changed | `security-mfa-reset`, `security-identity-linked`, `security-identity-unlinked`, `security-role-changed` |
+| Two-step sign-in reset, sign-in method linked/removed, roles changed, email changed by a super admin (to the old address) | `security-mfa-reset`, `security-identity-linked`, `security-identity-unlinked`, `security-role-changed`, `security-email-changed` |
 | Email sign-in or confirmation code; new-device sign-in; account locked after wrong attempts (docs/AUTH.md §7) | `auth-email-code`, `security-new-device`, `security-account-locked` |
 | A super admin opened your dashboard (support session); an AI agent got access to your courses | `security-support-session`, `security-agent-access` |
 | Purchase receipt (with access dates, renewals marked) | `order-receipt` |

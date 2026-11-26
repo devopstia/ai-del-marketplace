@@ -1,9 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Optional } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createHash } from 'node:crypto';
 import type { Role } from '../generated/prisma/enums';
-import { AppRequest, hasRole, IS_PUBLIC, PERMISSION, ROLES } from './auth-context';
-import { can, type AdminPermission } from './permissions';
+import { AppRequest, CAPABILITY, hasRole, IS_PUBLIC, PERMISSION, ROLES } from './auth-context';
+import { canWithConfig, DEFAULT_ROLE_CONFIG, hasCapability, type AdminPermission, type Capability } from './permissions';
+import { RoleConfigService } from './role-config.service';
 import { SESSION_COOKIE } from './cookies';
 import { ACT_AS_COOKIE, ACT_AS_PLATFORM, acting, STUDIO_PATH } from './acting';
 import { forbidden, unauthorized } from './errors';
@@ -14,6 +15,9 @@ import { AssistResolver } from '../assist/assist-resolver';
 /** Ends a browser is told about (401 `session_<reason>`); a plain logout or a password change just reads as signed out. */
 const ENDED_MESSAGES: Record<string, string> = { replaced: REPLACED_MESSAGE, idle: IDLE_MESSAGE, lifetime: LIFETIME_MESSAGE, admin: ADMIN_MESSAGE };
 const PROGRESS_PATH = /\/lectures\/[^/]+\/progress\/?$/;
+
+/** What a person with a temporary password may still call (sign-in state, the password change, sign-out). */
+const PASSWORD_CHANGE_PATHS = /^\/api\/auth\/(me|password|logout|csrf|security|password-policy)$/;
 
 export const hashSessionToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -29,6 +33,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
     private readonly policy: SessionPolicyService,
+    @Optional() private readonly roleConfig?: RoleConfigService,
   ) {
     this.assist = new AssistResolver(prisma);
   }
@@ -39,14 +44,15 @@ export class AuthGuard implements CanActivate {
     if (typeof token === 'string' && token.length >= 20 && token.length <= 200) {
       const session = await this.prisma.session.findUnique({
         where: { id: hashSessionToken(token) },
-        include: { user: { select: { id: true, email: true, name: true, roles: true, status: true, adminPermissions: true } } },
+        include: { user: { select: { id: true, email: true, name: true, roles: true, status: true, adminPermissions: true, mustChangePassword: true } } },
       });
       if (session && !session.revokedAt && session.expiresAt > new Date() && session.user.status === 'active') {
         const ended = await this.sessionLimits(session, req);
         if (ended) req.sessionEnded = ended;
         else {
-          const { status: _s, ...user } = session.user;
+          const { status: _s, mustChangePassword, ...user } = session.user;
           req.user = user;
+          if (mustChangePassword) req.mustChangePassword = true;
           req.sessionId = session.id;
           req.sessionKind = session.kind;
           // Watching a lesson is activity: the player saves progress every few seconds while it plays.
@@ -66,11 +72,21 @@ export class AuthGuard implements CanActivate {
     if (isPublic && !roles?.length) return true;
     if (!req.user && req.sessionEnded) throw unauthorized(ENDED_MESSAGES[req.sessionEnded], `session_${req.sessionEnded}`);
     if (!req.user) throw unauthorized();
+    // A temporary password set by a super admin: only the sign-in and password routes until the person picks their own.
+    if (req.mustChangePassword && !PASSWORD_CHANGE_PATHS.test(req.path ?? req.url ?? '')) {
+      throw forbidden('Choose a new password before you continue.', 'password_change_required');
+    }
     if (roles?.length && !roles.some((r) => hasRole(req.user, r))) throw forbidden();
     const perm = this.reflector.getAllAndOverride<AdminPermission | undefined>(PERMISSION, [ctx.getHandler(), ctx.getClass()]);
     // In "DEL Studio" mode req.user is DEL's instructor account; permissions are always the real person's.
-    // In a support session they are the USER's: viewing someone's dashboard never widens what it can do.
-    if (perm && !can(req.support || req.agent ? req.user : (req.realUser ?? req.user), perm)) throw forbidden('Your admin account does not have this permission', 'permission_required');
+    const cap = this.reflector.getAllAndOverride<Capability | undefined>(CAPABILITY, [ctx.getHandler(), ctx.getClass()]);
+    if (perm || cap) {
+      const cfg = this.roleConfig ? await this.roleConfig.get() : DEFAULT_ROLE_CONFIG;
+      // In a support session or agent call they are the USER's: viewing someone's dashboard never widens what it can do.
+      const subject = req.support || req.agent ? req.user : (req.realUser ?? req.user);
+      if (perm && !canWithConfig(subject, perm, cfg)) throw forbidden('Your admin account does not have this permission', 'permission_required');
+      if (cap && !hasCapability(subject, cap, cfg)) throw forbidden('This is turned off on DevOps Easy Learning right now.', 'capability_disabled');
+    }
     return true;
   }
 

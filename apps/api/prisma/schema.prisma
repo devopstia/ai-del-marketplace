@@ -20,6 +20,10 @@ enum Role {
 enum UserStatus {
   active
   suspended
+  /// Turned off by a super admin until turned on again (no end date).
+  disabled
+  /// Deleted by a super admin: personal data removed, financial records kept (docs/SUPER_ADMIN.md).
+  deleted
 }
 
 enum InstructorStatus {
@@ -179,6 +183,15 @@ model User {
   /// When the person proved they own the email address (link or code, or a provider that verified it).
   emailVerifiedAt   DateTime?
   emailVerifications EmailVerification[]
+
+  // ---- Super Admin › Users (owner 2026-11-26, docs/SUPER_ADMIN.md) ----
+  /// A temporary suspension ends by itself at this time (null: until reactivated).
+  suspendedUntil     DateTime?
+  /// Why the account is suspended, disabled or deleted (also in the audit log).
+  statusReason       String?
+  /// Set with a temporary password from a super admin: every route except the password change is refused until then.
+  mustChangePassword Boolean   @default(false)
+  deletedAt          DateTime?
 }
 
 /// Email ownership: a single-use link (or six-digit code for invitations), stored hashed.
@@ -308,8 +321,26 @@ model Course {
   sales        CourseSale[]
   pathSteps    CareerPathStep[]
 
+  // ---- Super Admin › Courses (owner 2026-11-26, docs/SUPER_ADMIN.md) ----
+  /// Featured courses lead the "popular" order (homepage and catalogue).
+  featuredAt          DateTime?
+  /// Archived: off the marketplace, kept for later; enrolled learners keep their access until it ends.
+  archivedAt          DateTime?
+  archiveReason       String?
+  archivedById        String?
+  /// The status to return to on restore.
+  statusBeforeArchive CourseStatus?
+  /// Deletion requested: archived, then its content is removed after deleteAfter (at least 30 days) once no learner
+  /// still has access. Orders, refunds, certificates and the audit log are never deleted.
+  deleteRequestedAt   DateTime?
+  deleteAfter         DateTime?
+  /// Content removed (videos, files, lessons); the course row stays for receipts and certificates.
+  purgedAt            DateTime?
+
   @@index([status, publishedAt])
   @@index([instructorId])
+  @@index([archivedAt])
+  @@index([deleteAfter])
   @@map("courses")
 }
 
