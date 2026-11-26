@@ -31,7 +31,8 @@
       "For the Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster",
       "For the AI lesson: your own OpenAI API key with a monthly budget limit set"
     ],
-    "priceCents": 1500
+    "priceCents": 1500,
+    "taughtBy": "Tia"
   },
   "sections": [
     {

@@ -79,6 +79,7 @@ export async function applyTree(tx: Tx, courseId: string, tree: CourseTree, opts
       categoryId: c.categoryId,
       thumbnailKey: c.thumbnailKey,
       promoVideoAssetId: c.promoVideoAssetId,
+      ...(c.taughtBy !== undefined ? { taughtBy: c.taughtBy } : {}),
     },
   });
   await tx.lecture.deleteMany({ where: { section: { courseId }, id: { notIn: lectureIds } } });

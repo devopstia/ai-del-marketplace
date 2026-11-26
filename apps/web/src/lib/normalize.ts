@@ -84,9 +84,9 @@ export function toCategory(x: unknown): Category {
   };
 }
 
-function instructorRef(o: R): { id: string; name: string; brand: string | null } {
+function instructorRef(o: R): { id: string; name: string; brand: string | null; taughtBy: string | null } {
   const i = obj(o.instructor);
-  return { id: str(i.id ?? i.userId ?? o.instructorId), name: str(i.name ?? o.instructorName, "DevOps Easy Learning"), brand: str(i.brand) || null };
+  return { id: str(i.id ?? i.userId ?? o.instructorId), name: str(i.name ?? o.instructorName, "DevOps Easy Learning"), brand: str(i.brand) || null, taughtBy: str(i.taughtBy) || null };
 }
 
 export function toSale(x: unknown): SaleInfo | null {
@@ -144,6 +144,7 @@ export function toInstructor(x: unknown): InstructorSummary {
     ratingCount: o.ratingCount != null ? num(o.ratingCount) : undefined,
     brand: str(o.brand) || null,
     official: Boolean(o.official),
+    taughtBy: str(o.taughtBy) || null,
   };
 }
 
@@ -377,6 +378,7 @@ export function toStudioCourse(x: unknown): StudioCourse {
     slug: str(o.slug),
     title: str(o.title),
     subtitle: str(o.subtitle),
+    taughtBy: str(o.taughtBy) || null,
     description: str(o.description),
     language: str(o.language, "en"),
     level: toLevel(o.level),

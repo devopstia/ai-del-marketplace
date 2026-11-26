@@ -32,6 +32,7 @@ const courseFields = z.object({
   categoryId: z.string().uuid().nullable(),
   thumbnailKey: z.string().max(300).nullable(),
   promoVideoAssetId: z.string().uuid().nullable(),
+  taughtBy: str(80).nullable(),
 });
 export const createSchema = courseFields.partial().extend({ title: str(120).min(3) });
 export const updateSchema = courseFields.partial();

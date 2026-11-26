@@ -27,6 +27,8 @@ export interface CoursePlan {
   course: {
     title: string; subtitle?: string; description?: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string;
     objectives?: string[]; requirements?: string[]; categorySlug?: string; priceCents?: number;
+    /** DEL courses only: the instructor name shown ("Taught by Tia"). */
+    taughtBy?: string;
     /** "suggested" (the template the platform suggests for the category) or a template id. */
     cover?: string;
   };

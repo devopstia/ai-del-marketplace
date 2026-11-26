@@ -76,7 +76,7 @@ export class LearningService {
    * the refund position. Only the student's own data; needs an enrolment (also an expired one).
    */
   async courseReport(userId: string, slug: string) {
-    const course = await this.prisma.course.findUnique({ where: { slug }, select: { id: true, slug: true, title: true, coverKey: true, instructor: { select: { name: true } } } });
+    const course = await this.prisma.course.findUnique({ where: { slug }, select: { id: true, slug: true, title: true, coverKey: true, taughtBy: true, instructor: { select: { name: true } } } });
     if (!course) throw notFound('Course');
     const e = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId: course.id } } });
     if (!e || e.revokedAt) throw notFound('Enrolment');
@@ -94,7 +94,7 @@ export class LearningService {
     const downloads = await this.prisma.resourceDownload.findMany({ where: { userId, courseId: course.id }, orderBy: { at: 'desc' }, take: 100, select: { title: true, at: true } });
     const refund = (await this.refunds?.courseStatus(userId, [course.id]))?.get(course.id);
     return {
-      course: { id: course.id, slug: course.slug, title: course.title, thumbnailUrl: this.media.imageUrl(course.coverKey), instructor: course.instructor },
+      course: { id: course.id, slug: course.slug, title: course.title, thumbnailUrl: this.media.imageUrl(course.coverKey), instructor: { name: course.taughtBy || course.instructor.name } },
       purchasedAt: line?.order.paidAt ?? null,
       orderId: line?.order.id ?? null,
       enrolledAt: e.createdAt,
@@ -141,7 +141,7 @@ export class LearningService {
     const enrolments = await this.prisma.enrollment.findMany({
       where: { userId, revokedAt: null },
       orderBy: { createdAt: 'desc' },
-      include: { course: { select: { id: true, slug: true, title: true, coverKey: true, instructor: { select: { name: true } } } } },
+      include: { course: { select: { id: true, slug: true, title: true, coverKey: true, taughtBy: true, instructor: { select: { name: true } } } } },
     });
     const items = [];
     // The refund position per course, without asking for a refund (owner 2026-11-26).
@@ -157,7 +157,7 @@ export class LearningService {
       const line = e.orderLineId ? await this.prisma.orderLine.findUnique({ where: { id: e.orderLineId }, select: { order: { select: { paidAt: true } } } }) : null;
       const state = accessState(e);
       items.push({
-        course: { id: e.course.id, slug: e.course.slug, title: e.course.title, thumbnailUrl: this.media.imageUrl(e.course.coverKey), instructor: e.course.instructor },
+        course: { id: e.course.id, slug: e.course.slug, title: e.course.title, thumbnailUrl: this.media.imageUrl(e.course.coverKey), instructor: { name: e.course.taughtBy || e.course.instructor.name } },
         enrolledAt: e.createdAt,
         // One-year access (owner 2026-11-25): when it was bought, when it ends, days left; expired courses keep progress.
         access: { state, purchasedAt: line?.order.paidAt ?? e.createdAt, expiresAt: e.accessExpiresAt, daysLeft: daysLeft(e.accessExpiresAt), canRenew: state === 'expiring' || state === 'expired' },
@@ -216,7 +216,7 @@ export class LearningService {
       slug: c.slug,
       title: c.title,
       subtitle: c.subtitle,
-      instructor: c.instructor,
+      instructor: { ...c.instructor, taughtBy: c.taughtBy ?? null },
       thumbnailUrl: this.media.imageUrl(c.coverKey),
       access,
       progress: { total: lectureIds.length, completed: done, percent: lectureIds.length ? Math.round((done / lectureIds.length) * 100) : 0 },

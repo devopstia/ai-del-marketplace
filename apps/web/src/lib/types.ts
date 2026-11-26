@@ -49,6 +49,8 @@ export interface InstructorSummary {
   brand?: string | null;
   /** An Official DevOps Easy Learning Instructor (not DEL's own platform account). */
   official?: boolean;
+  /** DEL courses: the person who teaches it ("Taught by Tia"); the course still belongs to DEL. */
+  taughtBy?: string | null;
 }
 
 export interface CourseCard {
@@ -57,7 +59,7 @@ export interface CourseCard {
   title: string;
   subtitle: string;
   thumbnailUrl?: string | null;
-  instructor: { id: string; name: string; brand?: string | null };
+  instructor: { id: string; name: string; brand?: string | null; taughtBy?: string | null };
   priceCents: number;
   currency: string;
   ratingAvg: number;
@@ -325,6 +327,8 @@ export interface StudioCourse {
   thumbnailUrl?: string | null;
   thumbnailKey?: string | null;
   promoVideoAssetId?: string | null;
+  /** DEL courses only: the instructor name shown. */
+  taughtBy?: string | null;
   status: CourseStatus;
   reviewNote?: string | null;
   sections: StudioSection[];

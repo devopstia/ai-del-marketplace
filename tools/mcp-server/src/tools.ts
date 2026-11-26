@@ -22,6 +22,7 @@ const courseFields = {
   requirements: z.array(z.string().min(1).max(200)).max(20).optional(),
   priceCents: z.number().int().min(0).optional().describe('USD cents; 0 = free'),
   categoryId: uuid.nullable().optional(),
+  taughtBy: z.string().max(80).nullable().optional().describe('DEL courses only: the instructor name shown ("Taught by …")'),
 };
 const lessonFields = {
   title: z.string().min(1).max(200).optional(),

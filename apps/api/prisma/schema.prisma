@@ -287,6 +287,9 @@ model Course {
   category          Category?    @relation(fields: [categoryId], references: [id])
   title             String
   subtitle          String       @default("")
+  /// Instructor name shown on a DEL (platform) course, e.g. "Tia" (owner 2026-11-26): "Taught by Tia". Display only;
+  /// ownership and money stay with DEL.
+  taughtBy           String?
   description       String       @default("")
   language          String       @default("en")
   level             CourseLevel  @default(beginner)

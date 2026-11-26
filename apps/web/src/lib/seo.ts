@@ -121,7 +121,7 @@ const LEVEL: Record<string, string> = { beginner: "Beginner", intermediate: "Int
 /** schema.org Course for Google's course rich results (developers.google.com/search/docs/appearance/structured-data/course-info). */
 export function courseLd(c: CourseDetail) {
   const url = abs(`/courses/${c.slug}`);
-  const instructor = { "@type": "Person", name: c.instructor.name, url: abs(`/instructors/${c.instructor.id}`), ...(c.instructor.headline ? { description: c.instructor.headline } : {}) };
+  const instructor = { "@type": "Person", name: c.instructor.taughtBy || c.instructor.name, url: abs(`/instructors/${c.instructor.id}`), ...(c.instructor.headline ? { description: c.instructor.headline } : {}) };
   const free = c.priceCents === 0;
   return {
     "@context": "https://schema.org",
