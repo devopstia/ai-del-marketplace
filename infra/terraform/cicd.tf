@@ -16,7 +16,8 @@ data "aws_iam_policy_document" "gh_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/main", "repo:${var.github_repo}:environment:production", "repo:${var.github_repo}:environment:staging"]
+      # both subject formats: classic "repo:owner/name:…" and GitHub's immutable "repo:owner@id/name@id:…" (this repo uses it)
+      values = flatten([for p in ["repo:${var.github_repo}", "repo:${var.github_repo_immutable}"] : ["${p}:ref:refs/heads/main", "${p}:environment:production", "${p}:environment:staging"]])
     }
   }
 }

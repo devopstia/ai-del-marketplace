@@ -95,7 +95,7 @@ resource "aws_ecr_repository" "app" {
 resource "aws_ecr_lifecycle_policy" "app" {
   for_each   = aws_ecr_repository.app
   repository = each.value.name
-  policy = jsonencode({ rules = [{ rulePriority = 1, description = "keep the 20 newest images", selection = { tagStatus = "any", countType = "imageCountMoreThan", countNumber = 20 }, action = { type = "expire" } }] })
+  policy     = jsonencode({ rules = [{ rulePriority = 1, description = "keep the 20 newest images", selection = { tagStatus = "any", countType = "imageCountMoreThan", countNumber = 20 }, action = { type = "expire" } }] })
 }
 
 # ---------------- network ----------------
