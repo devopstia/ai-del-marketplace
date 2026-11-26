@@ -253,3 +253,12 @@ Owner: "Please work on this prompts.md, skip the ones we have already". Checkpoi
 (merges feat/admin-portal, feat/auth-sessions, feat/support-sessions-agents, feat/refund-management). Built on the SEO and
 stand-out batch (still awaiting production approval). Email OTP for students/instructors changes AGENTS rule 19 at the
 owner's request; privileged roles keep the authenticator. Government ID verification: not offered (owner: "We do not need this").
+
+## 2026-11-26: Official DevOps Easy Learning Instructors (owner: "build it")
+Checkpoint `checkpoint-2026-11-26-official-instructors` (a7e77d9), branch `backup/pre-official-instructors`, work on
+`feat/official-instructors`. A super admin marks an instructor "Official DevOps Easy Learning Instructor"
+(Super Admin › Instructor applications › Edit type and payment terms; audited with a reason; `instructor_profiles.official`).
+Their courses show under the DEL brand (cards, cart, checkout, search, paths: "DevOps Easy Learning"; course page "Created by
+DevOps Easy Learning · Taught by <name>"; badge on the course and instructor pages; certificates "Course by"). Branding only:
+their own rate (per-instructor agreed rate) and their own Stripe Connect payouts are unchanged. Independent instructors keep
+their own name. Admin: "Official DEL" tab, order lines say Official DEL / independent / platform.
