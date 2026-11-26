@@ -26,6 +26,13 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
    owner was shown a review page (https://claude.ai/artifact/LNvmWMpUsJB1wpoWgs9hdA) and asked for "OK for production".
    On OK: merge into `main`, tag `release-<date>-improvements`, RDS snapshot, `deploy-aws.sh release production <tag>`,
    verify, GitHub release. Full mobile QA (64 routes × 5 viewports) was done on staging and its findings fixed.
+   **Built on top of it: `feat/seo-standout-2026-11-26`** (owner: "Go with all recommendations and improvements"):
+   SEO (docs/SEO.md), measured watch share on reviews + verified certificate with LinkedIn (docs/TRUST.md), data saver
+   360p/audio only + instructor insights (docs/VIDEO_DELIVERY.md, API.md), career paths (docs/CAREER_PATHS.md); merges
+   feat/seo, feat/trust-reviews-certificates, feat/datasaver-insights, feat/career-paths. Releasing it releases both
+   batches. Open owner items for it: Google Search Console / Bing token (Route 53 TXT), OK for the homepage career-paths
+   band (shows only once a path is published), whether to add "Career paths" to the top menu, certificate revocation.
+   After deploying, run the super-admin "Update N videos" (Admin › Video protection) so existing videos get 360p + audio.
 
 1. **Cost question (open, 2026-11-26).** The owner wrote "I don't want this now please Cost: about $52 a month". Asked which
    they mean: (1) just stop mentioning cost, (2) cut cost but keep the site up (remove staging, smaller server, budget
