@@ -1,0 +1,12 @@
+{
+  "_comment": "Course Upload and Publishing Agent defaults (owner 2026-11-26). Skill: .claude/skills/del-course-publisher/SKILL.md. Never put a token here.",
+  "environment": "staging",
+  "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+  "provider": "DevOps Easy Learning",
+  "instructorName": "DevOps Easy Learning",
+  "instructorAccount": "courses@del.example (the DEL platform account on staging; DEL Studio)",
+  "videosRoot": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos",
+  "videosRootWindows": "C:\\Users\\tiaje\\Dropbox\\AI-VIDEOS\\ai-devops\\videos",
+  "productionAllowed": false,
+  "publishAllowed": false
+}

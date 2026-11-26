@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "Getting started: n8n and Mattermost": "ba2d4f3e-c896-4394-bd5d-7888f9926a35"
+  },
+  "lessons": {
+    "01-n1-n8n-mattermost-explained": "84f74d44-c780-4b94-8eb3-44583a5eb62c",
+    "02-n2-deploy-n8n-mattermost-live": "fdb45ecc-61ca-4813-bf3f-363681899ca7",
+    "03-n3-mattermost-webhook-live": "355a5331-391b-43b2-9e6f-842c2e82fcec"
+  },
+  "courseId": "cc53b627-6390-44e1-97c6-577eaa88fd9d"
+}

@@ -189,6 +189,13 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     instructor. Account security, money, learning records and admin writes stay blocked in support sessions; a new
     session-security rule must not end or count support sessions.
 
+29. **Course Upload and Publishing Agent** (owner 2026-11-26). Courses from the AI video folders are uploaded by the
+    `del-course-publisher` agent (`.claude/agents/`, skill `.claude/skills/del-course-publisher`, settings
+    `courses/publisher.config.json`, one `courses/<slug>/plan.json` per course, tool `tools/mcp-server` →
+    `del-publish-course`). Staging and drafts only until the owner says otherwise; review captions, slides and labs
+    before structuring; never upload PowerPoint, thumbnails or secrets; idempotent re-runs; report, then update
+    `courses/LESSONS_LEARNED.md` and `courses/GENERATION_FEEDBACK.md`.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
