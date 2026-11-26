@@ -379,15 +379,15 @@ dispute after a transfer is reversed in Stripe, or recorded in `ledger_entries` 
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/checkout` | body `{ acceptTerms: true, termsVersion: "2026-11-25" }` required for every cart (`400 terms_required` / `terms_outdated`, details.currentVersion; stored on the order as termsVersion, termsAcceptedAt, termsAcceptedIp), plus `immediateAccessConsent: true` for paid carts (`400 consent_required`) |
-| GET | `/orders/:id/refund` | own order: `{ eligibleUntil, policy: { windowDays: 14, maxWatchedPercent: 25, selfServicePerYear: 3 }, selfServiceLeft, pendingRequest, lines: [{ lineId, courseId, title, eligible, reason, watchedPercent }] }`; reasons `already_refunded`, `free_course`, `not_paid`, `window_closed`, `certificate_issued`, `watched_too_much`, `disputed` |
-| POST | `/orders/:id/refund` | `{ lineIds?, reason? }` → `{ status: 'refunded' }` or, over 3 self-service refunds in 12 months, `{ status: 'pending_review', requestId }`; `400 <reason>` when not eligible. A refund revokes access and the course certificate |
-| GET | `/instructor/terms` | `{ instructorSharePercent, platformBps, source: default\|agreement\|platform, defaultInstructorSharePercent, payToPlatform, note, formula, holdDays: 16, refundWindowDays: 14 }` |
+| GET | `/orders/:id/refund` | own order: `{ eligibleUntil, policy: { version, generousFrom, windowDays, maxWatchedPercent, selfServicePerYear, autoApprove, url }, selfServiceLeft, pendingRequest: { id, status, paymentStatus } \| null, lines: [{ lineId, courseId, title, instructor, priceCents, purchasedAt, windowEndsAt, withinWindow, daysLeft, daysSincePurchase, totalSec, watchedSec, watchedPercent, lessons, lessonsStarted, lessonsTotal, lessonsCompleted, downloads, tracking: ok\|missing\|inconsistent, thresholdPercent, windowDays, policyVersion, eligible, reason, reasons[], outcome: approve\|review\|reject\|none, investigation, message }] }`; numbers from the purchase's policy version (docs/ACCESS_AND_REFUNDS.md) |
+| POST | `/orders/:id/refund` | `{ lineIds?, reason? }` → `{ status: refunded\|processing\|payment_failed\|declined\|pending_review\|partial, requests: [{ requestId, status, lineIds, message }], requestId, message }`; `409 request_pending` while a request is open; `400 nothing_to_refund`. A confirmed refund revokes access and the course certificate |
+| GET | `/instructor/terms` | `{ instructorSharePercent, platformBps, source: default\|agreement\|platform, defaultInstructorSharePercent, payToPlatform, note, formula, holdDays, refundWindowDays }` (from the refund policy in force: period + 2 days) |
 | GET | `/instructor/sales` | items add `feeCents, netCents, payee, transferDueAt, disputeStatus`; totals add `feesCents, heldCents` |
 | GET | `/admin/finance` | totals (gross, fees, net, instructor shares, DEL-agreement shares, platform revenue, refunded, held, due, transferred, frozen by disputes, owed by instructors) + `checks: { orders, problems: [{ orderId, check }] }` (empty = reconciled) |
 | GET | `/admin/finance/waiting-for-onboarding` | instructors with shares waiting because Stripe onboarding isn't finished |
 | POST | `/admin/finance/release-transfers` | super admin: run the payout release now (audited) |
 | GET | `/admin/disputes` | chargebacks with status `open\|won\|lost` |
-| GET | `/admin/refund-requests?status` | learner requests that need review |
+| GET | `/admin/refund-requests?status` | see "Access and refunds" below |
 | POST | `/admin/refund-requests/:id/approve\|decline` | `{ note? }` (note required to decline) |
 | GET / PUT | `/admin/instructors/:id/terms` | PUT super admin only: `{ commissionBps?: 0..10000 \| null, payToPlatform?, note (≥ 5 chars) }`, applies to new sales, audited `commission.terms_changed` |
 | PUT | `/admin/settings` | now **super admin only** (`403 super_admin_required`) |
@@ -488,14 +488,22 @@ bought on its own. Slugs `summary`, `new` and `course-options` are reserved.
 | PUT | `/lectures/:id/progress` | access | `{ positionSec, completed?, played?: [[start, end], …] }` (unique seconds) |
 | GET | `/orders/:id/refund` · POST `/orders/:id/refund` | buyer | facts per line · decided at once: `refunded` / `declined` / `pending_review` / `partial` |
 | GET | `/orders/:id/refund-requests` · POST `/refund-requests/:id/review` | buyer | decisions · ask a person to review a decline |
-| GET | `/admin/refund-requests?status=needs_action\|pending\|auto_approved\|approved\|auto_declined\|declined` | admin | facts, AI summary, history, counts |
-| POST | `/admin/refund-requests/:id/approve` · `/decline` | admin; super_admin for exceptions | note required to decline or overturn |
+| GET | `/admin/refund-requests?status=all\|needs_action\|pending\|investigation\|auto_declined\|auto_approved\|approved\|declined\|refunded\|processing\|failed` | finance.view | items `{ id, status, paymentStatus, paymentError, investigation, override, needsAction, message, policyVersion, user, orderId, paidAt, daysSincePurchase, amountCents, payment: { provider, paymentIntentId, chargeId, stripeRefundId }, downloads[], lines: [{ title, instructor, priceCents, refundedAt, transferStatus }], analysis, aiSummary, history }`, `counts` per filter, `policy` in force |
+| POST | `/admin/refund-requests/:id/approve` · `/decline` | refunds.decide; super_admin to override an automatic decline (only while the policy allows exceptions) | note required to decline or override → `{ id, status, paymentStatus }` |
+| POST | `/admin/refund-requests/:id/retry-payment` | refunds.decide | approved refund whose payment failed → `{ id, paymentStatus }` |
+| GET | `/admin/refund-policy` | finance.view | `{ current, items: [version rows with effectiveFrom, effectiveUntil, inForce, orders, createdBy] }` |
+| PUT | `/admin/refund-policy` | super_admin + authenticator `code` | `{ windowDays 1–365, maxWatchedPercent 0–100 (1 decimal), autoCheck, autoReject, autoApprove, allowExceptions, selfServicePerYear, messages?: { submitted, approved, declined, processed }, note?, code }` → new version; audited `refund.policy_changed` |
+| GET | `/refund-policy` | public | `{ version, windowDays, maxWatchedPercent, effectiveFrom, selfServicePerYear, autoApprove, history[] }` |
+| GET | `/me/courses/:slug/report` | enrolled student | `{ course, purchasedAt, orderId, enrolledAt, accessUntil, lessons: { total, completed, percent }, video: { totalSec, uniqueWatchedSec, percent, paidSec, paidWatchedSec, paidPercent }, lastAccessAt, downloads: { count, items: [{ title, at }] }, refund }` |
+| GET | `/me/learning` | student | each item adds `refund: { state: eligible\|review\|not_eligible\|requested\|refunded, orderId, purchasedAt, deadline, daysLeft, watchedPercent, maxWatchedPercent, windowDays, reasons, message, policyVersion } \| null` |
+| GET | `/me/notifications?limit` · POST `/me/notifications/read` `{ ids? }` | signed in | `{ unread, items: [{ id, kind, title, body, link, read, createdAt }] }` (own rows only) |
 
 ## Webhooks (server to server; no cookies/CSRF)
 
 - `POST /webhooks/stripe`: raw body, `Stripe-Signature` verified with `STRIPE_WEBHOOK_SECRET`; event ids stored for idempotency.
   Handles `checkout.session.completed`, `checkout.session.async_payment_succeeded|failed`, `checkout.session.expired`,
-  `charge.refunded`, `charge.dispute.created`, `account.updated` and v2 `v2.core.account*` events.
+  `charge.refunded`, `refund.created`, `refund.updated`, `refund.failed`, `charge.refund.updated`, `charge.dispute.created`, `account.updated` and v2 `v2.core.account*` events
+  (a refund is applied locally and reported to the student only once Stripe confirms it).
   Local: `stripe listen --forward-to http://127.0.0.1:4000/api/webhooks/stripe`.
 - `POST /webhooks/mux`: verified with `MUX_WEBHOOK_SECRET`; `video.upload.asset_created`, `video.asset.ready`, `video.asset.errored`.
 

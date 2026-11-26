@@ -65,8 +65,11 @@ export class WebhooksService {
         const charge = obj as Stripe.Charge;
         const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
         if (!piId) return;
-        const order = await this.prisma.order.findUnique({ where: { stripePaymentIntentId: piId }, include: { lines: true } });
-        if (!order) return;
+        const found = await this.prisma.order.findUnique({ where: { stripePaymentIntentId: piId }, select: { id: true } });
+        if (!found) return;
+        // Our own refunds still waiting for Stripe's confirmation are settled first (their lines are known).
+        await this.refunds.syncProcessing(found.id);
+        const order = await this.prisma.order.findUniqueOrThrow({ where: { id: found.id }, include: { lines: true } });
         const open = order.lines.filter((l) => !l.refundedAt);
         const refundedLocally = order.lines.filter((l) => l.refundedAt).reduce((n, l) => n + l.priceCents, 0);
         if (charge.amount_refunded >= charge.amount) {
@@ -81,6 +84,14 @@ export class WebhooksService {
             meta: { amountRefunded: charge.amount_refunded, refundedLocally },
           });
         }
+        return;
+      }
+      case 'refund.created':
+      case 'refund.updated':
+      case 'refund.failed':
+      case 'charge.refund.updated': {
+        // Refund management (owner 2026-11-26): a refund is reported to the student only once Stripe confirms it.
+        await this.refunds.onStripeRefund(obj as Stripe.Refund);
         return;
       }
       case 'charge.updated': {

@@ -121,10 +121,14 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 20. **One-year access and refunds** (owner, 2026-11-25: "I do not want our platform to offer lifetime access";
     docs/ACCESS_AND_REFUNDS.md). Never write "lifetime access" anywhere. A purchase gives 12 months; expiry is enforced in
     the API (`hasAccess`), never only in the UI; progress is never deleted; renewal is a new purchase at the current
-    price, never automatic. Refunds: within 14 days **and** at most 25 % of the course video watched, measured only
-    from merged playback ranges (unique seconds), never estimated; every request is recorded with its facts; a decline
-    can always be reviewed by a person; only a Super Admin overturns an automatic decline. AI may summarise refund facts
-    for admins but never decides or invents numbers.
+    price, never automatic. Refunds: within the refund period **and** at most the watch limit of the paid video,
+    measured only from merged playback ranges (unique seconds), never estimated. The numbers (default 14 days, 25 %) and
+    the automatic handling come from the versioned refund policy (Super Admin › Refunds › Policy, owner 2026-11-26),
+    **never hard-coded**: a purchase keeps its version, a later stricter version never applies to it. Missing or
+    inconsistent tracking goes to a person, never an automatic decline. Every request is recorded with its facts; a
+    decline can always be reviewed by a person; only a Super Admin overrides an automatic decline, with a reason. A
+    refund is reported to the student only once the payment provider confirms it. AI may summarise refund facts for
+    admins but never decides or invents numbers.
 
 21. **Four roles and studios** (owner, 2026-11-25; docs/ROLES_AND_STUDIOS.md). Student is the default for every
     public sign-up (any method; registration schemas `.strict()`), Instructor only through an approved application

@@ -37,7 +37,7 @@ Owner, 2026-11-25: reuse Insurance Hub's email approach and templates, with the 
 | Manual enrollment: one course / several, date extended | `course-access-activated`, `courses-assigned`, `course-access-extended` |
 | Invitation, its confirmation code | `student-invitation`, `invitation-code` |
 | Instructor request received / submitted to staff / approved / rejected / needs info | `manual-enrollment-request-received`, `manual-enrollment-submitted`, `manual-enrollment-approved`, `manual-enrollment-rejected`, `manual-enrollment-needs-info` |
-| Refund received, approved, declined (with the facts), review received, declined after review | `refund-received`, `refund-approved`, `refund-declined`, `refund-review-received`, `refund-declined-after-review` |
+| Refund received (waits for a person), approved and being processed, complete (provider confirmed), payment delayed, declined (the exact decision text with purchase date, deadline, period, consumption and limit, policy link and support), review received, declined after review. The Super Admin can add one paragraph per kind in Refunds › Policy | `refund-received`, `refund-processing`, `refund-approved`, `refund-delayed`, `refund-declined`, `refund-review-received`, `refund-declined-after-review` |
 | Instructor application received / approved / rejected / needs info | `instructor-application-received`, `instructor-approved`, `instructor-rejected`, `instructor-needs-info` |
 | Staff (optional, Super Admin › Settings) | `staff-new-registration` (off by default), `staff-instructor-application` (on) |
 | Support replies | `support-reply`, `support-info-requested`, `support-resolved` |

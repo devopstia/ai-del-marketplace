@@ -47,7 +47,7 @@ describe('marketplace money rules', () => {
   it('free orders have no fee; hold and refund dates', () => {
     expect(simulatedStripeFee(0)).toBe(0);
     const paid = new Date('2026-11-01T10:00:00Z');
-    expect(refundDeadline(paid).toISOString()).toBe('2026-11-15T10:00:00.000Z');
-    expect(transferDueAt(paid).toISOString()).toBe('2026-11-17T10:00:00.000Z');
+    expect(refundDeadline(paid, 14).toISOString()).toBe('2026-11-15T10:00:00.000Z');
+    expect(transferDueAt(paid, 14).toISOString()).toBe('2026-11-17T10:00:00.000Z');
   });
 });

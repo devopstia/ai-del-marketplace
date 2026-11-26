@@ -96,7 +96,7 @@ const HELP_PAGES: (Omit<Result, "id"> & { words: string })[] = [
   { href: "/help", title: "Platform videos", sub: "Short videos on using the marketplace", icon: MonitorPlay, words: "help videos tutorial how to guide" },
   { href: "/support", title: "Help and support", sub: "Ask a question or follow a request", icon: LifeBuoy, words: "help support ticket problem question" },
   { href: "/contact", title: "Contact us", sub: "Write to DevOps Easy Learning", icon: Mail, words: "contact email message enrol enroll" },
-  { href: "/policies/access-and-refunds", title: "Access and refunds policy", sub: "12 months of access, refunds within 14 days", icon: ShieldCheck, words: "refund access renew expiry policy money back" },
+  { href: "/policies/access-and-refunds", title: "Access and refunds policy", sub: "12 months of access, when refunds apply", icon: ShieldCheck, words: "refund access renew expiry policy money back" },
   { href: "/policies/terms", title: "Terms of use", sub: "Rules for learning, buying and teaching", icon: FileText, words: "terms conditions policy legal" },
   { href: "/policies/privacy", title: "Privacy policy", sub: "What we collect and why", icon: FileText, words: "privacy data cookies gdpr policy" },
 ];

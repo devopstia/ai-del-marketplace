@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '../generated/prisma/client';
 import { AuditService } from '../common/audit.service';
 import { Actor, hasRole } from '../common/auth-context';
 import { badRequest, conflict, forbidden, notFound } from '../common/errors';
@@ -7,9 +8,27 @@ import { SettingsService } from '../common/settings.service';
 import { RefundsService } from '../commerce/refunds.service';
 import { PayoutsService } from '../commerce/payouts.service';
 import { StripeService } from '../commerce/stripe.service';
-import { PAYOUT_HOLD_DAYS, REFUND_WINDOW_DAYS } from '../commerce/money';
+import { PAYOUT_HOLD_BUFFER_DAYS } from '../commerce/money';
+import { RefundPolicyService } from '../commerce/refund-policy.service';
+import { NotificationsService } from '../common/notifications.service';
 import { JobsService } from '../common/jobs';
 import { env } from '../config/env';
+
+/** Refund dashboard filters (owner 2026-11-26). */
+export const REFUND_FILTERS = ['all', 'needs_action', 'pending', 'investigation', 'auto_declined', 'auto_approved', 'approved', 'declined', 'refunded', 'processing', 'failed'] as const;
+export type RefundFilter = (typeof REFUND_FILTERS)[number];
+export function refundWhere(f: RefundFilter | undefined): Prisma.RefundRequestWhereInput {
+  switch (f) {
+    case 'needs_action': return { OR: [{ status: 'pending' }, { status: 'auto_declined', reviewRequestedAt: { not: null } }, { status: { in: ['approved', 'auto_approved'] }, paymentStatus: 'failed' }] };
+    case 'pending': return { status: 'pending' };
+    case 'investigation': return { investigation: true, status: 'pending' };
+    case 'auto_declined': case 'auto_approved': case 'approved': case 'declined': return { status: f };
+    case 'refunded': return { paymentStatus: 'succeeded' };
+    case 'processing': return { paymentStatus: 'processing' };
+    case 'failed': return { paymentStatus: 'failed' };
+    default: return {};
+  }
+}
 
 const requireSuper = (a: Actor) => {
   if (!hasRole(a.user, 'super_admin')) throw forbidden('Only a super admin can change commission or payout terms', 'super_admin_required');
@@ -26,6 +45,8 @@ export class FinanceService {
     private readonly payouts: PayoutsService,
     private readonly stripe: StripeService,
     private readonly jobs: JobsService,
+    private readonly policy: RefundPolicyService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ---------- instructor terms (super admin) ----------
@@ -57,6 +78,7 @@ export class FinanceService {
     if (!p) throw notFound('Instructor');
     const defaultBps = await this.settings.commissionBps();
     const platformBps = p.isPlatform ? 10000 : (p.commissionBps ?? defaultBps);
+    const policy = await this.policy.current();
     return {
       isPlatform: p.isPlatform,
       platformBps,
@@ -66,76 +88,127 @@ export class FinanceService {
       payToPlatform: p.payToPlatform,
       note: p.termsNote,
       formula: 'Your share = (price − Stripe processing fee) × your rate. Tax is never part of the split.',
-      holdDays: PAYOUT_HOLD_DAYS,
-      refundWindowDays: REFUND_WINDOW_DAYS,
+      holdDays: policy.windowDays + PAYOUT_HOLD_BUFFER_DAYS,
+      refundWindowDays: policy.windowDays,
     };
   }
 
   // ---------- refund requests ----------
   /**
-   * Super Admin refund dashboard (owner 2026-11-25): every request with the student, course, purchase, the watch facts
-   * computed at request time, the optional AI summary, the decision and its history. `needs_action` = waiting for a
-   * person (over the yearly self-service limit, or a review the student asked for).
+   * Super Admin › Refunds (owner 2026-11-25, extended 2026-11-26): every request with the student, course, instructor,
+   * amount, purchase and request dates, deadline, the measured share watched against the limit, lessons completed,
+   * study material downloads, the automatic decision and its exact message, the payment state and references, and the
+   * policy version. Filters follow the owner's list; `needs_action` = waiting for a person.
    */
-  async refundRequests(status: 'needs_action' | 'pending' | 'approved' | 'declined' | 'auto_approved' | 'auto_declined' | undefined) {
-    const where = status === 'needs_action'
-      ? { OR: [{ status: 'pending' as const }, { status: 'auto_declined' as const, reviewRequestedAt: { not: null } }] }
-      : status ? { status } : {};
+  async refundRequests(filter: RefundFilter | undefined) {
+    const where = refundWhere(filter);
     const rows = await this.prisma.refundRequest.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: 200,
-      include: { user: { select: { id: true, name: true, email: true } }, order: { include: { lines: { include: { course: { select: { title: true } } } } } } },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        order: { include: { lines: { include: { course: { select: { id: true, title: true, instructor: { select: { name: true } } } } } } } },
+      },
     });
     const history = await this.prisma.auditLog.findMany({
       where: { targetType: 'order', targetId: { in: [...new Set(rows.map((r) => r.orderId))] }, OR: [{ action: { startsWith: 'refund.' } }, { action: { startsWith: 'order.refund' } }] },
       orderBy: { at: 'asc' },
       select: { action: true, at: true, targetId: true, meta: true, actor: { select: { name: true } } },
     });
-    const counts = await this.prisma.refundRequest.groupBy({ by: ['status'], _count: { _all: true } });
-    const needsAction = await this.prisma.refundRequest.count({ where: { OR: [{ status: 'pending' }, { status: 'auto_declined', reviewRequestedAt: { not: null } }] } });
+    const downloads = await this.prisma.resourceDownload.findMany({
+      where: { OR: rows.flatMap((r) => r.order.lines.filter((l) => r.lineIds.includes(l.id)).map((l) => ({ userId: r.userId, courseId: l.courseId }))) },
+      orderBy: { at: 'desc' },
+      take: 1000,
+      select: { userId: true, courseId: true, title: true, at: true },
+    });
+    const counts: Record<string, number> = {};
+    for (const f of REFUND_FILTERS) counts[f] = await this.prisma.refundRequest.count({ where: refundWhere(f) });
+    const current = await this.policy.current();
+    const DAY = 24 * 60 * 60 * 1000;
     return {
-      counts: { ...Object.fromEntries(counts.map((c) => [c.status, c._count._all])), needs_action: needsAction },
+      counts,
       aiEnabled: !!env().ANTHROPIC_API_KEY,
-      items: rows.map((r) => ({
-        id: r.id,
-        status: r.status,
-        needsAction: r.status === 'pending' || (r.status === 'auto_declined' && !!r.reviewRequestedAt),
-        reason: r.reason,
-        decisionNote: r.decisionNote,
-        createdAt: r.createdAt,
-        decidedAt: r.decidedAt,
-        processedAt: r.processedAt,
-        reviewRequestedAt: r.reviewRequestedAt,
-        reviewNote: r.reviewNote,
-        analysis: r.analysis,
-        aiSummary: r.aiSummary,
-        aiModel: r.aiModel,
-        user: r.user,
-        orderId: r.orderId,
-        paidAt: r.order.paidAt,
-        lines: r.order.lines.filter((l) => r.lineIds.includes(l.id)).map((l) => ({ id: l.id, title: l.course.title, priceCents: l.priceCents, refundedAt: l.refundedAt, transferStatus: l.transferStatus, instructorShareCents: l.instructorShareCents })),
-        history: history.filter((h) => h.targetId === r.orderId && (!h.meta || (h.meta as { requestId?: string }).requestId === r.id || !(h.meta as { requestId?: string }).requestId)).map((h) => ({ action: h.action, at: h.at, by: h.actor?.name ?? 'System' })),
-      })),
+      policy: { version: current.version, windowDays: current.windowDays, maxWatchedPercent: current.maxWatchedPercent, autoCheck: current.autoCheck, autoReject: current.autoReject, autoApprove: current.autoApprove, allowExceptions: current.allowExceptions },
+      items: rows.map((r) => {
+        const lines = r.order.lines.filter((l) => r.lineIds.includes(l.id));
+        const courseIds = new Set(lines.map((l) => l.courseId));
+        return {
+          id: r.id,
+          status: r.status,
+          paymentStatus: r.paymentStatus,
+          paymentError: r.paymentError,
+          investigation: r.investigation,
+          override: r.override,
+          needsAction: r.status === 'pending' || (r.status === 'auto_declined' && !!r.reviewRequestedAt) || ((r.status === 'approved' || r.status === 'auto_approved') && r.paymentStatus === 'failed'),
+          reason: r.reason,
+          decisionNote: r.decisionNote,
+          message: r.message,
+          policyVersion: r.policyVersion,
+          createdAt: r.createdAt,
+          decidedAt: r.decidedAt,
+          processedAt: r.processedAt,
+          reviewRequestedAt: r.reviewRequestedAt,
+          reviewNote: r.reviewNote,
+          analysis: r.analysis,
+          aiSummary: r.aiSummary,
+          aiModel: r.aiModel,
+          user: r.user,
+          orderId: r.orderId,
+          paidAt: r.order.paidAt,
+          daysSincePurchase: r.order.paidAt ? Math.floor((r.createdAt.getTime() - r.order.paidAt.getTime()) / DAY) : null,
+          amountCents: lines.reduce((n, l) => n + l.priceCents, 0),
+          payment: { provider: r.order.provider, paymentIntentId: r.order.stripePaymentIntentId, chargeId: r.order.stripeChargeId, stripeRefundId: r.stripeRefundId },
+          downloads: downloads.filter((d) => d.userId === r.userId && courseIds.has(d.courseId)).slice(0, 20).map((d) => ({ title: d.title, at: d.at })),
+          lines: lines.map((l) => ({ id: l.id, title: l.course.title, instructor: l.course.instructor?.name ?? null, priceCents: l.priceCents, refundedAt: l.refundedAt, transferStatus: l.transferStatus, instructorShareCents: l.instructorShareCents })),
+          history: history.filter((h) => h.targetId === r.orderId && (!h.meta || (h.meta as { requestId?: string }).requestId === r.id || !(h.meta as { requestId?: string }).requestId)).map((h) => ({ action: h.action, at: h.at, by: h.actor?.name ?? 'System' })),
+        };
+      }),
     };
   }
 
   /**
-   * A person decides. Pending requests (over the yearly limit): any admin. Overturning an automatic decline (an
-   * approved exception, a legal right, wrong playback data): Super Admin only. Declining needs a note for the student.
+   * A person decides (owner 2026-11-26): requests waiting for a person (manual approval, yearly limit, missing tracking
+   * data) — any admin with refunds.decide. Overriding an automatic decline — Super Admin only, only while the policy
+   * allows exceptions, always with a documented reason. Declines need a note for the student. Approving pays through the
+   * provider; the student is told "refunded" only once the provider confirms.
    */
   async decideRefundRequest(a: Actor, id: string, approve: boolean, note: string | undefined) {
     const r = await this.prisma.refundRequest.findUnique({ where: { id }, include: { user: { select: { email: true, name: true } } } });
     if (!r) throw notFound('Refund request');
-    const exception = r.status === 'auto_declined' && !!r.reviewRequestedAt;
-    if (r.status !== 'pending' && !exception) throw conflict('This request was already decided', 'already_decided');
-    if (exception && !a.user.roles.includes('super_admin')) throw forbidden('Only a Super Admin can overturn an automatic decision', 'super_admin_only');
-    if (!note?.trim() && (!approve || exception)) throw badRequest('Add a note: the student sees it, and it is kept in the audit log', 'note_required');
-    if (approve) await this.refunds.refund(r.orderId, r.lineIds, `${exception ? 'Approved exception' : 'Approved request'}: ${note?.trim() || r.reason || 'no reason given'}`, { id: a.user.id, ip: a.ip });
-    await this.prisma.refundRequest.update({ where: { id }, data: { status: approve ? 'approved' : 'declined', decisionNote: note?.trim() || r.decisionNote, decidedById: a.user.id, decidedAt: new Date(), ...(approve ? { processedAt: new Date() } : {}) } });
-    await this.audit.log({ actorId: a.user.id, action: approve ? (exception ? 'refund.exception_approved' : 'order.refund_request_approved') : 'order.refund_request_declined', targetType: 'order', targetId: r.orderId, ip: a.ip, meta: { requestId: id, note: note ?? null } });
-    await this.jobs.sendEmail({ to: r.user.email, template: approve ? 'refund-approved' : 'refund-declined-after-review', data: { name: r.user.name, requestId: id, note: note?.trim() || null } });
-    return { id, status: approve ? 'approved' : 'declined' };
+    const override = r.status === 'auto_declined';
+    if (r.status !== 'pending' && !override) throw conflict('This request was already decided', 'already_decided');
+    if (override) {
+      if (!a.user.roles.includes('super_admin')) throw forbidden('Only a Super Admin can overturn an automatic decision', 'super_admin_only');
+      // Keeping an automatic decline is only a decision when the student asked for a review.
+      if (!approve && !r.reviewRequestedAt) throw conflict('This request is already declined', 'already_decided');
+      if (approve && !(await this.policy.current()).allowExceptions) throw forbidden('Exceptions are turned off in the refund policy settings', 'exceptions_disabled');
+    }
+    if (!note?.trim() && (!approve || override)) throw badRequest('Add a reason: it is kept in the audit log, and the student sees it', 'note_required');
+    const moved = await this.prisma.refundRequest.updateMany({
+      where: { id, status: r.status },
+      data: { status: approve ? 'approved' : 'declined', decisionNote: note?.trim() || r.decisionNote, decidedById: a.user.id, decidedAt: new Date(), override: override && approve, ...(approve ? { paymentStatus: 'processing' } : {}) },
+    });
+    if (!moved.count) throw conflict('This request was already decided', 'already_decided');
+    await this.audit.log({ actorId: a.user.id, action: approve ? (override ? 'refund.exception_approved' : 'order.refund_request_approved') : 'order.refund_request_declined', targetType: 'order', targetId: r.orderId, ip: a.ip, meta: { requestId: id, note: note ?? null, override, investigation: r.investigation } });
+    if (approve) {
+      const state = await this.refunds.pay(id, { id: a.user.id, ip: a.ip }, `${override ? 'Approved exception' : 'Approved request'}: ${note?.trim() || r.reason || 'no reason given'}`);
+      return { id, status: 'approved', paymentStatus: state };
+    }
+    await this.jobs.sendEmail({ to: r.user.email, template: 'refund-declined-after-review', data: { name: r.user.name, requestId: id, note: note?.trim() || null } });
+    await this.notifications.notify(r.userId, { kind: 'refund.declined', title: 'Refund request reviewed', body: `We reviewed your refund request and can’t refund it. ${note?.trim() ?? ''}`.trim(), link: `/student/purchases/${r.orderId}` });
+    return { id, status: 'declined', paymentStatus: 'none' };
+  }
+
+  /** An approved refund the provider couldn't process: try again (Super Admin or refunds.decide). */
+  async retryRefundPayment(a: Actor, id: string) {
+    const r = await this.prisma.refundRequest.findUnique({ where: { id } });
+    if (!r) throw notFound('Refund request');
+    const moved = await this.prisma.refundRequest.updateMany({ where: { id, paymentStatus: 'failed', status: { in: ['approved', 'auto_approved'] } }, data: { paymentStatus: 'processing', paymentError: null } });
+    if (!moved.count) throw conflict('Only an approved refund whose payment failed can be retried', 'not_retryable');
+    await this.audit.log({ actorId: a.user.id, action: 'refund.payment_retried', targetType: 'order', targetId: r.orderId, ip: a.ip, meta: { requestId: id } });
+    const state = await this.refunds.pay(id, { id: a.user.id, ip: a.ip }, 'Retry after a failed payment', true);
+    return { id, paymentStatus: state };
   }
 
   // ---------- disputes ----------

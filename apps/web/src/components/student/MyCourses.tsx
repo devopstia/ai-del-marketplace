@@ -16,6 +16,7 @@ import { Empty, Skeleton } from "@/components/Empty";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { PageHead } from "@/components/shell/AppShell";
+import { RefundLine } from "./RefundLine";
 
 const mapPopular = (r: unknown) => paged(r, toCourseCard).items;
 
@@ -162,7 +163,7 @@ export function MyCourses() {
                     {i.lastActivityAt ? <span className="text-xs text-muted">Last studied {date(i.lastActivityAt)}</span> : null}
                     <CertificateAction item={i} onIssued={issue(i.course.slug)} />
                   </div>
-                  <div className="mt-1.5"><AccessLine item={i} now={now} /></div>
+                  <div className="mt-1.5 space-y-0.5"><AccessLine item={i} now={now} /><RefundLine r={i.refund} /></div>
                 </div>
                 <Link href={resumeHref(i)} className="btn btn-outline btn-sm col-span-2 sm:col-span-1">{i.progressPct === 0 ? "Start course" : i.progressPct >= 100 ? "Review course" : "Resume"}</Link>
               </li>

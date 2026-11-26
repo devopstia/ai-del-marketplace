@@ -1,7 +1,7 @@
 // Tolerant converters from raw API JSON to the app's types.
 // The API contract lives in docs/BUILD_SPEC.md and docs/API.md; these keep the UI stable if a field is
 // nested slightly differently (e.g. `instructor.name` vs `instructorName`).
-import type { SaleInfo, SaleRow, StudioRevision,
+import type { CourseRefund, SaleInfo, SaleRow, StudioRevision,
   AdminInstructor, AdminStats, AdminUser, AuditEntry, Cart, Category, Certificate, CourseCard, CourseDetail,
   InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, Review, ReviewSummary, Role,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
@@ -298,6 +298,17 @@ export function toLearningItem(x: unknown): LearningItem {
       if (!a.state) return null;
       return { state: a.state as "active" | "expiring" | "expired", purchasedAt: (a.purchasedAt as string) ?? null, expiresAt: (a.expiresAt as string) ?? null, daysLeft: a.daysLeft == null ? null : Number(a.daysLeft), canRenew: a.canRenew === true };
     })(),
+    refund: toCourseRefund(o.refund),
+  };
+}
+
+export function toCourseRefund(x: unknown): CourseRefund | null {
+  const r = obj(x);
+  if (!r.state) return null;
+  return {
+    state: r.state as CourseRefund["state"], orderId: str(r.orderId), purchasedAt: (r.purchasedAt as string) ?? null, deadline: (r.deadline as string) ?? null,
+    daysLeft: r.daysLeft == null ? null : Number(r.daysLeft), watchedPercent: num(r.watchedPercent), maxWatchedPercent: num(r.maxWatchedPercent), windowDays: num(r.windowDays),
+    reasons: Array.isArray(r.reasons) ? r.reasons.map(String) : [], message: str(r.message), policyVersion: num(r.policyVersion),
   };
 }
 

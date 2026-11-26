@@ -14,6 +14,22 @@ const usd = (c: unknown) => `$${(Number(c ?? 0) / 100).toFixed(2)}`;
 const list = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? x : s((x as D)?.title))).filter(Boolean) : []);
 const courseRows = (v: unknown): [string, string][] => (Array.isArray(v) ? v.map((x) => [s((x as D).title), `until ${when((x as D).expiresAt)}`] as [string, string]) : []);
 const mk = (subject: string, blocks: Block[], preheader?: string, why?: string): Rendered => layout({ subject, blocks, preheader, why });
+/** The decision text: paragraphs separated by blank lines; single lines inside a paragraph become rows when "Label: value". */
+const paras = (v: unknown): Block[] => {
+  const t = s(v);
+  if (!t) return [];
+  return t.split('\n\n').flatMap((para): Block[] => {
+    const lines = para.split('\n');
+    if (lines.length > 1 && lines.every((l) => /^[^:]{3,40}: .+/.test(l))) return [{ rows: lines.map((l) => { const i = l.indexOf(': '); return [l.slice(0, i), l.slice(i + 2)] as [string, string]; }) }];
+    return lines.map((l) => ({ p: l }) as Block);
+  });
+};
+/** The Super Admin's optional extra paragraph for this notification (refund policy settings). */
+const extra = (d: D): Block[] => (s(d.extra) ? [{ note: s(d.extra) }] : []);
+const refundTerms = (r: unknown) => {
+  const o = (r && typeof r === 'object' ? r : {}) as D;
+  return o.windowDays != null ? `Refunds within ${Number(o.windowDays)} days if you watched ${Number(o.maxWatchedPercent)}% of a course or less (Access and refunds policy).` : 'Refunds follow the Access and refunds policy.';
+};
 const STAFF_WHY = 'You receive this because you are a super admin of DevOps Easy Learning. Turn these emails off in Super Admin › Settings.';
 
 export const TEMPLATES: Record<string, (d: D) => Rendered> = {
@@ -115,7 +131,7 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { p: 'Your courses are ready in your Student Studio. Each purchase includes 12 months of access; nothing renews automatically.' },
     { rows: [...(Array.isArray(d.lines) ? (d.lines as D[]).map((l) => [`${s(l.title)}${l.renewal ? ' (renewal)' : ''}`, `${usd(l.priceCents)} · until ${when(l.accessUntil)}`] as [string, string]) : []), ['Total', usd(d.total)]] },
     { cta: { href: `${web()}/student/courses`, label: 'Start learning' } },
-    { muted: `Receipt ${s(d.orderId).slice(0, 8)}: ${web()}/student/purchases/${s(d.orderId)}. Refunds within 14 days if you watched 25% of a course or less.` },
+    { muted: `Receipt ${s(d.orderId).slice(0, 8)}: ${web()}/student/purchases/${s(d.orderId)}. ${refundTerms(d.refund)}` },
   ], 'Your courses are ready'),
   'access-expiring': (d) => mk(`Your access to ${s(d.course)} ends in ${Number(d.daysLeft)} day${Number(d.daysLeft) === 1 ? '' : 's'}`, [
     { h1: 'Your access ends soon' },
@@ -146,22 +162,40 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { cta: { href: s(d.link, `${web()}/student/courses`), label: 'Continue learning' } },
   ]),
 
-  // ---------- refunds ----------
+  // ---------- refunds (owner 2026-11-26: the exact decision, the dates, the measured share and the policy link) ----------
   'refund-received': (d) => mk('We received your refund request', [
     { h1: 'Refund request received' },
-    { p: `Hi ${first(d)}, we received your request for: ${list(d.courses).join(', ')}. A person reviews it and we email you the decision.` },
+    { p: `Hi ${first(d)}, we received your request for: ${list(d.courses).join(', ')}. A member of our team reviews it and emails you the decision.` },
+    ...paras(d.message),
+    ...extra(d),
+    { cta: { href: `${web()}/student/purchases/${s(d.orderId)}`, label: 'See my request' } },
   ]),
-  'refund-approved': (d) => mk('Your refund is approved', [
+  'refund-processing': (d) => mk('Your refund is approved', [
     { h1: 'Your refund is approved' },
-    { p: `Hi ${first(d)}, we refunded ${d.amountCents != null ? `**${usd(d.amountCents)}** for ` : ''}${list(d.courses).join(', ') || 'your course'}. It reaches your card in 5–10 business days, depending on your bank.` },
+    { p: `Hi ${first(d)}, your refund ${d.amountCents != null ? `of **${usd(d.amountCents)}** ` : ''}for ${list(d.courses).join(', ') || 'your course'} is approved and our payment provider is processing it.` },
+    { p: 'We’ll email you as soon as the provider confirms it. Until then nothing has been returned to your card yet.' },
+    ...extra(d),
+  ]),
+  'refund-approved': (d) => mk('Your refund is complete', [
+    { h1: 'Your refund is complete' },
+    { p: `Hi ${first(d)}, we refunded ${d.amountCents != null ? `**${usd(d.amountCents)}** for ` : ''}${list(d.courses).join(', ') || 'your course'}. Our payment provider confirmed it; your bank shows it in 5–10 business days.` },
     ...(s(d.note) ? [{ note: s(d.note) } as Block] : []),
+    ...extra(d),
+  ]),
+  'refund-delayed': (d) => mk('Your refund is approved: payment delayed', [
+    { h1: 'Your refund is approved' },
+    { p: `Hi ${first(d)}, your refund for ${list(d.courses).join(', ') || 'your course'} is approved, but our payment provider couldn’t process it yet. Our team is retrying; you don’t need to do anything.` },
+    { muted: 'Questions? Reply to this email or write to support@devopseasylearning.com.' },
   ]),
   'refund-declined': (d) => mk('About your refund request', [
-    { h1: 'We can’t refund this automatically' },
-    { p: `Hi ${first(d)}, refunds are available within ${Number(d.windowDays ?? 14)} days of purchase when no more than ${Number(d.thresholdPercent ?? 25)}% of the course video was watched.` },
-    { rows: [['Course', s(d.course)], ['Watched', `${Number(d.watchedPercent ?? 0)}% (unique playback)`]] },
-    { p: 'If something went wrong with the course, ask for a review from your receipt. A person looks at every review.' },
-    { cta: { href: `${web()}/student/purchases`, label: 'Ask for a review' } },
+    { h1: 'Your refund request is not eligible' },
+    { p: `Hi ${first(d)}, we checked your request for **${s(d.course, list(d.courses).join(', '))}** against our refund policy.` },
+    ...paras(d.message),
+    ...(d.message ? [] : [{ rows: [['Purchase date', when(d.purchasedAt)], ['Refund deadline', when(d.deadline)], ['Applicable refund period', `${Number(d.windowDays ?? 0)} days`], ['Your course consumption', `${Number(d.watchedPercent ?? 0)}%`], ['Maximum permitted consumption', `${Number(d.thresholdPercent ?? 0)}%`]] as [string, string][] } as Block]),
+    ...extra(d),
+    { p: 'If something went wrong (a technical problem, missing content, a payment error), ask for a review from your receipt. A person looks at every review.' },
+    { cta: { href: `${web()}/student/purchases/${s(d.orderId)}`, label: 'Ask for a review' } },
+    { muted: `Refund policy: ${s(d.policyUrl, `${web()}/policies/access-and-refunds`)} · Support: support@devopseasylearning.com` },
   ]),
   'refund-review-received': (d) => mk('We received your review request', [
     { h1: 'A person will review your request' },
@@ -171,7 +205,7 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { h1: 'Your refund review' },
     { p: `Hi ${first(d)}, we reviewed your request and can’t refund it.` },
     ...(s(d.note) ? [{ note: s(d.note) } as Block] : []),
-    { muted: 'Questions? Reply to this email.' },
+    { muted: `Refund policy: ${web()}/policies/access-and-refunds · Questions? Reply to this email.` },
   ]),
 
   // ---------- instructors ----------

@@ -12,6 +12,8 @@ import { StorageService } from '../common/storage.service';
 import { randomToken } from '../common/util';
 import { MediaService } from '../media/media.service';
 import { learningAiEnabled } from '../study/ai-client';
+import { RefundsService } from '../commerce/refunds.service';
+import { refundConsumption } from '../access/consumption';
 
 export interface QuizQuestion {
   q: string;
@@ -30,6 +32,7 @@ export class LearningService {
     private readonly storage: StorageService,
     private readonly audit: AuditService,
     @Optional() private readonly protection?: ProtectionService,
+    @Optional() private readonly refunds?: RefundsService,
   ) {}
 
   /** Who may open the paid content of a course: an active enrolment, the course owner, or an admin. */
@@ -62,6 +65,55 @@ export class LearningService {
     return { lecture: l, access };
   }
 
+  /** Study material downloads are recorded for the student's history and refund reviews (never for the refund measure). */
+  private async recordDownload(userId: string, courseId: string, f: { resourceId?: string; courseResourceId?: string; title: string }) {
+    await this.prisma.resourceDownload.create({ data: { userId, courseId, resourceId: f.resourceId ?? null, courseResourceId: f.courseResourceId ?? null, title: f.title.slice(0, 300) } }).catch(() => undefined);
+  }
+
+  /**
+   * One course's report for the student (owner 2026-11-26): purchase and enrolment dates, completion, video watched
+   * (unique seconds; free previews counted in "all video", left out of the refund measure), last access, downloads and
+   * the refund position. Only the student's own data; needs an enrolment (also an expired one).
+   */
+  async courseReport(userId: string, slug: string) {
+    const course = await this.prisma.course.findUnique({ where: { slug }, select: { id: true, slug: true, title: true, coverKey: true, instructor: { select: { name: true } } } });
+    if (!course) throw notFound('Course');
+    const e = await this.prisma.enrollment.findUnique({ where: { userId_courseId: { userId, courseId: course.id } } });
+    if (!e || e.revokedAt) throw notFound('Enrolment');
+    const lectures = await this.prisma.lecture.findMany({
+      where: { section: { courseId: course.id } },
+      select: { id: true, type: true, isPreview: true, durationSec: true, progress: { where: { userId }, select: { watchedSec: true, completed: true, updatedAt: true } } },
+    });
+    const videos = lectures.filter((l) => l.type === 'video');
+    const totalVideoSec = videos.reduce((a, l) => a + l.durationSec, 0);
+    const uniqueWatchedSec = videos.reduce((a, l) => a + Math.min(l.durationSec, l.progress[0]?.watchedSec ?? 0), 0);
+    const completed = lectures.filter((l) => l.progress[0]?.completed).length;
+    const lastAccessAt = lectures.reduce<Date | null>((m, l) => { const t = l.progress[0]?.updatedAt; return t && (!m || t > m) ? t : m; }, null);
+    const line = e.orderLineId ? await this.prisma.orderLine.findUnique({ where: { id: e.orderLineId }, select: { paidVideoSecAtPurchase: true, order: { select: { id: true, paidAt: true } } } }) : null;
+    const paid = await refundConsumption(this.prisma, userId, course.id, line?.paidVideoSecAtPurchase ?? null);
+    const downloads = await this.prisma.resourceDownload.findMany({ where: { userId, courseId: course.id }, orderBy: { at: 'desc' }, take: 100, select: { title: true, at: true } });
+    const refund = (await this.refunds?.courseStatus(userId, [course.id]))?.get(course.id);
+    return {
+      course: { id: course.id, slug: course.slug, title: course.title, thumbnailUrl: this.media.imageUrl(course.coverKey), instructor: course.instructor },
+      purchasedAt: line?.order.paidAt ?? null,
+      orderId: line?.order.id ?? null,
+      enrolledAt: e.createdAt,
+      accessUntil: e.accessExpiresAt,
+      lessons: { total: lectures.length, completed, percent: lectures.length ? Math.round((completed / lectures.length) * 100) : 0 },
+      video: {
+        totalSec: totalVideoSec,
+        uniqueWatchedSec,
+        percent: totalVideoSec ? Math.round((uniqueWatchedSec / totalVideoSec) * 1000) / 10 : 0,
+        paidSec: paid.totalSec,
+        paidWatchedSec: paid.watchedSec,
+        paidPercent: paid.percent,
+      },
+      lastAccessAt,
+      downloads: { count: downloads.length, items: downloads },
+      refund: refundSummary(refund),
+    };
+  }
+
   private async progressFor(userId: string, courseId: string) {
     const lectures = await this.prisma.lecture.findMany({ where: { section: { courseId } }, select: { id: true } });
     const done = await this.prisma.lectureProgress.count({ where: { userId, completed: true, lectureId: { in: lectures.map((l) => l.id) } } });
@@ -92,6 +144,8 @@ export class LearningService {
       include: { course: { select: { id: true, slug: true, title: true, coverKey: true, instructor: { select: { name: true } } } } },
     });
     const items = [];
+    // The refund position per course, without asking for a refund (owner 2026-11-26).
+    const refund = (await this.refunds?.courseStatus(userId, enrolments.map((e) => e.courseId))) ?? new Map();
     for (const e of enrolments) {
       const progress = await this.progressFor(userId, e.courseId);
       const last = await this.prisma.lectureProgress.findFirst({
@@ -110,6 +164,7 @@ export class LearningService {
         progress,
         lastLecture: last ? { id: last.lecture.id, title: last.lecture.title, positionSec: last.positionSec, at: last.updatedAt } : null,
         certificateCode: cert?.code ?? null,
+        refund: refundSummary(refund.get(e.courseId)),
       });
     }
     return { items: items.filter((i) => i.access.state !== 'expired'), expired: items.filter((i) => i.access.state === 'expired') };
@@ -238,7 +293,8 @@ export class LearningService {
   async download(user: AuthUser, resourceId: string) {
     const r = await this.prisma.resource.findUnique({ where: { id: resourceId } });
     if (!r) throw notFound('Resource');
-    await this.requireLectureAccess(user, r.lectureId);
+    const { lecture } = await this.requireLectureAccess(user, r.lectureId);
+    await this.recordDownload(user.id, lecture.section.courseId, { resourceId: r.id, title: r.title });
     const ttl = 300;
     const filename = r.storageKey.split('/').pop() ?? 'download';
     return { url: await this.storage.presignGet(r.storageKey, ttl, { downloadName: filename }), expiresAt: new Date(Date.now() + ttl * 1000).toISOString(), filename };
@@ -249,6 +305,7 @@ export class LearningService {
     const r = await this.prisma.courseResource.findUnique({ where: { id }, include: { course: { select: { id: true, instructorId: true } } } });
     if (!r) throw notFound('File');
     if (!(await this.access(user, r.course))) throw forbidden('Enrol in this course to download its files', 'not_enrolled');
+    await this.recordDownload(user.id, r.course.id, { courseResourceId: r.id, title: r.title });
     const ttl = 300;
     const filename = r.storageKey.split('/').pop() ?? 'download';
     return { url: await this.storage.presignGet(r.storageKey, ttl, { downloadName: filename }), expiresAt: new Date(Date.now() + ttl * 1000).toISOString(), filename };
@@ -329,4 +386,15 @@ export class LearningService {
 export async function recalcRating(prisma: PrismaService, courseId: string) {
   const agg = await prisma.review.aggregate({ where: { courseId, status: 'visible' }, _avg: { rating: true }, _count: { _all: true } });
   await prisma.course.update({ where: { id: courseId }, data: { ratingAvg: agg._avg.rating ?? 0, ratingCount: agg._count._all } });
+}
+
+type CourseRefund = Awaited<ReturnType<RefundsService['courseStatus']>> extends Map<string, infer V> ? V : never;
+
+/** The refund block the Student Studio shows (null when the course wasn't bought, e.g. free or granted). */
+function refundSummary(r: CourseRefund | undefined) {
+  if (!r) return null;
+  return {
+    state: r.state, orderId: r.orderId, purchasedAt: r.purchasedAt, deadline: r.deadline, daysLeft: r.daysLeft, watchedPercent: r.watchedPercent,
+    maxWatchedPercent: r.maxWatchedPercent, windowDays: r.windowDays, reasons: r.reasons, message: r.message, policyVersion: r.policyVersion,
+  };
 }
