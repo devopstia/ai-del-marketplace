@@ -28,9 +28,12 @@
   --cyan: #1e9bd7;
   --cyan-ink: #0b6d9e;
   --cyan-soft: #def1fb;
-  --amber: #94650a;
+  /* "amber" = notices, warnings and pending states. Owner 2026-11-26: no yellow banners; they use the brand's cyan family
+     (same values as --cyan-ink / --cyan-soft). Rating stars keep their gold (--star). */
+  --amber: #0b6d9e;
   --on-amber: #ffffff;
-  --amber-soft: #fdf1d6;
+  --amber-soft: #def1fb;
+  --star: #94650a;
   --mint: #0b6b45;
   --mint-soft: #ddf4e9;
   --rose: #ad2c45;
@@ -60,9 +63,10 @@
     --cyan: #58c3f2;
     --cyan-ink: #7fd2f6;
     --cyan-soft: #0f2b44;
-    --amber: #f2b53c;
-    --on-amber: #1f1500;
-    --amber-soft: #3a2c0c;
+    --amber: #7fd2f6;
+    --on-amber: #0c0f22;
+    --amber-soft: #0f2b44;
+    --star: #f2b53c;
     --mint: #3fcf92;
     --mint-soft: #0f3326;
     --rose: #ff7d93;
@@ -91,9 +95,10 @@
   --cyan: #58c3f2;
   --cyan-ink: #7fd2f6;
   --cyan-soft: #0f2b44;
-  --amber: #f2b53c;
-  --on-amber: #1f1500;
-  --amber-soft: #3a2c0c;
+  --amber: #7fd2f6;
+  --on-amber: #0c0f22;
+  --amber-soft: #0f2b44;
+  --star: #f2b53c;
   --mint: #3fcf92;
   --mint-soft: #0f3326;
   --rose: #ff7d93;
@@ -123,6 +128,7 @@
   --color-cyan-soft: var(--cyan-soft);
   --color-amber: var(--amber);
   --color-amber-soft: var(--amber-soft);
+  --color-star: var(--star);
   --color-mint: var(--mint);
   --color-mint-soft: var(--mint-soft);
   --color-rose: var(--rose);

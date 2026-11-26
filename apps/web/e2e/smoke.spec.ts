@@ -100,10 +100,16 @@ test.describe.serial("learner buys and studies a course", () => {
     await expect(page).toHaveURL(/\/checkout$/);
     // Terms acceptance (owner 2026-11-26): nothing can be paid before the box is ticked; the API records the version.
     const consent = page.locator("label").filter({ has: page.getByTestId("consent") });
-    await expect(consent).toContainText("Terms of use");
-    await expect(consent).toContainText("Access and refunds policy");
+    await expect(consent).toContainText("I have read and agree to the Terms and Conditions, Course Access Policy, and Refund Policy.");
+    await expect(consent.getByRole("link", { name: "Refund Policy" })).toHaveAttribute("href", "/policies/access-and-refunds#refunds");
+    await expect(consent.getByRole("link", { name: "Refund Policy" })).toHaveAttribute("target", "_blank");
+    await expect(page.getByTestId("access-terms")).toHaveText("Course access is valid for 12 months from the date of purchase. This is not lifetime access.");
+    await expect(page.getByTestId("consent")).not.toBeChecked();
     await expect(page.getByTestId("pay")).toBeDisabled();
     await page.getByTestId("consent").check();
+    // The separate consent to immediate access (right of withdrawal) is still required for paid courses.
+    await expect(page.getByTestId("pay")).toBeDisabled();
+    await page.getByTestId("immediate-consent").check();
     await expect(page.getByTestId("pay")).toBeEnabled();
     await page.getByTestId("pay").click();
     // Without Stripe keys the API returns the dev test-payment page

@@ -62,7 +62,7 @@ export default function CartPage() {
     <div className="container-x max-w-6xl pt-10">
       <h1 className="font-display text-[2.4rem] font-extrabold">Shopping cart</h1>
       <Suspense><CanceledNotice /></Suspense>
-      <TestModeNotice className="mt-4" />
+      <TestModeNotice className="mt-4" compact />
       {err ? <p className="mt-6 text-rose">{err}</p> : null}
       {!cart && !err ? <div className="mt-8 space-y-4"><Skeleton className="h-28" /><Skeleton className="h-28" /></div> : null}
       {cart && !cart.items.length ? (

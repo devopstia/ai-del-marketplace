@@ -9,7 +9,7 @@ export function Stars({ value, size = 14, className = "" }: { value: number; siz
           <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
             <Star size={size} className="absolute inset-0 text-muted/45" strokeWidth={0} fill="currentColor" />
             <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-              <Star size={size} className="text-amber" strokeWidth={0} fill="currentColor" />
+              <Star size={size} className="text-star" strokeWidth={0} fill="currentColor" />
             </span>
           </span>
         );
@@ -22,7 +22,7 @@ export function RatingInline({ avg, count, className = "" }: { avg: number; coun
   if (!count) return <span className={`text-sm font-bold text-cyan-ink ${className}`}>New</span>;
   return (
     <span className={`inline-flex items-center gap-1.5 text-sm ${className}`}>
-      <span className="font-bold text-amber tabular-nums">{avg.toFixed(1)}</span>
+      <span className="font-bold text-star tabular-nums">{avg.toFixed(1)}</span>
       <Stars value={avg} size={13} />
       <span className="text-muted tabular-nums">({count.toLocaleString("en-US")})</span>
     </span>

@@ -11,6 +11,8 @@ export interface RefundPolicy {
   effectiveFrom: string | null;
   selfServicePerYear: number;
   autoApprove: boolean;
+  /** Months of access a purchase gives (from the API: apps/api/src/access/access.ts). */
+  accessMonths: number;
   history: { version: number; windowDays: number; maxWatchedPercent: number; effectiveFrom: string; effectiveUntil: string | null }[];
 }
 
@@ -20,10 +22,13 @@ export function toRefundPolicy(raw: unknown): RefundPolicy | null {
   const hist = Array.isArray(o.history) ? o.history : [];
   return {
     version: Number(o.version ?? 0), windowDays: o.windowDays, maxWatchedPercent: o.maxWatchedPercent,
-    effectiveFrom: typeof o.effectiveFrom === "string" ? o.effectiveFrom : null, selfServicePerYear: Number(o.selfServicePerYear ?? 0), autoApprove: o.autoApprove === true,
+    effectiveFrom: typeof o.effectiveFrom === "string" ? o.effectiveFrom : null, selfServicePerYear: Number(o.selfServicePerYear ?? 0), autoApprove: o.autoApprove === true, accessMonths: Number(o.accessMonths ?? 12) || 12,
     history: hist.map((h) => { const x = obj(h); return { version: Number(x.version), windowDays: Number(x.windowDays), maxWatchedPercent: Number(x.maxWatchedPercent), effectiveFrom: String(x.effectiveFrom ?? ""), effectiveUntil: typeof x.effectiveUntil === "string" ? x.effectiveUntil : null }; }),
   };
 }
+
+/** The one access sentence shown at checkout (owner 2026-11-26). */
+export const accessStatement = (p: RefundPolicy | null) => `Course access is valid for ${p?.accessMonths ?? 12} months from the date of purchase. This is not lifetime access.`;
 
 export const pct = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
 

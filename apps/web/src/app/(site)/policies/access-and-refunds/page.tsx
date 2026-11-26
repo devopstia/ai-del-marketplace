@@ -11,10 +11,10 @@ export const metadata: Metadata = pageMeta({ title: "Access and refunds", descri
 
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) : "");
 
-const ROWS = (days: string, limit: string, auto: string): [string, string][] => [
-  ["How long you can use a course", "12 months from the day you buy it, not lifetime."],
+const ROWS = (days: string, limit: string, auto: string, months: number): [string, string][] => [
+  ["How long you can use a course", `${months} months from the day you buy it, not lifetime.`],
   ["When access ends", "The course moves to Expired in My learning. Videos and lab files lock, but your progress, notes and certificate stay."],
-  ["Renewing", "Buy the course again at its current price (sales apply). Renewing in the last 30 days adds 12 months after your current end date; after it ends, 12 months start from the renewal. We never charge you automatically."],
+  ["Renewing", `Buy the course again at its current price (sales apply). Renewing in the last 30 days adds ${months} months after your current end date; after it ends, ${months} months start from the renewal. We never charge you automatically.`],
   ["Reminders", "We email you 30, 7 and 1 day before your access ends, and when it ends."],
   ["Refunds", `Within ${days} of buying, if you have watched ${limit} or less of the course’s paid video. Both must be true. ${auto}`],
   [`How we measure ${limit}`, "Only the seconds of paid video you actually played, once each, on any device. Watching the same part again, skipping ahead or playing faster doesn’t add. Free preview lessons don’t count. Lessons added later can only lower your share; lessons removed later never raise it. Downloads and quizzes don’t count toward the limit."],
@@ -25,17 +25,18 @@ const ROWS = (days: string, limit: string, auto: string): [string, string][] => 
 
 export default async function AccessAndRefundsPolicy() {
   const p = await getRefundPolicy();
+  const months = p?.accessMonths ?? 12;
   const days = p ? `${p.windowDays} days` : "the refund period";
   const limit = p ? pct(p.maxWatchedPercent) : "the watch limit";
   const auto = p?.autoApprove ? `Eligible requests are refunded straight away (up to ${p.selfServicePerYear} a year; after that a person approves them).` : "A member of our team approves eligible requests.";
   return (
     <div className="container-x max-w-4xl pb-16 pt-8">
       <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.6rem)] font-extrabold leading-tight">Access and refunds</h1>
-      <p className="mt-2 max-w-2xl text-lg text-ink-2">Every course you buy gives you <span className="font-bold text-ink">12 months of access</span>. Here is exactly what that means, and when you can get your money back.</p>
+      <p className="mt-2 max-w-2xl text-lg text-ink-2">Every course you buy gives you <span className="font-bold text-ink">{months} months of access</span>. Here is exactly what that means, and when you can get your money back.</p>
 
       <dl className="mt-8 divide-y divide-line rounded-tile border border-line bg-surface" data-testid="policy">
-        {ROWS(days, limit, auto).map(([k, v]) => (
-          <div key={k} className="grid gap-1 px-5 py-4 sm:grid-cols-[15rem_minmax(0,1fr)] sm:gap-6">
+        {ROWS(days, limit, auto, months).map(([k, v], i) => (
+          <div key={k} id={i === 0 ? "access" : k === "Refunds" ? "refunds" : undefined} className="scroll-mt-24 grid gap-1 px-5 py-4 sm:grid-cols-[15rem_minmax(0,1fr)] sm:gap-6">
             <dt className="font-bold">{k}</dt>
             <dd className="text-ink-2">{v}</dd>
           </div>

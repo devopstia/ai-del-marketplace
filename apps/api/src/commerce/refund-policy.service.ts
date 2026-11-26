@@ -5,6 +5,7 @@ import { badRequest, forbidden } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { env, isProd, stepUpSkipped } from '../config/env';
 import { SignInService } from '../auth/signin.service';
+import { ACCESS_MONTHS } from '../access/access';
 import { effectiveTerms, LAUNCH_POLICY, policyProblems, type PolicyInput, type PolicyMessages, type PolicyTerms } from './refund-policy';
 
 type Row = {
@@ -90,6 +91,8 @@ export class RefundPolicyService {
     return {
       version: c.version, windowDays: c.windowDays, maxWatchedPercent: c.maxWatchedPercent, effectiveFrom: c.effectiveFrom,
       selfServicePerYear: c.selfServicePerYear, autoApprove: c.autoCheck && c.autoApprove,
+      // Course access length (one source: access/access.ts), shown at checkout and on the policy page.
+      accessMonths: ACCESS_MONTHS,
       history: rows.map((r, i) => ({ ...r, effectiveUntil: i > 0 ? rows[i - 1]!.effectiveFrom : null })),
     };
   }
