@@ -41,18 +41,23 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
 5. **SES production access** (AWS console › SES). Until then email only reaches verified addresses.
 6. **Alerts:** subscribe an email to SNS `del-marketplace-alerts`.
 7. **Videos and courses on production:** never upload local training videos or unfinished courses until the owner says so.
-8. **⌘K search and terms acceptance at purchase** (owner's earlier ordered list, items 5 and 11) were never built; confirm
-   they are still wanted.
+8. **AI learning features** (docs/AI_LEARNING.md) are built but **off until an `ANTHROPIC_API_KEY` is set** (SSM
+   `/del-marketplace/<stack>/ANTHROPIC_API_KEY`). Video search works without a key. Owner to decide the model for
+   "Ask" (default Opus 5.5 ≈ $22 per 1,000 questions; Sonnet 5.5 ≈ $11; Haiku 5.5 ≈ $0.55; `LEARNING_AI_ASK_MODEL`).
 
 9. **Super Admin password:** the bootstrap password was shown in chat on 2026-11-26 at the owner's request; the owner will
    change it (Account settings). Afterwards the SSM copy `/del-marketplace/bootstrap/ADMIN_PASSWORD` is stale: mark or delete it.
 
-## 3. Known gaps (from the 2026-11-26 requirement audit, `docs/FINAL_REVIEW_2026-11-26.md`)
+## 3. Known gaps
 
-- No browser tests yet for: manual-enrollment and invitation screens, curriculum drag-and-drop UI, Admin › Refunds and
-  Users UI, player double-click full screen / idle hide (the API side of all of these is tested).
-- Partial: filters by instructor/course/date on manual enrollments and review moderation; previewing a draft revision of
-  a live course; no automated smoke/Playwright step after the staging deploy in `release.yml`; no dependency audit in CI.
+- Built 2026-11-26 (branch `feat/improvements-2026-11-26`): CloudFront delivery + 720p/480p (docs/VIDEO_DELIVERY.md), budget
+  alert, filters, draft-revision preview, browser tests for the screens that lacked them, ⌘K quick search, terms acceptance
+  at purchase (`TERMS_VERSION` in `apps/api/src/commerce/terms.ts` AND `apps/web/src/lib/terms.ts`: bump both when the
+  policies change), AI learning (video search, assistant, study notes).
+- Budget: activate the `App` cost allocation tag in Billing (AWS refused on 2026-11-26: tag not yet in billing data);
+  until then the budget reports $0.
+- Still open: no automated smoke/Playwright step after the staging deploy in `release.yml`; no dependency audit in CI;
+  studio UI for instructors to upload captions or regenerate AI notes (API only); Mux captions not indexed.
 - Staging Playwright runs publish "E2E course …" courses that stay public on staging; unpublish them after a run
   (`update courses set status='unpublished' where title like 'E2E course %'` on `marketplace_staging`).
 
@@ -83,6 +88,8 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
 - RDS needs TLS: `DATABASE_SSL=rds` uses `apps/api/assets/rds-global-bundle.pem`; every Prisma client (app, seed, import,
   bootstrap, mfa-admin) passes `ssl: databaseSsl()`.
 - Seed refuses production builds unless `DEPLOY_ENV=staging`.
+- `next dev` only hydrates on `localhost`, not `127.0.0.1` (dev-only origin check); production builds are fine.
+- Helper agents in `.claude/worktrees/` (git-ignored); never commit that folder.
 - `ERR_NETWORK_CHANGED` in Playwright against staging is this machine's network (WSL), not the site; rerun `--last-failed`.
 - Remote commands: `source <(sed -n '/^APP=/,/^b64()/p' scripts/deploy-aws.sh)` then `remote '<shell>' "label"` (SSM Run Command, no SSH).
   Container names: `del-<stack>-api-1`, `del-<stack>-web-1`, `del-<stack>-worker-1`, `del-edge-caddy-1`.

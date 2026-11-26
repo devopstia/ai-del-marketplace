@@ -227,3 +227,12 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
 - Pipeline fixes: OIDC trust for GitHub's immutable subject, plain images for ECR scanning, immutable ECR tags.
 - Open with the owner: cost (they said "I don't want this now"; options asked, no answer), scan exception, provider keys.
   Everything for the next agent: docs/HANDOFF.md.
+
+## 2026-11-26 — Improvement batch approved by the owner ("1. A, 3, 6-10 please implement those")
+Checkpoint `checkpoint-2026-11-26-improvements` = 2393eef, branch `backup/pre-improvements-2026-11-26`; integration branch
+`feat/improvements-2026-11-26` (merges feat/video-delivery, feat/admin-filters-preview-tests, feat/search-and-terms, feat/ai-learning).
+- A: CloudFront for lesson segments (signed per-session policy, OAC to hls/* only, no geo restriction) + 720p/480p renditions;
+  re-package action for older videos. 3: AWS Budget $75/month (tag filter). 6: filters. 7: draft-revision preview.
+  8: browser tests. 9: ⌘K quick search; terms acceptance recorded on orders (version, time, IP). 10: AI learning
+  (Postgres FTS caption search; Claude assistant with timestamp citations; cached study notes), hidden without a key.
+- Owner also asked for a full mobile responsive check (staging review, fixes in this batch).
