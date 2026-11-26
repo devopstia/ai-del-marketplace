@@ -50,6 +50,8 @@ function fakeDb() {
     },
     user: { findUnique: jest.fn(async () => ({ email: 'u1@example.com' })) },
     auditLog: { create: jest.fn() },
+    // Paid (non-preview) video length per course, recorded on each line at purchase (refund measure).
+    lecture: { aggregate: jest.fn(async ({ where }: any) => ({ _sum: { durationSec: where.section.courseId === 'c1' ? 3600 : 1200 } })) },
   };
   const prisma: any = { ...tx, $transaction: jest.fn(async (fn: any) => fn(tx)) };
   return { state, prisma };
@@ -62,7 +64,8 @@ function build(stripeConfigured = true) {
   const stripe: any = { configured: stripeConfigured, client: { transfers } };
   const jobs: any = { sendEmail: jest.fn(), settleFee: jest.fn() };
   const payouts: any = { settleFee: jest.fn(async () => true), fetchStripeFee: jest.fn(async () => true) };
-  return { svc: new FulfilmentService(prisma, audit as any, stripe, jobs, payouts), state, transfers, jobs, payouts };
+  const refundPolicy: any = { current: jest.fn(async () => ({ id: 'pol-1', version: 1, windowDays: 14, maxWatchedPercent: 25 })) };
+  return { svc: new FulfilmentService(prisma, audit as any, stripe, jobs, payouts, refundPolicy), state, transfers, jobs, payouts };
 }
 
 describe('FulfilmentService.fulfil', () => {
@@ -110,6 +113,10 @@ describe('FulfilmentService: money after payment', () => {
     const held = (state as any).dueUpdate;
     expect(held.data.transferDueAt.getTime() - state.order.paidAt!.getTime()).toBe(16 * 24 * 3600 * 1000);
     expect((state.order as any).refundEligibleUntil.getTime() - state.order.paidAt!.getTime()).toBe(14 * 24 * 3600 * 1000);
+    // The policy version in force and each course's paid video length are recorded at purchase.
+    expect((state.order as any).refundPolicyId).toBe('pol-1');
+    expect((state.lines[0] as any).paidVideoSecAtPurchase).toBe(3600);
+    expect((state.lines[1] as any).paidVideoSecAtPurchase).toBe(1200);
   });
 
   it('dev test payments settle a simulated Stripe fee (2.9% + 30¢); Stripe orders read the real fee or retry', async () => {

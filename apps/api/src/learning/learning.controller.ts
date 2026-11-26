@@ -30,6 +30,15 @@ export class LearningController {
     return this.svc.courseForLearner(u, slug);
   }
 
+  /**
+   * Student Studio › Progress › course (owner 2026-11-26): purchase and enrolment dates, completion, unique paid video
+   * watched, watch time, last access, study material downloads and the refund position, without asking for a refund.
+   */
+  @Get('me/courses/:slug/report')
+  report(@Param('slug') slug: string, @CurrentUser() u: AuthUser) {
+    return this.svc.courseReport(u.id, slug);
+  }
+
   /** Student Studio › Reviews: my reviews, and enrolled courses still waiting for one. */
   @Get('me/reviews')
   myReviews(@CurrentUser() u: AuthUser) {

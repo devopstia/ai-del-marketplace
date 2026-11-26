@@ -58,6 +58,13 @@ describe('Stripe webhook endpoint (signature)', () => {
 });
 
 describe('WebhooksService (event idempotency + routing)', () => {
+  it('refund.updated goes to the refund settlement (applied only once Stripe confirms)', async () => {
+    const { svc, refunds } = build();
+    const refund = { id: 're_1', status: 'succeeded', metadata: { orderId: 'o1', lineIds: 'l1' } };
+    await svc.handle({ id: 'evt_ru', type: 'refund.updated', data: { object: refund } });
+    expect(refunds.onStripeRefund).toHaveBeenCalledWith(refund);
+  });
+
   function build(seen: string[] = []) {
     const stored = new Set(seen);
     const prisma: any = {
@@ -70,8 +77,9 @@ describe('WebhooksService (event idempotency + routing)', () => {
         updateMany: jest.fn(async () => ({ count: 1 })),
       },
     };
+    prisma.order.findUniqueOrThrow = prisma.order.findUnique;
     const fulfilment = { fulfil: jest.fn() };
-    const refunds = { applyRefund: jest.fn() };
+    const refunds = { applyRefund: jest.fn(), syncProcessing: jest.fn(), onStripeRefund: jest.fn() };
     const connect = { setPayoutsEnabled: jest.fn(), refreshAccount: jest.fn() };
     const stripe = { configured: true, client: { paymentIntents: { retrieve: jest.fn(async () => ({ latest_charge: 'ch_1' })) } } };
     const svc = new WebhooksService(prisma, stripe as any, fulfilment as any, refunds as any, connect as any, { log: jest.fn() } as any, { settleFromCharge: jest.fn() } as any);
@@ -118,6 +126,7 @@ describe('WebhooksService (event idempotency + routing)', () => {
   it('full charge.refunded reverses everything via applyRefund', async () => {
     const { svc, refunds } = build();
     await svc.handle({ id: 'evt_r', type: 'charge.refunded', data: { object: { payment_intent: 'pi_1', amount: 500, amount_refunded: 500 } } });
+    expect(refunds.syncProcessing).toHaveBeenCalledWith('o1');
     expect(refunds.applyRefund).toHaveBeenCalledWith('o1', ['l1']);
   });
 

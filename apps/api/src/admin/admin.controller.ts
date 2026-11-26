@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { ActorCtx, type Actor, Perm, Roles } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { AdminService } from './admin.service';
-import { FinanceService } from './finance.service';
+import { FinanceService, REFUND_FILTERS } from './finance.service';
+import { RefundPolicyService } from '../commerce/refund-policy.service';
 import { PeopleService } from './people.service';
 
 const paging = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
@@ -33,7 +34,20 @@ const auditQuery = z.object({
   to: z.coerce.date().optional(),
   ...paging,
 });
-const refundReqQuery = z.object({ status: z.enum(['needs_action', 'pending', 'approved', 'declined', 'auto_approved', 'auto_declined']).optional() });
+const refundReqQuery = z.object({ status: z.enum(REFUND_FILTERS).optional() });
+/** A new refund policy version (Super Admin › Refunds › Policy; src/commerce/refund-policy.ts validates the rules). */
+const refundPolicySchema = z.object({
+  windowDays: z.number().int().min(1).max(365),
+  maxWatchedPercent: z.number().min(0).max(100),
+  autoCheck: z.boolean(),
+  autoReject: z.boolean(),
+  autoApprove: z.boolean(),
+  allowExceptions: z.boolean(),
+  selfServicePerYear: z.number().int().min(0).max(100),
+  messages: z.object({ submitted: z.string().max(1000).optional(), approved: z.string().max(1000).optional(), declined: z.string().max(1000).optional(), processed: z.string().max(1000).optional() }).strict().optional(),
+  note: z.string().trim().max(500).optional(),
+  code: z.string().trim().max(12).optional(),
+}).strict();
 /** commissionBps = the platform's share of the net (2000 → instructor keeps 80%); null returns to the default. */
 const termsSchema = z.object({ commissionBps: z.number().int().min(0).max(10000).nullable().optional(), payToPlatform: z.boolean().optional(), note: z.string().trim().min(5).max(1000) });
 const reviewPatch = z.object({ status: z.enum(['visible', 'hidden']) });
@@ -45,6 +59,7 @@ export class AdminController {
     private readonly svc: AdminService,
     private readonly finance: FinanceService,
     private readonly people: PeopleService,
+    private readonly refundPolicy: RefundPolicyService,
   ) {}
 
   @Get('stats') stats() { return this.svc.stats(); }
@@ -95,6 +110,11 @@ export class AdminController {
   @Perm('finance.view') @Get('refund-requests') refundRequests(@ZQuery(refundReqQuery) q: z.infer<typeof refundReqQuery>) { return this.finance.refundRequests(q.status); }
   @Perm('refunds.decide') @HttpCode(200) @Post('refund-requests/:id/approve')
   approveRefund(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.finance.decideRefundRequest(a, id, true, b.note); }
+  @Perm('refunds.decide') @HttpCode(200) @Post('refund-requests/:id/retry-payment')
+  retryRefund(@Param('id') id: string, @ActorCtx() a: Actor) { return this.finance.retryRefundPayment(a, id); }
+  @Perm('finance.view') @Get('refund-policy') refundPolicyVersions() { return this.refundPolicy.versions(); }
+  @Roles('super_admin') @Put('refund-policy')
+  saveRefundPolicy(@ZBody(refundPolicySchema) b: z.infer<typeof refundPolicySchema>, @ActorCtx() a: Actor) { return this.refundPolicy.save(a, b); }
   @Perm('refunds.decide') @HttpCode(200) @Post('refund-requests/:id/decline')
   declineRefund(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.finance.decideRefundRequest(a, id, false, b.note); }
   @Perm('finance.view') @Get('instructors/:id/terms') instructorTerms(@Param('id') id: string) { return this.finance.terms(id); }

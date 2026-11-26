@@ -8,16 +8,16 @@
  *   platform    = net - instructor
  */
 
-/** Refunds: 14 days from purchase, under 25% of the course video watched, no certificate, 3 self-service refunds a year. */
-export const REFUND_WINDOW_DAYS = 14;
-export const REFUND_MAX_WATCHED = 0.25;
-export const REFUND_AUTO_LIMIT_PER_YEAR = 3;
-/** Instructor shares wait until the refund window has closed (+2 days buffer) before they are transferred. */
-export const PAYOUT_HOLD_DAYS = REFUND_WINDOW_DAYS + 2;
+/**
+ * Refund rules (period, watch limit, automatic handling) are not constants: they come from the refund policy version in
+ * force (Super Admin › Refunds › Policy; src/commerce/refund-policy.ts). Instructor shares wait until the purchase's
+ * refund period has closed, plus a 2-day buffer, before they are transferred.
+ */
+export const PAYOUT_HOLD_BUFFER_DAYS = 2;
 const DAY = 24 * 60 * 60 * 1000;
 
-export const refundDeadline = (paidAt: Date) => new Date(paidAt.getTime() + REFUND_WINDOW_DAYS * DAY);
-export const transferDueAt = (paidAt: Date) => new Date(paidAt.getTime() + PAYOUT_HOLD_DAYS * DAY);
+export const refundDeadline = (paidAt: Date, windowDays: number) => new Date(paidAt.getTime() + windowDays * DAY);
+export const transferDueAt = (paidAt: Date, windowDays: number) => new Date(paidAt.getTime() + (windowDays + PAYOUT_HOLD_BUFFER_DAYS) * DAY);
 
 const assertCents = (n: number, what: string) => {
   if (!Number.isInteger(n) || n < 0) throw new Error(`${what} must be a non-negative integer number of cents`);

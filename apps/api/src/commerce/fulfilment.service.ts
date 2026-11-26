@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { grantYear } from '../access/access';
+import { paidVideoSec } from '../access/consumption';
 import { AuditService } from '../common/audit.service';
 import { JobsService } from '../common/jobs';
 import { refundDeadline, simulatedStripeFee, transferDueAt } from './money';
 import { PayoutsService } from './payouts.service';
+import { RefundPolicyService } from './refund-policy.service';
 import { PrismaService } from '../common/prisma.service';
 import { StripeService } from './stripe.service';
 
@@ -38,9 +40,12 @@ export class FulfilmentService {
     private readonly stripe: StripeService,
     private readonly jobs: JobsService,
     private readonly payouts: PayoutsService,
+    private readonly refundPolicy: RefundPolicyService,
   ) {}
 
   async fulfil(orderId: string, payment: PaymentInfo): Promise<FulfilResult> {
+    // The refund policy in force at payment time is recorded on the order (docs/ACCESS_AND_REFUNDS.md › Policy versions).
+    const policy = await this.refundPolicy.current();
     const result = await this.prisma.$transaction(async (tx) => {
       const paidAt = new Date();
       const flipped = await tx.order.updateMany({
@@ -48,7 +53,8 @@ export class FulfilmentService {
         data: {
           status: 'paid',
           paidAt,
-          refundEligibleUntil: refundDeadline(paidAt),
+          refundEligibleUntil: refundDeadline(paidAt, policy.windowDays),
+          ...(policy.id ? { refundPolicyId: policy.id } : {}),
           ...(payment.paymentIntentId ? { stripePaymentIntentId: payment.paymentIntentId } : {}),
           ...(payment.chargeId ? { stripeChargeId: payment.chargeId } : {}),
         },
@@ -58,7 +64,9 @@ export class FulfilmentService {
       }
       const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: { lines: true } });
       // Instructor shares wait for the refund window to close before they are transferred.
-      await tx.orderLine.updateMany({ where: { orderId, transferStatus: 'pending' }, data: { transferDueAt: transferDueAt(paidAt) } });
+      await tx.orderLine.updateMany({ where: { orderId, transferStatus: 'pending' }, data: { transferDueAt: transferDueAt(paidAt, policy.windowDays) } });
+      // The paid video length when bought: lessons removed later never make the refund measure harsher.
+      for (const line of order.lines) await tx.orderLine.update({ where: { id: line.id }, data: { paidVideoSecAtPurchase: await paidVideoSec(tx, line.courseId) } });
       const enrolled: string[] = [];
       const renewed: string[] = [];
       for (const line of order.lines) {
@@ -91,7 +99,7 @@ export class FulfilmentService {
         const o = await this.prisma.order.findUnique({ where: { id: orderId }, select: { totalCents: true, lines: { select: { courseId: true, priceCents: true, course: { select: { title: true } } } } } });
         const ens = await this.prisma.enrollment.findMany({ where: { userId: result.userId, courseId: { in: o?.lines.map((l) => l.courseId) ?? [] } }, select: { courseId: true, accessExpiresAt: true } });
         const lines = (o?.lines ?? []).map((l) => ({ title: l.course?.title ?? '', priceCents: l.priceCents, accessUntil: ens.find((e) => e.courseId === l.courseId)?.accessExpiresAt ?? null, renewal: result.renewedCourseIds?.includes(l.courseId) ?? false }));
-        if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', dedupeKey: `receipt:${orderId}`, data: { orderId, name: user.name, total: o?.totalCents ?? 0, lines } });
+        if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', dedupeKey: `receipt:${orderId}`, data: { orderId, name: user.name, total: o?.totalCents ?? 0, lines, refund: { windowDays: policy.windowDays, maxWatchedPercent: policy.maxWatchedPercent } } });
       } catch (e) {
         this.logger?.warn?.(`receipt email skipped: ${(e as Error).message}`);
       }

@@ -11,6 +11,7 @@ import { useAuth } from "./AuthProvider";
 import { Avatar } from "./Avatar";
 import { usePwa } from "@/lib/pwa";
 import { SearchButton, SearchField } from "./search/QuickSearch";
+import { NotificationBell } from "./NotificationBell";
 
 function UserMenu() {
   const { installed } = usePwa();
@@ -111,7 +112,7 @@ export function SiteHeader({ dealsCount = 0 }: { dealsCount?: number }) {
           {loading ? (
             <span className="h-9 w-20" />
           ) : me ? (
-            <UserMenu />
+            <><NotificationBell /><UserMenu /></>
           ) : (
             <div className="hidden items-center gap-2 sm:flex">
               <Link href="/login" className="btn btn-ghost btn-sm">Log in</Link>

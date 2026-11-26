@@ -8,11 +8,13 @@ import { obj, toCart } from "@/lib/normalize";
 import { moneyExact } from "@/lib/format";
 import type { Cart } from "@/lib/types";
 import { TERMS_VERSION } from "@/lib/terms";
+import { refundRule, useRefundPolicy } from "@/lib/refund-policy";
 import { Price } from "@/components/CourseViews";
 import { CourseCover } from "@/components/CourseCover";
 import { Empty, Skeleton } from "@/components/Empty";
 
 export default function CheckoutPage() {
+  const refundPolicy = useRefundPolicy();
   const payMode = usePaymentsMode();
   const [cart, setCart] = useState<Cart | null>(null);
   const [busy, setBusy] = useState(false);
@@ -73,7 +75,7 @@ export default function CheckoutPage() {
             {err ? <p role="alert" className="mt-4 rounded-lg bg-rose-soft px-3 py-2 text-sm font-bold text-rose">{err}</p> : null}
             {cart.totalCents > 0 ? (
               <p className="mt-5 rounded-lg border border-line bg-surface-2 px-3 py-2.5 text-sm text-ink-2" data-testid="access-terms">
-                <span className="font-bold text-ink">12 months of access, not lifetime.</span> Each course is yours for 12 months from today. Renewing is optional and never charged automatically. Refunds: within 14 days if you’ve watched 25% or less. <Link href="/policies/access-and-refunds" className="link">Read the policy</Link>
+                <span className="font-bold text-ink">12 months of access, not lifetime.</span> Each course is yours for 12 months from today. Renewing is optional and never charged automatically. Refunds: {refundRule(refundPolicy)}. <Link href="/policies/access-and-refunds" className="link">Read the policy</Link>
               </p>
             ) : null}
             {cart.totalCents > 0 && payMode === "off" ? null : (
@@ -91,8 +93,8 @@ export default function CheckoutPage() {
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Lock className="size-4" />}Continue to secure payment
             </button>)}
             <p className="mt-3 text-xs text-muted">
-              You’ll pay on a Stripe-hosted page. Refunds: within 14 days of purchase, if you’ve watched 25% of the course or less
-              and before you get its certificate. Request one from your order page.
+              You’ll pay on a Stripe-hosted page. Refunds: {refundRule(refundPolicy, true)}, and before you get its certificate.
+              Request one from your order page.
             </p>
             <Link href="/cart" className="link mt-4 inline-block text-sm">Back to cart</Link>
           </aside>

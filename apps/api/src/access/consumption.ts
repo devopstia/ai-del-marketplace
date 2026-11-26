@@ -91,3 +91,55 @@ export async function reviewerWatch(prisma: PrismaService, pairs: { userId: stri
   });
   return summariseWatch(lectures, progress, pairs);
 }
+
+/**
+ * The refund measure (owner 2026-11-26, refund management): unique seconds of **paid** video watched, as a share of the
+ * course's paid video. Free preview lessons are left out on both sides. The total is the larger of today's paid video
+ * and the length when the course was bought (`atPurchaseSec`), so lessons added later can only lower the share and
+ * lessons removed later never raise it. `tracking` says whether the stored playback data can be trusted:
+ * - `missing`: a paid video lesson has no known length, or the course has paid video lessons but no measurable length;
+ * - `inconsistent`: stored seconds don't match the stored ranges, or exceed the lesson's length.
+ * Either way the request goes to a person instead of an automatic decline (docs/ACCESS_AND_REFUNDS.md).
+ */
+export interface RefundConsumption extends Consumption { tracking: 'ok' | 'missing' | 'inconsistent'; currentSec: number; atPurchaseSec: number | null }
+
+export interface RefundLecture { durationSec: number; progress: { watchedSec: number; watchedRanges: unknown } | null }
+
+export function summariseRefundConsumption(lectures: RefundLecture[], atPurchaseSec: number | null): RefundConsumption {
+  const currentSec = lectures.reduce((a, l) => a + Math.max(0, l.durationSec), 0);
+  const totalSec = Math.max(currentSec, atPurchaseSec ?? 0);
+  let tracking: RefundConsumption['tracking'] = 'ok';
+  let watchedSec = 0;
+  let started = 0;
+  for (const l of lectures) {
+    if (l.durationSec <= 0) { tracking = 'missing'; continue; }
+    const p = l.progress;
+    if (!p || p.watchedSec <= 0) continue;
+    started++;
+    const ranges = parseRanges(p.watchedRanges);
+    const fromRanges = rangeSeconds(mergeRanges(ranges, l.durationSec));
+    const bad = !ranges.length || Math.abs(fromRanges - Math.min(p.watchedSec, l.durationSec)) > 2 || p.watchedSec > l.durationSec + 2;
+    if (bad && tracking === 'ok') tracking = 'inconsistent';
+    watchedSec += Math.min(l.durationSec, p.watchedSec);
+  }
+  if (lectures.length && totalSec === 0) tracking = 'missing';
+  return {
+    totalSec, watchedSec, currentSec, atPurchaseSec, tracking, lessons: lectures.length, lessonsStarted: started,
+    // One decimal, like courseConsumption: 25.0 % is within a 25 % limit, 25.1 % is not.
+    percent: totalSec ? Math.round((watchedSec / totalSec) * 1000) / 10 : 0,
+  };
+}
+
+export async function refundConsumption(prisma: PrismaService, userId: string, courseId: string, atPurchaseSec: number | null): Promise<RefundConsumption> {
+  const lectures = await prisma.lecture.findMany({
+    where: { section: { courseId }, type: 'video', isPreview: false },
+    select: { durationSec: true, progress: { where: { userId }, select: { watchedSec: true, watchedRanges: true } } },
+  });
+  return summariseRefundConsumption(lectures.map((l) => ({ durationSec: l.durationSec, progress: l.progress[0] ?? null })), atPurchaseSec);
+}
+
+/** Paid (non-preview) video length of a course now; stored on each order line when it is paid. */
+export async function paidVideoSec(prisma: Pick<PrismaService, 'lecture'>, courseId: string): Promise<number> {
+  const r = await prisma.lecture.aggregate({ where: { section: { courseId }, type: 'video', isPreview: false }, _sum: { durationSec: true } });
+  return r._sum.durationSec ?? 0;
+}

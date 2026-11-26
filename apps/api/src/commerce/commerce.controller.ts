@@ -11,6 +11,7 @@ import { CommerceService } from './commerce.service';
 import { ConnectService } from './connect.service';
 import { FinanceService } from '../admin/finance.service';
 import { RefundsService } from './refunds.service';
+import { RefundPolicyService } from './refund-policy.service';
 import { StripeService } from './stripe.service';
 import { WebhooksService } from './webhooks.service';
 
@@ -32,7 +33,15 @@ export class CommerceController {
     private readonly connect: ConnectService,
     private readonly refunds: RefundsService,
     private readonly finance: FinanceService,
+    private readonly refundPolicy: RefundPolicyService,
   ) {}
+
+  /** The refund policy in force (public pages, course page, checkout) and the dates of earlier versions. */
+  @Public()
+  @Get('refund-policy')
+  publicRefundPolicy() {
+    return this.refundPolicy.publicPolicy();
+  }
 
   @Get('cart')
   cart(@ActorCtx() a: Actor) {

@@ -150,6 +150,7 @@ model User {
   reviews            Review[]
   certificates       Certificate[]
   pathFollows        CareerPathFollow[]
+  notifications      Notification[]
   quizAttempts       QuizAttempt[]
   auditLogs          AuditLog[]
 
@@ -549,6 +550,9 @@ model Order {
   termsVersion             String?
   termsAcceptedAt          DateTime?
   termsAcceptedIp          String?
+  /// Refund policy version in force when the order was paid (docs/ACCESS_AND_REFUNDS.md › Policy versions).
+  refundPolicyId           String?
+  refundPolicy             RefundPolicy?   @relation(fields: [refundPolicyId], references: [id])
   disputes                Dispute[]
   refundRequests           RefundRequest[]
   createdAt                DateTime        @default(now())
@@ -592,6 +596,9 @@ model OrderLine {
   @@index([orderId])
   @@index([instructorId])
   @@map("order_lines")
+  /// Length of the course's paid (non-preview) video when bought: the refund measure uses the larger of this and
+  /// today's length, so lessons removed later never make it harsher (docs/ACCESS_AND_REFUNDS.md › Consumption).
+  paidVideoSecAtPurchase Int?
 }
 
 model Enrollment {
@@ -753,6 +760,17 @@ model RefundRequest {
   reviewRequestedAt DateTime?
   reviewNote     String?
   processedAt    DateTime?
+  /// Refund management (owner 2026-11-26): payment state from Stripe (none | processing | succeeded | failed); the
+  /// student is told "refunded" only once Stripe confirms. `investigation`: tracking data missing or inconsistent, so a
+  /// person decides instead of the automatic rules. `message`: the exact decision text the student was shown.
+  paymentStatus  String    @default("none")
+  stripeRefundId String?
+  paymentError   String?
+  investigation  Boolean   @default(false)
+  message        String?
+  policyVersion  Int?
+  /// A Super Admin overturned an automatic decision (reason in decisionNote, audited).
+  override       Boolean   @default(false)
 }
 
 /// An instructor's own sale on one course: a fixed sale price between startsAt and endsAt (UTC). Never stored on the
@@ -1288,4 +1306,65 @@ model CareerPathFollow {
   @@id([userId, pathId])
   @@index([pathId])
   @@map("career_path_follows")
+}
+
+// ---------------- Refund management (owner 2026-11-26; docs/ACCESS_AND_REFUNDS.md) ----------------
+
+/// A version of the refund policy. The newest with effectiveFrom <= now is in force; every paid order keeps the version
+/// it was bought under (orders.refundPolicyId), and a later, more generous version also applies to it, never a stricter one.
+model RefundPolicy {
+  id                 String   @id @default(uuid())
+  version            Int      @unique
+  windowDays         Int
+  maxWatchedPercent  Float
+  /// Decide requests automatically from the facts; off = every request waits for a person.
+  autoCheck          Boolean  @default(true)
+  /// Decline requests that break a rule automatically; off = they wait for a person.
+  autoReject         Boolean  @default(true)
+  /// Refund eligible requests at once; off = they wait for a person (manual approval).
+  autoApprove        Boolean  @default(true)
+  /// A Super Admin may approve exceptions (overturn an automatic decline).
+  allowExceptions    Boolean  @default(true)
+  selfServicePerYear Int      @default(3)
+  /// Optional extra paragraph per notification: { submitted?, approved?, declined?, processed? }.
+  messages           Json     @default("{}")
+  note               String?
+  effectiveFrom      DateTime @default(now())
+  createdById        String?
+  createdAt          DateTime @default(now())
+  orders             Order[]
+
+  @@index([effectiveFrom])
+  @@map("refund_policies")
+}
+
+/// A study material download (lesson file or course package file): shown to the student and to admins on refund
+/// requests; it never changes the refund measure (unique paid video watched).
+model ResourceDownload {
+  id               String   @id @default(uuid())
+  userId           String
+  courseId         String
+  resourceId       String?
+  courseResourceId String?
+  title            String
+  at               DateTime @default(now())
+
+  @@index([userId, courseId, at])
+  @@map("resource_downloads")
+}
+
+/// In-platform notifications (bell in the header and studios). Emails are sent separately through the queue.
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

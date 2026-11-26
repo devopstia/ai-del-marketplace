@@ -4,7 +4,7 @@ import type { Prisma } from '../generated/prisma/client';
 import type { CourseStatus, OrderStatus, Role, UserStatus } from '../generated/prisma/enums';
 import { AuditService } from '../common/audit.service';
 import { Actor, hasRole } from '../common/auth-context';
-import { badRequest, conflict, forbidden, notFound } from '../common/errors';
+import { AppError, badRequest, conflict, forbidden, notFound } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { SettingsService } from '../common/settings.service';
 import { slugify } from '../common/util';
@@ -397,8 +397,10 @@ export class AdminService {
         throw badRequest('Some order lines do not belong to this order', 'invalid_line', [{ field: 'lineIds', message: 'Choose lines of this order' }]);
       }
     }
-    await this.refunds.refund(orderId, input.lineIds, input.reason, { id: a.user.id, ip: a.ip });
-    return this.order(orderId);
+    const r = await this.refunds.refund(orderId, input.lineIds, input.reason, { id: a.user.id, ip: a.ip });
+    // The provider decides: failed → the admin sees why; processing → the lines are refunded when Stripe confirms.
+    if (r.state === 'failed') throw new AppError(502, 'refund_failed', `The payment provider couldn’t process the refund: ${r.error ?? 'unknown error'}. Nothing was changed.`);
+    return { ...(await this.order(orderId)), refundState: r.state };
   }
 
   // ---------- reviews moderation ----------

@@ -14,8 +14,10 @@ import { Price, SaleTag } from "./CourseViews";
 import { CourseCover } from "./CourseCover";
 import { PreviewButton } from "./PreviewContext";
 import { PaymentsClosed, usePaymentsMode } from "@/components/TestModeNotice";
+import { refundRule, useRefundPolicy } from "@/lib/refund-policy";
 
 export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail; firstPreviewId?: string }) {
+  const refundPolicy = useRefundPolicy();
   const { me, loading: authLoading, refreshCart } = useAuth();
   const payMode = usePaymentsMode();
   const toast = useToast();
@@ -120,7 +122,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
               </button>
             </div>}
             <p className="mt-3 text-center text-xs text-muted">{!free && payMode === "off" ? "" : "Secure checkout with Stripe."}{free ? "" : " 12 months of access, not lifetime."}</p>
-            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5 shrink-0" aria-hidden="true" /><span>Refund within 14 days if you’ve watched 25% or less <span className="whitespace-nowrap">· <Link href="/policies/access-and-refunds" className="link">Policy</Link></span></span></p> : null}
+            {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5 shrink-0" aria-hidden="true" /><span>{refundPolicy ? `Refund ${refundRule(refundPolicy)} ` : "Refunds: "}<span className="whitespace-nowrap">· <Link href="/policies/access-and-refunds" className="link">Policy</Link></span></span></p> : null}
           </>
         )}
         <h3 className="mt-6 font-display text-sm font-bold text-ink">This course includes</h3>

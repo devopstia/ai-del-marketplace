@@ -210,6 +210,22 @@ export interface LearningItem {
   certificateCode?: string | null;
   /** One-year access (owner 2026-11-25). Null for free courses and grants without an end date. */
   access?: { state: "active" | "expiring" | "expired"; purchasedAt: string | null; expiresAt: string | null; daysLeft: number | null; canRenew: boolean } | null;
+  /** Refund position without asking (owner 2026-11-26). Null for free courses and grants. */
+  refund?: CourseRefund | null;
+}
+
+export interface CourseRefund {
+  state: "eligible" | "review" | "not_eligible" | "requested" | "refunded";
+  orderId: string;
+  purchasedAt: string | null;
+  deadline: string | null;
+  daysLeft: number | null;
+  watchedPercent: number;
+  maxWatchedPercent: number;
+  windowDays: number;
+  reasons: string[];
+  message: string;
+  policyVersion: number;
 }
 
 export interface Playback {

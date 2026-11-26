@@ -10,6 +10,7 @@ import { Markdown } from "@/components/Markdown";
 import { Curriculum } from "@/components/Curriculum";
 import { PreviewProvider } from "@/components/PreviewContext";
 import { CourseFaq, courseFaqItems } from "@/components/CourseFaq";
+import { getRefundPolicy } from "@/lib/refund-policy-server";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbLd, courseLd, faqLd, pageMeta, plainText, topicPath } from "@/lib/seo";
 import { ProgramNote } from "@/components/promo/FullProgram";
@@ -31,6 +32,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const c = await getCourse(slug);
   if (!c) notFound();
+  const policy = await getRefundPolicy();
   const reviews = await getReviews(slug, { ratingAvg: c.ratingAvg, ratingCount: c.ratingCount });
   const lecturePreviews = c.sections.flatMap((s) => s.lectures).filter((l) => l.isPreview && l.type === "video");
   const previews = c.hasPromo ? [{ id: "promo", title: "Course trailer", type: "video" as const, durationSec: 0, isPreview: true }, ...lecturePreviews] : lecturePreviews;
@@ -42,7 +44,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
     <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews}>
       <JsonLd data={courseLd(c)} />
       <JsonLd data={breadcrumbLd(crumbs)} />
-      <JsonLd data={faqLd(courseFaqItems(c))} />
+      <JsonLd data={faqLd(courseFaqItems(c, policy))} />
       <section className="bg-stage text-white">
         <div className="container-x py-10 md:py-14">
           <div className="lg:max-w-[calc(100%-420px)]">
@@ -123,7 +125,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             </div>
           </section>
 
-          <CourseFaq c={c} />
+          <CourseFaq c={c} policy={policy} />
 
           <div className="mt-10 max-w-2xl"><ProgramNote placement="course-page" /></div>
 

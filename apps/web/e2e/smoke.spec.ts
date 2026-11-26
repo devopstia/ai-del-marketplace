@@ -152,11 +152,15 @@ test.describe.serial("learner buys and studies a course", () => {
     await page.goto((await receipt.getAttribute("href"))!);
     await expect(page.getByRole("heading", { name: "Receipt" })).toBeVisible();
     const panel = page.getByTestId("refund-panel");
-    await expect(panel).toContainText("within 14 days");
+    // The numbers come from the refund policy in force (Super Admin › Refunds › Policy).
+    await expect(panel).toContainText(/within \d+ days/);
+    await expect(panel).toContainText(/Policy version \d+/);
     await panel.getByRole("checkbox").first().check();
     await panel.getByTestId("request-refund").click();
     await page.getByTestId("confirm-learner-refund").click();
-    await expect(page.getByText(/Refund issued/)).toBeVisible();
+    // Test payments confirm at once; the student is told "complete" only after the provider confirms.
+    await expect(page.getByText(/Refund complete/)).toBeVisible();
+    await expect(panel.getByTestId("refund-status").first()).toHaveText("Refunded");
   });
 });
 
@@ -477,7 +481,8 @@ test("12 months of access is disclosed before paying, never lifetime", async ({ 
   expect(faq ?? "").not.toMatch(/for life|lifetime|less than 25/i);
   await page.goto("/policies/access-and-refunds");
   await expect(page.getByTestId("policy")).toContainText("12 months from the day you buy it");
-  await expect(page.getByTestId("policy")).toContainText("25% or less");
+  await expect(page.getByTestId("policy")).toContainText(/\d+(\.\d)?% or less/);
+  await expect(page.getByTestId("policy-versions")).toContainText("In force");
 });
 
 
@@ -732,13 +737,18 @@ test.describe("admin screens: refunds, users and roles, review filters", () => {
     await expect(page.getByRole("heading", { name: "Refunds", exact: true })).toBeVisible();
     const tabs = page.getByRole("group", { name: "Filter requests" }).getByRole("button");
     await expect(tabs.first()).toHaveAttribute("aria-pressed", "true");
-    for (const name of ["All", "Refunded automatically", "Approved", "Declined by policy", "Declined after review", "Needs action"]) {
+    for (const name of ["All", "Pending", "Needs investigation", "Automatically rejected", "Automatically approved", "Manually approved", "Manually rejected", "Refunded", "Processing", "Failed refunds", "Needs action"]) {
       const tab = tabs.filter({ hasText: new RegExp(`^${name}`) });
       await tab.click();
       await expect(tab).toHaveAttribute("aria-pressed", "true");
       // a list or the empty state, never an error
       await expect(page.getByTestId("refund-list").or(page.getByText(/^(Nothing waiting|No requests here)$/))).toBeVisible();
     }
+    // Policy settings: the rules in force and the version history (owner 2026-11-26).
+    await page.getByTestId("refunds-tab-policy").click();
+    await expect(page.getByTestId("refund-policy")).toBeVisible();
+    await expect(page.getByTestId("rp-days")).toHaveValue(/^\d+$/);
+    await expect(page.getByTestId("rp-version-list")).toContainText("In force");
   });
 
   test("Admin › Users and roles: search, open a user and see the account history", async ({ page }) => {

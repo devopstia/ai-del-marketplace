@@ -58,7 +58,7 @@ describe('partial refunds', () => {
     const { db, state } = fakeDb();
     const audit = { log: jest.fn() };
     const payouts = { clawback: jest.fn() };
-    const refunds = new RefundsService(db, audit as any, { client: {} } as any, payouts as any);
+    const refunds = new RefundsService(db, audit as any, { client: {} } as any, payouts as any, {} as any);
     return { refunds, db, state, audit, payouts };
   }
 
@@ -103,5 +103,65 @@ describe('partial refunds', () => {
     const actor = { user: { id: 'admin', email: '', name: '', roles: ['admin' as const] }, ip: null };
     await expect(admin.refund(actor, 'o1', { lineIds: ['a', 'zzz'] })).rejects.toMatchObject({ code: 'invalid_line' });
     expect(refunds.refund).not.toHaveBeenCalled();
+  });
+});
+
+describe('refund payments are reported only once the provider confirms (owner 2026-11-26)', () => {
+  function build(stripeStatus: 'succeeded' | 'pending' | 'failed' | 'throws') {
+    const { db, state } = fakeDb();
+    state.order.provider = 'stripe';
+    (state.order as any).stripePaymentIntentId = 'pi_1';
+    const requests: any[] = [{ id: 'rq1', orderId: 'o1', userId: 'buyer', lineIds: ['a'], status: 'auto_approved', paymentStatus: 'processing', stripeRefundId: null }];
+    db.refundRequest = {
+      findUniqueOrThrow: jest.fn(async ({ where }: any) => requests.find((r) => r.id === where.id)),
+      findUnique: jest.fn(async () => null),
+      findMany: jest.fn(async ({ where }: any) => requests.filter((r) => r.stripeRefundId === where.stripeRefundId && r.paymentStatus === where.paymentStatus)),
+      update: jest.fn(async ({ where, data }: any) => Object.assign(requests.find((r) => r.id === where.id), data)),
+      updateMany: jest.fn(async ({ where, data }: any) => {
+        const rows = requests.filter((r) => r.id === where.id && r.paymentStatus === where.paymentStatus);
+        rows.forEach((r) => Object.assign(r, data));
+        return { count: rows.length };
+      }),
+    };
+    const create = jest.fn(async () => {
+      if (stripeStatus === 'throws') throw new Error('card_declined sk_test_123abc');
+      return { id: 're_1', status: stripeStatus, failure_reason: stripeStatus === 'failed' ? 'expired_or_canceled_card' : null };
+    });
+    const audit = { log: jest.fn() };
+    const refunds = new RefundsService(db, audit as any, { client: { refunds: { create } } } as any, { clawback: jest.fn() } as any, { current: jest.fn(async () => ({ messages: {} })) } as any);
+    return { refunds, state, requests, create, audit };
+  }
+
+  it('succeeded at once: lines refunded, request succeeded', async () => {
+    const { refunds, state, requests } = build('succeeded');
+    expect(await refunds.pay('rq1', { id: 'buyer', ip: null }, 'self-service')).toBe('succeeded');
+    expect(state.lines[0]!.refundedAt).toBeInstanceOf(Date);
+    expect(requests[0]).toMatchObject({ paymentStatus: 'succeeded', stripeRefundId: 're_1' });
+  });
+
+  it('pending: nothing refunded locally until the webhook confirms; then applied once', async () => {
+    const { refunds, state, requests } = build('pending');
+    expect(await refunds.pay('rq1', { id: 'buyer', ip: null }, 'self-service')).toBe('processing');
+    expect(state.lines[0]!.refundedAt).toBeNull();
+    expect(requests[0].paymentStatus).toBe('processing');
+    await refunds.onStripeRefund({ id: 're_1', status: 'succeeded', metadata: { orderId: 'o1', lineIds: 'a' } } as any);
+    expect(state.lines[0]!.refundedAt).toBeInstanceOf(Date);
+    expect(requests[0].paymentStatus).toBe('succeeded');
+  });
+
+  it('provider failure: nothing refunded, the request is marked failed with a safe error', async () => {
+    const { refunds, state, requests, audit } = build('throws');
+    expect(await refunds.pay('rq1', { id: 'buyer', ip: null }, 'self-service')).toBe('failed');
+    expect(state.lines[0]!.refundedAt).toBeNull();
+    expect(requests[0].paymentStatus).toBe('failed');
+    expect(requests[0].paymentError).not.toContain('sk_test');
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'refund.payment_failed' }));
+  });
+
+  it('a failed refund event marks the request failed', async () => {
+    const { refunds, requests } = build('pending');
+    await refunds.pay('rq1', { id: 'buyer', ip: null }, 'self-service');
+    await refunds.onStripeRefund({ id: 're_1', status: 'failed', failure_reason: 'lost_or_stolen_card', metadata: { orderId: 'o1', lineIds: 'a' } } as any);
+    expect(requests[0]).toMatchObject({ paymentStatus: 'failed', paymentError: 'lost_or_stolen_card' });
   });
 });

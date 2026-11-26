@@ -7,6 +7,7 @@ import { LoopMark } from "../Logo";
 import { StackTable } from "../StackTable";
 import { useOverlay } from "@/lib/useOverlay";
 import { ThemeToggle } from "../ThemeToggle";
+import { NotificationBell } from "../NotificationBell";
 import { useAuth } from "../AuthProvider";
 import { Avatar } from "../Avatar";
 import { useToast } from "../Toast";
@@ -147,6 +148,7 @@ export function AppShell({ studio, nav, children, banner }: { studio: StudioKey;
             </nav>
             <SearchButton />
             <Link href="/" className="btn btn-ghost btn-sm max-sm:!px-2" data-testid="topbar-marketplace" aria-label="Back to marketplace"><Store className="size-4" /><span className="max-sm:hidden">Marketplace</span></Link>
+            <NotificationBell />
             <ThemeToggle />
           </header>
           {banner}

@@ -9,16 +9,18 @@ import type { Order } from "@/lib/types";
 import { Empty, Skeleton } from "@/components/Empty";
 import { OrderStatus } from "@/components/StatusBadge";
 import { PageHead } from "@/components/shell/AppShell";
+import { refundRule, useRefundPolicy } from "@/lib/refund-policy";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const policy = useRefundPolicy();
   useEffect(() => {
     api("/orders").then((r) => setOrders(list(r, "orders").map(toOrder))).catch((e) => setErr(errMsg(e)));
   }, []);
   return (
     <div className="max-w-[1600px]">
-      <PageHead title="Purchase history" sub="Every order with its receipt. Refund requests start from a receipt." />
+      <PageHead title="Purchase history" sub={`Every order with its receipt. Refunds: ${refundRule(policy, true)}; each purchase keeps the policy version it was bought under. Requests start from a receipt.`} />
       {err ? <p className="mt-6 text-rose">{err}</p> : null}
       {!orders && !err ? <Skeleton className="mt-8 h-40" /> : null}
       {orders && !orders.length ? <div className="mt-8"><Empty icon={Receipt} title="No orders yet" body="Receipts for every course you buy are kept here." href="/courses" cta="Browse courses" /></div> : null}

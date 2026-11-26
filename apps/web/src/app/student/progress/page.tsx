@@ -10,6 +10,7 @@ import { LoopMeter } from "@/components/LoopMeter";
 import { Empty, Skeleton } from "@/components/Empty";
 import { DataTable, Kpis, PageHead } from "@/components/shell/AppShell";
 import { CertificateAction, resumeHref } from "@/components/student/MyCourses";
+import { RefundLine } from "@/components/student/RefundLine";
 
 /** Lessons completed per course, completion and overall progress (from the API, never estimated). */
 export default function LearningProgress() {
@@ -21,7 +22,7 @@ export default function LearningProgress() {
   const issue = (slug: string) => (code: string) => setItems((xs) => xs?.map((x) => (x.course.slug === slug ? { ...x, certificateCode: code } : x)) ?? null);
   return (
     <div className="max-w-[1600px]">
-      <PageHead title="Learning progress" sub="Completed lessons and completion for every course you are enrolled in." />
+      <PageHead title="Learning progress" sub="Completed lessons, video watched and your refund position for every course you are enrolled in. Open a course for the full report." />
       {err ? <p className="text-rose">{err}</p> : null}
       {!items && !err ? <Skeleton className="h-64" /> : null}
       {items && !items.length ? <Empty icon={BookOpen} title="No courses yet" body="Your progress appears here once you enrol in a course." href="/courses" cta="Browse courses" /> : null}
@@ -34,15 +35,16 @@ export default function LearningProgress() {
             { label: "Overall progress", value: `${lessons ? Math.round((doneLessons / lessons) * 100) : 0}%`, note: "Lessons completed across all courses" },
           ]} />
           <div className="mt-8">
-            <DataTable head={["Course", "Lessons", "Progress", "Last studied", "Certificate", ""]} min={760}>
+            <DataTable head={["Course", "Lessons", "Progress", "Last studied", "Refund", "Certificate", ""]} min={900}>
               {items.map((i) => (
                 <tr key={i.course.slug} data-testid="progress-row">
-                  <td className="px-4 py-3.5"><Link href={`/courses/${i.course.slug}`} className="font-bold hover:text-violet">{i.course.title}</Link><p className="text-xs text-muted">{i.course.instructor.name}{i.course.totalDurationSec ? `, ${hours(i.course.totalDurationSec)}` : ""}</p></td>
+                  <td className="px-4 py-3.5"><Link href={`/student/progress/${i.course.slug}`} className="font-bold hover:text-violet" data-testid="progress-details">{i.course.title}</Link><p className="text-xs text-muted">{i.course.instructor.name}{i.course.totalDurationSec ? `, ${hours(i.course.totalDurationSec)}` : ""}</p></td>
                   <td className="px-4 py-3.5 tabular-nums">{i.completedLectures ?? 0} of {i.totalLectures ?? 0}</td>
                   <td className="px-4 py-3.5"><LoopMeter value={i.progressPct} size="sm" /></td>
                   <td className="px-4 py-3.5 text-ink-2">{i.lastActivityAt ? date(i.lastActivityAt) : "Not started"}</td>
+                  <td className="max-w-[16rem] px-4 py-3.5">{i.refund ? <RefundLine r={i.refund} compact /> : <span className="text-xs text-muted">Not a purchase</span>}</td>
                   <td className="px-4 py-3.5"><CertificateAction item={i} onIssued={issue(i.course.slug)} />{i.progressPct < 100 && !i.certificateCode ? <span className="text-xs text-muted">At 100%</span> : null}</td>
-                  <td className="px-4 py-3.5 text-right"><Link href={resumeHref(i)} className="btn btn-ghost btn-sm">{i.progressPct >= 100 ? "Review" : "Continue"}</Link></td>
+                  <td className="px-4 py-3.5 text-right"><span className="inline-flex gap-1"><Link href={`/student/progress/${i.course.slug}`} className="btn btn-ghost btn-sm">Report</Link><Link href={resumeHref(i)} className="btn btn-ghost btn-sm">{i.progressPct >= 100 ? "Review" : "Continue"}</Link></span></td>
                 </tr>
               ))}
             </DataTable>
