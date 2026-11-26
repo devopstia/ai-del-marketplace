@@ -1,11 +1,25 @@
 {
   "sections": {
-    "Getting started: n8n and Mattermost": "ba2d4f3e-c896-4394-bd5d-7888f9926a35"
+    "Getting started: n8n and Mattermost": "ba2d4f3e-c896-4394-bd5d-7888f9926a35",
+    "Core concepts and your first real automations": "affcc0f7-2b3f-4c38-98d2-f1d1dfdea2b0",
+    "DevOps automations in practice": "259c6b99-0c19-4314-8ac2-5db3da6ca096",
+    "Advanced patterns and production": "37e43a1f-6b71-493a-ae7d-b464930af3b9"
   },
   "lessons": {
     "01-n1-n8n-mattermost-explained": "84f74d44-c780-4b94-8eb3-44583a5eb62c",
     "02-n2-deploy-n8n-mattermost-live": "fdb45ecc-61ca-4813-bf3f-363681899ca7",
-    "03-n3-mattermost-webhook-live": "355a5331-391b-43b2-9e6f-842c2e82fcec"
+    "03-n3-mattermost-webhook-live": "355a5331-391b-43b2-9e6f-842c2e82fcec",
+    "04-n4-n8n-tour-first-workflow-live": "a82b36af-a062-4ab9-81b6-43db42c9d152",
+    "05-nt1-n8n-words": "fc4ac0f3-ed0f-4c25-afa5-00158a207080",
+    "06-n6-n8n-deploy-notifications-live": "18f50dfa-fed7-4a86-84ba-6ad30a3db93b",
+    "07-n5-n8n-errors-retries-debugging-live": "f42e687e-86ea-4873-aad6-3bf49f227871",
+    "08-nt2-automation-chatops-words": "cffdcee8-83bb-469e-a5da-1eb0896fddb1",
+    "10-n10-n8n-kubernetes-alerts-live": "81019577-b7d8-49ad-8208-680d3d4ad182",
+    "12-n12-n8n-incident-management-live": "ccc4adc3-83cb-4729-9f22-7fcdf814311e",
+    "13-n13-n8n-scheduled-reports-live": "97b9e548-32b1-476c-8498-6a63917a94cb",
+    "15-n15-n8n-advanced-design-live": "f94346a4-36f8-4188-a065-60a6535bd859",
+    "16-n16-n8n-production-live": "7991e6dd-7da2-41a6-985a-5289be01dff9",
+    "17-n17-n8n-ai-assisted-live": "019737ec-3658-4cbe-8ca7-ff90b7d7abd3"
   },
   "courseId": "cc53b627-6390-44e1-97c6-577eaa88fd9d"
 }

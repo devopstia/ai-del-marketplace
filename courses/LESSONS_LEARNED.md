@@ -19,3 +19,10 @@ Read before every upload; add to it after every upload. Newest first.
 - **Staging has no sign-in codes**, so the admin can issue the agent key through the API; keep the key in the
   scratchpad (`umask 077`) and delete it when done.
 - Deploying to staging needs the owner's explicit go-ahead in this environment (the permission check blocks it otherwise).
+- **Idempotency confirmed:** the second run uploaded 0 files, reused 14, added only the 14 captions, 0 issues.
+- **New courses default to $0 (free).** Ask for the price, or put `priceCents` in the plan before publishing.
+- **QA as the Super Admin in DEL Studio** (cookie `act_as=platform`) sees a draft in the player; admins have access to
+  every lesson, so all videos and downloads can be checked before publishing. Progress tracking and the public page
+  need a published course and a student enrolment.
+- Playwright sign-in on staging: wait for the URL with `waitUntil: "commit"` (the dashboard keeps loading).
+- Revoke the agent key when the course is done (Super Admin › AI agents) and delete the scratchpad copy.
