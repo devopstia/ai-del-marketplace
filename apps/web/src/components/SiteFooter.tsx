@@ -9,7 +9,9 @@ const cols: [string, [string, string][]][] = [
   ["Your account", [["Student Studio", "/student"], ["My courses", "/student/courses"], ["Purchase history", "/student/purchases"], ["Contact us", "/contact"], ["Verify a certificate", "/certificates/verify"], ["Platform videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
 ];
 
-export function SiteFooter() {
+/** `careerPaths`: show the Career paths link (only while one is published; docs/CAREER_PATHS.md). */
+export function SiteFooter({ careerPaths = false }: { careerPaths?: boolean }) {
+  const columns = careerPaths ? cols.map(([t, links]) => [t, t === "Learn" ? [links[0]!, ["Career paths", "/paths"], ...links.slice(1)] : links] as [string, [string, string][]]) : cols;
   return (
     <footer className="mt-24 border-t border-line bg-surface">
       <div className="container-x grid gap-10 py-14 md:grid-cols-[1.3fr_repeat(3,1fr)]">
@@ -21,7 +23,7 @@ export function SiteFooter() {
           <p className="mt-4 text-sm text-muted">Hands-on AI and DevOps courses from engineers who run these systems in production. Every lesson ships with a lab you can run yourself.</p>
           <SocialLinks className="-ml-2 mt-4" />
         </div>
-        {cols.map(([title, links]) => (
+        {columns.map(([title, links]) => (
           <div key={title}>
             <h2 className="font-display text-sm font-bold text-ink">{title}</h2>
             <ul className="mt-3 space-y-2">

@@ -49,6 +49,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (typeof c.slug === "string" && Number(c.courseCount ?? 0) > 0) out.push({ url: u(topicPath(c.slug)), changeFrequency: "weekly", priority: 0.8 });
   }
 
+  // Career paths (docs/CAREER_PATHS.md): the list page only when at least one path is published.
+  const paths = await get("/paths");
+  const pathRows = Array.isArray(paths) ? paths : paths && Array.isArray(paths.items) ? (paths.items as Row[]) : [];
+  if (pathRows.length) out.push({ url: u("/paths"), changeFrequency: "weekly", priority: 0.7 });
+  for (const p of pathRows) {
+    if (typeof p.slug === "string") out.push({ url: u(`/paths/${encodeURIComponent(p.slug)}`), lastModified: date(p.updatedAt), changeFrequency: "weekly", priority: 0.7 });
+  }
+
   const help = await get("/help/videos");
   const helpCats = help && !Array.isArray(help) && Array.isArray(help.categories) ? (help.categories as Row[]) : [];
   for (const c of helpCats) {

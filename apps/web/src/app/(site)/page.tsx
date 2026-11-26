@@ -5,6 +5,8 @@ import { InstructorShowcase, TeachInvite } from "@/components/home/InstructorSho
 import { CoursePath } from "@/components/home/CoursePath";
 import { HeroLoop } from "@/components/HeroLoop";
 import { FullProgram } from "@/components/promo/FullProgram";
+import { PathsBand } from "@/components/paths/PathsBand";
+import { getPaths } from "@/lib/paths-server";
 import { CourseBadges, CourseTile, MIN_STUDENTS_SHOWN, Price } from "@/components/CourseViews";
 import { CourseCover, coverSeeds } from "@/components/CourseCover";
 import { categoryIcon } from "@/components/CategoryIcon";
@@ -75,12 +77,13 @@ function RankedRow({ c, rank, fill = false }: { c: CourseCard; rank?: number; fi
 }
 
 export default async function Home() {
-  const [cats, popular, newest, rated, instructors] = await Promise.all([
+  const [cats, popular, newest, rated, instructors, paths] = await Promise.all([
     getCategories(),
     getCourses({ sort: "popular", pageSize: 5 }),
     getCourses({ sort: "newest", pageSize: 8 }),
     getCourses({ sort: "rating", pageSize: 3 }),
     getFeaturedInstructors(3),
+    getPaths(),
   ]);
   const all = [...popular.items, ...newest.items, ...rated.items];
   const featured = rated.items[0] ?? popular.items[0];
@@ -211,6 +214,8 @@ export default async function Home() {
           </div>
         </section>
       ) : null}
+
+      {!offline ? <PathsBand paths={paths} /> : null}
 
       {!offline ? <FullProgram /> : null}
 

@@ -149,6 +149,7 @@ model User {
   progress           LectureProgress[]
   reviews            Review[]
   certificates       Certificate[]
+  pathFollows        CareerPathFollow[]
   quizAttempts       QuizAttempt[]
   auditLogs          AuditLog[]
 
@@ -295,6 +296,7 @@ model Course {
   reviews      Review[]
   certificates Certificate[]
   sales        CourseSale[]
+  pathSteps    CareerPathStep[]
 
   @@index([status, publishedAt])
   @@index([instructorId])
@@ -1229,4 +1231,61 @@ model ReviewReport {
   @@index([status])
   @@index([reviewId])
   @@map("review_reports")
+}
+
+// ---------------- career paths (owner 2026-11-26, idea 4; docs/CAREER_PATHS.md) ----------------
+
+/// A goal such as "DevOps engineer": an ordered list of marketplace courses with the skills each gives. Super admins
+/// write them; only published paths are public. A path never sells anything itself: each course is bought on its own.
+model CareerPath {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  title       String
+  /// One or two sentences for cards and search results.
+  summary     String    @default("")
+  /// Longer text for the path page (Markdown).
+  description String    @default("")
+  /// draft | published
+  status      String    @default("draft")
+  publishedAt DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  steps     CareerPathStep[]
+  followers CareerPathFollow[]
+
+  @@index([status])
+  @@map("career_paths")
+}
+
+model CareerPathStep {
+  id       String     @id @default(uuid())
+  pathId   String
+  path     CareerPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  position Int
+  /// Short skill names this course gives, e.g. "Docker", "Kubernetes basics".
+  skills   String[]   @default([])
+  note     String     @default("")
+
+  @@unique([pathId, courseId])
+  @@index([pathId, position])
+  @@map("career_path_steps")
+}
+
+/// A student following a path, with the study time they plan per week (for the weekly plan and finish date).
+model CareerPathFollow {
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pathId       String
+  path         CareerPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  hoursPerWeek Int        @default(5)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@id([userId, pathId])
+  @@index([pathId])
+  @@map("career_path_follows")
 }

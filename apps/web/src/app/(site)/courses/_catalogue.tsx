@@ -6,6 +6,7 @@ import { coverSeeds } from "@/components/CourseCover";
 import { AutoSubmit } from "@/components/AutoSubmit";
 import { JsonLd } from "@/components/JsonLd";
 import { qs } from "@/lib/qs";
+import { getPaths } from "@/lib/paths-server";
 import { breadcrumbLd, topicPath } from "@/lib/seo";
 import type { Category } from "@/lib/types";
 
@@ -47,7 +48,10 @@ export async function Catalogue({ sp: input, cats, topic }: { sp: SP; cats: Cate
   const sp: SP = topic ? { ...input, category: topic.slug } : input;
   const page = Math.max(1, Number(sp.page) || 1);
   const picked = pickedTopics(sp);
-  const res = await getCourses({ q: sp.q, category: picked, level: sp.level, price: sp.price, onSale: sp.onSale ? "1" : undefined, sort: sp.sort || "popular", page });
+  const [res, paths] = await Promise.all([
+    getCourses({ q: sp.q, category: picked, level: sp.level, price: sp.price, onSale: sp.onSale ? "1" : undefined, sort: sp.sort || "popular", page }),
+    getPaths(),
+  ]);
   const f = res.facets;
   const seeds = coverSeeds(res.items.map((c) => c.slug));
   const pages = Math.max(1, Math.ceil(res.total / (res.pageSize || 12)));
@@ -109,7 +113,7 @@ export async function Catalogue({ sp: input, cats, topic }: { sp: SP; cats: Cate
           <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.8rem)] font-extrabold leading-tight text-ink">{heading}</h1>
           {!res.ok ? <p className="mt-1 text-ink-2">The catalogue is unavailable right now. Refresh in a minute.</p>
             : topic ? <p className="mt-1 max-w-2xl text-ink-2">{topicIntro(topic, res.total, false)}</p>
-            : <p className="mt-1 text-ink-2">{`${res.total.toLocaleString("en-US")} ${res.total === 1 ? "course" : "courses"}`}</p>}
+            : <p className="mt-1 text-ink-2">{`${res.total.toLocaleString("en-US")} ${res.total === 1 ? "course" : "courses"}`}{paths.length ? <> · <Link href="/paths" className="link" data-testid="catalogue-paths-link">Not sure where to start? See career paths</Link></> : null}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <details className="group lg:hidden">
