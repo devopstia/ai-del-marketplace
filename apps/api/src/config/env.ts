@@ -128,5 +128,11 @@ export function resetEnvCache(): void {
 
 export const isProd = () => env().NODE_ENV === 'production';
 
+/**
+ * Sign-in without the second step: only with MFA_REQUIRED=false, and only locally or on staging (owner 2026-11-26:
+ * "please disable it in stage"). Never on production, whatever MFA_REQUIRED says.
+ */
+export const signinCodeSkipped = () => !env().MFA_REQUIRED && (!isProd() || env().DEPLOY_ENV === 'staging');
+
 /** Dev test payments are allowed only when explicitly enabled AND never in production. */
 export const devPaymentsEnabled = () => env().DEV_TEST_PAYMENTS && (env().NODE_ENV !== 'production' || env().DEPLOY_ENV === 'staging');

@@ -1,0 +1,18 @@
+import { resetEnvCache, signinCodeSkipped } from './env';
+
+describe('signinCodeSkipped (MFA_REQUIRED=false)', () => {
+  const saved = { ...process.env };
+  afterEach(() => { process.env = { ...saved }; resetEnvCache(); });
+  const at = (vars: Record<string, string>) => { Object.assign(process.env, vars); resetEnvCache(); return signinCodeSkipped(); };
+
+  it('is never skipped on production, even with MFA_REQUIRED=false', () => {
+    expect(at({ NODE_ENV: 'production', DEPLOY_ENV: 'production', MFA_REQUIRED: 'false' })).toBe(false);
+  });
+  it('is skipped on staging only when MFA_REQUIRED=false', () => {
+    expect(at({ NODE_ENV: 'production', DEPLOY_ENV: 'staging', MFA_REQUIRED: 'false' })).toBe(true);
+    expect(at({ NODE_ENV: 'production', DEPLOY_ENV: 'staging', MFA_REQUIRED: 'true' })).toBe(false);
+  });
+  it('is skipped locally with MFA_REQUIRED=false', () => {
+    expect(at({ NODE_ENV: 'development', DEPLOY_ENV: 'local', MFA_REQUIRED: 'false' })).toBe(true);
+  });
+});

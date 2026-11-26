@@ -67,6 +67,8 @@ locals {
       SEED_PASSWORD     = random_password.seed.result
       SEED_MFA_SECRET   = local.seed_mfa
       AUTH_RATE_LIMIT   = "300"
+      # Owner 2026-11-26: "please disable it in stage" (no sign-in code on staging; production ignores this switch).
+      MFA_REQUIRED      = "false"
     })
   }
   params = merge([for stack, kv in local.per_stack : { for k, v in kv : "${stack}/${k}" => v }]...)

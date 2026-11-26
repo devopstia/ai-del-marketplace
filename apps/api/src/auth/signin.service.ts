@@ -12,7 +12,7 @@ import { AppError } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { seal, sha256, unseal } from '../common/seal';
 import { randomToken } from '../common/util';
-import { env, isProd } from '../config/env';
+import { env, isProd, signinCodeSkipped } from '../config/env';
 import { allowedMethods, concurrentLimit, describeDevice, maskEmail } from './security-settings';
 import { newSecret, otpauthUrl, verifyCode } from './totp';
 
@@ -172,14 +172,14 @@ export class SignInService {
     }
     if (user.status !== 'active') throw new AppError(403, 'account_suspended', user.status === 'suspended' && user.suspendedUntil ? `This account is suspended until ${user.suspendedUntil.toUTCString()}` : 'This account is suspended');
     this.assertNotLocked(user);
-    // Local development switch (MFA_REQUIRED=false); never honoured in production.
-    const skip = !env().MFA_REQUIRED && !isProd();
+    // MFA_REQUIRED=false: local development and staging only; never honoured on production (signinCodeSkipped).
+    const skip = signinCodeSkipped();
     if (skip || (user.mfaEnabledAt && (await this.isTrusted(req, user.id)))) {
       await this.assertCanStart(user.id);
       const token = await this.createSession(user.id, ctx, { req, res, method });
       res.cookie(SESSION_COOKIE, token, sessionCookieOptions());
       await this.prisma.user.update({ where: { id: user.id }, data: { failedLogins: 0 } });
-      await this.audit.log({ actorId: user.id, action: 'auth.login', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method, ...(skip ? { mfa: 'skipped (MFA_REQUIRED=false, local only)' } : { trustedDevice: true }) } });
+      await this.audit.log({ actorId: user.id, action: 'auth.login', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { method, ...(skip ? { mfa: 'skipped (MFA_REQUIRED=false, local/staging only)' } : { trustedDevice: true }) } });
       return { done: true as const, userId: user.id, cartCourseIds: extra.cartCourseIds };
     }
     // Has an authenticator → 'verify'; without one → 'enroll'. A student or instructor allowed email codes may, on the
