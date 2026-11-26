@@ -197,8 +197,10 @@ export class CommerceService {
     const session = await this.stripe.client.checkout.sessions.create(
       {
         mode: 'payment',
-        // Staging: card only, so Stripe Link never asks testers to confirm a code (owner 2026-11-26). Production unchanged.
-        ...(env().DEPLOY_ENV === 'staging' ? { payment_method_types: ['card' as const] } : {}),
+        // Staging: no Stripe Link, so testers are never asked to confirm a Link code (owner 2026-11-26). Production unchanged.
+        // `payment_method_types` is retired for Checkout Sessions (Stripe 2026-09-30); `excluded_payment_method_types`
+        // removes one method from the Dashboard defaults (not yet in the SDK's types).
+        ...(env().DEPLOY_ENV === 'staging' ? ({ excluded_payment_method_types: ['link'] } as Record<string, unknown>) : {}),
         customer_email: user.email,
         client_reference_id: userId,
         // Stripe charges exactly the order lines (sale prices included).
