@@ -22,6 +22,11 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
 
 ## 2. Waiting on the owner (do not do these yourself)
 
+0. **Production release of `feat/improvements-2026-11-26`** (images `dac6ceaac1c1`, live on staging since 2026-11-26): the
+   owner was shown a review page (https://claude.ai/artifact/LNvmWMpUsJB1wpoWgs9hdA) and asked for "OK for production".
+   On OK: merge into `main`, tag `release-<date>-improvements`, RDS snapshot, `deploy-aws.sh release production <tag>`,
+   verify, GitHub release. Full mobile QA (64 routes × 5 viewports) was done on staging and its findings fixed.
+
 1. **Cost question (open, 2026-11-26).** The owner wrote "I don't want this now please Cost: about $52 a month". Asked which
    they mean: (1) just stop mentioning cost, (2) cut cost but keep the site up (remove staging, smaller server, budget
    alert: ~$25–30/month), (3) take the site offline, delete nothing (~$5–8/month). **No answer yet: do not stop, resize or
