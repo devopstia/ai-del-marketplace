@@ -103,11 +103,17 @@ describe('e2e: email sign-in codes and session security', () => {
     return { agent, csrf, send };
   }
   /** The next unused authenticator code for this user (codes are single use per 30 s step; ±1 step accepted). */
-  const nextCode = (u: { user: { id: string }; seed: string }) => { step[u.user.id] += 1; return codeAt(u.seed, step[u.user.id]); };
+  // A code is accepted once per account and only one step either side of now: instead of running ahead of the clock,
+  // forget the account's last used step and use the current one (as admin-portal.e2e-spec.ts does).
+  const nextCode = async (u: { user: { id: string }; seed: string }) => {
+    await prisma.user.update({ where: { id: u.user.id }, data: { mfaLastStep: null } });
+    step[u.user.id] = stepAt();
+    return codeAt(u.seed, step[u.user.id]);
+  };
   async function signInWithApp(u: { user: { id: string; email: string }; seed: string }, ua = UA_A) {
     const b = await browser(ua);
     await b.send('post', '/api/auth/login', { email: u.user.email, password: PW }).expect(200, { mfa: 'verify' });
-    await b.send('post', '/api/auth/mfa/complete', { code: nextCode(u) }).expect(200);
+    await b.send('post', '/api/auth/mfa/complete', { code: await nextCode(u) }).expect(200);
     return b;
   }
   const lastCode = (template = 'auth-email-code') => String([...sendEmail.mock.calls].reverse().find((c) => c[0]?.template === template)?.[0]?.data?.code ?? '');
@@ -172,10 +178,10 @@ describe('e2e: email sign-in codes and session security', () => {
     const sb = await signInWithApp(boss);
     const bad = { ...DEFAULT_AUTH_SETTINGS, emailOtp: { ...DEFAULT_AUTH_SETTINGS.emailOtp, roles: ['student', 'admin'] } };
     await sb.send('put', '/api/admin/auth-settings', { settings: bad, code: '000000' }).expect(401); // step-up first
-    expect((await sb.send('put', '/api/admin/auth-settings', { settings: bad, code: nextCode(boss) }).expect(400)).body.error.code).toBe('invalid_settings');
+    expect((await sb.send('put', '/api/admin/auth-settings', { settings: bad, code: await nextCode(boss) }).expect(400)).body.error.code).toBe('invalid_settings');
     // A valid change is saved, applied and audited.
     const good = { ...DEFAULT_AUTH_SETTINGS, session: { ...DEFAULT_AUTH_SETTINGS.session, inactivityMinutes: 45 } };
-    const saved = (await sb.send('put', '/api/admin/auth-settings', { settings: good, code: nextCode(boss) }).expect(200)).body;
+    const saved = (await sb.send('put', '/api/admin/auth-settings', { settings: good, code: await nextCode(boss) }).expect(200)).body;
     expect(saved.settings.session.inactivityMinutes).toBe(45);
     expect((await policy.settings()).session.inactivityMinutes).toBe(45);
     const audit = await prisma.auditLog.findFirstOrThrow({ where: { action: 'auth.security_settings_changed' }, orderBy: { at: 'desc' } });
@@ -199,7 +205,7 @@ describe('e2e: email sign-in codes and session security', () => {
     await b.send('post', '/api/auth/mfa/complete', { code: '000000' }).expect(401);
     expect((await a.agent.get('/api/auth/me').expect(200)).body.user?.email).toBe(u.user.email); // A untouched
 
-    await b.send('post', '/api/auth/mfa/complete', { code: nextCode(u) }).expect(200);
+    await b.send('post', '/api/auth/mfa/complete', { code: await nextCode(u) }).expect(200);
     const res = await a.agent.get('/api/auth/sessions').expect(401);
     expect(res.body.error.code).toBe('session_replaced');
     expect(res.body.error.message).toBe(REPLACED_MESSAGE);
@@ -232,7 +238,7 @@ describe('e2e: email sign-in codes and session security', () => {
     const a = await signInWithApp(u);
     const b = await browser(UA_B);
     await b.send('post', '/api/auth/login', { email: u.user.email, password: PW }).expect(200);
-    expect((await b.send('post', '/api/auth/mfa/complete', { code: nextCode(u) }).expect(409)).body.error.code).toBe('session_limit');
+    expect((await b.send('post', '/api/auth/mfa/complete', { code: await nextCode(u) }).expect(409)).body.error.code).toBe('session_limit');
     expect((await a.agent.get('/api/auth/me').expect(200)).body.user?.email).toBe(u.user.email);
   });
 
@@ -304,7 +310,7 @@ describe('e2e: email sign-in codes and session security', () => {
     expect(sendEmail).not.toHaveBeenCalledWith(expect.objectContaining({ template: 'security-new-device' })); // first ever
     // Same browser again (keeps its del_dev cookie): no email.
     await a.send('post', '/api/auth/login', { email: u.user.email, password: PW }).expect(200);
-    await a.send('post', '/api/auth/mfa/complete', { code: nextCode(u) }).expect(200);
+    await a.send('post', '/api/auth/mfa/complete', { code: await nextCode(u) }).expect(200);
     expect(sendEmail).not.toHaveBeenCalledWith(expect.objectContaining({ template: 'security-new-device' }));
     // A new browser: one email with the device.
     await signInWithApp(u, UA_B);

@@ -181,7 +181,7 @@ describe('e2e: super admin portal', () => {
     const until = new Date(Date.now() + 3600_000);
     const sus = (await helper.send('post', `/api/admin/people/users/${id}/status`, { status: 'suspended', reason: 'Shared their account', until: until.toISOString() }).expect(200)).body;
     expect(sus).toMatchObject({ status: 'suspended', statusReason: 'Shared their account' });
-    await target.agent.get('/api/me/courses').expect(401);
+    await target.agent.get('/api/me/learning').expect(401);
     expect((await signIn('new-target@e2e.example')).login.status).toBe(403);
     await prisma.user.update({ where: { id }, data: { suspendedUntil: new Date(Date.now() - 1000) } });
     const back = await signIn('new-target@e2e.example');
@@ -217,15 +217,15 @@ describe('e2e: super admin portal', () => {
     expect(temp.password).toMatch(/^[A-Za-z0-9-]{19}$/);
     expect((await prisma.auditLog.findFirstOrThrow({ where: { action: 'user.temporary_password_set', targetId: id } })).meta).not.toHaveProperty('password');
     const withTemp = await signIn('new-target@e2e.example', temp.password);
-    expect((await withTemp.agent.get('/api/me/courses').expect(403)).body.error.code).toBe('password_change_required');
+    expect((await withTemp.agent.get('/api/me/learning').expect(403)).body.error.code).toBe('password_change_required');
     expect((await withTemp.agent.get('/api/auth/me').expect(200)).body.user.mustChangePassword).toBe(true);
     await withTemp.send('post', '/api/auth/password', { currentPassword: temp.password, newPassword: 'My-own-pass-2026' }).expect(200);
-    await withTemp.agent.get('/api/me/courses').expect(200);
+    await withTemp.agent.get('/api/me/learning').expect(200);
 
     // Sign out everywhere.
     const revoked = (await helper.send('post', `/api/admin/people/users/${id}/sessions/revoke`).expect(200)).body;
     expect(revoked.revoked).toBeGreaterThanOrEqual(1);
-    await withTemp.agent.get('/api/me/courses').expect(401);
+    await withTemp.agent.get('/api/me/learning').expect(401);
 
     // Delete: super admin, email typed back, code; personal data gone, orders kept, can't sign in.
     const teacher = await prisma.user.create({ data: { email: 'acct-teacher@e2e.example', name: 'Teacher', passwordHash: 'x', roles: ['student', 'instructor'] } });
