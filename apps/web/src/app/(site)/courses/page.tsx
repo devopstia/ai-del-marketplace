@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getPaths } from "@/lib/paths-server";
 import { ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { getCategories, getCourses } from "@/lib/catalog";
 import { CourseResultCard } from "@/components/CourseViews";
@@ -39,9 +40,10 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const picked = (Array.isArray(sp.category) ? sp.category : sp.category ? sp.category.split(",") : []).filter(Boolean);
-  const [cats, res] = await Promise.all([
+  const [cats, res, paths] = await Promise.all([
     getCategories(),
     getCourses({ q: sp.q, category: picked, level: sp.level, price: sp.price, onSale: sp.onSale ? "1" : undefined, sort: sp.sort || "popular", page }),
+    getPaths(),
   ]);
   const f = res.facets;
   const seeds = coverSeeds(res.items.map((c) => c.slug));
@@ -91,7 +93,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-line pb-5">
         <div className="min-w-0">
           <h1 className="font-display text-[clamp(1.9rem,3.6vw,2.8rem)] font-extrabold leading-tight text-ink">{heading}</h1>
-          <p className="mt-1 text-ink-2">{res.ok ? `${res.total.toLocaleString("en-US")} ${res.total === 1 ? "course" : "courses"}` : "The catalogue is unavailable right now. Refresh in a minute."}</p>
+          <p className="mt-1 text-ink-2">{res.ok ? `${res.total.toLocaleString("en-US")} ${res.total === 1 ? "course" : "courses"}` : "The catalogue is unavailable right now. Refresh in a minute."}{paths.length ? <> · <Link href="/paths" className="link" data-testid="catalogue-paths-link">Not sure where to start? See career paths</Link></> : null}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <details className="group lg:hidden">

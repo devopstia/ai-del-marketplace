@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeDollarSign, BookOpen, ChartNoAxesColumnIncreasing, ClipboardCheck, Clapperboard, CreditCard, FolderTree, Gauge, GraduationCap,
-  Image as ImageIcon, KeyRound, Landmark, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw,
+  Image as ImageIcon, KeyRound, Landmark, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw, Route,
   ScrollText, Settings, ShieldCheck, Tag, UserPlus, UserRound, Users, Wallet,
 } from "lucide-react";
 import type { Me } from "./types";
@@ -14,13 +14,15 @@ export type NavGroup = { label?: string; items: NavItem[] };
  * The studio menus, in one place: the studio layouts draw their sidebars from these and the quick search (⌘K) lists
  * the same pages, so it never offers a page the sidebar doesn't. The API still checks every request.
  */
-export function studentNav(me: Me | null): NavGroup[] {
+export function studentNav(me: Me | null, opts: { careerPaths?: boolean } = {}): NavGroup[] {
   const instructor = !!me?.roles.includes("instructor");
   return [
     { items: [{ href: "/student", label: "Dashboard", icon: LayoutDashboard, exact: true, testId: "nav-student-dashboard" }] },
     { label: "Learning", items: [
       { href: "/student/courses", label: "My courses", icon: BookOpen, testId: "nav-my-courses" },
       { href: "/student/progress", label: "Learning progress", icon: ChartNoAxesColumnIncreasing },
+      // Only while a career path is published or followed (docs/CAREER_PATHS.md; rule 4: no menu to an empty feature).
+      ...(opts.careerPaths ? [{ href: "/student/paths", label: "Career paths", icon: Route, testId: "nav-career-paths" }] : []),
       { href: "/student/reviews", label: "Course reviews", icon: MessageSquareText },
     ] },
     { label: "Account", items: [
@@ -65,6 +67,7 @@ const adminGroups: { label?: string; items: AdminItem[] }[] = [
     { href: "/admin/review", label: "Review queue", icon: ClipboardCheck, perm: "courses.review" },
     { href: "/admin/courses", label: "Courses", icon: BookOpen, perm: "courses.review" },
     { href: "/admin/course-reviews", label: "Course reviews", icon: MessageSquareText, perm: "reviews.moderate" },
+    { href: "/admin/paths", label: "Career paths", icon: Route, perm: "content.manage" },
   ] },
   { label: "People", items: [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },

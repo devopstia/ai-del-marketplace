@@ -409,6 +409,23 @@ endpoints return **404 when `ANTHROPIC_API_KEY` is unset**; search never needs a
 | GET | `/lectures/:id/study-notes` | access, AI key | `{ status: 'ready', summary, keyPoints[], questions: [{ question, answer, atSec }], generatedAt, model }` or `{ status: 'generating' \| 'unavailable' \| 'failed' }` (poll while generating) |
 | GET | `/instructor/lectures/:id/study-notes` · POST `…/regenerate` | course owner or admin, AI key | same view; regenerate is audited |
 
+## Career paths (2026-11-26, docs/CAREER_PATHS.md)
+Only published paths are public, and only their published courses are listed. A path sells nothing: each course is
+bought on its own. Slugs `summary`, `new` and `course-options` are reserved.
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| GET | `/paths` | public | `{ items: [{ id, slug, title, summary, courseCount, totalDurationSec, totalPriceCents, currency, skills[], covers[] }] }` (empty: the web hides every entry point) |
+| GET | `/paths/:slug` | public | the same plus `description`, `steps: [{ position, skills[], note, course: <course card> }]`; 404 for drafts |
+| GET | `/me/paths` | signed in | `{ items: [<my path>], available }` (paths followed; `available` = published paths) |
+| GET | `/me/paths/summary` | signed in | `{ available, following }` (Student Studio menu) |
+| GET | `/me/paths/:slug` | signed in, following | `{ path, hoursPerWeek, progress: { coursesDone, courseCount, lecturesDone, lectureCount }, remainingPriceCents, steps: [... access: owned\|expired\|none, progress, certificateCode], plan: { remainingSec, weeks, finishOn, thisWeek: [{ lectureId, title, courseSlug, courseTitle, remainingSec }], thisWeekSec, blockedBy }, skills: [{ skill, state: done\|in_progress\|needed }] }` |
+| PUT | `/me/paths/:slug` | signed in | follow, or change `{ hoursPerWeek? (1–40) }`; returns `<my path>`; 404 for drafts |
+| DELETE | `/me/paths/:slug` | signed in | stop following (course progress stays) |
+| GET | `/admin/paths` · `/admin/paths/:id` · `/admin/paths/course-options?q=` | admin + `content.manage` | list (status, stepCount, followerCount) · editor view · published courses for the picker (max 50) |
+| POST | `/admin/paths` · PUT `/admin/paths/:id` | super_admin | `{ title (3–80), slug, summary (≤280), description (≤5000), steps: [{ courseId, skills[], note }] (≤20, no duplicates) }`; a published path must stay publishable; audited |
+| POST | `/admin/paths/:id/publish` · `/unpublish` | super_admin | publish needs a summary and ≥2 courses, all published (`too_few_steps`, `course_not_published`, `summary_required`); audited |
+| DELETE | `/admin/paths/:id` | super_admin | drafts only (409 `published`); audited |
+
 ## Access and refunds (2026-11-25, docs/ACCESS_AND_REFUNDS.md)
 | Method | Path | Who | Notes |
 |---|---|---|---|

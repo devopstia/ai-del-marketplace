@@ -112,6 +112,7 @@ describe('e2e: career paths', () => {
     // Nothing published: the public list is empty (the site hides every entry point).
     expect((await http.get('/api/paths').expect(200)).body.items).toEqual([]);
     expect((await student.agent.get('/api/me/paths').expect(200)).body).toEqual({ items: [], available: 0 });
+    expect((await student.agent.get('/api/me/paths/summary').expect(200)).body).toEqual({ available: 0, following: 0 });
 
     const body = {
       title: 'DevOps engineer', slug: 'devops-engineer', summary: 'From Linux to containers.', description: 'Start here.',
@@ -174,6 +175,7 @@ describe('e2e: career paths', () => {
     for (const l of linux.lectures) await student.send('put', `/api/lectures/${l.id}/progress`, { positionSec: 1800, completed: true }).expect(200);
     const p2 = (await student.agent.get('/api/me/paths').expect(200)).body;
     expect(p2.available).toBe(1);
+    expect((await student.agent.get('/api/me/paths/summary').expect(200)).body).toEqual({ available: 1, following: 1 });
     expect(p2.items[0].progress).toMatchObject({ coursesDone: 1, lecturesDone: 2 });
     expect(p2.items[0].skills.slice(0, 2)).toEqual([{ skill: 'Linux', state: 'done' }, { skill: 'Bash', state: 'done' }]);
     expect(p2.items[0].plan.remainingSec).toBe(7200);

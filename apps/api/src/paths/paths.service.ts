@@ -13,6 +13,8 @@ import { clampHours, cleanSkills, lectureRemaining, type PlanStep, skillMap, wee
 export const MIN_PUBLISHED_STEPS = 2;
 export const MAX_STEPS = 20;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/** Route names under /me/paths and /admin/paths. */
+const RESERVED_SLUGS = new Set(['summary', 'new', 'course-options']);
 /** Reading time for an article lesson without a length: 200 words a minute, at least a minute. */
 const articleSec = (md: string | null) => Math.max(60, Math.round(((md ?? '').split(/\s+/).filter(Boolean).length / 200) * 60));
 /** A quiz without a length: 30 seconds a question, at least a minute. */
@@ -109,6 +111,14 @@ export class PathsService {
     const p = await this.prisma.careerPath.findUnique({ where: { slug }, select: { id: true } });
     if (p) await this.prisma.careerPathFollow.deleteMany({ where: { userId, pathId: p.id } });
     return { following: false };
+  }
+
+  async mySummary(userId: string) {
+    const [available, following] = await Promise.all([
+      this.prisma.careerPath.count({ where: { status: 'published', steps: { some: { course: { status: 'published' } } } } }),
+      this.prisma.careerPathFollow.count({ where: { userId, path: { status: 'published' } } }),
+    ]);
+    return { available, following };
   }
 
   /** Paths this student follows, with real progress, the weekly plan and the skill map; plus how many are published. */
@@ -220,6 +230,7 @@ export class PathsService {
 
   private async validate(input: PathInput, id?: string) {
     if (!SLUG_RE.test(input.slug)) throw badRequest('Use lowercase letters, numbers and dashes for the link', 'invalid_slug');
+    if (RESERVED_SLUGS.has(input.slug)) throw badRequest('This link is reserved; choose another', 'invalid_slug');
     const clash = await this.prisma.careerPath.findFirst({ where: { slug: input.slug, ...(id ? { NOT: { id } } : {}) }, select: { id: true } });
     if (clash) throw conflict('Another path already uses this link', 'slug_taken');
     if (input.steps.length > MAX_STEPS) throw badRequest(`A path has at most ${MAX_STEPS} courses`, 'too_many_steps');

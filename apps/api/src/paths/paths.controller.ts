@@ -39,6 +39,9 @@ export class MyPathsController {
 
   @Get() list(@CurrentUser() u: AuthUser) { return this.svc.myPaths(u.id); }
 
+  /** Light check for the Student Studio menu: is any path published, does this student follow one. */
+  @Get('summary') summary(@CurrentUser() u: AuthUser) { return this.svc.mySummary(u.id); }
+
   @Get(':slug') one(@Param('slug') s: string, @CurrentUser() u: AuthUser) { return this.svc.myPath(u.id, s); }
 
   /** Follow a path, or change the hours per week of one already followed. */
