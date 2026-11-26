@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { Bot, ChevronDown, Loader2, RotateCcw } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
@@ -123,7 +124,11 @@ export default function AdminRefunds() {
                 {isOpen ? (
                   <div className="grid gap-5 border-t border-line bg-surface-2/40 px-4 py-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
                     <div className="min-w-0">
-                      <h3 className="text-sm font-bold text-muted">Refund analysis</h3>
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 className="text-sm font-bold text-muted">Refund analysis</h3>
+                        {/* Investigate as the student: the account dialog has "Switch to user dashboard" (docs/SUPPORT_SESSIONS_AND_AGENTS.md). */}
+                        {me?.roles.includes("super_admin") && user.id ? <Link href={`/admin/users?open=${encodeURIComponent(String(user.id))}`} className="text-sm font-bold text-violet hover:underline" data-testid="refund-open-student">Open the student&apos;s account</Link> : null}
+                      </div>
                       {facts.map((f) => (
                         <dl key={String(f.lineId)} className="mt-2 grid grid-cols-[11rem_minmax(0,1fr)] gap-x-3 gap-y-1 rounded-tile border border-line bg-surface p-3 text-sm" data-testid="refund-facts">
                           <dt className="text-muted">Course</dt><dd className="font-bold">{String(f.title)}{f.renewal ? " (renewal)" : ""}</dd>
