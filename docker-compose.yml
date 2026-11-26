@@ -42,6 +42,13 @@ x-api-env: &api-env
   PASSWORD_BREACH_CHECK: ${PASSWORD_BREACH_CHECK:-true}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   REFUND_AI_MODEL: ${REFUND_AI_MODEL:-claude-opus-5-5}
+  # AI learning features (docs/AI_LEARNING.md): hidden without ANTHROPIC_API_KEY; video search works without it.
+  LEARNING_AI_MODEL: ${LEARNING_AI_MODEL:-claude-opus-5-5}
+  LEARNING_AI_ASK_MODEL: ${LEARNING_AI_ASK_MODEL:-}
+  LEARNING_AI_ENABLED: ${LEARNING_AI_ENABLED:-true}
+  LEARNING_AI_PER_MINUTE: ${LEARNING_AI_PER_MINUTE:-5}
+  LEARNING_AI_PER_DAY: ${LEARNING_AI_PER_DAY:-30}
+  LEARNING_AI_PLATFORM_PER_DAY: ${LEARNING_AI_PLATFORM_PER_DAY:-500}
   AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-20}
   # Email (docs/EMAIL.md): locally every message lands in Mailpit (http://127.0.0.1:8025); production uses Resend.
   EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}

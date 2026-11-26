@@ -65,10 +65,10 @@ export class StorageService {
     return getSignedUrl(this.internal, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn });
   }
 
-  async head(key: string): Promise<{ size: number; contentType: string } | null> {
+  async head(key: string): Promise<{ size: number; contentType: string; etag: string | null } | null> {
     try {
       const r = await this.internal.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
-      return { size: Number(r.ContentLength ?? 0), contentType: r.ContentType ?? 'application/octet-stream' };
+      return { size: Number(r.ContentLength ?? 0), contentType: r.ContentType ?? 'application/octet-stream', etag: r.ETag ?? null };
     } catch (e: any) {
       if (e?.$metadata?.httpStatusCode === 404 || e?.name === 'NotFound') return null;
       throw e;
@@ -90,6 +90,18 @@ export class StorageService {
     try {
       const r = await this.internal.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
       return { body: r.Body as Readable, contentType: r.ContentType ?? 'application/octet-stream', size: Number(r.ContentLength ?? 0) };
+    } catch (e: any) {
+      if (e?.$metadata?.httpStatusCode === 404 || e?.name === 'NoSuchKey') return null;
+      throw e;
+    }
+  }
+
+  /** A small text object (captions), or null when it doesn't exist. Refuses objects larger than maxBytes. */
+  async getText(key: string, maxBytes = 5 * 1024 * 1024): Promise<{ text: string; etag: string | null } | null> {
+    try {
+      const r = await this.internal.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+      if (Number(r.ContentLength ?? 0) > maxBytes) throw new Error(`object too large (${r.ContentLength} bytes)`);
+      return { text: (await r.Body?.transformToString('utf-8')) ?? '', etag: r.ETag ?? null };
     } catch (e: any) {
       if (e?.$metadata?.httpStatusCode === 404 || e?.name === 'NoSuchKey') return null;
       throw e;

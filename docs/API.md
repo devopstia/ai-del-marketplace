@@ -398,6 +398,17 @@ Details: docs/SUPPORT.md, docs/CONTENT_PROTECTION.md, docs/HELP_VIDEOS.md.
 | POST | `/auth/identities/:id/unlink` | signed in | needs a code; not the last way in |
 | POST | `/admin/users/:id/mfa/reset` | super_admin | never one's own; audited |
 
+## AI learning (2026-11-27, docs/AI_LEARNING.md)
+Access = an active enrolment, the course owner or an admin (checked in `StudyService`). The assistant and notes
+endpoints return **404 when `ANTHROPIC_API_KEY` is unset**; search never needs a key.
+| Method | Path | Who | Notes |
+|---|---|---|---|
+| GET | `/me/courses/:slug` | access | adds `study: { search, assistant, notes }` (which tabs the player shows) |
+| GET | `/me/courses/:slug/search?q=` | access | spoken words in the course's videos → `{ query, items: [{ lectureId, lectureTitle, sectionTitle, startSec, endSec, parts: [{ text, match }] }] }` (max 30; 60/min) |
+| POST | `/me/courses/:slug/ask` | access, AI key | `{ question (3–500), lectureId?, history?: [{ role, text }] (≤6) }` → `{ covered, answer (with [S1]/[L2] markers), citations: [{ ref, lectureId, lectureTitle, startSec }], remainingToday }`; `429 rate_limited` with `details.retryAfterSec` |
+| GET | `/lectures/:id/study-notes` | access, AI key | `{ status: 'ready', summary, keyPoints[], questions: [{ question, answer, atSec }], generatedAt, model }` or `{ status: 'generating' \| 'unavailable' \| 'failed' }` (poll while generating) |
+| GET | `/instructor/lectures/:id/study-notes` · POST `…/regenerate` | course owner or admin, AI key | same view; regenerate is audited |
+
 ## Access and refunds (2026-11-25, docs/ACCESS_AND_REFUNDS.md)
 | Method | Path | Who | Notes |
 |---|---|---|---|

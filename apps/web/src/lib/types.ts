@@ -105,6 +105,8 @@ export interface LectureOutline {
   positionSec?: number;
   hasResources?: boolean;
   hasQuiz?: boolean;
+  /** The lesson video has captions (search inside videos, AI study notes). */
+  hasCaptions?: boolean;
   articleMd?: string | null;
   description?: string | null;
 }

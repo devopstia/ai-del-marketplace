@@ -9,7 +9,7 @@ async function main() {
   env();
   const app = await NestFactory.createApplicationContext(WorkerModule);
   app.enableShutdownHooks();
-  new Logger('Worker').log('worker started (queues: media, email)');
+  new Logger('Worker').log('worker started (queues: media, email; caption index scan)');
 }
 
 main().catch((err) => {

@@ -97,6 +97,8 @@ describe('e2e: buy and learn', () => {
       S3_ACCESS_KEY: env.S3_ACCESS_KEY ?? process.env.S3_ACCESS_KEY ?? 'test',
       S3_SECRET_KEY: env.S3_SECRET_KEY ?? process.env.S3_SECRET_KEY ?? 'test-secret',
       WEB_URL: 'http://127.0.0.1:3000',
+      // Tests never call the real Claude API: the AI learning features must be hidden (404) here.
+      ANTHROPIC_API_KEY: '',
     });
     resetEnvCache();
 
@@ -1651,5 +1653,51 @@ describe('e2e: buy and learn', () => {
     // another instructor can't file things under this course
     await o.send('post', '/api/instructor/uploads/video', { filename: 'a.mp4', contentType: 'video/mp4', courseId: course.id }).expect(400);
     await o.send('post', `/api/instructor/courses/${course.id}/package`, { title: 'x', storageKey: r.storageKey }).expect(404);
+  });
+
+  it('search inside videos: spoken words to the exact moment for people with access; AI assistant and notes hidden without a key', async () => {
+    if (!available) return;
+    const teacher = await userAgent('study-teacher@e2e.example', ['student', 'instructor'], {});
+    const learner = await userAgent('study-learner@e2e.example', ['student']);
+    const outsider = await userAgent('study-outsider@e2e.example', ['student']);
+    const lapsed = await userAgent('study-lapsed@e2e.example', ['student']);
+    const { course, lecture } = await publishedCourse(teacher.user.id, 'study-course', 1500);
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: course.id, source: 'free' } });
+    await prisma.enrollment.create({ data: { userId: lapsed.user.id, courseId: course.id, source: 'purchase', accessExpiresAt: new Date(Date.now() - 86_400_000) } });
+    const storage = app.get(StorageService);
+    const key = `videos/study-${Date.now()}/captions.vtt`;
+    await storage.put(key, 'WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nWelcome to the lab.\n\n00:00:20.000 --> 00:00:24.000\nNow run helm rollback to restore the previous release.\n\n00:00:40.000 --> 00:00:44.000\nKubernetes keeps the old ReplicaSet around.\n', 'text/vtt');
+    const assetId = (await prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id } })).videoAssetId!;
+    await prisma.videoAsset.update({ where: { id: assetId }, data: { captionsKey: key } });
+    const url = (q: string) => `/api/me/courses/study-course/search?q=${encodeURIComponent(q)}`;
+
+    // Access: enrolled with active access, the owner and admins only (checked in the service, every request).
+    await request(app.getHttpServer()).get(url('rollback')).expect(401);
+    await outsider.agent.get(url('rollback')).expect(403);
+    await lapsed.agent.get(url('rollback')).expect(403);
+    const r = (await learner.agent.get(url('rollback')).expect(200)).body;
+    expect(r.items).toHaveLength(1);
+    expect(r.items[0]).toMatchObject({ lectureId: lecture.id, startSec: 20, endSec: 24 });
+    expect(r.items[0].parts).toContainEqual({ text: 'rollback', match: true });
+    // stemming and prefix while typing (real Postgres full-text search); the owner can search too
+    expect((await learner.agent.get(url('restoring releases')).expect(200)).body.items[0].startSec).toBe(20);
+    expect((await teacher.agent.get(url('kube')).expect(200)).body.items[0].startSec).toBe(40);
+    expect((await learner.agent.get(url('terraform')).expect(200)).body.items).toEqual([]);
+    expect(await prisma.captionSegment.count({ where: { videoAssetId: assetId } })).toBe(3);
+
+    // New captions replace the old index.
+    await storage.put(key, 'WEBVTT\n\n00:01:05.000 --> 00:01:09.000\nArgo CD syncs the cluster.\n', 'text/vtt');
+    await prisma.captionIndex.update({ where: { videoAssetId: assetId }, data: { captionsKey: 'stale' } }); // as if the key changed
+    expect((await learner.agent.get(url('argo')).expect(200)).body.items[0].startSec).toBe(65);
+    expect((await learner.agent.get(url('rollback')).expect(200)).body.items).toEqual([]);
+
+    // Without ANTHROPIC_API_KEY the AI features don't exist: flags off, endpoints 404, nothing recorded.
+    const view = (await learner.agent.get('/api/me/courses/study-course').expect(200)).body;
+    expect(view.study).toEqual({ search: true, assistant: false, notes: false });
+    await learner.send('post', '/api/me/courses/study-course/ask', { question: 'How do I roll back?' }).expect(404);
+    await learner.agent.get(`/api/lectures/${lecture.id}/study-notes`).expect(404);
+    await teacher.agent.get(`/api/instructor/lectures/${lecture.id}/study-notes`).expect(404);
+    await teacher.send('post', `/api/instructor/lectures/${lecture.id}/study-notes/regenerate`).expect(404);
+    expect(await prisma.aiUsage.count()).toBe(0);
   });
 });

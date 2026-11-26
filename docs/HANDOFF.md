@@ -92,5 +92,5 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
 `AGENTS.md` (rules) · `docs/DECISIONS.md` (history of decisions and rollback points) · `docs/FINAL_REVIEW_2026-11-26.md`
 (latest requirement audit, tests, release) · `docs/DEPLOYMENT.md` · `docs/AWS_COSTS.md` · `docs/AUTH.md` (sign-in, provider setup) ·
 `docs/EMAIL.md` · `docs/PAYMENTS.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/MANUAL_ENROLLMENT.md` · `docs/ACCESS_AND_REFUNDS.md` ·
-`docs/STORAGE.md` · `docs/PWA.md` · `docs/SUPPORT.md` · `docs/HELP_VIDEOS.md` · `docs/CONTENT_PROTECTION.md`. Historical:
+`docs/STORAGE.md` · `docs/PWA.md` · `docs/SUPPORT.md` · `docs/HELP_VIDEOS.md` · `docs/CONTENT_PROTECTION.md` · `docs/AI_LEARNING.md` (video search, course assistant, study notes). Historical:
 `docs/ASSESSMENT.md`, `docs/ROADMAP.md`, `docs/PHASE1.md`, `docs/PAYMENTS_PROPOSAL.md`, `docs/LAUNCH_REPORT.md`.
