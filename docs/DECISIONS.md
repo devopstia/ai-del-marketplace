@@ -219,3 +219,11 @@ feat/step3-teach → feat/step4-player → feat/step5-learning → feat/step6-st
   everywhere; Buy/Checkout replaced by "Contact us to enrol" while card payments are off (rule 4); Terms of use and
   Privacy policy pages (also needed by the sign-in providers); the player always shows the access end date.
 - Costs: docs/AWS_COSTS.md (≈ $52/month fixed, video traffic is the variable that matters).
+
+## 2026-11-26 — Release r4 and handoff
+- Production and staging run `release-2026-11-26-final-review-r4` (images `4b5706c24617`, API on Debian 13); pre-release snapshot
+  `pre-release-4b5706c24617-20261126-0254`; rollback target `80a2549306af`. Released with `scripts/deploy-aws.sh` because the
+  pipeline's scan gate blocks one critical libtiff finding (owner decision pending). Staging QA findings fixed (FINAL_REVIEW §4).
+- Pipeline fixes: OIDC trust for GitHub's immutable subject, plain images for ECR scanning, immutable ECR tags.
+- Open with the owner: cost (they said "I don't want this now"; options asked, no answer), scan exception, provider keys.
+  Everything for the next agent: docs/HANDOFF.md.

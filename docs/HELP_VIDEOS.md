@@ -15,8 +15,8 @@ to **/help**. Adapted from the Insurance Knowledge Hub's Platform Academy and it
   `/api/admin/help/…` (docs/API.md). Code: `apps/api/src/help/`, `apps/web/src/app/(site)/help/`, `app/admin/help/`.
 
 ## The engine (`video-academy/`)
-Turns a short JavaScript script per video into: a narrated 1080p MP4 recorded from the running local site (dark, the
-site's default), a cover, SRT captions, a slide deck (PPTX + PDF) and a QA report (Whisper transcript vs. script, loudness).
+Turns a short JavaScript script per video into: a narrated 1080p MP4 recorded from the running local site (dark theme; the
+site's default is light since 2026-11-25), a cover, SRT captions, a slide deck (PPTX + PDF) and a QA report (Whisper transcript vs. script, loudness).
 - `cli.mjs` stages: script → voice (Kokoro, voice `af_heart`) → record (Playwright, visible cursor and highlights) →
   cover → assemble (ffmpeg) → deck → qa. `node cli.mjs list | build <id…> [--from stage] [--only s02] | inventory`.
 - `brands/del/`: DEL colours (the dark tokens), logo, fonts, demo accounts, categories (`brand.mjs`) and the plan of

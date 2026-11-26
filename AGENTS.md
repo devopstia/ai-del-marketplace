@@ -1,6 +1,6 @@
 # AGENTS.md: how to work on the AI Learning Marketplace
 
-Read this first, then `docs/DECISIONS.md`, `docs/BUILD_SPEC.md` and `docs/API.md`. Everything for this marketplace (code, plans,
+Read this first, then **`docs/HANDOFF.md` (current state, open owner decisions, how to test and release)**, then `docs/DECISIONS.md`, `docs/BUILD_SPEC.md` and `docs/API.md`. Everything for this marketplace (code, plans,
 research, docs) lives in this repository.
 
 ## What this is
@@ -40,7 +40,7 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     design, make sure the current working version is committed, mark it with an annotated tag (`design-approved-<date>`) and a
     `backup/…` branch, record the hash, and do the work on a dedicated `feat/…` branch. Never merge or deploy a redesign without the
     owner's approval. Rollback on request: `git checkout <tag> -- apps/web` (or the affected paths) on the working branch, then
-    rebuild the web container; unrelated work stays. Current baseline: `main` after the owner-approved merge of 2026-11-24 (tag `release-local-2026-11-24`); previous approved design tag `design-approved-2026-11-24` = `9b0170e`.
+    rebuild the web container; unrelated work stays. Current baseline: `main` = production release `release-2026-11-26-final-review-r4` (images `4b5706c24617`; light default theme); earlier approved design tags `design-approved-2026-11-24` = `9b0170e`, `release-local-2026-11-24`.
 14. **Natural, not AI-generated design** (owner, 2026-11-24): clean typography, consistent spacing, proper alignment, professional
     colour; avoid excessive gradients, glows, repetitive cards, oversized headings, needless animation and decoration. Improve the
     existing identity, don't replace it. Preserve the course listing and course detail pages (owner likes them).
@@ -97,7 +97,8 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 19. **Sign-in security** (owner, 2026-11-25: "registration extremely easy, but account access must remain secure";
     docs/AUTH.md). Every agent keeps these true:
     - Sign-in methods: email + password, Google, GitHub, Facebook, LinkedIn. A provider's button exists only when its
-      keys are set. Every method ends in the same two-step flow: **no session before a Google Authenticator code**
+      keys are set (Super Admin › People › Sign-in methods, `/admin/sign-in`: keys checked with the provider, sealed,
+      step-up code, audited; `.env` keys also work). Every method ends in the same two-step flow: **no session before a Google Authenticator code**
       (or a recovery code, or a trusted device of an enrolled account). New accounts set it up before their first session.
     - Accounts are matched by the provider's account id, **never merged by email**; linking happens only from a
       signed-in account (Account › Security) through the provider. One person = one account (courses, purchases,
@@ -173,8 +174,13 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
   prefetched copy made while signed out (a cached redirect to /login).
 - MinIO's official image is no longer published; local dev uses the pinned community build `pgsty/minio`. Production uses S3.
 - Stripe and Mux code paths are untested against the real services until keys exist; local payments use the dev-only test mode.
+- The release scan gate (`.github/workflows/images.yml`) blocks CRITICAL image findings; accepting one is the owner's decision
+  (see docs/HANDOFF.md §2). ECR tags are immutable; git release tags are never moved (`-r2`, `-r3` for successors).
+- Staging and production share one EC2 server and one RDS instance on purpose (owner will delete staging later); don't load-test
+  staging while real users are on production. More pitfalls: docs/HANDOFF.md §5.
 
 ## Where things are
 `docs/ASSESSMENT.md` (original assessment) · `docs/DECISIONS.md` · `docs/BUILD_SPEC.md` · `docs/API.md` · `docs/research/` ·
-`docs/ROADMAP.md` (improvement roadmap, when written) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
-`docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md`. Local email inbox: http://127.0.0.1:8025.
+`docs/ROADMAP.md` (2026-11-24 roadmap, historical) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
+`docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md` · **`docs/HANDOFF.md`** ·
+`docs/FINAL_REVIEW_2026-11-26.md` (latest audit + release) · `docs/AWS_COSTS.md` · `docs/STORAGE.md` · `docs/PAYMENTS.md`. Local email inbox: http://127.0.0.1:8025.

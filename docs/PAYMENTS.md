@@ -13,3 +13,8 @@
   pastes a key. 80% of the net (after Stripe's fee) to the instructor, 20% to DEL (or an agreed rate set by a super
   admin); transfers after the 14-day refund hold; a payout is "completed" only when Stripe confirms the transfer.
 - **Manual enrollment** payments are recorded by super admins and paid out by hand (docs/MANUAL_ENROLLMENT.md).
+
+## While Stripe has no keys (production today)
+`GET /payments/mode` answers `off`: course pages, the cart and checkout replace Buy / Checkout with "Contact us to enrol"
+(`components/TestModeNotice.tsx` › `PaymentsClosed`, linking to `/contact?topic=payment`); DEL can enrol learners through
+manual enrollment. With test keys the cart and checkout show the test-mode notice instead.

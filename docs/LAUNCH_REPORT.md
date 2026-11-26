@@ -1,3 +1,5 @@
+> Historical (first launch, release `release-2026-11-26-launch-prep`). Current state: docs/HANDOFF.md; latest release: docs/FINAL_REVIEW_2026-11-26.md.
+
 # Launch report (2026-11-25)
 
 **Production:** https://ai-devopseasylearning.com (www and http redirect to it; Let's Encrypt TLS, HSTS).

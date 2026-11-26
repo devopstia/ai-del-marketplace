@@ -1,3 +1,5 @@
+> Historical (2026-11-24 proposal). Much of it has since been built; current state and open items: docs/HANDOFF.md.
+
 # Roadmap v2: discovery findings and redesign plan
 
 **Status: proposal for the owner's approval (2026-11-24). Nothing below is implemented.** v1 of this roadmap is in git history
