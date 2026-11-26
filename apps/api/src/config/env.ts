@@ -67,8 +67,8 @@ const schema = z.object({
   LEARNING_AI_ENABLED: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
   /** Questions per learner: per minute and per UTC day; and for the whole platform per UTC day (cost ceiling). */
   LEARNING_AI_PER_MINUTE: z.coerce.number().int().min(1).default(5),
-  LEARNING_AI_PER_DAY: z.coerce.number().int().min(1).default(40),
-  LEARNING_AI_PLATFORM_PER_DAY: z.coerce.number().int().min(1).default(3000),
+  LEARNING_AI_PER_DAY: z.coerce.number().int().min(1).default(30),
+  LEARNING_AI_PLATFORM_PER_DAY: z.coerce.number().int().min(1).default(500),
   PASSWORD_BREACH_CHECK: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
   /**
    * Local development only: `false` skips the Google Authenticator step so the owner can sign in quickly while testing.

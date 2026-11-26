@@ -10,11 +10,14 @@ import type { CourseDetail, LectureOutline, Playback, ResourceItem } from "@/lib
 import { LoopMark } from "../Logo";
 import { LoopMeter } from "../LoopMeter";
 import { ThemeToggle } from "../ThemeToggle";
-import { VideoPlayer } from "../VideoPlayer";
+import { VideoPlayer, type PlayerHandle } from "../VideoPlayer";
 import { Markdown } from "../Markdown";
 import { QuizPanel } from "./QuizPanel";
 import { ResourcesPanel } from "./ResourcesPanel";
 import { NotesPanel } from "./NotesPanel";
+import { VideoSearchPanel } from "./VideoSearchPanel";
+import { AskPanel } from "./AskPanel";
+import { StudyNotesPanel } from "./StudyNotesPanel";
 import { ReviewPanel, toReviewInfo, type ReviewInfo } from "./ReviewPanel";
 import { RatingInline } from "@/components/Stars";
 import { useToast } from "../Toast";
@@ -22,7 +25,9 @@ import { useToast } from "../Toast";
 const SAVE_EVERY_MS = 10_000;
 const AUTOPLAY_SECONDS = 5;
 
-type Tab = "overview" | "content" | "resources" | "quiz" | "notes" | "review" | "package";
+type Tab = "overview" | "content" | "search" | "ask" | "study" | "resources" | "quiz" | "notes" | "review" | "package";
+/** docs/AI_LEARNING.md: search needs captions only; the assistant and study notes need the API's AI key. */
+type StudyFlags = { search: boolean; assistant: boolean; notes: boolean };
 
 export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string; lectureId: string }) {
   // Lessons change in place (history.pushState): the player stays mounted, so full screen survives "Next".
@@ -38,6 +43,10 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [playErr, setPlayErr] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
+  const [study, setStudy] = useState<StudyFlags>({ search: false, assistant: false, notes: false });
+  const playerRef = useRef<PlayerHandle>(null);
+  /** A moment to start the next lesson at (search result or citation in another lesson). */
+  const pendingSeek = useRef<number | null>(null);
   // ?tab=review (from Student Studio › Course reviews) opens the review tab
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get("tab");
@@ -58,6 +67,8 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
       setCourse(c);
       setReviews(toReviewInfo(r));
       setPkg(Array.isArray(obj(r).packageFiles) ? (obj(r).packageFiles as ResourceItem[]) : []);
+      const sf = obj(obj(r).study);
+      setStudy({ search: sf.search === true, assistant: sf.assistant === true, notes: sf.notes === true });
       const ai = obj(obj(r).accessInfo);
       setAccess(ai.expiresAt ? { state: String(ai.state), expiresAt: String(ai.expiresAt), daysLeft: Number(ai.daysLeft ?? 0) } : null);
     }).catch((e) => setLoadErr(errMsg(e)));
@@ -99,7 +110,9 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
     setTab((t) => (t === "quiz" || t === "resources" ? "overview" : t));
     retried.current = false;
     lastSaved.current = 0;
-    if (lecture?.type === "video") void loadPlayback(lecture.completed ? 0 : lecture.positionSec ?? 0);
+    const seekTo = pendingSeek.current;
+    pendingSeek.current = null;
+    if (lecture?.type === "video") void loadPlayback(seekTo != null ? Math.max(0.01, seekTo) : lecture.completed ? 0 : lecture.positionSec ?? 0);
     // Only refetch when the lecture changes, not when its progress fields update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lecture?.type, lectureId, loadPlayback]);
@@ -156,6 +169,23 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countdown, next, slug]);
 
+  /** Plays a lesson from a moment (search results, assistant citations, study-note questions). */
+  function jump(id: string, sec: number) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const video = playerRef.current?.video;
+    if (id === lectureId && lecture?.type === "video" && video) {
+      video.currentTime = Math.max(0, sec);
+      void video.play().catch(() => {});
+      stageRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+      video.closest<HTMLElement>("[data-testid=video-player]")?.focus({ preventScroll: true });
+      return;
+    }
+    const target = flat.find((l) => l.id === id);
+    if (!target) return;
+    pendingSeek.current = target.type === "video" ? sec : null;
+    go(target);
+  }
+
   function go(l?: LectureOutline) {
     if (!l || l.id === lectureId) return;
     if (lecture?.type === "video" && posRef.current > 0) void save(posRef.current, !!lecture.completed);
@@ -186,9 +216,15 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
     ...(lecture?.hasResources ? ([["resources", "Lesson files"]] as [Tab, string][]) : []),
     ...(pkg.length ? ([["package", "Course package"]] as [Tab, string][]) : []),
     ...(lecture?.hasQuiz || lecture?.type === "quiz" ? ([["quiz", "Quiz"]] as [Tab, string][]) : []),
-    ["notes", "Notes"],
+    ...(study.search ? ([["search", "Search videos"]] as [Tab, string][]) : []),
+    ...(study.assistant ? ([["ask", "Ask"]] as [Tab, string][]) : []),
+    ...(study.notes && lecture?.type === "video" && lecture.hasCaptions ? ([["study", "Study notes"]] as [Tab, string][]) : []),
+    ["notes", "My notes"],
     ["review", reviews?.mine ? "Your review" : "Rate course"],
   ];
+
+  // A tab that doesn't exist for this lesson (e.g. Study notes on a reading) shows the overview instead.
+  const activeTab: Tab = tabs.some(([k]) => k === tab) ? tab : "overview";
 
   const outline = course ? (
     <nav aria-label="Course content" className="text-sm">
@@ -266,6 +302,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
               ) : lecture.type === "video" ? (
                 playback ? (
                   <VideoPlayer
+                    ref={playerRef}
                     key={playback.url}
                     src={playback.url}
                     format={playback.format}
@@ -337,14 +374,14 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
           <div className="px-4 sm:px-8">
             <div role="tablist" aria-label="Lecture" className="flex gap-1 overflow-x-auto border-b border-line">
               {tabs.map(([k, l]) => (
-                <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => setTab(k)}
-                  className={`-mb-px shrink-0 border-b-2 px-3 py-3 text-sm font-bold sm:px-4 ${k === "content" ? "lg:hidden" : ""} ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
+                <button key={k} role="tab" type="button" aria-selected={activeTab === k} onClick={() => setTab(k)}
+                  className={`-mb-px shrink-0 border-b-2 px-3 py-3 text-sm font-bold sm:px-4 ${k === "content" ? "lg:hidden" : ""} ${activeTab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
                   {l}
                 </button>
               ))}
             </div>
             <div role="tabpanel" className="py-8">
-              {tab === "overview" && course ? (
+              {activeTab === "overview" && course ? (
                 <div className="max-w-3xl">
                   <h1 className="font-display text-2xl font-extrabold">{lecture?.title}</h1>
                   {access && access.state !== "expiring" ? (
@@ -380,17 +417,20 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   {pct >= 100 ? <Link href="/student/progress" className="btn btn-primary mt-6">Get your certificate</Link> : null}
                 </div>
               ) : null}
-              {tab === "content" ? <div className="-mx-4 border-t border-line lg:hidden">{outline}</div> : null}
-              {tab === "resources" ? <ResourcesPanel lectureId={lectureId} /> : null}
-              {tab === "package" ? (
+              {activeTab === "content" ? <div className="-mx-4 border-t border-line lg:hidden">{outline}</div> : null}
+              {activeTab === "resources" ? <ResourcesPanel lectureId={lectureId} /> : null}
+              {activeTab === "package" ? (
                 <div>
                   <p className="mb-3 max-w-2xl text-ink-2">Everything from the course in one place: demo code, configuration files and documents. Each lesson also has its own files.</p>
                   <ResourcesPanel items={pkg} kind="package" />
                 </div>
               ) : null}
-              {tab === "quiz" ? <QuizPanel lectureId={lectureId} onPassed={() => { void save(posRef.current, true); toast("ok", "Quiz passed."); }} /> : null}
-              {tab === "notes" ? <NotesPanel lectureId={lectureId} /> : null}
-              {tab === "review" && reviews ? <ReviewPanel slug={slug} info={reviews} onSaved={setReviews} /> : null}
+              {activeTab === "quiz" ? <QuizPanel lectureId={lectureId} onPassed={() => { void save(posRef.current, true); toast("ok", "Quiz passed."); }} /> : null}
+              {activeTab === "search" ? <VideoSearchPanel slug={slug} currentLectureId={lectureId} onJump={jump} /> : null}
+              {activeTab === "ask" ? <AskPanel slug={slug} lectureId={lectureId} onJump={jump} /> : null}
+              {activeTab === "study" ? <StudyNotesPanel lectureId={lectureId} onJump={(sec) => jump(lectureId, sec)} /> : null}
+              {activeTab === "notes" ? <NotesPanel lectureId={lectureId} /> : null}
+              {activeTab === "review" && reviews ? <ReviewPanel slug={slug} info={reviews} onSaved={setReviews} /> : null}
             </div>
           </div>
         </div>
