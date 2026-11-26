@@ -2,7 +2,9 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { ContactModule } from './contact/contact.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { AssistModule } from './assist/assist.module';
+import { AssistAuditInterceptor } from './assist/assist-audit.interceptor';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
@@ -42,12 +44,15 @@ import { PathsModule } from './paths/paths.module';
     InstructorModule,
     AdminModule,
     PathsModule,
+    AssistModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     // Order matters: CSRF first (cheap, no DB), then session/roles.
     { provide: APP_GUARD, useClass: CsrfGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
+    // Support sessions and AI agents: every state-changing request is audited (docs/SUPPORT_SESSIONS_AND_AGENTS.md).
+    { provide: APP_INTERCEPTOR, useClass: AssistAuditInterceptor },
   ],
 })
 export class AppModule implements NestModule {

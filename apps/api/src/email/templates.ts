@@ -66,6 +66,21 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { note: 'If you didn’t expect this, write to support@devopseasylearning.com.' },
   ]),
 
+  // Super admin support session (docs/SUPPORT_SESSIONS_AND_AGENTS.md): sent when it starts, so the person always knows.
+  'security-support-session': (d) => mk('DevOps Easy Learning support opened your dashboard', [
+    { h1: 'Support is working in your account' },
+    { p: `Hi ${first(d)}, ${s(d.admin, 'a DevOps Easy Learning super admin')} opened your dashboard to help you. They can see what you see, but cannot see or change your password, email or two-step sign-in, and cannot buy or request refunds for you.` },
+    { rows: [['Reason', s(d.reason)], ['Started', s(d.startedAt)], ['Ends at the latest', s(d.expiresAt)]] },
+    { note: 'If you didn’t ask for help, write to support@devopseasylearning.com. Every action in a support session is recorded.' },
+  ], 'A super admin opened your dashboard to help you'),
+  'security-agent-access': (d) => mk('An AI assistant can now work on your courses', [
+    { h1: 'AI course assistant enabled' },
+    { p: `Hi ${first(d)}, ${s(d.admin, 'a DevOps Easy Learning super admin')} gave an AI assistant (“${s(d.agent)}”) access to help build your courses. It can create and edit your draft courses, upload your videos and files, and submit a course for review. It can’t publish, see payments, or touch anyone else’s courses.` },
+    { rows: [['Reason', s(d.reason)], ['Access ends', s(d.expiresAt)]] },
+    { note: 'Courses stay yours. Ask support@devopseasylearning.com to stop it at any time.' },
+    { cta: { href: `${web()}/studio`, label: 'Open my Instructor Studio' } },
+  ]),
+
   // ---------- purchases and access ----------
   'order-receipt': (d) => mk(`Your receipt from DevOps Easy Learning${d.total ? ` (${usd(d.total)})` : ''}`, [
     { h1: `Thanks for your purchase, ${first(d)}` },

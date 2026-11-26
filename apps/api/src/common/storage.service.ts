@@ -1,4 +1,9 @@
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
+  ListPartsCommand,
+  UploadPartCommand,
   DeleteObjectsCommand,
   ListObjectsV2Command,
   DeleteObjectCommand,
@@ -43,6 +48,39 @@ export class StorageService {
     return getSignedUrl(this.publicSigner, new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }), {
       expiresIn,
     });
+  }
+
+  // ---------- resumable multipart uploads (AI agents, large files; docs/SUPPORT_SESSIONS_AND_AGENTS.md) ----------
+  async createMultipart(key: string, contentType: string): Promise<string> {
+    const r = await this.internal.send(new CreateMultipartUploadCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }));
+    if (!r.UploadId) throw new Error('storage did not return an upload id');
+    return r.UploadId;
+  }
+
+  /** Presigned PUT for one part (1-based). The client keeps the ETag response header of each part. */
+  presignPart(key: string, uploadId: string, partNumber: number, expiresIn = 3600) {
+    return getSignedUrl(this.publicSigner, new UploadPartCommand({ Bucket: this.bucket, Key: key, UploadId: uploadId, PartNumber: partNumber }), { expiresIn });
+  }
+
+  /** Parts already stored (for resuming): number, ETag, size. */
+  async listParts(key: string, uploadId: string): Promise<{ partNumber: number; etag: string; size: number }[]> {
+    const out: { partNumber: number; etag: string; size: number }[] = [];
+    let marker: string | undefined;
+    for (;;) {
+      const r = await this.internal.send(new ListPartsCommand({ Bucket: this.bucket, Key: key, UploadId: uploadId, PartNumberMarker: marker }));
+      for (const p of r.Parts ?? []) if (p.PartNumber && p.ETag) out.push({ partNumber: p.PartNumber, etag: p.ETag, size: Number(p.Size ?? 0) });
+      if (!r.IsTruncated) break;
+      marker = r.NextPartNumberMarker;
+    }
+    return out.sort((a, b) => a.partNumber - b.partNumber);
+  }
+
+  async completeMultipart(key: string, uploadId: string, parts: { partNumber: number; etag: string }[]) {
+    await this.internal.send(new CompleteMultipartUploadCommand({ Bucket: this.bucket, Key: key, UploadId: uploadId, MultipartUpload: { Parts: parts.map((p) => ({ PartNumber: p.partNumber, ETag: p.etag })) } }));
+  }
+
+  async abortMultipart(key: string, uploadId: string) {
+    await this.internal.send(new AbortMultipartUploadCommand({ Bucket: this.bucket, Key: key, UploadId: uploadId })).catch(() => undefined);
   }
 
   /** Presigned GET for a browser (playback, download). */

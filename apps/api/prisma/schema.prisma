@@ -687,8 +687,18 @@ model AuditLog {
   ip         String?
   meta       Json     @default("{}")
   at         DateTime @default(now())
+  /// Support session / AI agent attribution (docs/SUPPORT_SESSIONS_AND_AGENTS.md): actorId is always the real person
+  /// (the super admin, or the admin who issued the agent token); these name whom and what acted on their behalf.
+  onBehalfOfId     String?
+  agentTokenId     String?
+  supportSessionId String?
+  /// ok | failed (request-level entries written while a support session or agent token is active).
+  status           String   @default("ok")
 
   @@index([at])
+  @@index([onBehalfOfId])
+  @@index([agentTokenId])
+  @@index([supportSessionId])
   @@index([actorId])
   @@index([targetType, targetId])
   @@map("audit_logs")
@@ -1288,4 +1298,79 @@ model CareerPathFollow {
   @@id([userId, pathId])
   @@index([pathId])
   @@map("career_path_follows")
+}
+
+// ---------- Support sessions and AI agents (docs/SUPPORT_SESSIONS_AND_AGENTS.md) ----------
+
+/// A super admin viewing and working in another user's dashboard ("Switch to user dashboard"). Separate from the
+/// user's own sessions: it never revokes them or counts against them. Only the admin's browser holds its cookie.
+model SupportSession {
+  /// sha256 of the support_sid cookie value
+  id             String    @id
+  actorId        String
+  subjectId      String
+  /// The admin's own session (sessions.id) that started it; it only works together with that session.
+  adminSessionId String
+  reason         String
+  startedAt      DateTime  @default(now())
+  expiresAt      DateTime
+  endedAt        DateTime?
+  /// returned | revoked
+  endedReason    String?
+  ip             String?
+  userAgent      String?
+
+  @@index([actorId, startedAt])
+  @@index([subjectId, startedAt])
+  @@map("support_sessions")
+}
+
+/// A scoped, expiring, revocable API token for an AI agent working for ONE instructor (Bearer del_agent_...).
+model AgentToken {
+  id           String    @id @default(uuid())
+  name         String
+  /// sha256 of the token; the token itself is shown once
+  tokenHash    String    @unique
+  /// First characters, to recognise a token in lists
+  prefix       String
+  instructorId String
+  issuedById   String
+  scopes       String[]
+  reason       String    @default("")
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  revokedById  String?
+  lastUsedAt   DateTime?
+
+  @@index([instructorId])
+  @@map("agent_tokens")
+}
+
+/// Resumable multipart upload (agents, large files): parts go straight to storage, the server completes it.
+model UploadSession {
+  id           String    @id @default(uuid())
+  ownerId      String
+  /// video | resource
+  kind         String
+  filename     String
+  contentType  String
+  sizeBytes    BigInt
+  /// hex sha256 of the whole file as declared by the uploader (duplicate detection)
+  sha256       String?
+  storageKey   String
+  uploadId     String
+  partSize     Int
+  /// video_assets.id for videos
+  assetId      String?
+  courseId     String?
+  agentTokenId String?
+  /// uploading | completed | aborted
+  status       String    @default("uploading")
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  @@index([ownerId, sha256])
+  @@index([assetId])
+  @@map("upload_sessions")
 }
