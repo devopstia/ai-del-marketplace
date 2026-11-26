@@ -389,6 +389,86 @@ model VideoAsset {
   hlsPackagedAt DateTime?
   playbackSessions PlaybackSession[]
   helpVideo     HelpVideo?
+  captionIndex    CaptionIndex?
+  captionSegments CaptionSegment[]
+  studyNotes      StudyNotes?
+}
+
+/// AI learning (docs/AI_LEARNING.md): which caption file of a video is in the search index (ETag + content hash detect changes).
+model CaptionIndex {
+  videoAssetId String     @id
+  videoAsset   VideoAsset @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+  captionsKey  String
+  etag         String?
+  /// sha256 of the caption file: notes are regenerated when it changes.
+  contentHash  String
+  segmentCount Int        @default(0)
+  /// ready | empty | failed
+  status       String     @default("ready")
+  error        String?
+  indexedAt    DateTime   @default(now())
+
+  @@map("caption_indexes")
+}
+
+/// Spoken content of a video, a few caption cues merged into one passage (about 15 s), searchable to the moment.
+/// `tsv` is a stored generated column (to_tsvector('english', text)) with a GIN index, created in the migration.
+model CaptionSegment {
+  id           String                   @id @default(uuid())
+  videoAssetId String
+  videoAsset   VideoAsset               @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+  seq          Int
+  startSec     Float
+  endSec       Float
+  text         String
+  tsv          Unsupported("tsvector")?
+
+  @@unique([videoAssetId, seq])
+  @@index([tsv], type: Gin)
+  @@map("caption_segments")
+}
+
+/// AI study notes of one lesson video, generated once per caption version (contentHash) and shared by every learner.
+model StudyNotes {
+  videoAssetId String     @id
+  videoAsset   VideoAsset @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+  contentHash  String
+  /// queued | generating | ready | failed | empty
+  status       String     @default("queued")
+  summary      String     @default("")
+  /// string[]
+  keyPoints    Json       @default("[]")
+  /// { question, answer }[]
+  questions    Json       @default("[]")
+  model        String?
+  error        String?
+  attempts     Int        @default(0)
+  generatedAt  DateTime?
+  updatedAt    DateTime   @updatedAt
+
+  @@map("study_notes")
+}
+
+/// One AI request (ask | notes): counts for rate limits, cost and audit. Never stores the question, answer or transcript.
+model AiUsage {
+  id               String   @id @default(uuid())
+  userId           String?
+  kind             String
+  courseId         String?
+  lectureId        String?
+  model            String?
+  /// pending | ok | not_covered | refused | limited | error
+  status           String   @default("pending")
+  inputTokens      Int      @default(0)
+  outputTokens     Int      @default(0)
+  cacheReadTokens  Int      @default(0)
+  cacheWriteTokens Int      @default(0)
+  passages         Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, kind, createdAt])
+  @@index([kind, createdAt])
+  @@map("ai_usage")
 }
 
 model Resource {

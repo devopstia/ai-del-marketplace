@@ -8,6 +8,7 @@ import { env } from '../config/env';
 import { packageHls, UnsupportedVideo } from '../protection/hls-packager';
 import { PrismaService } from '../common/prisma.service';
 import { StorageService } from '../common/storage.service';
+import { StudyNotesService } from '../study/study-notes.service';
 
 const run = promisify(execFile);
 
@@ -26,12 +27,15 @@ export class VideoProcessor extends WorkerHost {
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly jobs: JobsService,
+    private readonly notes: StudyNotesService,
   ) {
     super();
   }
 
   async process(job: Job<ProcessVideoJob>) {
     if (job.name === 'package-hls') return this.packageHls(job);
+    // AI study notes (docs/AI_LEARNING.md): throws to retry; gives up after its attempts.
+    if (job.name === 'study-notes') return this.notes.generate(job.data.assetId);
     const asset = await this.prisma.videoAsset.findUnique({ where: { id: job.data.assetId } });
     if (!asset || asset.provider !== 'local' || !asset.storageKey) return { skipped: true };
     try {

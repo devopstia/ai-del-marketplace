@@ -57,6 +57,18 @@ const schema = z.object({
   /** Optional: AI summaries of refund requests for admins (Claude). Without a key the summary is simply not shown. */
   ANTHROPIC_API_KEY: z.string().default(''),
   REFUND_AI_MODEL: z.string().default('claude-opus-5-5'),
+  /**
+   * AI learning features (docs/AI_LEARNING.md): course assistant and study notes. Hidden entirely without ANTHROPIC_API_KEY;
+   * video search needs no key. LEARNING_AI_ASK_MODEL defaults to LEARNING_AI_MODEL (high-volume Q&A can use a cheaper model).
+   */
+  LEARNING_AI_MODEL: z.string().default('claude-opus-5-5'),
+  LEARNING_AI_ASK_MODEL: z.string().default(''),
+  /** Set to false to switch the AI learning features off even when a key is present. */
+  LEARNING_AI_ENABLED: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
+  /** Questions per learner: per minute and per UTC day; and for the whole platform per UTC day (cost ceiling). */
+  LEARNING_AI_PER_MINUTE: z.coerce.number().int().min(1).default(5),
+  LEARNING_AI_PER_DAY: z.coerce.number().int().min(1).default(40),
+  LEARNING_AI_PLATFORM_PER_DAY: z.coerce.number().int().min(1).default(3000),
   PASSWORD_BREACH_CHECK: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
   /**
    * Local development only: `false` skips the Google Authenticator step so the owner can sign in quickly while testing.

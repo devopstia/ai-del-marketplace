@@ -9,6 +9,7 @@ import { PrismaService } from '../common/prisma.service';
 import { StorageService } from '../common/storage.service';
 import { randomToken } from '../common/util';
 import { MediaService } from '../media/media.service';
+import { learningAiEnabled } from '../study/ai-client';
 
 export interface QuizQuestion {
   q: string;
@@ -169,6 +170,8 @@ export class LearningService {
       accessInfo: await this.accessInfo(user.id, c.id),
       packageFiles: await this.prisma.courseResource.findMany({ where: { courseId: c.id }, orderBy: { position: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true } }),
       canReview: access === 'enrolled',
+      // Search inside videos needs captions only; the assistant and study notes exist only with an AI key (docs/AI_LEARNING.md).
+      study: { search: c.sections.some((s) => s.lectures.some((l) => !!l.videoAsset?.captionsKey)), assistant: learningAiEnabled(), notes: learningAiEnabled() },
       sections: c.sections.map((s) => ({
         id: s.id,
         title: s.title,

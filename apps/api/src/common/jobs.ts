@@ -7,6 +7,8 @@ export const EMAIL_QUEUE = 'email';
 /** Money jobs (fee lookup retries, hourly payout release). Processed inside the API process (CommerceModule). */
 export const PAYMENTS_QUEUE = 'payments';
 
+const NOTES_JOB_ATTEMPTS = 3;
+
 export interface ProcessVideoJob {
   assetId: string;
 }
@@ -51,6 +53,21 @@ export class JobsService {
       removeOnComplete: true,
       removeOnFail: true,
     });
+  }
+
+  /** AI study notes of one lesson video (docs/AI_LEARNING.md). One queued job per video at a time. */
+  async studyNotes(assetId: string) {
+    try {
+      await this.media.add('study-notes', { assetId } satisfies ProcessVideoJob, {
+        jobId: `notes-${assetId}`,
+        attempts: NOTES_JOB_ATTEMPTS,
+        backoff: { type: 'exponential', delay: 60_000 },
+        removeOnComplete: true,
+        removeOnFail: true,
+      });
+    } catch (e) {
+      this.logger.warn(`study notes enqueue failed for ${assetId}: ${(e as Error).message}`);
+    }
   }
 
   /** Retry reading an order's Stripe fee until Stripe has created the balance transaction (about 2 h of retries). */
