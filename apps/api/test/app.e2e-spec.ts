@@ -1386,6 +1386,100 @@ describe('e2e: buy and learn', () => {
     await teacher.send('delete', `/api/instructor/courses/${course.id}/package/${files[0].id}`).expect(200);
   });
 
+  it('draft preview: the course owner (and course reviewers) preview draft-revision lessons; learners and other instructors cannot', async () => {
+    if (!available) return;
+    const teacher = await userAgent('dp-teacher@e2e.example', ['student', 'instructor'], {});
+    const other = await userAgent('dp-other@e2e.example', ['student', 'instructor'], {});
+    const learner = await userAgent('dp-learner@e2e.example', ['student']);
+    const reviewer = await userAgent('dp-admin@e2e.example', ['student', 'admin'], undefined, ['courses.review']);
+    const support = await userAgent('dp-support@e2e.example', ['student', 'admin'], undefined, ['support.manage']);
+    const { course, section, lecture } = await publishedCourse(teacher.user.id, 'dp-live', 1500);
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: course.id, source: 'admin' } });
+    const newVideo = await prisma.videoAsset.create({ data: { ownerId: teacher.user.id, provider: 'local', status: 'ready', storageKey: `videos/dp-new/source.mp4`, durationSec: 33 } });
+
+    // Draft changes: a new video lesson, a new article, a quiz, and an edited live lesson.
+    const vid = (await teacher.send('post', `/api/instructor/courses/${course.id}/sections/${section.id}/lectures`, { title: 'Draft video', videoAssetId: newVideo.id }).expect(201)).body;
+    const art = (await teacher.send('post', `/api/instructor/courses/${course.id}/sections/${section.id}/lectures`, { title: 'Draft article', type: 'article', articleMd: '# Secret draft notes' }).expect(201)).body;
+    const quiz = (await teacher.send('post', `/api/instructor/courses/${course.id}/sections/${section.id}/lectures`, { title: 'Draft quiz', type: 'quiz' }).expect(201)).body;
+    await teacher.send('put', `/api/instructor/courses/${course.id}/lectures/${quiz.id}/quiz`, { questions: [{ q: 'Which port?', options: ['22', '80', '443'], correct: 2, why: 'TLS' }] }).expect(200);
+    await teacher.send('patch', `/api/instructor/courses/${course.id}/lectures/${lecture.id}`, { title: 'L1 renamed in draft' }).expect(200);
+    expect(await prisma.lecture.count({ where: { section: { courseId: course.id } } })).toBe(1); // live unchanged
+
+    const url = (id: string) => `/api/instructor/courses/${course.id}/lectures/${id}/preview`;
+    const v = (await teacher.agent.get(url(vid.id)).expect(200)).body;
+    expect(v).toMatchObject({ version: 'draft', lecture: { title: 'Draft video', type: 'video' }, video: { status: 'ready', playback: { url: expect.any(String), expiresAt: expect.any(String) } } });
+    expect(new Date(v.video.playback.expiresAt).getTime() - Date.now()).toBeLessThanOrEqual(15 * 60_000); // short-lived signed URL
+    expect((await teacher.agent.get(url(art.id)).expect(200)).body.lecture.articleMd).toBe('# Secret draft notes');
+    expect((await teacher.agent.get(url(quiz.id)).expect(200)).body.quiz).toEqual([{ q: 'Which port?', options: ['22', '80', '443'], correct: 2, why: 'TLS' }]);
+    expect((await teacher.agent.get(url(lecture.id)).expect(200)).body.lecture.title).toBe('L1 renamed in draft');
+    await teacher.agent.get(url('00000000-0000-0000-0000-000000000000')).expect(404);
+    // An admin who reviews courses may preview too; an admin without that permission may not.
+    expect((await reviewer.agent.get(url(art.id)).expect(200)).body.lecture.articleMd).toBe('# Secret draft notes');
+    await support.agent.get(url(art.id)).expect(404);
+    expect(await prisma.auditLog.count({ where: { action: 'course.draft_preview', actorId: reviewer.user.id, targetId: course.id } })).toBe(1);
+
+    // Nobody else: not another instructor, not an enrolled learner (403 at the role guard), and the learner routes
+    // don't know the draft lessons.
+    await other.agent.get(url(art.id)).expect(404);
+    await other.agent.get(url(vid.id)).expect(404);
+    await learner.agent.get(url(art.id)).expect(403);
+    await learner.send('post', `/api/lectures/${vid.id}/playback`).expect(404);
+    await learner.agent.get(`/api/lectures/${quiz.id}/quiz`).expect(404);
+    const learnerView = (await learner.agent.get('/api/me/courses/dp-live').expect(200)).body;
+    expect(JSON.stringify(learnerView)).not.toContain('Secret draft notes');
+    expect(JSON.stringify(learnerView)).not.toContain(vid.id);
+  });
+
+  it('list filters: manual enrollments by instructor, course and created date; review moderation by course and instructor', async () => {
+    if (!available) return;
+    const boss = await userAgent('flt-boss@e2e.example', ['student', 'admin', 'super_admin']);
+    const t1 = await userAgent('flt-t1@e2e.example', ['student', 'instructor'], {});
+    const t2 = await userAgent('flt-t2@e2e.example', ['student', 'instructor'], {});
+    const a = await publishedCourse(t1.user.id, 'flt-a', 3000);
+    const b = await publishedCourse(t1.user.id, 'flt-b', 3000);
+    const c = await publishedCourse(t2.user.id, 'flt-c', 3000);
+    const r1 = (await t1.send('post', '/api/enrollments/manual', { studentEmail: 'flt-s1@e2e.example', studentName: 'Kofi One', items: [{ courseId: a.course.id }] }).expect(201)).body;
+    const r2 = (await t1.send('post', '/api/enrollments/manual', { studentEmail: 'flt-s2@e2e.example', studentName: 'Kofi Two', items: [{ courseId: b.course.id }] }).expect(201)).body;
+    const r3 = (await t2.send('post', '/api/enrollments/manual', { studentEmail: 'flt-s3@e2e.example', studentName: 'Kofi Three', items: [{ courseId: c.course.id }] }).expect(201)).body;
+    await prisma.manualEnrollment.update({ where: { id: r1.id }, data: { createdAt: new Date('2026-01-10T12:00:00Z') } });
+    const ids = async (agent: typeof boss.agent, query: string) => (await agent.get(`/api/enrollments/manual?status=open&q=Kofi&${query}`).expect(200)).body.items.map((x: any) => x.id).sort();
+
+    expect(await ids(boss.agent, `instructorId=${t1.user.id}`)).toEqual([r1.id, r2.id].sort());
+    expect(await ids(boss.agent, `instructorId=${t1.user.id}&courseId=${c.course.id}`)).toEqual([]); // both must match one line
+    expect(await ids(boss.agent, `courseId=${b.course.id}`)).toEqual([r2.id]);
+    expect(await ids(boss.agent, 'from=2026-01-10&to=2026-01-10')).toEqual([r1.id]); // whole days, both included
+    expect(await ids(boss.agent, 'to=2026-01-09')).toEqual([]);
+    await boss.agent.get('/api/enrollments/manual?from=yesterday').expect(400);
+    await boss.agent.get('/api/enrollments/manual?courseId=nope').expect(400);
+    // instructors: own requests only; the instructor filter can't reach other people's requests
+    expect(await ids(t1.agent, `instructorId=${t2.user.id}`)).toEqual([r1.id, r2.id].sort());
+    expect(await ids(t2.agent, `courseId=${a.course.id}`)).toEqual([]);
+    const own = (await t1.agent.get('/api/enrollments/manual/filters').expect(200)).body;
+    expect(own.courses.map((x: any) => x.id).sort()).toEqual([a.course.id, b.course.id].sort());
+    expect(own.instructors).toEqual([]);
+    const all = (await boss.agent.get('/api/enrollments/manual/filters').expect(200)).body;
+    expect(all.instructors.map((x: any) => x.id)).toEqual(expect.arrayContaining([t1.user.id, t2.user.id]));
+    expect(all.courses.map((x: any) => x.id)).toEqual(expect.arrayContaining([a.course.id, b.course.id, c.course.id]));
+    expect(r3.id).toBeTruthy();
+
+    // reviews
+    const stu = await userAgent('flt-stu@e2e.example', ['student']);
+    for (const x of [a, c]) {
+      await prisma.enrollment.create({ data: { userId: stu.user.id, courseId: x.course.id, source: 'admin' } });
+      await stu.send('post', `/api/courses/${x.course.slug}/reviews`, { rating: 4, body: 'Clear labs and good pacing.' }).expect(201);
+    }
+    const rev = async (query: string) => (await boss.agent.get(`/api/admin/reviews?${query}`).expect(200)).body.items.map((x: any) => x.course.id);
+    expect(await rev(`courseId=${a.course.id}`)).toEqual([a.course.id]);
+    expect(await rev(`instructorId=${t2.user.id}`)).toEqual([c.course.id]);
+    expect(await rev(`instructorId=${t2.user.id}&courseId=${a.course.id}`)).toEqual([]);
+    await boss.agent.get('/api/admin/reviews?instructorId=x').expect(400);
+    const rf = (await boss.agent.get('/api/admin/reviews/filters').expect(200)).body;
+    expect(rf.courses).toEqual(expect.arrayContaining([{ id: a.course.id, title: 'flt-a', instructorId: t1.user.id }]));
+    expect(rf.courses.map((x: any) => x.id)).not.toContain(b.course.id); // no reviews, not offered
+    expect(rf.instructors.map((x: any) => x.id)).toEqual(expect.arrayContaining([t1.user.id, t2.user.id]));
+    await t1.agent.get('/api/admin/reviews/filters').expect(403);
+  });
+
   describe('manual enrollment and invitations (owner 2026-11-25)', () => {
     const jobsMock = () => app.get(JobsService) as unknown as { sendEmail: jest.Mock };
     const lastMail = (template: string, to?: string) => jobsMock().sendEmail.mock.calls.map((c) => c[0]).reverse().find((j) => j.template === template && (!to || j.to === to));

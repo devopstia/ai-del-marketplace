@@ -79,3 +79,26 @@ export function tinyVideo(): string | null {
 
 export const visible = (page: Page, testId: string) => page.getByTestId(testId).filter({ visible: true }).first();
 export { expect };
+
+/**
+ * The API base this web app talks to, learned from its own /auth/me request (local, test stack or staging).
+ * Call before the first navigation; read the getter once a page has loaded.
+ */
+export function watchApiBase(page: Page): () => string {
+  let base = "";
+  page.on("request", (r) => {
+    const m = r.url().match(/^(.*)\/auth\/me(\?|$)/);
+    if (m && !base) base = m[1];
+  });
+  return () => base;
+}
+
+/** An API call with the page's session and CSRF token, only for test clean-up that the UI deliberately doesn't offer. */
+export async function apiFromPage(page: Page, base: string, method: "DELETE" | "POST" | "PATCH", path: string, body?: unknown): Promise<number> {
+  return page.evaluate(async ({ base, method, path, body }) => {
+    let csrf = decodeURIComponent(document.cookie.match(/(?:^|; )csrf=([^;]*)/)?.[1] ?? "");
+    if (!csrf) csrf = ((await (await fetch(`${base}/auth/me`, { credentials: "include" })).json()) as { csrf?: string }).csrf ?? "";
+    const r = await fetch(`${base}${path}`, { method, credentials: "include", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf }, body: body === undefined ? undefined : JSON.stringify(body) });
+    return r.status;
+  }, { base, method, path, body });
+}

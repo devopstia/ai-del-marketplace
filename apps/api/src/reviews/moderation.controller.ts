@@ -28,6 +28,10 @@ export class ModerationController {
   @Roles('admin') @Perm('reviews.moderate') @Get('admin/reviews')
   list(@ZQuery(listQuery) q: z.infer<typeof listQuery>) { return this.svc.list(q); }
 
+  /** Options for the course and instructor filters: only courses that have reviews. */
+  @Roles('admin') @Perm('reviews.moderate') @Get('admin/reviews/filters')
+  filters() { return this.svc.filterOptions(); }
+
   @Roles('admin') @Perm('reviews.moderate') @HttpCode(200) @Post('admin/reviews/:id/status')
   status(@Param('id') id: string, @ZBody(statusSchema) b: z.infer<typeof statusSchema>, @ActorCtx() a: Actor) { return this.svc.setStatus(a, id, b.status, b.reason); }
 

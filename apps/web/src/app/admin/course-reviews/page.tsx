@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Eye, EyeOff, Flag, Loader2, MessageSquareText, Trash2 } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
@@ -14,6 +14,8 @@ import { Modal } from "@/components/Modal";
 import { Pager, useDebounced } from "@/components/Pager";
 import { useToast } from "@/components/Toast";
 import { useAuth } from "@/components/AuthProvider";
+import { ListFilters, type FilterOptions } from "@/components/ListFilters";
+import { useUrlFilters } from "@/lib/url-filters";
 
 interface Rep { id: string; reasonLabel: string; details: string; status: string; createdAt: string; reporter: string | null; resolvedBy: string | null; resolution: string | null }
 interface Row { id: string; rating: number; body: string; status: "visible" | "hidden"; createdAt: string; instructorReply: string | null; author: { name: string; email: string }; course: { title: string; slug: string; instructor: { name: string } }; reports: Rep[] }
@@ -25,14 +27,28 @@ type Act = { kind: "hidden" | "visible" | "delete"; row: Row } | { kind: "dismis
  * A low rating is never a reason to remove a review.
  */
 export default function CourseReviews() {
+  return <Suspense fallback={<Skeleton className="h-64" />}><CourseReviewsInner /></Suspense>;
+}
+
+const FILTER_KEYS = ["view", "rating", "q", "course", "instructor", "page"] as const;
+
+function CourseReviewsInner() {
   const toast = useToast();
   const { has } = useAuth();
-  const [view, setView] = useState<"reported" | "all" | "hidden">("reported");
-  const [rating, setRating] = useState("");
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
+  // Filters live in the URL; no view = "Reported".
+  const [f, setF] = useUrlFilters(FILTER_KEYS);
+  const view: "reported" | "all" | "hidden" = f.view === "all" || f.view === "hidden" ? f.view : "reported";
+  const rating = f.rating;
+  const page = Math.max(1, Number(f.page) || 1);
+  const [q, setQ] = useState(f.q);
   const dq = useDebounced(q.trim());
-  const { data, error, reload } = useApi(`/admin/reviews${qs({ reported: view === "reported" ? "true" : undefined, status: view === "hidden" ? "hidden" : undefined, rating: rating || undefined, q: dq.length > 1 ? dq : undefined, page, pageSize: 20 })}`,
+  useEffect(() => {
+    const v = dq.length > 1 ? dq : "";
+    if (v !== f.q) setF({ q: v, page: null });
+  }, [dq, f.q, setF]);
+  const opts = useApi("/admin/reviews/filters", (r) => obj(r) as unknown as FilterOptions);
+  const filtered = !!(f.q || f.rating || f.course || f.instructor);
+  const { data, error, reload } = useApi(`/admin/reviews${qs({ reported: view === "reported" ? "true" : undefined, status: view === "hidden" ? "hidden" : undefined, rating: rating || undefined, q: f.q || undefined, courseId: f.course || undefined, instructorId: f.instructor || undefined, page, pageSize: 20 })}`,
     (r) => obj(r) as unknown as { items: Row[]; total: number; page: number; pageSize: number; counts: { total: number; hidden: number; openReports: number } });
   const [act, setAct] = useState<Act | null>(null);
   const [reason, setReason] = useState("");
@@ -57,17 +73,18 @@ export default function CourseReviews() {
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line">
         <div role="tablist" className="flex gap-1">
           {([["reported", `Reported${c?.openReports ? ` (${c.openReports})` : ""}`], ["all", `All${c ? ` (${c.total})` : ""}`], ["hidden", `Hidden${c?.hidden ? ` (${c.hidden})` : ""}`]] as const).map(([k, l]) => (
-            <button key={k} role="tab" type="button" aria-selected={view === k} onClick={() => { setView(k); setPage(1); }} className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-bold ${view === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>{l}</button>
+            <button key={k} role="tab" type="button" aria-selected={view === k} onClick={() => setF({ view: k === "reported" ? null : k, page: null })} className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-bold ${view === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>{l}</button>
           ))}
         </div>
         <div className="mb-2 flex flex-wrap gap-2">
-          <input type="search" aria-label="Search reviews" className="field !w-60" placeholder="Course, learner or words" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
-          <select aria-label="Rating" className="field !w-auto" value={rating} onChange={(e) => { setRating(e.target.value); setPage(1); }}><option value="">Any rating</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n > 1 ? "s" : ""}</option>)}</select>
+          <input type="search" aria-label="Search reviews" className="field !w-60" placeholder="Course, learner or words" value={q} onChange={(e) => setQ(e.target.value)} />
+          <select aria-label="Rating" className="field !w-auto" value={rating} onChange={(e) => setF({ rating: e.target.value, page: null })}><option value="">Any rating</option>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n > 1 ? "s" : ""}</option>)}</select>
         </div>
       </div>
+      <ListFilters label="Filter reviews" options={opts.data} values={{ instructor: f.instructor, course: f.course }} onChange={(v) => setF({ instructor: v.instructor, course: v.course, page: null })} />
       {error ? <p className="mt-4 text-rose">{error}</p> : null}
       {!data && !error ? <Skeleton className="mt-5 h-64" /> : null}
-      {data && !data.items.length ? <div className="mt-6"><Empty icon={MessageSquareText} title={view === "reported" ? "No reports waiting" : "No reviews here"} body={view === "reported" ? "Instructors can report reviews that break the policy; they appear here." : "Reviews appear once learners rate courses."} /></div> : null}
+      {data && !data.items.length ? <div className="mt-6"><Empty icon={MessageSquareText} title={filtered ? "No reviews match these filters" : view === "reported" ? "No reports waiting" : "No reviews here"} body={filtered ? "Change or clear the filters to see more." : view === "reported" ? "Instructors can report reviews that break the policy; they appear here." : "Reviews appear once learners rate courses."} /></div> : null}
       {data?.items.length ? (
         <>
           <ul className="mt-5 space-y-3">
@@ -103,7 +120,7 @@ export default function CourseReviews() {
               );
             })}
           </ul>
-          <Pager page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} noun="reviews" />
+          <Pager page={data.page} pageSize={data.pageSize} total={data.total} onPage={(n) => setF({ page: n > 1 ? n : null })} noun="reviews" />
         </>
       ) : null}
       <Modal open={!!act} onClose={() => { setAct(null); setReason(""); }} title={act ? { hidden: "Hide this review", visible: "Restore this review", delete: "Delete this review", dismiss: "Dismiss the report" }[act.kind] : ""}>

@@ -7,6 +7,7 @@ import type { Prisma } from '../generated/prisma/client';
 import type { LectureType } from '../generated/prisma/enums';
 import { AuditService } from '../common/audit.service';
 import { Actor } from '../common/auth-context';
+import { can } from '../common/permissions';
 import { badRequest, conflict, notFound } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { StorageService } from '../common/storage.service';
@@ -205,6 +206,37 @@ export class InstructorService {
     const tree = version === 'draft' ? (rev!.snapshot as unknown as T.CourseTree) : live;
     const revision = rev ? await this.revisions.summary(rev, live) : null;
     return this.render(row, tree, version, revision);
+  }
+
+  /**
+   * Preview one lesson as the studio edits it (the draft revision of a published course, or the course itself before
+   * publishing): article, quiz with its answers, file names and a short-lived signed video URL. Only the course owner
+   * and admins who review courses; everyone else gets 404, so draft content never reaches learners.
+   */
+  async previewLecture(a: Actor, courseId: string, lectureId: string) {
+    const user = a.user;
+    const course = await this.prisma.course.findUnique({ where: { id: courseId }, select: { id: true, instructorId: true, status: true } });
+    if (!course || (course.instructorId !== user.id && !can(user, 'courses.review'))) throw notFound('Course');
+    const rev = course.status === 'published' ? await this.revisions.open(courseId) : null;
+    const tree = rev ? (rev.snapshot as unknown as T.CourseTree) : await this.revisions.liveTree(courseId);
+    const found = T.allLectures(tree).find((x) => x.lecture.id === lectureId);
+    if (!found) throw notFound('Lecture');
+    const l = found.lecture;
+    // Only the course owner's own uploads (the same rule as applying a revision).
+    const asset = l.videoAssetId ? await this.prisma.videoAsset.findFirst({ where: { id: l.videoAssetId, ownerId: course.instructorId } }) : null;
+    const video = asset
+      ? { status: asset.status, durationSec: asset.durationSec, playback: asset.status === 'ready' ? await this.media.playback(asset, user.id) : null }
+      : null;
+    // A reviewer opening someone else's unpublished lesson is recorded, like the admin video playback.
+    if (course.instructorId !== user.id) await this.audit.log({ actorId: user.id, action: 'course.draft_preview', targetType: 'course', targetId: courseId, ip: a.ip, meta: { lectureId } });
+    return {
+      version: rev ? 'draft' : 'live',
+      section: { id: found.section.id, title: found.section.title },
+      lecture: { id: l.id, title: l.title, type: l.type, isPreview: l.isPreview, durationSec: l.durationSec, articleMd: l.articleMd, summary: l.summary ?? '' },
+      video,
+      quiz: l.quiz?.length ? l.quiz.map((q) => ({ q: q.q, options: q.options, correct: q.correct, why: q.why })) : null,
+      resources: l.resources.map((r) => ({ id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime })),
+    };
   }
 
   private async render(

@@ -31,10 +31,12 @@ const createSchema = z.object({
   payment: payment.optional(),
   activate: z.boolean().optional(),
 }).strict();
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date');
 const listQuery = z.object({
   status: z.enum(['open', 'pending', 'needs_info', 'approved', 'rejected', 'cancelled']).optional(),
   instructorId: z.string().uuid().optional(), courseId: z.string().uuid().optional(), q: z.string().max(100).optional(),
-  from: z.coerce.date().optional(), to: z.coerce.date().optional(),
+  // Calendar days (the browser's date inputs): "created between from and to", both days included.
+  from: day.optional(), to: day.optional(),
   page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 const approveSchema = z.object({ complimentary: z.boolean().optional(), complimentaryReason: z.string().max(1000).optional(), expiries: z.record(z.string().uuid(), date).optional() }).strict();
@@ -61,6 +63,10 @@ export class ManualEnrollmentController {
 
   @Roles('instructor', 'admin') @Get('enrollments/manual')
   list(@CurrentUser() u: AuthUser, @ZQuery(listQuery) q: z.infer<typeof listQuery>) { return this.svc.list(u, q); }
+
+  /** Options for the list filters: only the courses and instructors that appear in requests this person can see. */
+  @Roles('instructor', 'admin') @Get('enrollments/manual/filters')
+  filters(@CurrentUser() u: AuthUser) { return this.svc.filterOptions(u); }
 
   @Roles('instructor', 'super_admin') @Post('enrollments/manual')
   create(@ZBody(createSchema) b: z.infer<typeof createSchema>, @ActorCtx() a: Actor) { return this.svc.create(a, b); }
