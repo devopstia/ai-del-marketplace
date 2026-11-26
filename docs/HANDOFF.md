@@ -33,6 +33,13 @@ history) is deliberately untracked. Restore points: tags `checkpoint-*`, `releas
    batches. Open owner items for it: Google Search Console / Bing token (Route 53 TXT), OK for the homepage career-paths
    band (shows only once a path is published), whether to add "Career paths" to the top menu, certificate revocation.
    After deploying, run the super-admin "Update N videos" (Admin › Video protection) so existing videos get 360p + audio.
+   **Then `feat/admin-security-refunds-2026-11-26`** (owner's prompts.md; on staging as images `d8288394b46c`): Super Admin
+   portal (docs/SUPER_ADMIN.md), support sessions + AI agent tokens + MCP server (docs/SUPPORT_SESSIONS_AND_AGENTS.md,
+   tools/mcp-server), email codes + session security (docs/AUTH.md §7, AGENTS rule 19 updated), versioned refund policy,
+   notifications, Stripe-confirmed refunds (docs/ACCESS_AND_REFUNDS.md). Verified on a fresh test stack: API 387/387,
+   smoke 148/148 (144 before videos were packaged), Playwright 67 passed / 1 skipped, contrast scans clean. Releasing
+   production releases all three batches. At deploy: idle >30 min / older than 24 h sessions are signed out; staging and
+   production use one-browser-per-account (test stacks set `AUTH_SESSION_LIMITS=off`).
 
 1. **Cost question (open, 2026-11-26).** The owner wrote "I don't want this now please Cost: about $52 a month". Asked which
    they mean: (1) just stop mentioning cost, (2) cut cost but keep the site up (remove staging, smaller server, budget
