@@ -164,26 +164,27 @@ describe('AuthGuard: role management and temporary passwords (owner 2026-11-26)'
   const future = new Date(Date.now() + 60_000);
   const prismaWith = (user: unknown) => ({ session: { findUnique: jest.fn().mockResolvedValue({ revokedAt: null, expiresAt: future, user }) } }) as any;
   const roleConfig = (cfg: Partial<{ adminAllowed: string[]; adminDefaults: string[]; disabled: string[] }>) => ({ get: async () => ({ adminAllowed: ['users.view', 'audit.view'], adminDefaults: [], disabled: [], ...cfg }) }) as any;
+  const noPolicy = { touch: jest.fn(), settings: jest.fn(), end: jest.fn() } as any;
   const student = { id: 's1', email: 's@x.y', name: 'S', roles: ['student'], status: 'active', adminPermissions: [], mustChangePassword: false };
 
   it('a capability turned off is refused for students and allowed again when on', async () => {
     const { context, reflector } = ctx({ cookies: { sid: token }, path: '/api/courses/x/reviews' }, { [CAPABILITY]: 'student.reviews.write' });
-    await expectAppError(new AuthGuard(reflector, prismaWith(student), roleConfig({ disabled: ['student.reviews.write'] })).canActivate(context), 403, 'capability_disabled');
-    await expect(new AuthGuard(reflector, prismaWith(student), roleConfig({})).canActivate(context)).resolves.toBe(true);
+    await expectAppError(new AuthGuard(reflector, prismaWith(student), noPolicy, roleConfig({ disabled: ['student.reviews.write'] })).canActivate(context), 403, 'capability_disabled');
+    await expect(new AuthGuard(reflector, prismaWith(student), noPolicy, roleConfig({})).canActivate(context)).resolves.toBe(true);
   });
 
   it('super admins are never limited by capabilities', async () => {
     const su = { ...student, roles: ['student', 'super_admin'] };
     const { context, reflector } = ctx({ cookies: { sid: token }, path: '/api/x' }, { [CAPABILITY]: 'student.reviews.write' });
-    await expect(new AuthGuard(reflector, prismaWith(su), roleConfig({ disabled: ['student.reviews.write'] })).canActivate(context)).resolves.toBe(true);
+    await expect(new AuthGuard(reflector, prismaWith(su), noPolicy, roleConfig({ disabled: ['student.reviews.write'] })).canActivate(context)).resolves.toBe(true);
   });
 
   it('an admin permission withheld from the Admin role is refused even when granted to the person', async () => {
     const admin = { ...student, roles: ['student', 'admin'], adminPermissions: ['users.view', 'orders.view'] };
     const ok = ctx({ cookies: { sid: token }, path: '/api/admin/x' }, { [ROLES]: ['admin'], [PERMISSION]: 'users.view' });
-    await expect(new AuthGuard(ok.reflector, prismaWith(admin), roleConfig({})).canActivate(ok.context)).resolves.toBe(true);
+    await expect(new AuthGuard(ok.reflector, prismaWith(admin), noPolicy, roleConfig({})).canActivate(ok.context)).resolves.toBe(true);
     const no = ctx({ cookies: { sid: token }, path: '/api/admin/x' }, { [ROLES]: ['admin'], [PERMISSION]: 'orders.view' });
-    await expectAppError(new AuthGuard(no.reflector, prismaWith(admin), roleConfig({})).canActivate(no.context), 403, 'permission_required');
+    await expectAppError(new AuthGuard(no.reflector, prismaWith(admin), noPolicy, roleConfig({})).canActivate(no.context), 403, 'permission_required');
   });
 
   it('a temporary password allows only the password change until a new one is chosen', async () => {
