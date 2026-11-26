@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
 import type { Request } from 'express';
 import type { Role } from '../generated/prisma/enums';
-import type { AdminPermission } from './permissions';
+import type { AdminPermission, Capability } from './permissions';
 
 export interface AuthUser {
   id: string;
@@ -12,12 +12,13 @@ export interface AuthUser {
   adminPermissions?: string[];
 }
 
-export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; rawBody?: Buffer };
+export type AppRequest = Request & { user?: AuthUser; realUser?: AuthUser; sessionId?: string; rawBody?: Buffer; mustChangePassword?: boolean };
 
 export const IS_PUBLIC = 'isPublic';
 export const ROLES = 'roles';
 export const SKIP_CSRF = 'skipCsrf';
 export const PERMISSION = 'permission';
+export const CAPABILITY = 'capability';
 
 /** Route is reachable without a session (a session, if present, is still attached). */
 export const Public = () => SetMetadata(IS_PUBLIC, true);
@@ -28,6 +29,11 @@ export const Roles = (...roles: Role[]) => SetMetadata(ROLES, roles);
  * Checked by the global guard on every request: switching dashboards never changes what an account may do.
  */
 export const Perm = (perm: AdminPermission) => SetMetadata(PERMISSION, perm);
+/**
+ * Route needs a role capability (Super Admin › Role management, src/common/permissions.ts ROLE_CAPABILITIES). Checked by
+ * the global guard on every request; super admins are never limited.
+ */
+export const Cap = (cap: Capability) => SetMetadata(CAPABILITY, cap);
 /** Route is exempt from CSRF (server-to-server webhooks only). */
 export const SkipCsrf = () => SetMetadata(SKIP_CSRF, true);
 

@@ -6,12 +6,15 @@ import { env } from '../config/env';
 import { PayoutsService } from './payouts.service';
 import { PrismaService } from '../common/prisma.service';
 import { sendAccessReminders } from '../access/reminders';
+import { purgeDueCourses } from '../admin/course-lifecycle';
+import { AuditService } from '../common/audit.service';
+import { StorageService } from '../common/storage.service';
 
 /** Runs in the API process: fee lookups that Stripe hasn't finished yet, and the hourly payout release. */
 @Processor(PAYMENTS_QUEUE)
 export class PaymentsProcessor extends WorkerHost {
   private readonly logger = new Logger('PaymentsJobs');
-  constructor(private readonly payouts: PayoutsService, private readonly prisma: PrismaService, private readonly jobs: JobsService) {
+  constructor(private readonly payouts: PayoutsService, private readonly prisma: PrismaService, private readonly jobs: JobsService, private readonly storage: StorageService, private readonly audit: AuditService) {
     super();
   }
 
@@ -29,6 +32,11 @@ export class PaymentsProcessor extends WorkerHost {
     if (job.name === 'access-reminders') {
       const r = await sendAccessReminders(this.prisma, this.jobs);
       if (r.sent) this.logger.log(`sent ${r.sent} access reminders`);
+      return r;
+    }
+    if (job.name === 'course-purge') {
+      const r = await purgeDueCourses(this.prisma, this.storage, this.audit);
+      if (r.purged || r.waiting) this.logger.log(`course deletion: ${r.purged} purged, ${r.waiting} waiting for learners' access to end`);
       return r;
     }
     return { ignored: job.name };

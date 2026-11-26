@@ -1,13 +1,17 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Optional } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createHash } from 'node:crypto';
 import type { Role } from '../generated/prisma/enums';
-import { AppRequest, hasRole, IS_PUBLIC, PERMISSION, ROLES } from './auth-context';
-import { can, type AdminPermission } from './permissions';
+import { AppRequest, CAPABILITY, hasRole, IS_PUBLIC, PERMISSION, ROLES } from './auth-context';
+import { canWithConfig, DEFAULT_ROLE_CONFIG, hasCapability, type AdminPermission, type Capability } from './permissions';
+import { RoleConfigService } from './role-config.service';
 import { SESSION_COOKIE } from './cookies';
 import { ACT_AS_COOKIE, ACT_AS_PLATFORM, acting, STUDIO_PATH } from './acting';
 import { forbidden, unauthorized } from './errors';
 import { PrismaService } from './prisma.service';
+
+/** What a person with a temporary password may still call (sign-in state, the password change, sign-out). */
+const PASSWORD_CHANGE_PATHS = /^\/api\/auth\/(me|password|logout|csrf|security|password-policy)$/;
 
 export const hashSessionToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -20,6 +24,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
+    @Optional() private readonly roleConfig?: RoleConfigService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -28,11 +33,12 @@ export class AuthGuard implements CanActivate {
     if (typeof token === 'string' && token.length >= 20 && token.length <= 200) {
       const session = await this.prisma.session.findUnique({
         where: { id: hashSessionToken(token) },
-        include: { user: { select: { id: true, email: true, name: true, roles: true, status: true, adminPermissions: true } } },
+        include: { user: { select: { id: true, email: true, name: true, roles: true, status: true, adminPermissions: true, mustChangePassword: true } } },
       });
       if (session && !session.revokedAt && session.expiresAt > new Date() && session.user.status === 'active') {
-        const { status: _s, ...user } = session.user;
+        const { status: _s, mustChangePassword, ...user } = session.user;
         req.user = user;
+        if (mustChangePassword) req.mustChangePassword = true;
         req.sessionId = session.id;
         await this.maybeActAsPlatform(req);
       }
@@ -42,10 +48,19 @@ export class AuthGuard implements CanActivate {
     const roles = this.reflector.getAllAndOverride<Role[] | undefined>(ROLES, [ctx.getHandler(), ctx.getClass()]);
     if (isPublic && !roles?.length) return true;
     if (!req.user) throw unauthorized();
+    // A temporary password set by a super admin: only the sign-in and password routes until the person picks their own.
+    if (req.mustChangePassword && !PASSWORD_CHANGE_PATHS.test(req.path ?? req.url ?? '')) {
+      throw forbidden('Choose a new password before you continue.', 'password_change_required');
+    }
     if (roles?.length && !roles.some((r) => hasRole(req.user, r))) throw forbidden();
     const perm = this.reflector.getAllAndOverride<AdminPermission | undefined>(PERMISSION, [ctx.getHandler(), ctx.getClass()]);
     // In "DEL Studio" mode req.user is DEL's instructor account; permissions are always the real person's.
-    if (perm && !can(req.realUser ?? req.user, perm)) throw forbidden('Your admin account does not have this permission', 'permission_required');
+    const cap = this.reflector.getAllAndOverride<Capability | undefined>(CAPABILITY, [ctx.getHandler(), ctx.getClass()]);
+    if (perm || cap) {
+      const cfg = this.roleConfig ? await this.roleConfig.get() : DEFAULT_ROLE_CONFIG;
+      if (perm && !canWithConfig(req.realUser ?? req.user, perm, cfg)) throw forbidden('Your admin account does not have this permission', 'permission_required');
+      if (cap && !hasCapability(req.realUser ?? req.user, cap, cfg)) throw forbidden('This is turned off on DevOps Easy Learning right now.', 'capability_disabled');
+    }
     return true;
   }
 

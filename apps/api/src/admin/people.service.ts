@@ -5,7 +5,8 @@ import { AuditService } from '../common/audit.service';
 import type { Actor } from '../common/auth-context';
 import { badRequest, conflict, forbidden, notFound } from '../common/errors';
 import { JobsService } from '../common/jobs';
-import { ADMIN_PERMISSIONS, ALL_ADMIN_PERMISSIONS, can, DEFAULT_ADMIN_PERMISSIONS, isPermission, ROLE_INFO, SUPER_ADMIN_ONLY } from '../common/permissions';
+import { ADMIN_PERMISSIONS, ALL_ADMIN_PERMISSIONS, ALL_CAPABILITIES, can, isPermission, ROLE_CAPABILITIES, ROLE_INFO, SUPER_ADMIN_ONLY, type AdminPermission, type Capability } from '../common/permissions';
+import { RoleConfigService } from '../common/role-config.service';
 import { PrismaService } from '../common/prisma.service';
 import { page, paged } from '../common/util';
 import { env, isProd } from '../config/env';
@@ -13,6 +14,13 @@ import { SignInService } from '../auth/signin.service';
 
 const PRIVILEGED: Role[] = ['admin', 'super_admin'];
 const OPEN_APPLICATION: InstructorStatus[] = ['pending', 'under_review', 'needs_info'];
+/** What a user's history shows (Super Admin › Users › an account). */
+export const USER_HISTORY_ACTIONS = [
+  'user.updated', 'user.access_changed', 'user.suspended', 'user.reactivated', 'user.disabled', 'user.deleted', 'user.email_changed',
+  'user.password_reset_sent', 'user.verification_sent', 'user.recovery_link_created', 'user.temporary_password_set', 'user.sessions_revoked',
+  'instructor.approved', 'instructor.rejected', 'instructor.applied', 'instructor.needs_info', 'instructor.under_review', 'instructor.revoked',
+  'auth.register', 'auth.mfa_reset', 'auth.password_reset', 'auth.password_changed',
+];
 
 /**
  * Users & roles (owner 2026-11-25, AGENTS.md rule 21). Roles are read from the database on every request (AuthGuard),
@@ -25,26 +33,65 @@ export class PeopleService {
     private readonly audit: AuditService,
     private readonly jobs: JobsService,
     private readonly signIn: SignInService,
+    private readonly roleConfig: RoleConfigService,
   ) {}
 
-  catalogue() {
+  async catalogue() {
+    const cfg = await this.roleConfig.get();
     return {
       roles: (Object.keys(ROLE_INFO) as Role[]).map((r) => ({ key: r, ...ROLE_INFO[r] })),
-      permissions: ALL_ADMIN_PERMISSIONS.map((k) => ({ key: k, description: ADMIN_PERMISSIONS[k] })),
-      defaultAdminPermissions: DEFAULT_ADMIN_PERMISSIONS,
+      permissions: ALL_ADMIN_PERMISSIONS.map((k) => ({ key: k, description: ADMIN_PERMISSIONS[k], allowed: cfg.adminAllowed.includes(k) })),
+      defaultAdminPermissions: cfg.adminDefaults,
       superAdminOnly: SUPER_ADMIN_ONLY,
     };
+  }
+
+  // ---------- Role Management (owner 2026-11-26) ----------
+  /** The four roles with what each may do. Super Admin is a locked system role. */
+  async roles() {
+    const cfg = await this.roleConfig.get();
+    const counts = await this.summary();
+    const caps = (role: 'student' | 'instructor') => (Object.entries(ROLE_CAPABILITIES[role]) as [Capability, string][]).map(([key, description]) => ({ key, description, enabled: !cfg.disabled.includes(key) }));
+    return {
+      roles: [
+        { key: 'super_admin', ...ROLE_INFO.super_admin, system: true, members: counts.superAdmins, alwaysIncluded: ['Every admin permission', ...SUPER_ADMIN_ONLY] },
+        { key: 'admin', ...ROLE_INFO.admin, system: false, members: counts.admins, permissions: ALL_ADMIN_PERMISSIONS.map((k) => ({ key: k, description: ADMIN_PERMISSIONS[k], allowed: cfg.adminAllowed.includes(k), default: cfg.adminDefaults.includes(k) })) },
+        { key: 'instructor', ...ROLE_INFO.instructor, system: false, members: counts.instructors, capabilities: caps('instructor'), alwaysIncluded: ['Build and edit their own courses', 'See their own sales, students and reviews', 'Student access'] },
+        { key: 'student', ...ROLE_INFO.student, system: false, members: counts.students, capabilities: caps('student'), alwaysIncluded: ['Sign in and manage their account', 'Browse, buy and watch the courses they own', 'Certificates for finished courses'] },
+      ],
+    };
+  }
+
+  /**
+   * Save what Admin, Instructor and Student may do (super admin + authenticator code, audited). Super Admin can't be
+   * changed. Admin permissions left out are withheld from every admin at once; their individual grants are kept.
+   */
+  async saveRoles(a: Actor, input: { adminAllowed: string[]; adminDefaults: string[]; disabled: string[]; code?: string; reason?: string }) {
+    if (!a.user.roles.includes('super_admin')) throw forbidden('Only a super admin can change roles', 'super_admin_required');
+    const before = await this.roleConfig.get();
+    const adminAllowed = Array.from(new Set(input.adminAllowed.filter(isPermission))) as AdminPermission[];
+    const adminDefaults = Array.from(new Set(input.adminDefaults.filter(isPermission))).filter((p) => adminAllowed.includes(p)) as AdminPermission[];
+    const disabled = Array.from(new Set(input.disabled.filter((c): c is Capability => (ALL_CAPABILITIES as string[]).includes(c))));
+    const same = (x: string[], y: string[]) => [...x].sort().join() === [...y].sort().join();
+    if (same(adminAllowed, before.adminAllowed) && same(adminDefaults, before.adminDefaults) && same(disabled, before.disabled)) return this.roles();
+    await this.stepUp(a, input.code);
+    await this.roleConfig.save({ adminAllowed, adminDefaults, disabled });
+    await this.audit.log({
+      actorId: a.user.id, action: 'roles.permissions_changed', targetType: 'role', targetId: null, ip: a.ip,
+      meta: { before, after: { adminAllowed, adminDefaults, disabled }, reason: input.reason?.trim() || null },
+    });
+    return this.roles();
   }
 
   async summary() {
     const weekAgo = new Date(Date.now() - 7 * 24 * 3600_000);
     const [total, students, instructors, admins, superAdmins, suspended, newWeek, applications] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { NOT: { roles: { hasSome: ['instructor', 'admin', 'super_admin'] } } } }),
+      this.prisma.user.count({ where: { status: { not: 'deleted' } } }),
+      this.prisma.user.count({ where: { status: { not: 'deleted' }, NOT: { roles: { hasSome: ['instructor', 'admin', 'super_admin'] } } } }),
       this.prisma.user.count({ where: { roles: { has: 'instructor' } } }),
       this.prisma.user.count({ where: { roles: { has: 'admin' }, NOT: { roles: { has: 'super_admin' } } } }),
       this.prisma.user.count({ where: { roles: { has: 'super_admin' } } }),
-      this.prisma.user.count({ where: { status: 'suspended' } }),
+      this.prisma.user.count({ where: { status: { in: ['suspended', 'disabled'] } } }),
       this.prisma.user.count({ where: { createdAt: { gte: weekAgo } } }),
       this.prisma.instructorProfile.count({ where: { status: { in: OPEN_APPLICATION } } }),
     ]);
@@ -58,7 +105,7 @@ export class PeopleService {
       : q.role ? { roles: { has: q.role } } : {};
     const where: Prisma.UserWhereInput = {
       ...role,
-      status: q.status,
+      status: q.status ?? { not: 'deleted' },
       ...(q.method ? { signupMethod: q.method } : {}),
       ...(q.since ? { createdAt: { gte: q.since } } : {}),
       ...(q.q ? { OR: [{ email: { contains: q.q, mode: 'insensitive' } }, { name: { contains: q.q, mode: 'insensitive' } }] } : {}),
@@ -71,7 +118,7 @@ export class PeopleService {
         ...page(q.page, q.pageSize),
         select: {
           id: true, email: true, name: true, roles: true, status: true, createdAt: true, signupMethod: true, emailVerifiedAt: true, mfaEnabledAt: true, adminPermissions: true,
-          instructorProfile: { select: { status: true } }, _count: { select: { enrollments: true, orders: true } },
+          suspendedUntil: true, instructorProfile: { select: { status: true } }, _count: { select: { enrollments: true, orders: true } },
         },
       }),
     ]);
@@ -83,6 +130,7 @@ export class PeopleService {
       where: { id: userId },
       select: {
         id: true, email: true, name: true, roles: true, status: true, createdAt: true, signupMethod: true, emailVerifiedAt: true, mfaEnabledAt: true, adminPermissions: true,
+        suspendedUntil: true, statusReason: true, deletedAt: true, mustChangePassword: true, lockedUntil: true, passwordHash: true,
         identities: { select: { provider: true, createdAt: true } },
         instructorProfile: { select: { status: true, headline: true, submittedAt: true, reviewNote: true } },
         _count: { select: { enrollments: true, orders: true, courses: true } },
@@ -90,15 +138,25 @@ export class PeopleService {
     });
     if (!u) throw notFound('User');
     const history = await this.prisma.auditLog.findMany({
-      where: { targetId: userId, action: { in: ['user.updated', 'user.access_changed', 'user.suspended', 'user.reactivated', 'instructor.approved', 'instructor.rejected', 'instructor.applied', 'instructor.needs_info', 'instructor.under_review', 'instructor.revoked', 'auth.register', 'auth.mfa_reset'] } },
+      where: { targetId: userId, action: { in: USER_HISTORY_ACTIONS } },
       orderBy: { at: 'desc' },
       take: 50,
       include: { actor: { select: { id: true, name: true } } },
     });
-    const { mfaEnabledAt, ...rest } = u;
+    const now = new Date();
+    const [lastSession, activeSessions] = await Promise.all([
+      this.prisma.session.findFirst({ where: { userId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }),
+      this.prisma.session.count({ where: { userId, revokedAt: null, expiresAt: { gt: now } } }),
+    ]);
+    const { mfaEnabledAt, passwordHash, lockedUntil, ...rest } = u;
     return {
       ...rest,
       mfaEnabled: !!mfaEnabledAt,
+      hasPassword: !!passwordHash,
+      locked: !!lockedUntil && lockedUntil > now,
+      lastLoginAt: lastSession?.createdAt ?? null,
+      activeSessions,
+      suspensionEnded: u.status === 'suspended' && !!u.suspendedUntil && u.suspendedUntil <= now,
       history: history.map((h) => ({ id: h.id, action: h.action, at: h.at, actor: h.actor, meta: h.meta })),
     };
   }
@@ -155,22 +213,32 @@ export class PeopleService {
     return this.detail(userId);
   }
 
-  async setStatus(a: Actor, userId: string, status: UserStatus, reason?: string) {
+  /**
+   * Active, suspended (optionally until a date: it ends by itself at the next sign-in after it) or disabled (until turned
+   * on again). Suspending or disabling signs the person out everywhere. Admins with users.manage may do it for students
+   * and instructors; only a super admin for admins; nobody for themselves or the last active super admin.
+   */
+  async setStatus(a: Actor, userId: string, status: Exclude<UserStatus, 'deleted'>, reason?: string, until?: Date | null) {
     if (userId === a.user.id) throw forbidden('You cannot suspend your own account', 'self_change');
     const target = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!target) throw notFound('User');
+    if (target.status === 'deleted') throw conflict('This account was deleted.', 'user_deleted');
     const isSuper = a.user.roles.includes('super_admin');
     if (!isSuper && target.roles.some((r) => PRIVILEGED.includes(r))) throw forbidden('Only a super admin can suspend another admin', 'super_admin_required');
-    if (status === 'suspended' && target.roles.includes('super_admin')) await this.assertNotLastSuperAdmin(userId);
-    if (target.status === status) return this.detail(userId);
-    if (status === 'suspended' && !reason?.trim()) throw badRequest('Add a reason for the suspension (it is kept in the account history).', 'reason_required');
-    await this.prisma.user.update({ where: { id: userId }, data: { status } });
-    if (status === 'suspended') await this.prisma.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
-    await this.audit.log({ actorId: a.user.id, action: status === 'suspended' ? 'user.suspended' : 'user.reactivated', targetType: 'user', targetId: userId, ip: a.ip, meta: { reason: reason?.trim() || null } });
+    if (status !== 'active' && target.roles.includes('super_admin')) await this.assertNotLastSuperAdmin(userId);
+    if (status === 'suspended' && until && until <= new Date()) throw badRequest('The end of the suspension must be in the future.', 'invalid_until');
+    const sameUntil = (target.suspendedUntil?.getTime() ?? null) === (status === 'suspended' ? until?.getTime() ?? null : null);
+    if (target.status === status && sameUntil) return this.detail(userId);
+    if (status !== 'active' && !reason?.trim()) throw badRequest(`Add a reason for the ${status === 'disabled' ? 'change' : 'suspension'} (it is kept in the account history).`, 'reason_required');
+    await this.prisma.user.update({ where: { id: userId }, data: { status, suspendedUntil: status === 'suspended' ? until ?? null : null, statusReason: status === 'active' ? null : reason!.trim() } });
+    if (status !== 'active') await this.prisma.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+    const action = status === 'active' ? 'user.reactivated' : status === 'disabled' ? 'user.disabled' : 'user.suspended';
+    await this.audit.log({ actorId: a.user.id, action, targetType: 'user', targetId: userId, ip: a.ip, meta: { reason: reason?.trim() || null, until: status === 'suspended' ? until?.toISOString() ?? null : null, before: target.status } });
     return this.detail(userId);
   }
 
-  private async stepUp(a: Actor, code?: string) {
+  /** A fresh Google Authenticator code from the acting super admin (also used by course deletion). */
+  async stepUp(a: Actor, code?: string) {
     const me = await this.prisma.user.findUnique({ where: { id: a.user.id }, select: { mfaEnabledAt: true } });
     // Local development with MFA_REQUIRED=false and no authenticator set up: nothing to ask (never in production).
     if (!me?.mfaEnabledAt && !env().MFA_REQUIRED && !isProd()) return;
@@ -178,7 +246,7 @@ export class PeopleService {
     await this.signIn.checkCode(a.user.id, code, a.ip);
   }
 
-  private async assertNotLastSuperAdmin(userId: string) {
+  async assertNotLastSuperAdmin(userId: string) {
     const others = await this.prisma.user.count({ where: { id: { not: userId }, roles: { has: 'super_admin' }, status: 'active' } });
     if (!others) throw conflict('This is the last active super admin. Make someone else a super admin first.', 'last_super_admin');
   }

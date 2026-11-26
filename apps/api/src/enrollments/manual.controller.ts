@@ -2,7 +2,7 @@ import { Controller, Get, HttpCode, Param, Post, Put, Req, Res, UseGuards } from
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { z } from 'zod';
-import { ActorCtx, type Actor, type AppRequest, CurrentUser, type AuthUser, Public, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, type AppRequest, CurrentUser, type AuthUser, Public, Roles, Cap } from '../common/auth-context';
 import { CSRF_COOKIE } from '../common/cookies';
 import { ZBody, ZQuery } from '../common/zod';
 import { AuthService } from '../auth/auth.service';
@@ -68,13 +68,13 @@ export class ManualEnrollmentController {
   @Roles('instructor', 'admin') @Get('enrollments/manual/filters')
   filters(@CurrentUser() u: AuthUser) { return this.svc.filterOptions(u); }
 
-  @Roles('instructor', 'super_admin') @Post('enrollments/manual')
+  @Roles('instructor', 'super_admin') @Cap('instructor.enrollments.request') @Post('enrollments/manual')
   create(@ZBody(createSchema) b: z.infer<typeof createSchema>, @ActorCtx() a: Actor) { return this.svc.create(a, b); }
 
   @Roles('instructor', 'admin') @Get('enrollments/manual/:id')
   detail(@Param('id') id: string, @CurrentUser() u: AuthUser) { return this.svc.detail(u, id); }
 
-  @Roles('instructor') @HttpCode(200) @Post('enrollments/manual/:id/resubmit')
+  @Roles('instructor') @Cap('instructor.enrollments.request') @HttpCode(200) @Post('enrollments/manual/:id/resubmit')
   resubmit(@Param('id') id: string, @ZBody(resubmitSchema) b: z.infer<typeof resubmitSchema>, @ActorCtx() a: Actor) { return this.svc.resubmit(a, id, b); }
 
   @Roles('super_admin') @HttpCode(200) @Post('enrollments/manual/:id/approve')

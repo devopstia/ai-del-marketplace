@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 import { Controller, Get, HttpCode, Param, Post, Put, Req } from '@nestjs/common';
 import { z } from 'zod';
-import { CurrentUser, type AuthUser } from '../common/auth-context';
+import { CurrentUser, type AuthUser, Cap } from '../common/auth-context';
 import { ZBody } from '../common/zod';
 import { LearningService } from './learning.service';
 
@@ -80,6 +80,7 @@ export class LearningController {
     return this.svc.submitQuiz(u, id, body.answers);
   }
 
+  @Cap('student.reviews.write')
   @Post('courses/:slug/reviews')
   review(@Param('slug') slug: string, @ZBody(reviewSchema) body: z.infer<typeof reviewSchema>, @CurrentUser() u: AuthUser) {
     return this.svc.review(u, slug, body);

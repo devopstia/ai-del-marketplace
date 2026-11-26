@@ -1,6 +1,6 @@
 import { Controller, Delete, Get, HttpCode, Param, Patch, Post, Put } from '@nestjs/common';
 import { z } from 'zod';
-import { ActorCtx, type Actor, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, Roles, Cap } from '../common/auth-context';
 import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
 import { InsightsService } from './insights.service';
@@ -94,7 +94,7 @@ export class InstructorController {
     return this.svc.listCourses(a.user.id);
   }
 
-  @Roles('instructor') @Post('courses')
+  @Roles('instructor') @Cap('instructor.courses.create') @Post('courses')
   create(@ZBody(createSchema) body: z.infer<typeof createSchema>, @ActorCtx() a: Actor) {
     return this.svc.createCourse(a, body);
   }
@@ -127,7 +127,7 @@ export class InstructorController {
     return this.svc.deleteCourse(a, id);
   }
 
-  @Roles('instructor') @HttpCode(200) @Post('courses/:id/submit')
+  @Roles('instructor') @Cap('instructor.courses.submit') @HttpCode(200) @Post('courses/:id/submit')
   submit(@Param('id') id: string, @ActorCtx() a: Actor) {
     return this.svc.submit(a, id);
   }
@@ -221,7 +221,7 @@ export class InstructorController {
     return this.svc.reviews(a.user.id);
   }
 
-  @Roles('instructor') @HttpCode(200) @Post('reviews/:id/reply')
+  @Roles('instructor') @Cap('instructor.reviews.respond') @HttpCode(200) @Post('reviews/:id/reply')
   reply(@Param('id') id: string, @ZBody(replySchema) body: z.infer<typeof replySchema>, @ActorCtx() a: Actor) {
     return this.svc.reply(a, id, body.reply);
   }

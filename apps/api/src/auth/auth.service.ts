@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import type { Response } from 'express';
 import { AuditService } from '../common/audit.service';
@@ -11,12 +11,13 @@ import { randomToken } from '../common/util';
 import { env } from '../config/env';
 import { checkPassword, passwordMessage } from './password-policy';
 import { ALL_ADMIN_PERMISSIONS } from '../common/permissions';
+import { RoleConfigService } from '../common/role-config.service';
 import { type Ctx, SignInService } from './signin.service';
 
 export const ARGON2_OPTS = { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
 const RESET_TTL_MS = 60 * 60_000;
 
-const publicUser = { id: true, email: true, name: true, avatarUrl: true, roles: true, status: true, createdAt: true, adminPermissions: true, signupMethod: true, emailVerifiedAt: true } as const;
+const publicUser = { id: true, email: true, name: true, avatarUrl: true, roles: true, status: true, createdAt: true, adminPermissions: true, signupMethod: true, emailVerifiedAt: true, mustChangePassword: true } as const;
 const VERIFY_TTL_MS = 3 * 24 * 3600_000;
 
 @Injectable()
@@ -28,6 +29,7 @@ export class AuthService {
     private readonly audit: AuditService,
     private readonly signIn: SignInService,
     private readonly jobs: JobsService,
+    @Optional() private readonly roleConfig?: RoleConfigService,
   ) {}
 
   hashPassword(pw: string) {
@@ -85,7 +87,8 @@ export class AuthService {
     if (!user) throw notFound('User');
     const { instructorProfile, adminPermissions, ...rest } = user;
     const mfa = await this.prisma.user.findUnique({ where: { id: userId }, select: { mfaEnabledAt: true } });
-    return { ...rest, adminPermissions: rest.roles.includes('super_admin') ? ALL_ADMIN_PERMISSIONS : rest.roles.includes('admin') ? adminPermissions : [], mfaEnabled: !!mfa?.mfaEnabledAt, instructor: instructorProfile };
+    const allowed = (await this.roleConfig?.get())?.adminAllowed ?? ALL_ADMIN_PERMISSIONS;
+    return { ...rest, adminPermissions: rest.roles.includes('super_admin') ? ALL_ADMIN_PERMISSIONS : rest.roles.includes('admin') ? adminPermissions.filter((p) => (allowed as string[]).includes(p)) : [], mfaEnabled: !!mfa?.mfaEnabledAt, instructor: instructorProfile };
   }
 
   // ---------- email verification ----------
@@ -172,7 +175,7 @@ export class AuthService {
       await this.signIn.checkCode(userId, input.code, ip);
     }
     await this.assertStrong(input.newPassword, { email: user.email, name: user.name });
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await this.hashPassword(input.newPassword), passwordChangedAt: new Date() } });
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await this.hashPassword(input.newPassword), passwordChangedAt: new Date(), mustChangePassword: false } });
     await this.prisma.session.updateMany({ where: { userId, revokedAt: null, NOT: keepSessionId ? { id: keepSessionId } : undefined }, data: { revokedAt: new Date() } });
     await this.signIn.forgetDevices(userId);
     await this.audit.log({ actorId: userId, action: user.passwordHash ? 'auth.password_changed' : 'auth.password_set', targetType: 'user', targetId: userId, ip });
@@ -203,7 +206,7 @@ export class AuthService {
     await this.assertStrong(password, { email: r.user.email, name: r.user.name });
     const used = await this.prisma.passwordReset.updateMany({ where: { id: r.id, usedAt: null }, data: { usedAt: new Date() } });
     if (!used.count) throw new AppError(400, 'reset_link_invalid', 'This link has expired or was already used. Ask for a new one.');
-    await this.prisma.user.update({ where: { id: r.userId }, data: { passwordHash: await this.hashPassword(password), passwordChangedAt: new Date(), failedLogins: 0, lockedUntil: null } });
+    await this.prisma.user.update({ where: { id: r.userId }, data: { passwordHash: await this.hashPassword(password), passwordChangedAt: new Date(), failedLogins: 0, lockedUntil: null, mustChangePassword: false } });
     await this.prisma.session.updateMany({ where: { userId: r.userId, revokedAt: null }, data: { revokedAt: new Date() } });
     await this.signIn.forgetDevices(r.userId);
     await this.audit.log({ actorId: r.userId, action: 'auth.password_reset', targetType: 'user', targetId: r.userId, ip });

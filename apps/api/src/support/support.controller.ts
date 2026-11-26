@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { z } from 'zod';
-import { ActorCtx, type Actor, CurrentUser, Perm } from '../common/auth-context';
+import { ActorCtx, type Actor, CurrentUser, Perm, Cap } from '../common/auth-context';
 import type { AuthUser } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { CATEGORIES, SupportService } from './support.service';
@@ -44,7 +44,7 @@ export class SupportController {
   constructor(private readonly svc: SupportService) {}
 
   @Get('support/tickets') mine(@ActorCtx() a: Actor) { return this.svc.mine(a.user.id); }
-  @Post('support/tickets') create(@ZBody(createSchema) b: z.infer<typeof createSchema>, @ActorCtx() a: Actor) { return this.svc.create(a, b); }
+  @Cap('student.support.create') @Post('support/tickets') create(@ZBody(createSchema) b: z.infer<typeof createSchema>, @ActorCtx() a: Actor) { return this.svc.create(a, b); }
   @Get('support/tickets/:number') one(@Param('number') n: string, @CurrentUser() u: AuthUser) { return this.svc.ticket(u, n); }
   @Post('support/tickets/:number/messages') reply(@Param('number') n: string, @ZBody(replySchema) b: z.infer<typeof replySchema>, @ActorCtx() a: Actor) { return this.svc.reply(a, n, b); }
   @HttpCode(200) @Post('support/tickets/:number/resolved') resolved(@Param('number') n: string, @ActorCtx() a: Actor) { return this.svc.confirm(a, n, true); }

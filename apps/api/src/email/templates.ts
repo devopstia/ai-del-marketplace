@@ -59,6 +59,11 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { p: `**${s(d.provider)}** can no longer be used to sign in to your account.` },
     { cta: { href: `${web()}/student/account`, label: 'Review my sign-in methods' } },
   ]),
+  'security-email-changed': (d) => mk('The email address of your account was changed', [
+    { h1: 'Your sign-in email changed' },
+    { p: `Hi ${first(d)}, DevOps Easy Learning changed the email address of your account to **${s(d.newEmail)}** at your request. From now on, receipts and sign-in emails go there.` },
+    { note: 'If you didn’t ask for this, write to support@devopseasylearning.com right away.' },
+  ]),
   'security-role-changed': (d) => mk('Your access on DevOps Easy Learning changed', [
     { h1: 'Your access changed' },
     { p: `Hi ${first(d)}, a super admin changed the roles on your account.` },

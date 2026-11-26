@@ -52,3 +52,74 @@ export function can(user: { roles: Role[]; adminPermissions?: string[] } | undef
   if (user.roles.includes('super_admin')) return true;
   return user.roles.includes('admin') && !!user.adminPermissions?.includes(perm);
 }
+
+// ---------- Role Management (owner 2026-11-26, Super Admin › Role management; docs/SUPER_ADMIN.md) ----------
+/**
+ * What the Student and Instructor roles may do beyond the basics. Each one guards real API routes (`@Cap`), so turning
+ * one off takes effect on the next request. The basics are never configurable (signing in, account settings, watching
+ * purchased courses, buying, building and editing one's own courses): switching those off would break the platform.
+ * Super admins are never limited by these switches.
+ */
+export const ROLE_CAPABILITIES = {
+  student: {
+    'student.reviews.write': 'Write and edit reviews of courses they are enrolled in',
+    'student.refunds.request': 'Request refunds (the refund rules still apply)',
+    'student.ai.ask': 'Ask the AI course assistant',
+    'student.support.create': 'Open support requests',
+    'student.paths.follow': 'Follow career paths',
+  },
+  instructor: {
+    'instructor.courses.create': 'Create new courses',
+    'instructor.courses.submit': 'Submit courses and changes for review',
+    'instructor.sales.manage': 'Run sales on their own courses',
+    'instructor.enrollments.request': 'Ask DEL to enroll students manually',
+    'instructor.reviews.respond': 'Reply to and report reviews of their courses',
+  },
+} as const;
+export type Capability = keyof (typeof ROLE_CAPABILITIES)['student'] | keyof (typeof ROLE_CAPABILITIES)['instructor'];
+export const ALL_CAPABILITIES = [...Object.keys(ROLE_CAPABILITIES.student), ...Object.keys(ROLE_CAPABILITIES.instructor)] as Capability[];
+export const isCapability = (c: string): c is Capability => (ALL_CAPABILITIES as string[]).includes(c);
+
+/**
+ * Saved in platform_settings `role_permissions`. Missing keys mean "on" (the defaults), so a capability added in code
+ * later is on until a super admin turns it off.
+ * - adminAllowed: the permissions any admin may hold. One left out is withheld from every admin at once (their own
+ *   grants are kept, so allowing it again restores them).
+ * - adminDefaults: what a newly made admin starts with.
+ * - disabled: capabilities turned off for their role.
+ */
+export interface RolePermissionConfig {
+  adminAllowed: AdminPermission[];
+  adminDefaults: AdminPermission[];
+  disabled: Capability[];
+}
+export const DEFAULT_ROLE_CONFIG: RolePermissionConfig = { adminAllowed: ALL_ADMIN_PERMISSIONS, adminDefaults: DEFAULT_ADMIN_PERMISSIONS, disabled: [] };
+
+/** Reads a saved config defensively (unknown keys dropped, defaults filled in). */
+export function parseRoleConfig(v: unknown): RolePermissionConfig {
+  const o = v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
+  const arr = (x: unknown) => (Array.isArray(x) ? x.filter((s): s is string => typeof s === 'string') : null);
+  const allowed = arr(o.adminAllowed);
+  const defaults = arr(o.adminDefaults);
+  const disabled = arr(o.disabled);
+  const adminAllowed = allowed ? allowed.filter(isPermission) : DEFAULT_ROLE_CONFIG.adminAllowed;
+  return {
+    adminAllowed,
+    adminDefaults: (defaults ? defaults.filter(isPermission) : DEFAULT_ROLE_CONFIG.adminDefaults).filter((p) => adminAllowed.includes(p)),
+    disabled: disabled ? disabled.filter(isCapability) : [],
+  };
+}
+
+/** `can` plus the role-wide ceiling: an admin needs the permission granted to them AND allowed for admins. */
+export function canWithConfig(user: { roles: Role[]; adminPermissions?: string[] } | undefined, perm: AdminPermission, cfg: RolePermissionConfig) {
+  if (!user) return false;
+  if (user.roles.includes('super_admin')) return true;
+  return can(user, perm) && cfg.adminAllowed.includes(perm);
+}
+
+/** A capability limits everyone except super admins. */
+export function hasCapability(user: { roles: Role[] } | undefined, cap: Capability, cfg: RolePermissionConfig) {
+  if (!user) return false;
+  if (user.roles.includes('super_admin')) return true;
+  return !cfg.disabled.includes(cap);
+}

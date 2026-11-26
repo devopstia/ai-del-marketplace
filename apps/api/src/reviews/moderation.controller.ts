@@ -1,6 +1,6 @@
 import { Controller, Delete, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
 import { z } from 'zod';
-import { ActorCtx, type Actor, Perm, Roles } from '../common/auth-context';
+import { ActorCtx, type Actor, Perm, Roles, Cap } from '../common/auth-context';
 import { ZBody, ZQuery } from '../common/zod';
 import { ModerationService, REPORT_REASONS } from './moderation.service';
 
@@ -19,7 +19,7 @@ const noteSchema = z.object({ note: z.string().trim().min(3).max(1000) }).strict
 export class ModerationController {
   constructor(private readonly svc: ModerationService) {}
 
-  @Roles('instructor') @Post('instructor/reviews/:id/report')
+  @Roles('instructor') @Cap('instructor.reviews.respond') @Post('instructor/reviews/:id/report')
   report(@Param('id') id: string, @ZBody(reportSchema) b: z.infer<typeof reportSchema>, @ActorCtx() a: Actor) { return this.svc.report(a, id, b); }
 
   @Roles('instructor') @Get('instructor/review-reports')

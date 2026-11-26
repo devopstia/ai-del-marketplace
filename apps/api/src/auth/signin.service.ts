@@ -101,7 +101,13 @@ export class SignInService {
    * (or for setting up an authenticator).
    */
   async begin(user: User, method: Method, req: AppRequest, res: Response, ctx: Ctx, extra: { cartCourseIds?: string[]; next?: string } = {}) {
-    if (user.status !== 'active') throw new AppError(403, 'account_suspended', 'This account is suspended');
+    // A temporary suspension (Super Admin › Users) ends by itself at its end date: the first sign-in after it reactivates.
+    if (user.status === 'suspended' && user.suspendedUntil && user.suspendedUntil <= new Date()) {
+      await this.prisma.user.update({ where: { id: user.id }, data: { status: 'active', suspendedUntil: null, statusReason: null } });
+      await this.audit.log({ actorId: null, action: 'user.reactivated', targetType: 'user', targetId: user.id, ip: ctx.ip, meta: { reason: 'Temporary suspension ended' } });
+      user = { ...user, status: 'active', suspendedUntil: null };
+    }
+    if (user.status !== 'active') throw new AppError(403, 'account_suspended', user.status === 'suspended' && user.suspendedUntil ? `This account is suspended until ${user.suspendedUntil.toUTCString()}` : 'This account is suspended');
     this.assertNotLocked(user);
     // Local development switch (MFA_REQUIRED=false); never honoured in production.
     const skip = !env().MFA_REQUIRED && !isProd();

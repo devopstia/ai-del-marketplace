@@ -1,7 +1,7 @@
 import { Controller, Delete, Get, Headers, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { z } from 'zod';
-import { ActorCtx, type Actor, type AppRequest, Public, Roles, SkipCsrf } from '../common/auth-context';
+import { ActorCtx, type Actor, type AppRequest, Public, Roles, SkipCsrf, Cap } from '../common/auth-context';
 import { AppError, badRequest, unavailable } from '../common/errors';
 import { ZBody } from '../common/zod';
 import { env } from '../config/env';
@@ -107,6 +107,7 @@ export class CommerceController {
 
   /** Learner refund: decided at once by the policy (docs/ACCESS_AND_REFUNDS.md). */
   @HttpCode(200)
+  @Cap('student.refunds.request')
   @Post('orders/:id/refund')
   requestRefund(@Param('id') id: string, @ZBody(refundRequestSchema) b: z.infer<typeof refundRequestSchema>, @ActorCtx() a: Actor) {
     return this.refunds.request({ id: a.user.id, ip: a.ip }, id, b.lineIds, b.reason);

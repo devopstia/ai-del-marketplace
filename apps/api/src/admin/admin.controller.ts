@@ -5,10 +5,20 @@ import { ZBody, ZQuery } from '../common/zod';
 import { AdminService } from './admin.service';
 import { FinanceService } from './finance.service';
 import { PeopleService } from './people.service';
+import { CourseAdminService } from './course-admin.service';
 
 const paging = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 const noteSchema = z.object({ note: z.string().trim().max(4000).optional() });
-const coursesQuery = z.object({ status: z.enum(['draft', 'in_review', 'changes_requested', 'published', 'unpublished', 'rejected']).optional(), q: z.string().max(100).optional(), ...paging });
+const coursesQuery = z.object({ status: z.enum(['draft', 'in_review', 'changes_requested', 'published', 'unpublished', 'rejected']).optional(), view: z.enum(['active', 'archived', 'deleting', 'purged', 'all']).optional(), featured: z.coerce.boolean().optional(), q: z.string().max(100).optional(), ...paging });
+const lines = z.array(z.string().trim().min(1).max(300)).max(30);
+const courseEdit = z.object({
+  title: z.string().trim().min(3).max(160).optional(), subtitle: z.string().trim().max(300).optional(), description: z.string().max(20000).optional(),
+  objectives: lines.optional(), requirements: lines.optional(), categoryId: z.string().uuid().nullable().optional(), level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  language: z.string().trim().min(2).max(10).optional(), priceCents: z.number().int().min(0).max(100_000_00).optional(), coverTemplateId: z.string().uuid().nullable().optional(), reason: z.string().trim().max(500).optional(),
+}).strict();
+const featureSchema = z.object({ on: z.boolean() }).strict();
+const archiveSchema = z.object({ reason: z.string().trim().min(3).max(500) }).strict();
+const deleteCourseSchema = z.object({ reason: z.string().trim().min(3).max(500), confirmTitle: z.string().max(200), code: z.string().trim().max(12).optional() }).strict();
 const usersQuery = z.object({ q: z.string().max(100).optional(), role: z.enum(['student', 'instructor', 'admin', 'super_admin']).optional(), status: z.enum(['active', 'suspended']).optional(), ...paging });
 const userPatch = z
   .object({ status: z.enum(['active', 'suspended']).optional(), roles: z.array(z.enum(['student', 'instructor', 'admin', 'super_admin'])).max(4).optional(), code: z.string().trim().max(12).optional(), reason: z.string().trim().max(500).optional() })
@@ -45,12 +55,29 @@ export class AdminController {
     private readonly svc: AdminService,
     private readonly finance: FinanceService,
     private readonly people: PeopleService,
+    private readonly courseAdmin: CourseAdminService,
   ) {}
 
   @Get('stats') stats() { return this.svc.stats(); }
   @Perm('courses.review') @Get('review-queue') queue() { return this.svc.reviewQueue(); }
   @Perm('courses.review') @Get('courses') courses(@ZQuery(coursesQuery) q: z.infer<typeof coursesQuery>) { return this.svc.courses(q); }
   @Perm('courses.review') @Get('courses/:id') course(@Param('id') id: string) { return this.svc.course(id); }
+  // Super Admin › Courses: any course, whoever teaches it (docs/SUPER_ADMIN.md).
+  @Perm('courses.review') @Get('courses/:id/state') courseState(@Param('id') id: string) { return this.courseAdmin.state(id); }
+  @Roles('super_admin') @Patch('courses/:id')
+  editCourse(@Param('id') id: string, @ZBody(courseEdit) b: z.infer<typeof courseEdit>, @ActorCtx() a: Actor) { return this.courseAdmin.edit(a, id, b); }
+  @Roles('super_admin') @HttpCode(200) @Post('courses/:id/publish')
+  publish(@Param('id') id: string, @ZBody(noteSchema) b: z.infer<typeof noteSchema>, @ActorCtx() a: Actor) { return this.courseAdmin.publish(a, id, b.note); }
+  @Roles('super_admin') @HttpCode(200) @Post('courses/:id/feature')
+  feature(@Param('id') id: string, @ZBody(featureSchema) b: z.infer<typeof featureSchema>, @ActorCtx() a: Actor) { return this.courseAdmin.feature(a, id, b.on); }
+  @Roles('super_admin') @HttpCode(200) @Post('courses/:id/archive')
+  archive(@Param('id') id: string, @ZBody(archiveSchema) b: z.infer<typeof archiveSchema>, @ActorCtx() a: Actor) { return this.courseAdmin.archive(a, id, b.reason); }
+  @Roles('super_admin') @HttpCode(200) @Post('courses/:id/restore')
+  restore(@Param('id') id: string, @ActorCtx() a: Actor) { return this.courseAdmin.restore(a, id); }
+  @Roles('super_admin') @HttpCode(200) @Post('courses/:id/delete')
+  deleteCourse(@Param('id') id: string, @ZBody(deleteCourseSchema) b: z.infer<typeof deleteCourseSchema>, @ActorCtx() a: Actor) { return this.courseAdmin.requestDeletion(a, id, b); }
+  @Roles('super_admin') @HttpCode(200) @Post('courses/:id/cancel-deletion')
+  cancelDeletion(@Param('id') id: string, @ActorCtx() a: Actor) { return this.courseAdmin.cancelDeletion(a, id); }
 
   /** Reviewers watch any video asset (e.g. a new video in a revision that is not live yet). Audited. */
   @Perm('courses.review') @HttpCode(200) @Post('videos/:assetId/playback')

@@ -336,6 +336,7 @@ export class InstructorService {
   /** Submit a new/changed course for review; for a published course this submits its draft revision. */
   async submit(a: Actor, courseId: string) {
     const c = await this.ownCourse(a.user.id, courseId);
+    if (c.archivedAt) throw conflict('DevOps Easy Learning archived this course. Contact support to restore it.', 'course_archived');
     if (c.status === 'published') {
       await this.revisions.submit(a, courseId);
       return this.courseDetail(a.user.id, courseId);
