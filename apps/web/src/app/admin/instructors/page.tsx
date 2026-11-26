@@ -61,10 +61,10 @@ export default function InstructorApplications() {
     <>
       <PageHead title="Instructor applications" sub="Students apply to teach; you approve, reject or ask for more information. Approval adds the Instructor role and keeps student access." />
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line">
-        <div role="tablist" className="flex gap-1">
+        <div role="tablist" className="flex max-w-full gap-1 overflow-x-auto">
           {TABS.map(([k, l]) => (
             <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => { setTab(k); setPage(1); setOpenId(null); }}
-              className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-bold ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
+              className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-bold sm:px-4 ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
               {l}{k === "open" && openCount ? <span className="ml-1.5 rounded-full bg-amber px-1.5 text-xs text-[var(--on-amber)]">{openCount}</span> : null}
             </button>
           ))}
