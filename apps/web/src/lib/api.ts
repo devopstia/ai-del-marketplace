@@ -3,6 +3,7 @@
 // mutations carry X-CSRF-Token (double submit: header must equal the `csrf` cookie).
 import { API_URL } from "./config";
 import { qs } from "./qs";
+import { announceSessionEnded, sessionEndedReason } from "./session-end";
 export { qs };
 
 export class ApiError extends Error {
@@ -79,6 +80,9 @@ export async function api<T = unknown>(path: string, opts: ReqOpts = {}): Promis
     const e = (data as { error?: { code?: string; message?: string | string[] }; message?: string | string[] }) ?? {};
     const raw = e.error?.message ?? e.message ?? res.statusText;
     const msg = Array.isArray(raw) ? raw.join(". ") : String(raw || "Request failed");
+    // This browser's session was ended (signed in elsewhere, inactivity, support): SessionGuard sends it to sign-in.
+    const ended = res.status === 401 ? sessionEndedReason(e.error?.code) : null;
+    if (ended) announceSessionEnded(ended);
     throw new ApiError(res.status, e.error?.code ?? String(res.status), msg);
   }
   return data as T;

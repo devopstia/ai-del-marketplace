@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Circle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { api, errMsg, setCsrf } from "@/lib/api";
 import { obj } from "@/lib/normalize";
+import { takeSessionEnded } from "@/lib/session-end";
 import { useAuth } from "./AuthProvider";
 import { Divider, OAUTH_ERRORS, safeNext, SocialButtons, useProviders } from "./auth/shared";
 
@@ -32,6 +33,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [err, setErr] = useState<string | null>(() => OAUTH_ERRORS[sp.get("error") ?? ""] ?? null);
   const [busy, setBusy] = useState(false);
   const rules = rulesMet(password, email, name);
+  // Why the last session ended (signed in elsewhere, inactivity, support; docs/AUTH.md §7), shown once.
+  const [ended, setEnded] = useState<string | null>(null);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { if (mode === "login") setEnded(takeSessionEnded(sp.get("ended"))); }, [mode, sp]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +64,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const other = mode === "login" ? "/register" : "/login";
   return (
     <div>
+      {ended && !err ? <p role="status" className="mb-5 rounded-tile border border-amber/40 bg-amber-soft px-4 py-3 text-sm font-bold text-ink" data-testid="session-ended">{ended}</p> : null}
       {err ? <p role="alert" className="mb-5 rounded-tile border border-rose/40 bg-rose-soft px-4 py-3 text-sm font-bold text-rose">{err}</p> : null}
       {providers?.items.length ? (
         <>

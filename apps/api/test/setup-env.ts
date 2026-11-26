@@ -6,3 +6,4 @@ process.env.DEV_TEST_PAYMENTS ??= 'true';
 process.env.S3_ACCESS_KEY ??= 'test';
 process.env.S3_SECRET_KEY ??= 'test-secret';
 process.env.AUTH_RATE_LIMIT ??= '1000';
+process.env.AUTH_SESSION_LIMITS ??= 'off'; // parallel test sign-ins; auth-sessions.e2e-spec saves real settings (docs/AUTH.md §7)

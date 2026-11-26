@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { KeyRound, Link2, Loader2, MonitorSmartphone, ShieldCheck, Smartphone } from "lucide-react";
+import { KeyRound, Link2, Loader2, Mail, MonitorSmartphone, ShieldCheck, Smartphone } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { obj } from "@/lib/normalize";
 import { date, dateTime } from "@/lib/format";
@@ -12,7 +12,7 @@ import { CodeInput, RecoveryCodes } from "./MfaStep";
 import { OAUTH_ERRORS, ProviderIcon, startUrl, type Provider } from "./shared";
 
 interface Identity { id: string; provider: string; email: string | null; createdAt: string; lastUsedAt: string | null }
-interface Sec { hasPassword: boolean; passwordChangedAt: string | null; mfa: { enabledAt: string | null; recoveryCodesLeft: number }; trustedDevices: number; identities: Identity[]; providers: Provider[] }
+interface Sec { hasPassword: boolean; passwordChangedAt: string | null; mfa: { enabledAt: string | null; recoveryCodesLeft: number }; trustedDevices: number; identities: Identity[]; providers: Provider[]; emailCodes: boolean; emailCodeLength: number }
 const arr = (x: unknown) => (Array.isArray(x) ? x : []);
 const toSec = (r: unknown): Sec => {
   const o = obj(r); const m = obj(o.mfa);
@@ -21,23 +21,40 @@ const toSec = (r: unknown): Sec => {
     mfa: { enabledAt: (m.enabledAt as string) ?? null, recoveryCodesLeft: Number(m.recoveryCodesLeft ?? 0) }, trustedDevices: Number(o.trustedDevices ?? 0),
     identities: arr(o.identities).map((i) => { const x = obj(i); return { id: String(x.id), provider: String(x.provider), email: (x.email as string) ?? null, createdAt: String(x.createdAt), lastUsedAt: (x.lastUsedAt as string) ?? null }; }),
     providers: arr(o.providers).map((p) => ({ key: String(obj(p).key), label: String(obj(p).label) })),
+    emailCodes: o.emailCodes === true, emailCodeLength: Number(o.emailCodeLength ?? 6),
   };
 };
 const LABEL: Record<string, string> = { google: "Google", github: "GitHub", facebook: "Facebook", linkedin: "LinkedIn", test: "Test provider" };
 
-/** "Enter a code to …" inline confirmation. */
-function Confirm({ label, busy, onConfirm, onCancel }: { label: string; busy: boolean; onConfirm: (code: string) => void; onCancel: () => void }) {
+/** "Send a code to my email" for people who sign in with email codes (no authenticator; docs/AUTH.md §7). */
+function EmailCodeButton() {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  return (
+    <button type="button" className="btn btn-outline btn-sm" disabled={busy} data-testid="stepup-email" onClick={async () => {
+      setBusy(true);
+      try { const r = obj(await api("/auth/step-up/email", { method: "POST" })); setSentTo(String(r.sentTo ?? "")); toast("ok", `Code sent to ${String(r.sentTo ?? "your email")}.`); }
+      catch (e) { toast("error", errMsg(e)); } finally { setBusy(false); }
+    }}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}{sentTo ? "Send a new code" : "Send code to my email"}</button>
+  );
+}
+
+/** "Enter a code to …" inline confirmation: from the authenticator, or (no authenticator) from an email. */
+function Confirm({ label, busy, onConfirm, onCancel, email }: { label: string; busy: boolean; onConfirm: (code: string) => void; onCancel: () => void; email?: { length: number } | null }) {
   const [code, setCode] = useState("");
+  const len = email?.length ?? 6;
   return (
     <form className="mt-3 flex flex-wrap items-end gap-2 rounded-tile border border-line bg-surface-2 p-3" onSubmit={(e) => { e.preventDefault(); onConfirm(code); }}>
-      <div className="w-44"><label className="label" htmlFor="confirm-code">Code from your app</label><CodeInput id="confirm-code" value={code} onChange={setCode} /></div>
-      <button className="btn btn-primary btn-sm" disabled={busy || code.length !== 6} data-testid="confirm-submit">{busy ? <Loader2 className="size-4 animate-spin" /> : null}{label}</button>
+      {email ? <EmailCodeButton /> : null}
+      <div className="w-48"><label className="label" htmlFor="confirm-code">{email ? "Code from your email" : "Code from your app"}</label><CodeInput id="confirm-code" value={code} onChange={setCode} length={len} autoFocus={!email} /></div>
+      <button className="btn btn-primary btn-sm" disabled={busy || code.length !== len} data-testid="confirm-submit">{busy ? <Loader2 className="size-4 animate-spin" /> : null}{label}</button>
       <button type="button" className="btn btn-ghost btn-sm" onClick={onCancel}>Cancel</button>
     </form>
   );
 }
 
-function PasswordBox({ hasPassword, onDone }: { hasPassword: boolean; onDone: () => void }) {
+function PasswordBox({ hasPassword, onDone, email }: { hasPassword: boolean; onDone: () => void; email?: { length: number } | null }) {
   const toast = useToast();
   const [cur, setCur] = useState("");
   const [next, setNext] = useState("");
@@ -53,7 +70,7 @@ function PasswordBox({ hasPassword, onDone }: { hasPassword: boolean; onDone: ()
       } catch (err) { toast("error", errMsg(err)); } finally { setBusy(false); }
     }}>
       {hasPassword ? <div><label className="label" htmlFor="pw-cur">Current password</label><input id="pw-cur" type="password" autoComplete="current-password" className="field" required value={cur} onChange={(e) => setCur(e.target.value)} /></div>
-        : <div><label className="label" htmlFor="pw-code">Code from your app</label><CodeInput id="pw-code" value={code} onChange={setCode} autoFocus={false} /></div>}
+        : <div><label className="label" htmlFor="pw-code">{email ? "Code from your email" : "Code from your app"}</label><CodeInput id="pw-code" value={code} onChange={setCode} autoFocus={false} length={email?.length ?? 6} />{email ? <div className="mt-2"><EmailCodeButton /></div> : null}</div>}
       <div><label className="label" htmlFor="pw-new">New password</label><input id="pw-new" type="password" autoComplete="new-password" minLength={12} maxLength={128} className="field" required value={next} onChange={(e) => setNext(e.target.value)} /><p className="hint">12+ characters, letters and numbers, not from a data breach.</p></div>
       <div className="sm:col-span-2"><button className="btn btn-outline" disabled={busy} data-testid="password-save">{busy ? <Loader2 className="size-4 animate-spin" /> : null}{hasPassword ? "Change password" : "Set password"}</button></div>
     </form>
@@ -79,6 +96,8 @@ export function SecuritySection() {
 
   const run = async (fn: () => Promise<void>) => { setBusy(true); try { await fn(); } catch (e) { toast("error", errMsg(e)); } finally { setBusy(false); } };
   if (!sec) return <Skeleton className="mt-10 h-72" />;
+  // No authenticator yet, email codes allowed: confirmations use an email code (docs/AUTH.md §7).
+  const stepUpEmail = !sec.mfa.enabledAt && sec.emailCodes ? { length: sec.emailCodeLength } : null;
   const linkedKeys = new Set(sec.identities.map((i) => i.provider));
   const methods = sec.identities.length + (sec.hasPassword ? 1 : 0);
   const row = "flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4";
@@ -92,20 +111,20 @@ export function SecuritySection() {
         <div className={row}>
           <ShieldCheck className="size-6 text-mint" />
           <div className="min-w-[13rem] flex-1">
-            <p className="font-bold">Two-step sign-in with Google Authenticator</p>
-            <p className="text-sm text-muted">{sec.mfa.enabledAt ? `On since ${date(sec.mfa.enabledAt)}. Required for every account.` : "Set up at your next sign-in."}</p>
+            <p className="font-bold">{sec.mfa.enabledAt || !sec.emailCodes ? "Two-step sign-in with Google Authenticator" : "Two-step sign-in with email codes"}</p>
+            <p className="text-sm text-muted">{sec.mfa.enabledAt ? `On since ${date(sec.mfa.enabledAt)}. Required for every account.` : sec.emailCodes ? "Each sign-in asks for a code we email you. For stronger protection, set up Google Authenticator." : "Set up at your next sign-in."}</p>
           </div>
-          {sec.mfa.enabledAt ? <button type="button" className="btn btn-outline btn-sm" onClick={() => { setOpen(open === "replace" ? null : "replace"); setReplace(null); setNewCode(""); }}><Smartphone className="size-4" />Move to a new phone</button> : null}
+          {sec.mfa.enabledAt || sec.emailCodes ? <button type="button" className="btn btn-outline btn-sm" onClick={() => { setOpen(open === "replace" ? null : "replace"); setReplace(null); setNewCode(""); }} data-testid="authenticator-setup"><Smartphone className="size-4" />{sec.mfa.enabledAt ? "Move to a new phone" : "Set up Google Authenticator"}</button> : null}
         </div>
         {open === "replace" ? (
           <div className="px-5 pb-5">
-            {!replace ? <Confirm label="Continue" busy={busy} onCancel={() => setOpen(null)} onConfirm={(code) => void run(async () => {
+            {!replace ? <Confirm label="Continue" busy={busy} email={stepUpEmail} onCancel={() => setOpen(null)} onConfirm={(code) => void run(async () => {
               const r = obj(await api("/auth/mfa/replace/start", { method: "POST", body: { code } }));
               setReplace({ pending: String(r.pending), secret: String(r.secret), qr: await QRCode.toString(String(r.otpauthUrl), { type: "svg", margin: 1, color: { dark: "#0c0f22", light: "#ffffff" } }) });
             })} /> : (
               <form className="mt-3 flex flex-wrap items-start gap-4 rounded-tile border border-line bg-surface-2 p-4" onSubmit={(e) => { e.preventDefault(); void run(async () => {
                 await api("/auth/mfa/replace/confirm", { method: "POST", body: { pending: replace.pending, code: newCode } });
-                toast("ok", "Your new phone is set up. Other devices were signed out."); setOpen(null); setReplace(null); load();
+                toast("ok", sec.mfa.enabledAt ? "Your new phone is set up. Other devices were signed out." : "Google Authenticator is on. Get your recovery codes below. Other devices were signed out."); setOpen(null); setReplace(null); load();
               }); }}>
                 <span className="block size-36 shrink-0 overflow-hidden rounded-lg bg-white p-1.5" role="img" aria-label="QR code for your new phone" dangerouslySetInnerHTML={{ __html: replace.qr }} />
                 <div className="min-w-[13rem] flex-1">
@@ -141,7 +160,7 @@ export function SecuritySection() {
           <KeyRound className="size-5 text-muted" />
           <div className="min-w-[13rem] flex-1"><p className="font-bold">Email and password</p><p className="text-sm text-muted">{sec.hasPassword ? (sec.passwordChangedAt ? `Last changed ${date(sec.passwordChangedAt)}` : "Set") : "Not set. Add one to also log in with your email."}</p></div>
           <button type="button" className="btn btn-outline btn-sm" onClick={() => setOpen(open === "password" ? null : "password")} aria-expanded={open === "password"}>{sec.hasPassword ? "Change" : "Set a password"}</button>
-          {open === "password" ? <div className="w-full"><PasswordBox hasPassword={sec.hasPassword} onDone={() => { setOpen(null); load(); }} /></div> : null}
+          {open === "password" ? <div className="w-full"><PasswordBox hasPassword={sec.hasPassword} email={stepUpEmail} onDone={() => { setOpen(null); load(); }} /></div> : null}
         </li>
         {[...new Set([...sec.providers.map((p) => p.key), ...linkedKeys])].map((k) => {
           const linked = sec.identities.filter((i) => i.provider === k);
@@ -157,7 +176,7 @@ export function SecuritySection() {
                 <button key={i.id} type="button" className="btn btn-outline btn-sm" disabled={methods <= 1} title={methods <= 1 ? "Set a password or link another account first" : undefined} onClick={() => setOpen(open === `unlink-${i.id}` ? null : `unlink-${i.id}`)} data-testid={`unlink-${k}`}>Unlink</button>
               )) : enabled ? <a href={startUrl(k, "link", "/student/account")} className="btn btn-outline btn-sm" data-testid={`link-${k}`}><Link2 className="size-4" />Link</a> : null}
               {linked.map((i) => open === `unlink-${i.id}` ? (
-                <div key={i.id} className="w-full"><Confirm label={`Unlink ${LABEL[k] ?? k}`} busy={busy} onCancel={() => setOpen(null)} onConfirm={(code) => void run(async () => { await api(`/auth/identities/${i.id}/unlink`, { method: "POST", body: { code } }); toast("ok", `${LABEL[k] ?? k} is unlinked.`); setOpen(null); load(); })} /></div>
+                <div key={i.id} className="w-full"><Confirm label={`Unlink ${LABEL[k] ?? k}`} busy={busy} email={stepUpEmail} onCancel={() => setOpen(null)} onConfirm={(code) => void run(async () => { await api(`/auth/identities/${i.id}/unlink`, { method: "POST", body: { code } }); toast("ok", `${LABEL[k] ?? k} is unlinked.`); setOpen(null); load(); })} /></div>
               ) : null)}
             </li>
           );

@@ -30,6 +30,7 @@ Owner, 2026-11-25: reuse Insurance Hub's email approach and templates, with the 
 | Email sign-up (welcome + confirm address) / provider sign-up | `verify-email` / `welcome` |
 | Password reset, password changed | `password-reset`, `security-password-changed` |
 | Two-step sign-in reset, sign-in method linked/removed, roles changed | `security-mfa-reset`, `security-identity-linked`, `security-identity-unlinked`, `security-role-changed` |
+| Email sign-in or confirmation code; new-device sign-in; account locked after wrong attempts (docs/AUTH.md §7) | `auth-email-code`, `security-new-device`, `security-account-locked` |
 | Purchase receipt (with access dates, renewals marked) | `order-receipt` |
 | Access ends in 30/7/1 days, ended | `access-expiring`, `access-expired` |
 | Manual enrollment: one course / several, date extended | `course-access-activated`, `courses-assigned`, `course-access-extended` |

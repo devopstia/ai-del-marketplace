@@ -24,7 +24,7 @@ LinkedIn, the compromised-password check, trusted devices, account linking.
 - `state` (one-time) and the PKCE verifier live in a sealed, 10-minute httpOnly cookie; the callback checks both.
 - Accounts are matched by the provider's **own account id** (`auth_identities.provider + subject`), never by email.
 
-## 2. Two-step sign-in (Google Authenticator), for everyone
+## 2. Two-step sign-in (Google Authenticator, or email codes for students and instructors: §7), for everyone
 Every method only earns a **ticket** (httpOnly `del_mfa` cookie, SHA-256 at rest, 5 minutes to verify / 20 to set up,
 single use, burnt after 5 wrong codes). The session cookie is set only after a code.
 - **New accounts** (any method) set up Google Authenticator on `/login/verify`: QR (drawn in the browser; the seed never
@@ -90,3 +90,61 @@ Locally you can instead set `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_…`, `FACEBOOK_�
   `login()` enters a code once per account and reuses "Trust this device".
 - Tests: `apps/api/src/auth/auth-security.spec.ts` (RFC 6238 vectors, breach check, each provider's response) and the
   e2e "sign-in security" suite (codes, recovery, trust, lockout, reset, social, linking, Super Admin reset).
+
+## 7. Email sign-in codes and session security (owner 2026-11-26, prompts.md)
+**Review before the change (what existed, what was missing).** Existing and reused: password + four providers, the
+single-use sign-in ticket, Google Authenticator (TOTP, single-use steps), ten hashed recovery codes, trusted devices,
+lockout after 5 failures, step-up codes for sensitive changes, cookie sessions hashed at rest, "sign out other devices"
+on a password change, per-IP rate limits, signed short-lived playback sessions. Missing: a second step without a
+smartphone (email codes), central settings, an inactivity timeout, a maximum session lifetime (sessions lasted 30 days),
+a one-browser rule, telling a disconnected browser why, a Super Admin view of a person's sessions, new-device and
+lockout emails, and (a bug) signing in again revoked the browser's current session *before* the new code was checked.
+Government ID verification: not offered (owner, 2026-11-26).
+
+**Email codes** (`signin.service.ts` `sendEmailCode`, `complete({ emailCode })`): for **students and instructors only**
+when allowed (Super Admin setting, per role). An email code proves access to the inbox, not who someone is, so it is
+never enough for Admin or Super Admin: `allowedMethods()` refuses it for any account with a privileged role, and the
+settings schema can't list those roles. Code: N digits (6–8) from `crypto.randomInt`, stored only as an HMAC
+(SESSION_SECRET) bound to the sign-in ticket, single use, expires (5 min), limited wrong tries (5) per code, 60 s resend
+cooldown, at most 5 codes per sign-in attempt, a new code replaces the old one, the email is masked on screen, the code
+never appears in logs or the audit (only "sent"). A successful email-code sign-in marks the email verified. "Trust this
+browser" isn't offered with an email code. People without an authenticator see "Send a code to my email" on the setup
+screen (stage `enroll`); next time the screen starts on the email code (`prefers`). Sensitive changes for them use
+`POST /auth/step-up/email` (same rules, bound to the account); they can add Google Authenticator from Account › Security.
+
+**Settings** (`auth/security-settings.ts`, `common/session-policy.service.ts`, page `/admin/security`): stored in
+`platform_settings.auth_security`, cached 15 s per API process (refreshed at once on save), step-up code to change,
+audited with the changed fields, "Restore recommended settings". Defaults = the owner's table: email codes on for
+students and instructors, 6 digits, 5 min, 5 tries, 60 s; inactivity 30 min, warning 2 min, lifetime 24 h, one browser,
+end the older session; new-device and lockout emails on. Recovery codes are always on (they come with the authenticator).
+
+**Sessions** (`auth.guard.ts`, `SessionPolicyService`):
+- `sessions.kind`: `user` = an ordinary sign-in; `support` = a super admin support session (impersonation, built
+  separately). **Contract:** create support sessions with `SignInService.createSession(userId, ctx, { kind: 'support',
+  ttlMs })`; they don't count toward the person's limit, never end the person's sessions, and aren't subject to the
+  ordinary idle/lifetime rule (their own `expiresAt` applies). AI agents use scoped tokens, never sessions.
+- Lifetime and inactivity are checked by the guard on every request. Activity = the heartbeat (`POST
+  /auth/session/heartbeat`, sent by `components/SessionGuard.tsx` at most once a minute while the person types, clicks,
+  scrolls or a lesson plays) and video progress saves; background polling never counts.
+- One browser (or "at most N"): when a sign-in completes **every** step, older `user` sessions over the limit end as
+  `replaced` (oldest first), or with "refuse" the new sign-in gets 409 `session_limit` before its ticket is used. A
+  failed code never disconnects anyone. Tabs of one browser share the cookie and keep working.
+- Every end goes through `SessionPolicyService.end()`: `endedReason` (logout, replaced, idle, lifetime, admin, user),
+  an audit entry, and the person's video playback sessions expire at once (encryption key and playlists stop; segment
+  links already handed out expire with their short signature).
+- The ended browser gets 401 `session_<reason>` with a clear message (the owner's wording for "replaced"); `/auth/me`
+  reports it once and clears the dead cookie; the sign-in page shows the message.
+- Browser warning: `SessionGuard` shows "Are you still there?" with a countdown `warningMinutes` before the timeout,
+  "Stay signed in" / "Sign out now"; the newest activity of any tab counts (localStorage).
+- New device: a long-lived random `del_dev` cookie (stored as sha256 on the session). The first sign-in from a browser
+  an account never used (not the very first sign-in of the account) emails the owner: time, device (from the user
+  agent), IP, "Location unavailable" (no geo-IP service is used).
+- Super Admin › Users › a person › Sessions: live sessions (device, IP, signed in, last active, end time), recent
+  sign-ins and session ends from the audit log, "Sign out" one or everywhere (audited; viewing is audited too).
+
+**Tests and test stacks.** `AUTH_SESSION_LIMITS=off` (ignored in production) relaxes only the *defaults* (no one-browser
+rule, 8 h idle) so parallel browser tests can sign the same demo account in several times: set in
+`docker-compose.test.yml` and the jest setup. Saved settings still apply. The owner's local site and staging use the real
+defaults (signing in on a second browser signs the first out). `apps/api/test/auth-sessions.e2e-spec.ts` covers email
+codes, the admin safeguard, one-browser, refuse mode, inactivity, lifetime, Super Admin session control, security
+emails and step-up by email; `src/auth/security-settings.spec.ts` and `src/common/guards.spec.ts` the rules.

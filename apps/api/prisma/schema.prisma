@@ -204,8 +204,18 @@ model Session {
   ip        String?
   userAgent String?
   revokedAt DateTime?
+  /// Session security (docs/AUTH.md §7, migration 20261127090000): 'user' = an ordinary sign-in (counts toward the
+  /// single-session limit); 'support' = a super admin support session (impersonation) that never disconnects the person.
+  kind         String    @default("user")
+  /// Last real activity (heartbeat, video progress, sign-in); the API ends the session after the inactivity timeout.
+  lastActiveAt DateTime?
+  /// Why it ended: logout | replaced | idle | lifetime | admin | password | mfa_reset | user
+  endedReason  String?
+  /// sha256 of the long-lived del_dev cookie: a sign-in from a browser never seen before sends a security email.
+  deviceId     String?
 
   @@index([userId])
+  @@index([userId, kind, revokedAt])
   @@map("sessions")
 }
 

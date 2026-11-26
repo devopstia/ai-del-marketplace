@@ -92,6 +92,12 @@ const schema = z.object({
   /** Where Contact page messages go (DEL support inbox). */
   CONTACT_EMAIL: z.string().email().default('support@devopseasylearning.com'),
   MFA_REQUIRED: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
+  /**
+   * Test stacks only (docs/AUTH.md §7): "off" relaxes the *default* session limits (no single-session rule, no inactivity
+   * timeout) so parallel browser tests can sign the same demo account in several times. Saved Super Admin settings still
+   * apply, and production ignores it.
+   */
+  AUTH_SESSION_LIMITS: z.enum(['on', 'off']).default('on'),
   /** The name shown in Google Authenticator. */
   MFA_ISSUER: z.string().default('DevOps Easy Learning'),
   /** Local demo accounts only: the authenticator seed the seed script gives them (base32), so tests and demos can sign in. */

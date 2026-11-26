@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeDollarSign, BookOpen, ChartNoAxesColumnIncreasing, ClipboardCheck, Clapperboard, CreditCard, FolderTree, Gauge, GraduationCap,
-  Image as ImageIcon, KeyRound, Landmark, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw, Route,
+  Image as ImageIcon, KeyRound, Landmark, LockKeyhole, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw, Route,
   ScrollText, Settings, ShieldCheck, Tag, UserPlus, UserRound, Users, Wallet,
 } from "lucide-react";
 import type { Me } from "./types";
@@ -73,6 +73,7 @@ const adminGroups: { label?: string; items: AdminItem[] }[] = [
   { label: "People", items: [
     { href: "/admin/users", label: "Users and roles", icon: Users, perm: "users.view" },
     { href: "/admin/sign-in", label: "Sign-in methods", icon: KeyRound, superOnly: true },
+    { href: "/admin/security", label: "Authentication & security", icon: LockKeyhole, superOnly: true },
     { href: "/admin/instructors", label: "Instructor applications", icon: GraduationCap, perm: "users.view" },
     { href: "/admin/enrollments", label: "Manual enrollments", icon: UserPlus, perm: "enrollments.manage" },
   ] },

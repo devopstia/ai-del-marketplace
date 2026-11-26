@@ -12,6 +12,8 @@ import { env } from '../config/env';
 import { checkPassword, passwordMessage } from './password-policy';
 import { ALL_ADMIN_PERMISSIONS } from '../common/permissions';
 import { type Ctx, SignInService } from './signin.service';
+import { SessionPolicyService } from '../common/session-policy.service';
+import { allowedMethods, describeDevice } from './security-settings';
 
 export const ARGON2_OPTS = { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
 const RESET_TTL_MS = 60 * 60_000;
@@ -28,6 +30,7 @@ export class AuthService {
     private readonly audit: AuditService,
     private readonly signIn: SignInService,
     private readonly jobs: JobsService,
+    private readonly policy: SessionPolicyService,
   ) {}
 
   hashPassword(pw: string) {
@@ -131,17 +134,29 @@ export class AuthService {
 
   async listSessions(userId: string, currentId?: string) {
     const rows = await this.prisma.session.findMany({
-      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      where: { userId, kind: 'user', revokedAt: null, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, createdAt: true, expiresAt: true, ip: true, userAgent: true },
+      select: { id: true, createdAt: true, expiresAt: true, ip: true, userAgent: true, lastActiveAt: true },
     });
-    return rows.map((r) => ({ ...r, current: r.id === currentId }));
+    return rows.map((r) => ({ ...r, device: describeDevice(r.userAgent).label, current: r.id === currentId }));
   }
 
   async revokeOwnSession(userId: string, sessionId: string, ip: string | null) {
-    const r = await this.prisma.session.updateMany({ where: { id: sessionId, userId, revokedAt: null }, data: { revokedAt: new Date() } });
-    if (!r.count) throw notFound('Session');
-    await this.audit.log({ actorId: userId, action: 'auth.session_revoked', targetType: 'session', targetId: sessionId, ip });
+    const n = await this.policy.end({ ids: [sessionId], userId }, 'user', { ip });
+    if (!n) throw notFound('Session');
+  }
+
+  /**
+   * The inactivity warning's numbers (docs/AUTH.md §7): when this session is signed out for inactivity (idleAt) and at the
+   * latest (endsAt). For a support session only the end.
+   */
+  async sessionStatus(sessionId: string) {
+    const s = await this.prisma.session.findUniqueOrThrow({ where: { id: sessionId }, select: { kind: true, createdAt: true, lastActiveAt: true, expiresAt: true } });
+    const cfg = await this.policy.settings();
+    if (s.kind !== 'user') return { kind: s.kind, inactivityMinutes: null, warningMinutes: null, idleAt: null, endsAt: s.expiresAt };
+    const last = (s.lastActiveAt ?? s.createdAt).getTime();
+    const endsAt = new Date(Math.min(s.expiresAt.getTime(), s.createdAt.getTime() + cfg.session.lifetimeHours * 3600_000));
+    return { kind: s.kind, inactivityMinutes: cfg.session.inactivityMinutes, warningMinutes: cfg.session.warningMinutes, idleAt: new Date(last + cfg.session.inactivityMinutes * 60_000), endsAt };
   }
 
   async updateProfile(userId: string, data: { name?: string; avatarUrl?: string | null }) {
@@ -150,12 +165,14 @@ export class AuthService {
 
   /** What Account › Security shows. */
   async security(userId: string) {
-    const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { passwordHash: true, passwordChangedAt: true, mfaEnabledAt: true } });
-    const [codesLeft, devices] = await Promise.all([
+    const u = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { passwordHash: true, passwordChangedAt: true, mfaEnabledAt: true, roles: true } });
+    const [codesLeft, devices, cfg] = await Promise.all([
       this.prisma.mfaRecoveryCode.count({ where: { userId, usedAt: null } }),
       this.prisma.trustedDevice.count({ where: { userId, revokedAt: null, expiresAt: { gt: new Date() } } }),
+      this.policy.settings(),
     ]);
-    return { hasPassword: !!u.passwordHash, passwordChangedAt: u.passwordChangedAt, mfa: { enabledAt: u.mfaEnabledAt, recoveryCodesLeft: codesLeft }, trustedDevices: devices };
+    // emailCodes: this account may sign in (and confirm changes) with email codes (docs/AUTH.md §7).
+    return { hasPassword: !!u.passwordHash, passwordChangedAt: u.passwordChangedAt, mfa: { enabledAt: u.mfaEnabledAt, recoveryCodesLeft: codesLeft }, trustedDevices: devices, emailCodes: allowedMethods(u.roles, cfg).email, emailCodeLength: cfg.emailOtp.length };
   }
 
   /**

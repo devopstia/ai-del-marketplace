@@ -21,7 +21,7 @@ export default function SignInMethods() {
   const { data: s, error, setData } = useApi("/admin/sign-in-methods", (r) => obj(r) as unknown as Status);
   return (
     <div className="max-w-5xl">
-      <PageHead title="Sign-in methods" sub="Email and password always works. Each social provider appears on the sign-in page once its keys are saved here. Every method still ends with the Google Authenticator step, and every new account is a Student." />
+      <PageHead title="Sign-in methods" sub="Email and password always works. Each social provider appears on the sign-in page once its keys are saved here. Every method still ends with the two-step sign-in (Authentication &amp; security), and every new account is a Student." />
       {error ? <p className="text-rose">{error}</p> : null}
       {!s && !error ? <Skeleton className="h-96" /> : null}
       {s ? (
