@@ -1,4 +1,6 @@
 import {
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -96,5 +98,20 @@ export class StorageService {
 
   async delete(key: string) {
     await this.internal.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  /** Deletes every object under a prefix (used for superseded HLS packagings). Refuses anything outside hls/<id>/. */
+  async deletePrefix(prefix: string): Promise<number> {
+    if (!/^hls\/[0-9a-f]{32}\/$/.test(prefix)) throw new Error(`refusing to delete prefix ${prefix}`);
+    let token: string | undefined;
+    let n = 0;
+    do {
+      const page = await this.internal.send(new ListObjectsV2Command({ Bucket: this.bucket, Prefix: prefix, ContinuationToken: token }));
+      const keys = (page.Contents ?? []).map((o) => ({ Key: o.Key! }));
+      if (keys.length) await this.internal.send(new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects: keys, Quiet: true } }));
+      n += keys.length;
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+    return n;
   }
 }

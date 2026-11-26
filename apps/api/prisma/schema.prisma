@@ -387,6 +387,8 @@ model VideoAsset {
   hlsError      String?
   hlsAttempts   Int       @default(0)
   hlsPackagedAt DateTime?
+  /// Qualities for adaptive playback: [{ name, height, width, bandwidth, playlist }] (source first). Null = single quality (packaged before 2026-11-26).
+  hlsVariants   Json?
   playbackSessions PlaybackSession[]
   helpVideo     HelpVideo?
 }

@@ -21,6 +21,13 @@ const schema = z.object({
   HLS_SEGMENT_SECONDS: z.coerce.number().int().min(2).max(10).default(4),
   /** Re-encode video to 2-second keyframes while packaging: faster start on slow links, more CPU, small quality cost. */
   HLS_REENCODE: z.string().default('false').transform((v) => v === 'true' || v === '1'),
+  /** Lower qualities added under the original (heights, comma-separated; empty = original only). */
+  HLS_RENDITIONS: z.string().default('720,480'),
+  /** CloudFront for lesson video segments (docs/VIDEO_DELIVERY.md): https://<distribution>.cloudfront.net; empty = signed S3 links. */
+  CDN_URL: z.string().default(''),
+  CDN_KEY_PAIR_ID: z.string().default(''),
+  /** Base64 of the PEM private key that signs CloudFront links (SSM only, never in git). */
+  CDN_PRIVATE_KEY_B64: z.string().default(''),
   WEB_URL: z.string().url().default('http://127.0.0.1:3000'),
   API_URL: z.string().url().default('http://127.0.0.1:4000'),
   /** A MinIO/S3-compatible URL, or "aws" for Amazon S3 with the instance role (production). */

@@ -4,6 +4,8 @@ Adapted from the Insurance Knowledge Hub (`docs/CONTENT_PROTECTION.md` there), r
 `apps/api/src/protection/`, `apps/api/src/worker/video.processor.ts` (`package-hls` job), `hls-backfill.ts`,
 `apps/web/src/components/VideoPlayer.tsx`, `apps/web/src/app/admin/protection/`.
 
+Delivery through CloudFront and adaptive qualities (720p/480p): docs/VIDEO_DELIVERY.md.
+
 ## What happens
 1. **Packaging (worker).** When a local video becomes ready, and on every worker start for any ready video not yet packaged,
    the `package-hls` job runs ffmpeg **without re-encoding** (`-c copy`, H.264 + AAC/MP3) into ~4 s MPEG-TS segments.

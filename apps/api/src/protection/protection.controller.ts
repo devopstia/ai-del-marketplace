@@ -1,4 +1,4 @@
-import { Controller, Get, Header, Param, Res } from '@nestjs/common';
+import { Controller, Get, Header, HttpCode, Param, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { CurrentUser, Roles, Perm } from '../common/auth-context';
 import type { AuthUser } from '../common/auth-context';
@@ -18,6 +18,15 @@ export class ProtectionController {
     res.send(body);
   }
 
+  @Get('playback/:sid/q/:name/index.m3u8')
+  @Header('Cache-Control', 'no-store')
+  async quality(@Param('sid') sid: string, @Param('name') name: string, @CurrentUser() u: AuthUser, @Res() res: Response) {
+    const body = await this.svc.quality(sid, name, u);
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.send(body);
+  }
+
   @Get('playback/:sid/key')
   @Header('Cache-Control', 'no-store')
   async key(@Param('sid') sid: string, @CurrentUser() u: AuthUser, @Res() res: Response) {
@@ -27,6 +36,9 @@ export class ProtectionController {
     res.end(k);
   }
 
+
+  @Roles('super_admin') @HttpCode(200) @Post('admin/playback/repackage')
+  repackage() { return this.svc.repackageSingleQuality(); }
 
   @Perm('content.manage') @Get('admin/playback/status')
   status() { return this.svc.status(); }
