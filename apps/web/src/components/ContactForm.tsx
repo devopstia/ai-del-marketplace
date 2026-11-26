@@ -17,6 +17,12 @@ export function ContactForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [topic, setTopic] = useState("general");
+  // /contact?topic=payment (from "Contact us to enrol") preselects the topic
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("topic");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (t && TOPICS.some(([k]) => k === t)) setTopic(t);
+  }, []);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [hp, setHp] = useState("");

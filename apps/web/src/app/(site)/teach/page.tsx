@@ -84,7 +84,7 @@ export default async function TeachPage() {
             <ul className="mt-5 space-y-3 text-ink-2">
               <li><b className="text-ink">Your price:</b> free, or any price from {moneyExact(minCents)} to {moneyExact(maxCents)} in US dollars. You can change it later.</li>
               <li><b className="text-ink">When you’re paid:</b> 16 days after each sale, once the learner’s 14-day refund period has ended, your share is transferred to your own Stripe account. Stripe then pays it out to your bank.</li>
-              <li><b className="text-ink">Refunds:</b> learners can get a refund within 14 days while they’ve watched less than 25% of the course. A refunded sale pays you nothing and costs you nothing.</li>
+              <li><b className="text-ink">Refunds:</b> learners can get a refund within 14 days if they’ve watched 25% of the course or less. A refunded sale pays you nothing and costs you nothing.</li>
               <li><b className="text-ink">Chargebacks:</b> the platform handles disputes with the bank. If one is lost, that sale’s share is taken back.</li>
             </ul>
             <p className="mt-5 text-sm text-muted">Every sale shows its price, fee and your share in your studio.</p>

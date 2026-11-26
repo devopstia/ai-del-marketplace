@@ -1,3 +1,4 @@
+import { env } from '../config/env';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { Prisma } from '../generated/prisma/client';
@@ -193,7 +194,14 @@ export class SupportService {
       },
     });
     await this.audit.log({ actorId: a.user.id, action: 'support.ticket_opened', targetType: 'support_ticket', targetId: ticketNumber(t.number), ip: a.ip, meta: { category: t.category } });
-    return { number: ticketNumber(t.number) };
+    // confirmation to the requester + notification to the support inbox (owner, 2026-11-25)
+    const ref = ticketNumber(t.number);
+    const who = await this.prisma.user.findUnique({ where: { id: a.user.id }, select: { email: true, name: true } });
+    if (who) {
+      await this.jobs.sendEmail({ to: who.email, template: 'support-ticket-received', data: { ticket: ref, subject, category: t.category, name: who.name }, dedupeKey: `support-received:${ref}` });
+      await this.jobs.sendEmail({ to: env().CONTACT_EMAIL, replyTo: who.email, template: 'support-ticket-new', data: { ticket: ref, subject, category: t.category, priority: t.priority, name: who.name, email: who.email, body: description, link: `${env().WEB_URL}/admin/support` }, dedupeKey: `support-new:${ref}` });
+    }
+    return { number: ref };
   }
 
   async reply(a: Actor, raw: string, input: { body: string; attachments?: AttachmentInput[] }) {

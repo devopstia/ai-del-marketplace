@@ -64,7 +64,7 @@ export default function InstructorApplications() {
           {TABS.map(([k, l]) => (
             <button key={k} role="tab" type="button" aria-selected={tab === k} onClick={() => { setTab(k); setPage(1); setOpenId(null); }}
               className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-bold ${tab === k ? "border-violet text-ink" : "border-transparent text-muted hover:text-ink"}`}>
-              {l}{k === "open" && openCount ? <span className="ml-1.5 rounded-full bg-amber px-1.5 text-xs text-[#1f1500]">{openCount}</span> : null}
+              {l}{k === "open" && openCount ? <span className="ml-1.5 rounded-full bg-amber px-1.5 text-xs text-[var(--on-amber)]">{openCount}</span> : null}
             </button>
           ))}
         </div>

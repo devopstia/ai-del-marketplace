@@ -14,7 +14,7 @@ import { RatingInline } from "@/components/Stars";
 import { Empty, Skeleton } from "@/components/Empty";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
-import { TestModeNotice } from "@/components/TestModeNotice";
+import { PaymentsClosed, TestModeNotice, usePaymentsMode } from "@/components/TestModeNotice";
 
 function CanceledNotice() {
   const canceled = useSearchParams().get("canceled");
@@ -23,6 +23,7 @@ function CanceledNotice() {
 
 export default function CartPage() {
   const { me, loading, refreshCart } = useAuth();
+  const payMode = usePaymentsMode();
   const toast = useToast();
   const [cart, setCart] = useState<Cart | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export default function CartPage() {
             {saved > 0 ? (
               <p className="mt-1 text-sm"><s className="text-muted">{moneyExact(cart.totalCents + saved, cart.currency)}</s> <span className="font-bold text-rose">You save {moneyExact(saved, cart.currency)}</span></p>
             ) : null}
-            {me ? <Link href="/checkout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Proceed to checkout</Link> : (
+            {cart.totalCents > 0 && payMode === "off" ? <PaymentsClosed className="mt-5" /> : me ? <Link href="/checkout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Proceed to checkout</Link> : (
               <>
                 <Link href="/register?next=%2Fcheckout" className="btn btn-primary mt-5 w-full" data-testid="checkout">Proceed to checkout</Link>
                 <p className="mt-2 text-center text-sm text-ink-2">New here? Create a free account in a minute. <Link href="/login?next=%2Fcheckout" className="link">I already have an account</Link></p>

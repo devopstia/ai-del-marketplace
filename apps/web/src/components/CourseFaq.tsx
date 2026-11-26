@@ -9,8 +9,8 @@ export function CourseFaq({ c }: { c: CourseDetail }) {
   const items: [string, string][] = [
     free
       ? ["Is it really free?", "Yes. Create a free account and enrol; there is nothing to pay and no card needed."]
-      : ["Can I get a refund?", "Yes, within 14 days of purchase, while you’ve watched less than 25% of the course and before its certificate is issued. Request it from your order page; the money goes back to your card."],
-    ["How long can I watch it?", "For life, with no subscription. You also get the updates the instructor publishes after you enrol, and you keep access even if the course is later withdrawn from the catalogue."],
+      : ["Can I get a refund?", "Yes, within 14 days of purchase, if you’ve watched 25% of the course or less and no certificate has been issued. Request it from your order page; the money goes back to your card."],
+    ["How long can I watch it?", "12 months from the day you buy it, with no subscription. You get the updates the instructor publishes during that time. Renewing afterwards is optional and never charged automatically, and your progress is kept."],
     ["Do I get a certificate?", "Yes. When you finish every lesson you get a certificate with a code anyone can verify on this site."],
   ];
   if (c.resourceCount > 0) items.push(["What do I need for the labs?", c.requirements.length ? `The labs run on your own computer or cloud account with the downloadable files. You’ll need: ${c.requirements.join("; ")}.` : "The labs run on your own computer or cloud account with the downloadable files."]);

@@ -60,7 +60,7 @@ export default function StaffTicket({ params }: { params: Promise<{ number: stri
           {t.status !== "closed" ? (
             <div className="mt-6 rounded-panel border border-line bg-surface p-5">
               <div className="mb-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Message type">
-                {KINDS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} className={`rounded-full border px-3 py-1 text-sm font-bold ${kind === k ? (k === "note" ? "border-amber bg-amber text-[#1f1500]" : "border-violet bg-violet text-on-violet") : "border-line text-ink-2 hover:border-violet hover:text-ink"}`}>{l}</button>)}
+                {KINDS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)} className={`rounded-full border px-3 py-1 text-sm font-bold ${kind === k ? (k === "note" ? "border-amber bg-amber text-[var(--on-amber)]" : "border-violet bg-violet text-on-violet") : "border-line text-ink-2 hover:border-violet hover:text-ink"}`}>{l}</button>)}
               </div>
               <Composer key={kind} label={kind === "note" ? "Note for staff (the requester never sees it)" : kind === "resolve" ? "Closing message (asks the requester to confirm)" : "Message to the requester"} busy={busy} onSend={send} submitLabel={active[2]} />
             </div>

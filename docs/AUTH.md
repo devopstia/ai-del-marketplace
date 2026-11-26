@@ -64,7 +64,13 @@ single use, burnt after 5 wrong codes). The session cookie is set only after a c
 - **Unlink** needs a code and is refused when it would leave no way in (no password and no other provider).
 - Courses, purchases, progress and roles stay on the one account, whatever the method.
 
-## 5. Provider setup (owner, when ready; keys go only in `.env`)
+## 5. Provider setup (owner, when ready)
+Production: **Super Admin › Platform › Sign-in methods** (`/admin/sign-in`) shows each provider's exact redirect URI and
+console link. Paste the client ID and secret with an authenticator code: the API checks them with the provider, stores them
+sealed (`platform_settings.oauth_config`), never returns the secret, audits the change, and the button appears at once.
+Privacy policy URL for the consent screens: `https://ai-devopseasylearning.com/policies/privacy` (it also gives the
+data-deletion instructions Facebook asks for); terms: `/policies/terms`. Keys in `.env` still work (shown as "server settings").
+
 Callback URL for each: `<API_URL>/api/auth/oauth/<provider>/callback` (local: `http://127.0.0.1:4000/api/auth/oauth/google/callback`).
 | Provider | Where | Notes |
 |---|---|---|
@@ -73,7 +79,7 @@ Callback URL for each: `<API_URL>/api/auth/oauth/<provider>/callback` (local: `h
 | Facebook | developers.facebook.com › Create app › "Authenticate and request data from users with Facebook Login" | **Business verification and App Review** are needed before the public can use it (`email`, `public_profile`); Live mode, privacy policy URL and data deletion URL required. |
 | LinkedIn | linkedin.com/developers › Create app › Products › **Sign In with LinkedIn using OpenID Connect** | Needs a LinkedIn **Company Page** to verify the app; the product is approved automatically after verification. No PKCE for web apps (client secret is used). |
 
-Then set `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_…`, `FACEBOOK_…`, `LINKEDIN_…` and restart api. Production: never set
+Locally you can instead set `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_…`, `FACEBOOK_…`, `LINKEDIN_…` and restart api. Production: never set
 `OAUTH_TEST_PROVIDER`.
 
 ## 6. Local development and tests

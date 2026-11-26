@@ -13,9 +13,11 @@ import { useToast } from "./Toast";
 import { Price, SaleTag } from "./CourseViews";
 import { CourseCover } from "./CourseCover";
 import { PreviewButton } from "./PreviewContext";
+import { PaymentsClosed, usePaymentsMode } from "@/components/TestModeNotice";
 
 export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail; firstPreviewId?: string }) {
   const { me, loading: authLoading, refreshCart } = useAuth();
+  const payMode = usePaymentsMode();
   const toast = useToast();
   const router = useRouter();
   const [enrolled, setEnrolled] = useState(!!course.enrolled);
@@ -103,7 +105,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
             ) : null}
             <p className="leading-none" data-testid="course-price"><Price cents={course.priceCents} listCents={course.listPriceCents} currency={course.currency} className="text-[2rem] leading-none" /></p>
             {course.sale ? <SaleTag sale={course.sale} withName className="mt-2.5" /> : null}
-            <div className="mt-5 grid gap-2.5">
+            {!free && payMode === "off" ? <PaymentsClosed className="mt-5" /> : <div className="mt-5 grid gap-2.5">
               {inCart ? (
                 <Link href="/cart" className="btn btn-primary w-full"><ShoppingCart className="size-4" />Go to cart</Link>
               ) : (
@@ -116,8 +118,8 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
                 onClick={async () => { setBusy("buy"); if (await add()) router.push(me ? "/checkout" : "/cart"); else setBusy(null); }}>
                 {busy === "buy" ? <Loader2 className="size-4 animate-spin" /> : null}{free ? "Enrol now" : "Buy now"}
               </button>
-            </div>
-            <p className="mt-3 text-center text-xs text-muted">Secure checkout with Stripe.{free ? "" : " 12 months of access, not lifetime."}</p>
+            </div>}
+            <p className="mt-3 text-center text-xs text-muted">{!free && payMode === "off" ? "" : "Secure checkout with Stripe."}{free ? "" : " 12 months of access, not lifetime."}</p>
             {!free ? <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-xs text-muted"><RotateCcw className="size-3.5" aria-hidden="true" />Refund within 14 days if you’ve watched 25% or less · <Link href="/policies/access-and-refunds" className="link">Policy</Link></p> : null}
           </>
         )}

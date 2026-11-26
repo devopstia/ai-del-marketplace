@@ -75,7 +75,7 @@ export function CoursePath({ c }: { c: CourseDetail }) {
             {previews[0] ? (
               <PreviewButton lectureId={previews[0].id} className="absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full bg-[#141833]/90 py-1.5 pl-1.5 pr-3.5 text-sm font-bold text-white shadow-float transition-colors hover:bg-[#141833]">
                 <PlayCircle className="size-6" aria-hidden="true" />
-                <span>Free lesson<span className="sr-only">: {previews[0].title}</span>{previews[0].durationSec ? <span className="font-normal text-white/75">, {clock(previews[0].durationSec)}</span> : null}</span>
+                <span data-qa-on-media>Free lesson<span className="sr-only">: {previews[0].title}</span>{previews[0].durationSec ? <span className="font-normal text-white/75">, {clock(previews[0].durationSec)}</span> : null}</span>
               </PreviewButton>
             ) : null}
           </div>

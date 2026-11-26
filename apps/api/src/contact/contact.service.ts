@@ -59,7 +59,7 @@ export class ContactService {
       replyTo: input.email,
       attachments: attachments.map((a) => ({ key: a.key, name: a.name, mime: a.mime })),
     });
-    await this.jobs.sendEmail({ to: input.email, template: 'contact-received', data: { ref, name: input.name, subject: input.subject } });
+    await this.jobs.sendEmail({ to: input.email, template: 'contact-received', data: { ref, name: input.name, subject: input.subject, topic: input.topic }, dedupeKey: `contact-received:${ref}` });
     await this.audit.log({ actorId: user?.id ?? null, action: 'contact.sent', targetType: 'contact', targetId: msg.id, ip, meta: { ref, topic: input.topic, files: attachments.length } });
     return { ok: true, ref };
   }

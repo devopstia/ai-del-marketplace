@@ -106,7 +106,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           {mode === "login" ? "New to DevOps Easy Learning? " : "Already have an account? "}
           <Link href={`${other}${sp.get("next") ? `?next=${encodeURIComponent(next)}` : ""}`} className="link">{mode === "login" ? "Create an account" : "Log in"}</Link>
         </p>
-        {mode === "register" ? <p className="text-center text-xs text-muted">Every account is protected with Google Authenticator: you’ll set it up in the next step.</p> : null}
+        {mode === "register" ? <p className="text-center text-xs text-muted">Every account is protected with Google Authenticator: you’ll set it up in the next step. By creating an account you agree to the <Link href="/policies/terms" className="link">Terms of use</Link> and <Link href="/policies/privacy" className="link">Privacy policy</Link>.</p> : null}
       </form>
     </div>
   );

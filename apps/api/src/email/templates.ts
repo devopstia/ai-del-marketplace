@@ -231,15 +231,29 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
   ]),
   'contact-message': (d) => mk(`[${s(d.ref)}] ${s(d.subject)}`, [
     { h1: s(d.subject) },
-    { rows: [['From', `${s(d.name)} <${s(d.email)}>`], ['Topic', s(d.topic)], ['Reference', s(d.ref)], ['Signed in', d.signedIn ? 'yes' : 'no']] },
+    { rows: [['From', `${s(d.name)} <${s(d.email)}>`], ['Subject', s(d.subject)], ['Topic', s(d.topic)], ['Reference', s(d.ref)], ['Signed in', d.signedIn ? 'yes' : 'no']] },
     { p: s(d.body) },
     { muted: 'Screenshots, if any, are attached. Reply to this email to answer the sender directly.' },
     { cta: { href: s(d.link), label: 'Open Contact messages' } },
   ], undefined, 'Sent from the Contact page of the DevOps Easy Learning marketplace.'),
   'contact-received': (d) => mk(`We received your message (${s(d.ref)})`, [
-    { h1: `Thanks, ${first(d)}` },
-    { p: `We received your message “${s(d.subject)}”. Your reference is **${s(d.ref)}**. We reply within one working day.` },
-  ], undefined, 'You receive this because you wrote to DevOps Easy Learning from the Contact page.'),
+    { h1: `Thanks, ${first(d)}. We received your message.` },
+    { p: 'Our support team will review it and reply to this email address, usually within one working day.' },
+    { rows: [['Reference', s(d.ref)], ['Subject', s(d.subject)], ...(s(d.topic) ? [['Topic', s(d.topic)] as [string, string]] : [])] },
+    { note: 'To add details or screenshots, reply to this email and keep the reference in the subject.' },
+  ], `Reference ${s(d.ref)}: our support team will review your message.`, 'You receive this because you wrote to DevOps Easy Learning from the Contact page.'),
+  'support-ticket-received': (d) => mk(`We received your support request (${s(d.ticket)})`, [
+    { h1: `Thanks, ${first(d)}. Your request is with our support team.` },
+    { p: 'We review every request and reply in your Help and support page; you also get an email when we answer.' },
+    { rows: [['Request', s(d.ticket)], ['Subject', s(d.subject)], ['Category', s(d.category)]] },
+    { cta: { href: `${web()}/support`, label: 'Open my request' } },
+  ], `Request ${s(d.ticket)}: our support team will review it.`),
+  'support-ticket-new': (d) => mk(`[${s(d.ticket)}] ${s(d.subject)}`, [
+    { h1: 'New support request' },
+    { rows: [['From', `${s(d.name)} <${s(d.email)}>`], ['Subject', s(d.subject)], ['Request', s(d.ticket)], ['Category', s(d.category)], ['Priority', s(d.priority)]] },
+    { p: s(d.body) },
+    { cta: { href: s(d.link), label: 'Open the support queue' } },
+  ], undefined, 'Sent to the DevOps Easy Learning support inbox when a learner opens a support request.'),
 };
 
 export function render(template: string, data: D = {}): Rendered | null {

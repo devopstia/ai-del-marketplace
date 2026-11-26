@@ -35,7 +35,7 @@ export function SiteFooter() {
       <div className="border-t border-line">
         <div className="container-x flex flex-col gap-2 py-5 text-xs text-muted sm:flex-row sm:justify-between">
           <span>© {new Date().getUTCFullYear()} DevOps Easy Learning. Payments processed securely by Stripe.</span>
-          <span>Prices in USD. Each purchase includes 12 months of access. <Link href="/policies/access-and-refunds" className="underline-offset-2 hover:underline">Access and refunds</Link></span>
+          <span>Prices in USD. Each purchase includes 12 months of access. <Link href="/policies/access-and-refunds" className="underline-offset-2 hover:underline">Access and refunds</Link> · <Link href="/policies/terms" className="underline-offset-2 hover:underline">Terms</Link> · <Link href="/policies/privacy" className="underline-offset-2 hover:underline">Privacy</Link></span>
         </div>
       </div>
     </footer>
