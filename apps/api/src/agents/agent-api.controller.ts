@@ -80,7 +80,7 @@ export class AgentApiController {
   @Post('courses/:id/sections/:sid/lectures') addLecture(@Param('id') id: string, @Param('sid') sid: string, @ZBody(lectureCreate) b: z.infer<typeof lectureCreate>, @Agent('courses:write') a: AgentActor) { return this.instructor.addLecture(a, id, sid, b); }
   @Patch('courses/:id/lectures/:lid') updateLecture(@Param('id') id: string, @Param('lid') lid: string, @ZBody(lectureUpdate) b: z.infer<typeof lectureUpdate>, @Agent('courses:write') a: AgentActor) { return this.instructor.updateLecture(a, id, lid, b); }
   @Put('courses/:id/curriculum') arrange(@Param('id') id: string, @ZBody(arrangeSchema) b: z.infer<typeof arrangeSchema>, @Agent('courses:write') a: AgentActor) { return this.instructor.arrange(a, id, b.sections); }
-  @Put('courses/:id/lectures/:lid/quiz') quiz(@Param('id') id: string, @Param('lid') lid: string, @ZBody(quizSchema) b: z.infer<typeof quizSchema>, @Agent('courses:write') a: AgentActor) { return this.instructor.setQuiz(a, id, lid, b.questions); }
+  @Put('courses/:id/lectures/:lid/quiz') quiz(@Param('id') id: string, @Param('lid') lid: string, @ZBody(quizSchema) b: z.infer<typeof quizSchema>, @Agent('courses:write') a: AgentActor) { return this.instructor.setQuiz(a, id, lid, b.questions, b.settings); }
 
   /** Related courses ("Continue your learning journey"): not course content, so no revision review; audited. */
   @Get('courses/:id/related') relatedList(@Param('id') id: string, @Agent('courses:read') a: AgentActor) { return this.related.list(a.user.id, id); }

@@ -34,7 +34,7 @@ const SAFE = new Set(['GET', 'HEAD', 'OPTIONS']);
 const SUPPORT_BLOCKED: { re: RegExp; any?: boolean; why: string }[] = [
   { re: /^\/api\/auth\/(?!me$|csrf$|session$|session\/heartbeat$)/, any: true, why: 'Password, email, two-step sign-in, sessions and linked sign-in methods stay private to the account owner.' },
   { re: /^\/api\/me\/profile$/, why: 'Profile and email changes are made by the account owner, or as yourself in Super Admin › Users.' },
-  { re: /^\/api\/lectures\/[^/]+\/(progress|quiz)$/, why: 'Watching progress and quiz answers are not recorded during a support session, so the learner’s progress and refund facts stay accurate.' },
+  { re: /^\/api\/lectures\/[^/]+\/(progress|quiz)(\/|$)/, why: 'Watching progress and quiz answers are not recorded during a support session, so the learner’s progress and refund facts stay accurate.' },
   { re: /^\/api\/courses\/[^/]+\/(reviews|certificate)$/, why: 'Reviews and certificates are only created by the learner.' },
   { re: /^\/api\/me\/courses\/[^/]+\/ask$/, why: 'The AI assistant isn’t used in a support session.' },
   { re: /^\/api\/(cart|checkout|orders|refund-requests|dev\/test-payments)(\/|$)/, why: 'Purchases and refund requests are made only by the account owner.' },

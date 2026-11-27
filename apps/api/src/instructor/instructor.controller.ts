@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ActorCtx, type Actor, Roles, Cap } from '../common/auth-context';
 import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
+import { MAX_QUESTIONS, questionSchema, settingsSchema } from '../learning/quiz-model';
 import { RANGE_KEYS, type RangeKey } from './dashboard';
 import { DashboardService } from './dashboard.service';
 import { InsightsService } from './insights.service';
@@ -53,11 +54,11 @@ const lectureFields = z.object({
 });
 export const lectureCreate = lectureFields.omit({ sectionId: true }).partial().extend({ title: str(200).min(1) });
 export const lectureUpdate = lectureFields.partial();
+// Quiz banks (owner 2026-11-28): as many questions as the lesson needs (up to 60), 2–6 options, explanations per option,
+// difficulty, type, topic and timestamp; quiz-level settings for module, final and scenario assessments.
 export const quizSchema = z.object({
-  questions: z
-    .array(z.object({ q: str(500).min(3), options: z.array(str(300).min(1)).min(3).max(5), correct: z.number().int().min(0).max(4), why: str(1000).min(1) }))
-    .min(1)
-    .max(50),
+  questions: z.array(questionSchema).min(1).max(MAX_QUESTIONS),
+  settings: settingsSchema.optional(),
 });
 export const resourceSchema = z.object({ title: str(200).min(1), storageKey: z.string().min(1).max(400) });
 const dashboardQuery = z.object({ range: z.enum(RANGE_KEYS as [RangeKey, ...RangeKey[]]).optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional() });
@@ -198,7 +199,7 @@ export class InstructorController {
 
   @Roles('instructor') @Put('courses/:id/lectures/:lectureId/quiz')
   setQuiz(@Param('id') id: string, @Param('lectureId') lid: string, @ZBody(quizSchema) body: z.infer<typeof quizSchema>, @ActorCtx() a: Actor) {
-    return this.svc.setQuiz(a, id, lid, body.questions);
+    return this.svc.setQuiz(a, id, lid, body.questions, body.settings);
   }
 
   @Roles('instructor') @Delete('courses/:id/lectures/:lectureId/quiz')

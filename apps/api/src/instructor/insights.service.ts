@@ -59,7 +59,7 @@ export class InsightsService {
       const rowsFor = byLecture.get(l.id) ?? [];
       const enough = l.type === 'video' && l.durationSec > 0 && rowsFor.length >= MIN_SAMPLE;
       const curve = enough ? retentionCurve(rowsFor.map((p) => parseRanges(p.watchedRanges)), l.durationSec) : null;
-      const questions = l.quiz ? ((l.quiz.questions as unknown as { q: string; correct: number }[]) ?? []) : [];
+      const questions = l.quiz ? ((l.quiz.questions as unknown as { id?: string; q: string; correct: number }[]) ?? []) : [];
       const answers = l.quiz ? latest.get(l.quiz.id) ?? [] : [];
       const misses = l.quiz ? quizMisses(questions, answers) : [];
       return {

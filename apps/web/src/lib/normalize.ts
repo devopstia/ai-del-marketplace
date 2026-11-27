@@ -386,7 +386,8 @@ function toStudioLecture(x: unknown): StudioLecture {
     }),
     quiz: q.questions ? { questions: arr(q.questions).map((qq) => {
       const qo = obj(qq);
-      return { q: str(qo.q), options: strs(qo.options), correct: num(qo.correct), why: str(qo.why) };
+      // Keep the bank's extra fields (explanations, takeaway, topic, timestamp…) so a studio edit doesn't drop them.
+      return { ...qo, q: str(qo.q), options: strs(qo.options), correct: num(qo.correct), why: str(qo.why) };
     }) } : null,
   };
 }

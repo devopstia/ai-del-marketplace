@@ -368,7 +368,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   {lecture.type === "quiz" ? (
                     <>
                       <h1 className="mb-6 font-display text-2xl font-extrabold">{lecture.title}</h1>
-                      <QuizPanel lectureId={lecture.id} onPassed={() => void save(0, true)} />
+                      <QuizPanel lectureId={lecture.id} onPassed={() => void save(0, true)} onWatch={jump} />
                     </>
                   ) : (
                     <article className="mx-auto max-w-3xl">
@@ -445,7 +445,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   <ResourcesPanel items={pkg} kind="package" />
                 </div>
               ) : null}
-              {activeTab === "quiz" ? <QuizPanel lectureId={lectureId} onPassed={() => { void save(posRef.current, true); toast("ok", "Quiz passed."); }} /> : null}
+              {activeTab === "quiz" ? <QuizPanel lectureId={lectureId} onPassed={() => { void save(posRef.current, true); toast("ok", "Quiz passed."); }} onWatch={jump} /> : null}
               {activeTab === "search" ? <VideoSearchPanel slug={slug} currentLectureId={lectureId} onJump={jump} /> : null}
               {activeTab === "ask" ? <AskPanel slug={slug} lectureId={lectureId} onJump={jump} /> : null}
               {activeTab === "study" ? <StudyNotesPanel lectureId={lectureId} onJump={(sec) => jump(lectureId, sec)} /> : null}

@@ -279,10 +279,21 @@ export interface ResourceItem {
 }
 
 export interface QuizQuestion {
+  /** Stable id (author's, or derived from the text by the API). */
+  id?: string;
   q: string;
   options: string[];
   correct?: number;
   why?: string;
+  /** Owner 2026-11-28: why each option is right or wrong, same order as `options`. */
+  explanations?: string[];
+  takeaway?: string;
+  difficulty?: "foundation" | "applied" | "advanced";
+  type?: string;
+  topic?: string;
+  timestamp?: number;
+  code?: string;
+  fixedOrder?: boolean;
 }
 
 export interface Quiz {
