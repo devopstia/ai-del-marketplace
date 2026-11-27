@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Review screenshots (AGENTS.md rules 5 and 16): full-page PNGs of pages in light and dark at the given widths.
-// Usage: node scripts/qa-shots.mjs --out DIR [--as student|instructor|admin] [--widths 390,1440,1920] path [path…]
+// Usage: node scripts/qa-shots.mjs --out DIR [--as student|instructor|admin] [--act-as del] [--widths 390,1440,1920] path [path…]
 // Signs in like scripts/qa-dark.mjs (seed accounts, real authenticator step). QA_BASE picks the site (default :3000).
 import { freshCode, seedSecret } from "./totp.mjs";
 import { chromium } from "playwright";
@@ -9,9 +9,11 @@ import { mkdirSync, readFileSync } from "node:fs";
 const args = process.argv.slice(2);
 const opt = (name, d) => { const i = args.indexOf(name); if (i < 0) return d; const v = args[i + 1]; args.splice(i, 2); return v; };
 const role = opt("--as", null);
+const actAs = opt("--act-as", null); // del: switch the super admin to DEL Studio after signing in
 const out = opt("--out", "qa-shots");
 const widths = opt("--widths", "390,1440,1920").split(",").map(Number);
 const base = process.env.QA_BASE ?? "http://127.0.0.1:3000";
+const apiBase = process.env.QA_API ?? base.replace(/:(\d+)$/, (_, p) => `:${Number(p) + 1000}`);
 const paths = args.length ? args : ["/"];
 const users = { student: "student@del.example", instructor: "nadia@instructor.example", admin: "admin@del.example" };
 const password = process.env.SEED_PASSWORD ?? readFileSync(new URL("../.env", import.meta.url), "utf8").match(/^SEED_PASSWORD=(.*)$/m)?.[1];
@@ -42,6 +44,13 @@ for (const theme of ["light", "dark"]) {
       }
       if (new URL(page.url()).pathname.startsWith("/login")) throw new Error(`could not sign in as ${role}`);
       trust = (await ctx.cookies()).find((c) => c.name === "del_trust") ?? trust;
+      if (actAs) {
+        const ok = await page.evaluate(async ([api, mode]) => {
+          const me = await (await fetch(`${api}/api/auth/me`, { credentials: "include" })).json();
+          return (await fetch(`${api}/api/auth/act-as`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", "X-CSRF-Token": me.csrf }, body: JSON.stringify({ mode }) })).ok;
+        }, [apiBase, actAs]);
+        if (!ok) throw new Error(`could not switch to ${actAs}`);
+      }
     }
     for (const p of paths) {
       await page.goto(base + p, { waitUntil: "networkidle" });

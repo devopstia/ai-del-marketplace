@@ -3,19 +3,22 @@
 // default is light since 2026-11-25, pass --light to scan it) and reports:
 //  - text whose contrast against its actual background is under WCAG AA (4.5:1; 3:1 for large text),
 //  - pages that scroll sideways.
-// Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--widths 390,768,1440] [--light] path [path…]
+// Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--act-as del] [--widths 390,768,1440] [--light] path [path…]
 // Signs in with the seed accounts (SEED_PASSWORD from .env). Exit code 1 when anything fails.
 import { freshCode, seedSecret } from "./totp.mjs";
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
+const base = process.env.QA_BASE ?? "http://127.0.0.1:3000";
 const opt = (name, d) => { const i = args.indexOf(name); if (i < 0) return d; const v = args[i + 1]; args.splice(i, 2); return v; };
 const flag = (name) => { const i = args.indexOf(name); if (i < 0) return false; args.splice(i, 1); return true; };
 const role = opt("--as", null);
+// --act-as del: after signing in as the super admin, switch to DEL Studio (the DEL platform account) like the studio switcher.
+const actAs = opt("--act-as", null);
+const apiBase = process.env.QA_API ?? base.replace(/:(\d+)$/, (_, p) => `:${Number(p) + 1000}`);
 const widths = opt("--widths", "390,1440").split(",").map(Number);
 const light = flag("--light");
-const base = process.env.QA_BASE ?? "http://127.0.0.1:3000";
 const paths = args.length ? args : ["/"];
 const users = { student: "student@del.example", instructor: "nadia@instructor.example", admin: "admin@del.example" };
 const password = process.env.SEED_PASSWORD ?? readFileSync(new URL("../.env", import.meta.url), "utf8").match(/^SEED_PASSWORD=(.*)$/m)?.[1];
@@ -102,6 +105,14 @@ for (const w of widths) {
     }
     if (new URL(page.url()).pathname.startsWith("/login")) throw new Error(`could not sign in as ${role}`);
     trust[role] = (await ctx.cookies()).find((c) => c.name === "del_trust") ?? trust[role];
+    if (actAs) {
+      const ok = await page.evaluate(async ([api, mode]) => {
+        const me = await (await fetch(`${api}/api/auth/me`, { credentials: "include" })).json();
+        const r = await fetch(`${api}/api/auth/act-as`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", "X-CSRF-Token": me.csrf }, body: JSON.stringify({ mode }) });
+        return r.ok;
+      }, [apiBase, actAs]);
+      if (!ok) throw new Error(`could not switch to ${actAs}`);
+    }
   }
   for (const p of paths) {
     await page.goto(base + p, { waitUntil: "networkidle" });

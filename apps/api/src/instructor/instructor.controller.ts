@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { ActorCtx, type Actor, Roles, Cap } from '../common/auth-context';
 import { priceCentsSchema } from '../common/pricing';
 import { ZBody, ZQuery } from '../common/zod';
+import { RANGE_KEYS, type RangeKey } from './dashboard';
+import { DashboardService } from './dashboard.service';
 import { InsightsService } from './insights.service';
 import { InstructorService } from './instructor.service';
 
@@ -58,6 +60,7 @@ export const quizSchema = z.object({
     .max(50),
 });
 export const resourceSchema = z.object({ title: str(200).min(1), storageKey: z.string().min(1).max(400) });
+const dashboardQuery = z.object({ range: z.enum(RANGE_KEYS as [RangeKey, ...RangeKey[]]).optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional() });
 const salesQuery = z.object({ from: z.coerce.date().optional(), to: z.coerce.date().optional() });
 const studentsQuery = z.object({ courseId: z.string().uuid().optional() });
 const replySchema = z.object({ reply: str(4000) });
@@ -65,7 +68,13 @@ const versionQuery = z.object({ version: z.enum(['live', 'draft']).optional() })
 
 @Controller('instructor')
 export class InstructorController {
-  constructor(private readonly svc: InstructorService, private readonly insights: InsightsService) {}
+  constructor(private readonly svc: InstructorService, private readonly insights: InsightsService, private readonly dashboard: DashboardService) {}
+
+  /** Dashboard for a date range + the previous period (reporting only; docs/DASHBOARD_DESIGN.md). In DEL Studio: the DEL account. */
+  @Roles('instructor') @Get('dashboard')
+  overview(@ZQuery(dashboardQuery) q: z.infer<typeof dashboardQuery>, @ActorCtx() a: Actor) {
+    return this.dashboard.overview(a.user.id, q);
+  }
 
   /** Insights for one course: retention per lesson, hardest quiz questions, AI questions (own course; super admin any). */
   @Roles('instructor', 'admin') @Get('courses/:id/insights')

@@ -95,8 +95,8 @@ describe('e2e: buy and learn', () => {
       GOOGLE_CLIENT_ID: '',
       GOOGLE_CLIENT_SECRET: '',
       STRIPE_SECRET_KEY: '',
-      S3_ENDPOINT: 'http://127.0.0.1:9000',
-      S3_PUBLIC_ENDPOINT: 'http://127.0.0.1:9000',
+      S3_ENDPOINT: process.env.E2E_S3_ENDPOINT ?? 'http://127.0.0.1:9000',
+      S3_PUBLIC_ENDPOINT: process.env.E2E_S3_ENDPOINT ?? 'http://127.0.0.1:9000',
       S3_ACCESS_KEY: env.S3_ACCESS_KEY ?? process.env.S3_ACCESS_KEY ?? 'test',
       S3_SECRET_KEY: env.S3_SECRET_KEY ?? process.env.S3_SECRET_KEY ?? 'test-secret',
       WEB_URL: 'http://127.0.0.1:3000',
@@ -223,7 +223,7 @@ describe('e2e: buy and learn', () => {
 
     const pb = await agent.post(`/api/lectures/${ids.lecture}/playback`).set('X-CSRF-Token', csrf).expect(200);
     expect(pb.body.format).toBe('mp4');
-    expect(pb.body.url).toContain('http://127.0.0.1:9000/del-media/videos/e2e/source.mp4');
+    expect(pb.body.url).toContain(`${process.env.E2E_S3_ENDPOINT ?? 'http://127.0.0.1:9000'}/del-media/videos/e2e/source.mp4`);
     expect(pb.body.url).toContain('X-Amz-Signature=');
     expect(new Date(pb.body.expiresAt).getTime()).toBeGreaterThan(Date.now());
 
@@ -631,6 +631,61 @@ describe('e2e: buy and learn', () => {
     expect(fin.body.checks.problems).toEqual([]);
     const sales = await teacher.agent.get('/api/instructor/sales').expect(200);
     expect(sales.body.totals.feesCents).toBeGreaterThan(0);
+  });
+
+  it('dashboard: DEL net revenue for DEL courses, instructor earnings for revenue share, ranges, ownership checks', async () => {
+    if (!available) return;
+    const delAcct = await prisma.instructorProfile.findFirst({ where: { isPlatform: true } });
+    const del = delAcct ? { user: { id: delAcct.userId } } : await userAgent('d-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const teacher = await userAgent('d-teacher@e2e.example', ['student', 'instructor'], {});
+    const other = await userAgent('d-other@e2e.example', ['student', 'instructor'], {});
+    const buyer = await userAgent('d-buyer@e2e.example', ['student']);
+    const boss = await userAgent('d-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const delCourse = await publishedCourse(del.user.id, 'd-del-course', 499);
+    const tCourse = await publishedCourse(teacher.user.id, 'd-teacher-course', 1999);
+    for (const courseId of [delCourse.course.id, tCourse.course.id]) await buyer.send('post', '/api/cart', { courseId }).expect(201);
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
+    await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+    const lines = await prisma.orderLine.findMany({ where: { orderId: co.body.orderId } });
+    const tLine = lines.find((l) => l.courseId === tCourse.course.id)!;
+    const dLine = lines.find((l) => l.courseId === delCourse.course.id)!;
+
+    // Independent instructor: their share, payouts, their courses only.
+    const t = (await teacher.agent.get('/api/instructor/dashboard?range=30d').expect(200)).body;
+    expect(t.ownership).toBe('revenue_share');
+    expect(t.current).toMatchObject({ grossCents: 1999, feesCents: tLine.feeCents, refundsCents: 0, instructorShareCents: tLine.instructorShareCents, sales: 1, enrolments: 1 });
+    expect(t.current.netCents).toBe(1999 - tLine.feeCents);
+    expect(t.payouts).toEqual({ pendingCents: expect.any(Number), paidCents: 0 });
+    expect(t.courses.map((c: any) => c.id)).toEqual([tCourse.course.id]);
+    expect(t.courses[0]).toMatchObject({ students: 1, grossCents: 1999, sales: 1 });
+    expect(t.series).toHaveLength(30);
+    expect(t.series.at(-1).grossCents).toBe(1999);
+    expect(t.activity.some((a: any) => a.kind === 'purchase')).toBe(true);
+    expect(JSON.stringify(t)).not.toContain('d-buyer@e2e.example'); // first names only, never emails
+
+    // DEL Studio: gross, Stripe fee and DEL net, never "$0 earnings" (owner 2026-11-27).
+    await boss.send('post', '/api/auth/act-as', { mode: 'del' }).expect(200);
+    const d = (await boss.agent.get('/api/instructor/dashboard?range=7d').expect(200)).body;
+    expect(d.ownership).toBe('platform');
+    expect(d.payouts).toBeNull();
+    expect(d.current.grossCents).toBeGreaterThanOrEqual(499);
+    expect(d.current.netCents).toBe(d.current.grossCents - d.current.feesCents - d.current.refundsCents);
+    expect(d.current.instructorShareCents).toBe(0);
+    expect(d.courses.find((c: any) => c.id === delCourse.course.id)).toMatchObject({ grossCents: 499, netCents: 499 - dLine.feeCents });
+    expect(d.courses.some((c: any) => c.id === tCourse.course.id)).toBe(false);
+    await boss.send('post', '/api/auth/act-as', { mode: 'self' }).expect(200);
+
+    // Ranges: a custom range in the past has no sales; the previous period is reported; bad input is refused.
+    const past = (await teacher.agent.get('/api/instructor/dashboard?range=custom&from=2020-01-01&to=2020-01-31').expect(200)).body;
+    expect(past.range.days).toBe(31);
+    expect(past.current.grossCents).toBe(0);
+    expect(past.series).toHaveLength(31);
+    await teacher.agent.get('/api/instructor/dashboard?range=forever').expect(400);
+    // Someone else's dashboard never includes this instructor's courses; students have none.
+    const o = (await other.agent.get('/api/instructor/dashboard').expect(200)).body;
+    expect(o.courses).toEqual([]);
+    expect(o.current.grossCents).toBe(0);
+    await buyer.agent.get('/api/instructor/dashboard').expect(403);
   });
 
   it('DEL Studio: a super admin works in the studio as DEL; the audit log names the real person', async () => {

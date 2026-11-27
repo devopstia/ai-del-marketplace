@@ -1,0 +1,256 @@
+<title>Dashboard Design Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: three working prototypes of the DEL Studio dashboard, same sample data, to pick a design system
+   IDEA the real product screen: an app window with sidebar, date filter, live charts with hover, course table
+   PICTURE the revenue chart in each option, drawn at real size and redrawn by the date filter
+   COLOUR DEL tokens: ink #141833, violet #4f3fb0, cyan #1e9bd7, neutrals; dark mode from the site's dark tokens
+   TYPE Schibsted Grotesk (display, figures) + Atkinson Hyperlegible Next (text), as on the site
+   LAYOUT intro + findings, option tabs, then one full-width app window per option; phone: sidebar collapses to a top bar */
+:root{color-scheme:light dark;--bg:light-dark(#f3f4f9,#0b0e1a);--surface:light-dark(#ffffff,#141a2c);--s2:light-dark(#f6f7fb,#1a2036);--ink:light-dark(#141833,#e8eaf7);--muted:light-dark(#545a78,#a4a9c4);--line:light-dark(#e3e5ee,#262c42);--violet:light-dark(#4f3fb0,#9d8fff);--cyan:light-dark(#1e9bd7,#58c3f2);--green:light-dark(#11804a,#4fd69a);--red:light-dark(#c2283c,#ff8a98);--amber:light-dark(#9a5b00,#ffc261);--side:light-dark(#141833,#0f1324)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "Atkinson Hyperlegible Next",system-ui,sans-serif;overflow-x:clip;margin:0}
+h1,h2,h3,.disp{font-family:"Schibsted Grotesk",sans-serif}
+.band{padding-block:clamp(22px,3vw,44px);padding-left:max(4vw,16px,env(safe-area-inset-left,0px));padding-right:max(4vw,16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font-size:clamp(28px,3.6vw,42px);line-height:1.05;letter-spacing:-.02em;margin:0 0 8px;font-weight:800}
+.lead{color:var(--muted);max-width:76ch;margin:0}
+.find{display:grid;grid-template-columns:repeat(auto-fit,minmax(17em,1fr));gap:12px;margin-top:16px}
+.find div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px}
+.find b{display:block;font-family:"Schibsted Grotesk";font-size:15px;margin-bottom:2px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.tabs button{font:700 14px "Schibsted Grotesk";padding:10px 16px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left}
+.tabs button span{display:block;font:500 12px "Atkinson Hyperlegible Next";color:var(--muted)}
+.tabs button[aria-selected=true]{border-color:var(--violet);box-shadow:inset 0 0 0 1px var(--violet)}
+.sample{font-size:12px;color:var(--muted);margin-top:10px}
+/* app window */
+.app{margin-top:16px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg);display:grid;grid-template-columns:220px minmax(0,1fr);min-height:900px;box-shadow:0 10px 40px rgba(20,24,51,.10)}
+.side{background:var(--side);color:#cfd3ec;padding:18px 12px;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.side .lg{display:flex;align-items:center;gap:8px;color:#fff;font:800 15px "Schibsted Grotesk";padding:4px 8px 16px}
+.side .grp{font-size:11.5px;color:#8b91b5;padding:14px 10px 4px}
+.side a{color:inherit;text-decoration:none;padding:8px 10px;border-radius:8px;display:flex;gap:9px;align-items:center}
+.side a.on{background:rgba(255,255,255,.1);color:#fff;font-weight:700}
+.side a svg{width:16px;height:16px;flex:none}
+.side .back{margin-top:auto;border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+.main{padding:22px 26px 30px}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.top h2{margin:0;font-size:24px;letter-spacing:-.01em}
+.top .crumb{font-size:12.5px;color:var(--muted)}
+.range{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;background:var(--surface);overflow:hidden}
+.range button{font:600 13px "Schibsted Grotesk";border:0;background:none;color:var(--muted);padding:8px 11px;min-height:36px;cursor:pointer}
+.range button[aria-pressed=true]{background:var(--ink);color:var(--surface)}
+.btn{font:700 13px "Schibsted Grotesk";border-radius:9px;padding:8px 13px;min-height:36px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn.pri{background:var(--violet);border-color:var(--violet);color:#fff}
+.k{font-size:12.5px;color:var(--muted)}
+.v{font:800 24px "Schibsted Grotesk";letter-spacing:-.02em;white-space:nowrap}
+.d{font-size:12px;font-weight:700;white-space:nowrap}.d.up{color:var(--green)}.d.dn{color:var(--red)}.d.eq{color:var(--muted)}
+.fig{position:relative;height:260px}.fig svg{position:absolute;inset:0;width:100%;height:100%}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12.5px;border-radius:8px;padding:7px 9px;white-space:nowrap;transform:translate(-50%,-110%);display:none;z-index:2}
+.tip b{font-family:"Schibsted Grotesk"}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font:600 12px "Schibsted Grotesk";color:var(--muted);text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.thumb{width:52px;height:30px;border-radius:5px;flex:none}
+.ct{display:flex;gap:10px;align-items:center}
+.pill{font:700 11.5px "Schibsted Grotesk";padding:2px 8px;border-radius:99px;white-space:nowrap}
+.pill.pub{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}.pill.dr{background:var(--s2);color:var(--muted)}
+.bar{height:6px;border-radius:9px;background:var(--s2);overflow:hidden}.bar i{display:block;height:100%;background:var(--violet);border-radius:9px}
+.feed li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.feed ul{list-style:none;margin:0;padding:0}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.empty{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);padding:10px 12px;border:1px dashed var(--line);border-radius:9px}
+.stars{color:#d89b00;letter-spacing:1px}
+.search{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:8px 10px;font:14px "Atkinson Hyperlegible Next";min-height:36px;width:200px}
+.scroll{overflow-x:auto}
+/* A: enterprise analytics */
+.A .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-top:18px}
+.A .kpis>div{padding:14px 16px;border-right:1px solid var(--line)}.A .kpis>div:last-child{border:0}
+.A .row2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;margin-top:16px}
+.A .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.A .panel h3{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.A .panel h3 a{font:600 12.5px "Atkinson Hyperlegible Next";color:var(--violet)}
+.A .split{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.A .split .v{font-size:18px}
+.A .hb{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:13px}
+.A .legend{display:flex;gap:14px;font-size:12.5px;color:var(--muted)}.A .legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+/* B: modern learning studio */
+.B .hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;margin-top:18px}
+.B .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.B .rev .v{font-size:40px}
+.B .mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.B .mini>div{background:var(--s2);border-radius:12px;padding:12px 14px}
+.B .courses{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}
+.B .cc{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.B .cc .cv{height:84px;position:relative}
+.B .cc .bd{padding:12px 14px}
+.B .cc h4{margin:0 0 6px;font:700 14.5px "Schibsted Grotesk";line-height:1.25}
+.B .cc .st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;font-size:12px;color:var(--muted);margin-top:8px}
+.B .cc .st b{display:block;color:var(--ink);font:700 14px "Schibsted Grotesk"}
+.B .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.B h3{margin:0 0 10px;font-size:15px}
+/* C: premium minimalist */
+.C .main{padding:30px 40px}
+.C .strip{display:flex;flex-wrap:wrap;gap:36px;margin-top:26px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.C .strip .v{font-size:30px;font-weight:700}
+.C .big{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;margin-top:22px}
+.C h3{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 10px}
+.C .list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.C .list ul{list-style:none;margin:0;padding:0}
+.C .lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;margin-top:30px}
+@media(max-width:1100px){.A .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.A .kpis>div:nth-child(3n){border-right:0}.A .kpis>div:nth-child(-n+3){border-bottom:1px solid var(--line)}.B .row3{grid-template-columns:1fr 1fr}}
+@media(max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.side{flex-direction:row;overflow-x:auto;padding:10px;gap:4px}.side .grp,.side .back{display:none}.side .lg{padding:4px 8px}.side a{white-space:nowrap}
+ .A .row2,.B .hero,.B .row3,.C .big,.C .lower{grid-template-columns:minmax(0,1fr)}.main,.C .main{padding:18px 16px}}
+@media(max-width:560px){.A .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.A .kpis>div{border-right:0!important;border-bottom:1px solid var(--line)}.A .split{grid-template-columns:repeat(2,minmax(0,1fr))}.search{width:100%}}
+.A .row2 .panel{display:flex;flex-direction:column}.A .row2 .panel>.fig{flex:1;min-height:300px}.A .row2.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.B .mini>div{display:flex;flex-direction:column;justify-content:center}.B .rev{display:flex;flex-direction:column}.B .rev .fig{flex:1;min-height:200px}
+.C .big .fig{height:400px!important}
+@media(max-width:860px){.A .row2.even{grid-template-columns:minmax(0,1fr)}}
+</style>
+
+<section class="band"><div class="wrap">
+  <h1>Dashboard designs: pick one</h1>
+  <p class="lead">Three working prototypes of the DEL Studio dashboard, the richest one, with the same sample data. Change the date range and hover the charts; they respond. The direction you pick becomes one design system for every dashboard: Student, Instructor, DEL Studio, Admin and Super Admin.</p>
+  <div class="find">
+    <div><b>Why your dashboard showed $0.00 earnings</b>It is a reporting bug, not a payments problem: the studio shows <i>instructor share</i>, which is $0 by design on DEL-owned courses. DEL kept $4.55 of your $4.99 sale. Here every DEL view shows gross sales, Stripe fees, refunds and DEL net revenue instead.</div>
+    <div><b>What's weak today</b>Four plain number tiles, one bar chart fixed to 30 days, big empty boxes ("No sales…"), no date filter, no course table, no activity, no completion or quiz data on the dashboard.</div>
+    <div><b>What all three add</b>Date ranges (Today to custom), comparison with the previous period, hover details on charts, revenue by course, a sortable course table, student progress, an activity feed, compact reviews and small empty states.</div>
+  </div>
+  <div class="tabs" role="tablist" id="tabs">
+    <button role="tab" aria-selected="true" data-v="A">Option A · Enterprise Analytics<span>Dense, Stripe-like, numbers first</span></button>
+    <button role="tab" aria-selected="false" data-v="B">Option B · Modern Learning Studio<span>Course-centred, friendly cards</span></button>
+    <button role="tab" aria-selected="false" data-v="C">Option C · Premium Minimalist<span>Type and space, few lines</span></button>
+  </div>
+  <p class="sample">Sample data for the design only: course names are real, every number is made up. Production dashboards show only real records.</p>
+  <div id="app"></div>
+</div></section>
+
+<script>
+{
+const COURSES = [
+  { t: "AI-Powered DevOps Automation with n8n", s: "pub", price: 499, w: 5, rating: 4.8, comp: 41, upd: "Nov 27", hue: 250 },
+  { t: "AI for DevOps: from the vocabulary of AI to agents", s: "pub", price: 4999, w: 3, rating: 4.7, comp: 36, upd: "Nov 20", hue: 200 },
+  { t: "Terraform Basics", s: "pub", price: 1999, w: 2, rating: 4.6, comp: 58, upd: "Nov 12", hue: 160 },
+  { t: "Kubernetes for Beginners", s: "pub", price: 2999, w: 2, rating: 4.9, comp: 47, upd: "Oct 30", hue: 280 },
+  { t: "MCP & Agents in Practice", s: "dr", price: 3999, w: 0, rating: 0, comp: 0, upd: "Nov 26", hue: 330 },
+];
+// Seeded sample sales for 365 days.
+let seed = 7; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const DAYS = []; const today = new Date(2026, 10, 27);
+for (let i = 364; i >= 0; i--) {
+  const d = new Date(today); d.setDate(d.getDate() - i);
+  const growth = 0.4 + (364 - i) / 364;
+  const lines = [];
+  COURSES.forEach((c, ci) => { const n = Math.floor(rnd() * c.w * growth * 0.9); for (let k = 0; k < n; k++) lines.push({ ci, cents: c.price }); });
+  const gross = lines.reduce((a, l) => a + l.cents, 0);
+  const refund = rnd() < 0.04 && lines.length ? lines[0].cents : 0;
+  DAYS.push({ d, lines, gross, refund, fee: Math.round(gross * 0.029 + lines.length * 30) });
+}
+const RANGES = [["today", "Today", 1], ["7", "7 days", 7], ["30", "30 days", 30], ["90", "90 days", 90], ["month", "This month", 27], ["year", "This year", 331], ["custom", "Custom…", 60]];
+let range = "30", opt = "A", sortKey = "rev", sortDir = -1, q = "";
+const money = (c) => "$" + (c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money0 = (c) => "$" + Math.round(c / 100).toLocaleString("en-US");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const fmtD = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function stats(n, off = 0) {
+  const slice = DAYS.slice(DAYS.length - n - off, DAYS.length - off);
+  const gross = slice.reduce((a, d) => a + d.gross, 0), fee = slice.reduce((a, d) => a + d.fee, 0), refund = slice.reduce((a, d) => a + d.refund, 0);
+  const enr = slice.reduce((a, d) => a + d.lines.length, 0);
+  const byC = COURSES.map((c, ci) => slice.reduce((a, d) => a + d.lines.filter((l) => l.ci === ci).reduce((x, l) => x + l.cents, 0), 0));
+  const enrC = COURSES.map((c, ci) => slice.reduce((a, d) => a + d.lines.filter((l) => l.ci === ci).length, 0));
+  return { slice, gross, fee, refund, net: gross - fee - refund, enr, byC, enrC };
+}
+const delta = (a, b) => { if (!b) return `<span class="d eq">new</span>`; const p = (a - b) / b * 100; return `<span class="d ${p > 0.5 ? "up" : p < -0.5 ? "dn" : "eq"}">${p > 0 ? "▲" : p < 0 ? "▼" : ""} ${Math.abs(p).toFixed(0)}%</span>`; };
+const n = () => RANGES.find((r) => r[0] === range)[2];
+const loop = `<svg viewBox="0 0 120 60" width="34" height="17" fill="none" aria-hidden="true"><path d="M60,30 C48,14 34,8 22,10 C10,12 4,22 4,30 C4,38 10,48 22,50 C34,52 48,46 60,30" stroke="#9d8fff" stroke-width="11" stroke-linecap="round"/><path d="M60,30 C72,46 86,52 98,50 C110,48 116,38 116,30 C116,22 110,12 98,10 C86,8 72,14 60,30" stroke="#58c3f2" stroke-width="11" stroke-linecap="round"/></svg>`;
+const ic = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const NAV = [["Overview", '<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>', 1], ["Courses", '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/>'], ["Sales", '<path d="M3 3v18h18M7 15l4-4 3 3 5-6"/>'], ["Students", '<path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>'], ["Reviews", '<path d="M12 2l3 7 7 .6-5.3 4.6L18.4 22 12 18l-6.4 4 1.7-7.8L2 9.6 9 9z"/>'], ["Q&A", '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>']];
+const side = () => `<nav class="side" aria-label="DEL Studio"><div class="lg">${loop}DEL Studio</div><div class="grp">Studio</div>${NAV.slice(0, 2).map((x) => `<a href="#" class="${x[2] ? "on" : ""}">${ic(x[1])}${x[0]}</a>`).join("")}<div class="grp">Business</div>${NAV.slice(2).map((x) => `<a href="#">${ic(x[1])}${x[0]}</a>`).join("")}<a href="#" class="back">${ic('<path d="M15 18l-6-6 6-6"/>')}Back to marketplace</a></nav>`;
+const rangeCtl = () => `<div class="range" role="group" aria-label="Date range">${RANGES.map((r) => `<button data-r="${r[0]}" aria-pressed="${r[0] === range}">${r[1]}</button>`).join("")}</div>`;
+const head = (sub) => `<div class="top"><div><div class="crumb">DEL Studio · DevOps Easy Learning courses</div><h2>Overview</h2>${sub ? `<div class="k">${sub}</div>` : ""}</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${rangeCtl()}<button class="btn pri">New course</button></div></div>`;
+const activity = () => { const a = [["var(--green)", "New purchase · AI-Powered DevOps Automation with n8n", "$4.99 · 2 min ago"], ["var(--violet)", "Certificate issued · Terraform Basics", "Sam S. · 1 h ago"], ["#d89b00", "New 5★ review · Kubernetes for Beginners", "3 h ago"], ["var(--cyan)", "Course completed · AI for DevOps", "Li W. · 5 h ago"], ["var(--amber)", "Refund requested · Terraform Basics", "within policy · 1 d ago"], ["var(--muted)", "Draft updated · MCP & Agents in Practice", "1 d ago"]];
+  return `<div class="feed"><ul>${a.map((x) => `<li><span class="dot" style="background:${x[0]}"></span><div><div>${x[1]}</div><div class="k">${x[2]}</div></div></li>`).join("")}</ul></div>`; };
+const reviews = () => [["Amara O.", 5, "AI-Powered DevOps Automation with n8n", "The incident workflow alone was worth it. Labs worked first time."], ["Daniel K.", 4, "Terraform Basics", "Clear and practical. Would love a module on state locking."]].map((r) => `<div style="padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px"><div style="display:flex;justify-content:space-between;gap:8px"><b>${r[0]}</b><span class="stars">${"★".repeat(r[1])}${"☆".repeat(5 - r[1])}</span></div><div class="k">${esc(r[2])}</div><div>${esc(r[3])}</div><a href="#" style="font-size:12.5px;color:var(--violet)">Reply</a></div>`).join("");
+function courseRows(s) {
+  let rows = COURSES.map((c, i) => ({ ...c, i, rev: s.byC[i], enr: s.enrC[i] })).filter((c) => c.t.toLowerCase().includes(q.toLowerCase()));
+  rows.sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * sortDir);
+  const th = (k, l, num) => `<th data-sort="${k}" class="${num ? "num" : ""}">${l}${sortKey === k ? (sortDir < 0 ? " ↓" : " ↑") : ""}</th>`;
+  return `<div class="scroll"><table><thead><tr>${th("t", "Course")}${th("s", "Status")}${th("enr", "Enrolments", 1)}${th("rev", "Revenue", 1)}${th("rating", "Rating", 1)}${th("comp", "Completion", 1)}${th("upd", "Updated")}<th></th></tr></thead><tbody>${rows.map((c) => `<tr><td><div class="ct"><span class="thumb" style="background:linear-gradient(135deg,hsl(${c.hue} 60% 30%),hsl(${c.hue + 40} 70% 55%))"></span><span>${esc(c.t)}</span></div></td><td><span class="pill ${c.s}">${c.s === "pub" ? "Published" : "Draft"}</span></td><td class="num">${c.enr}</td><td class="num">${money(c.rev)}</td><td class="num">${c.rating ? c.rating.toFixed(1) + " ★" : "—"}</td><td class="num" style="min-width:110px">${c.comp ? `<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><span class="bar" style="width:60px"><i style="width:${c.comp}%"></i></span>${c.comp}%</div>` : "—"}</td><td class="nw">${c.upd}</td><td><a href="#" style="color:var(--violet);font-size:13px">Manage</a></td></tr>`).join("")}</tbody></table></div>`;
+}
+// Chart: kind = area | bars | line. Groups by day/week/month to keep marks readable.
+function chart(el, s, kind) {
+  const days = s.slice; const N = days.length; const step = N > 120 ? 30 : N > 45 ? 7 : 1;
+  const pts = []; for (let i = 0; i < N; i += step) { const g = days.slice(i, i + step); pts.push({ d: g[0].d, gross: g.reduce((a, x) => a + x.gross, 0), net: g.reduce((a, x) => a + x.gross - x.fee - x.refund, 0), unit: step === 1 ? "day" : step === 7 ? "week" : "month" }); }
+  const draw = () => {
+    const W = el.clientWidth, H = el.clientHeight, L = 52, R = 10, T = 14, B = 26; const max = Math.max(1, ...pts.map((p) => p.gross));
+    const nice = Math.pow(10, Math.floor(Math.log10(max))); const top = Math.ceil(max / nice) * nice;
+    const x = (i) => L + (pts.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (pts.length - 1)), y = (v) => T + (H - T - B) * (1 - v / top);
+    let g = ""; for (let k = 0; k <= 4; k++) { const v = top * k / 4; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11.5" fill="var(--muted)">${money0(v)}</text>`; }
+    const lab = pts.length > 8 ? Math.ceil(pts.length / (W < 520 ? 4 : 7)) : 1;
+    pts.forEach((p, i) => { if (i % lab === 0) g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${step === 30 ? p.d.toLocaleDateString("en-US", { month: "short" }) : fmtD(p.d)}</text>`; });
+    let m = "";
+    if (kind === "bars") { const bw = Math.max(3, (W - L - R) / pts.length * 0.62); pts.forEach((p, i) => { m += `<rect x="${x(i) - bw / 2}" y="${y(p.gross)}" width="${bw}" height="${y(0) - y(p.gross)}" rx="3" fill="var(--violet)" opacity=".28"/><rect x="${x(i) - bw / 2}" y="${y(p.net)}" width="${bw}" height="${y(0) - y(p.net)}" rx="3" fill="var(--violet)"/>`; }); }
+    else { const line = (k) => pts.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p[k])}`).join("");
+      if (kind === "area") m += `<path d="${line("gross")}L${x(pts.length - 1)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--violet)" opacity=".10"/>`;
+      m += `<path d="${line("gross")}" fill="none" stroke="var(--violet)" stroke-width="2.2"/><path d="${line("net")}" fill="none" stroke="var(--cyan)" stroke-width="2.2" ${kind === "line" ? 'stroke-dasharray="1 0"' : ""}/>`; }
+    el.innerHTML = `<svg role="img" aria-label="Gross and net revenue over the selected range">${g}${m}<line class="hl" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-dasharray="3 3" opacity="0"/></svg><div class="tip"></div>`;
+    const tip = el.querySelector(".tip"), hl = el.querySelector(".hl");
+    el.onmousemove = (e) => { const r = el.getBoundingClientRect(); const i = Math.max(0, Math.min(pts.length - 1, Math.round((e.clientX - r.left - L) / ((W - L - R) / Math.max(1, pts.length - 1))))); const p = pts[i];
+      hl.setAttribute("x1", x(i)); hl.setAttribute("x2", x(i)); hl.setAttribute("opacity", "1");
+      tip.style.display = "block"; tip.style.left = Math.min(W - 80, Math.max(80, x(i))) + "px"; tip.style.top = y(p.gross) + "px";
+      tip.innerHTML = `<b>${p.unit === "day" ? fmtD(p.d) : p.unit === "week" ? "Week of " + fmtD(p.d) : p.d.toLocaleDateString("en-US", { month: "long" })}</b><br>Gross ${money(p.gross)} · Net ${money(p.net)}`; };
+    el.onmouseleave = () => { tip.style.display = "none"; hl.setAttribute("opacity", "0"); };
+  };
+  draw(); return draw;
+}
+const KP = (s, p) => [["Gross sales", money(s.gross), delta(s.gross, p.gross)], ["DEL net revenue", money(s.net), delta(s.net, p.net)], ["Stripe fees", money(s.fee), ""], ["Refunds", money(s.refund), ""], ["New enrolments", s.enr, delta(s.enr, p.enr)], ["Active students", Math.round(s.enr * 2.6 + 40), delta(s.enr * 2.6, p.enr * 2.6)]];
+
+const VIEWS = {
+  A: (s, p) => `<div class="A app">${side()}<main class="main">${head()}
+    <div class="kpis">${KP(s, p).map((k) => `<div><div class="k">${k[0]}</div><div class="v">${k[1]}</div>${k[2]}</div>`).join("")}</div>
+    <div class="row2"><section class="panel"><h3>Revenue <span class="legend"><span><i style="background:var(--violet)"></i>Gross</span><span><i style="background:var(--cyan)"></i>DEL net</span></span></h3>
+      <div class="split"><div><div class="k">Courses published</div><div class="v">4</div></div><div><div class="k">Drafts</div><div class="v">1</div></div><div><div class="k">Avg rating</div><div class="v">4.76</div></div><div><div class="k">Completion</div><div class="v">43%</div></div></div>
+      <div class="fig" id="ch"></div></section>
+      <section class="panel"><h3>Revenue by course <a href="#">All sales</a></h3><div class="hb">${COURSES.map((c, i) => ({ c, v: s.byC[i] })).sort((a, b) => b.v - a.v).map(({ c, v }) => `<div><div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.t)}</div><div class="bar" style="margin-top:4px"><i style="width:${Math.max(2, v / Math.max(1, ...s.byC) * 100)}%"></i></div></div><div class="num">${money(v)}</div>`).join("")}</div>
+      <h3 style="margin-top:18px">Recent activity <a href="#">All</a></h3>${activity()}</section></div>
+    <section class="panel" style="margin-top:16px"><h3>Courses <input class="search" placeholder="Search courses" value="${esc(q)}" id="q"></h3>${courseRows(s)}</section>
+    <div class="row2 even"><section class="panel"><h3>Students <a href="#">Students</a></h3><div class="split" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div><div class="k">Avg progress</div><div class="v">57%</div></div><div><div class="k">Quiz average</div><div class="v">82%</div></div><div><div class="k">Certificates</div><div class="v">38</div></div><div><div class="k">Learning this week</div><div class="v">112</div></div></div>
+      <h3 style="margin-top:12px">Student engagement</h3>${[["Finished at least one module", 71], ["Passed their quizzes", 82], ["Completed a course", 43]].map((r) => `<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13.5px"><span>${r[0]}</span><b>${r[1]}%</b></div><div class="bar" style="margin-top:4px"><i style="width:${r[1]}%"></i></div></div>`).join("")}</section>
+      <section class="panel"><h3>Latest reviews <a href="#">Reply to reviews</a></h3>${reviews()}</section></div>
+  </main></div>`,
+  B: (s, p) => `<div class="B app">${side()}<main class="main">${head("Welcome back, Tia. Here is how your courses are doing.")}
+    <div class="hero"><div class="card rev"><div class="k">DEL net revenue · after Stripe fees and refunds</div><div class="v">${money(s.net)}</div><div>${delta(s.net, p.net)} <span class="k">vs the previous period · gross ${money(s.gross)} · fees ${money(s.fee)} · refunds ${money(s.refund)}</span></div><div class="fig" id="ch" style="height:200px;margin-top:10px"></div></div>
+      <div class="mini">${[["New enrolments", s.enr, delta(s.enr, p.enr)], ["Active students", Math.round(s.enr * 2.6 + 40), ""], ["Completion rate", "43%", ""], ["Average rating", "4.76 ★", ""], ["Certificates issued", "38", ""], ["Quiz average", "82%", ""]].map((k) => `<div><div class="k">${k[0]}</div><div class="v" style="font-size:22px">${k[1]}</div>${k[2]}</div>`).join("")}</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap"><h3 style="margin:0">Your courses</h3><input class="search" placeholder="Search courses" value="${esc(q)}" id="q"></div>
+    <div class="courses">${COURSES.map((c, i) => ({ c, i })).filter(({ c }) => c.t.toLowerCase().includes(q.toLowerCase())).map(({ c, i }) => `<article class="cc"><div class="cv" style="background:linear-gradient(135deg,hsl(${c.hue} 60% 25%),hsl(${c.hue + 40} 70% 50%))"><span class="pill ${c.s}" style="position:absolute;top:10px;left:10px;background:#fff">${c.s === "pub" ? "Published" : "Draft"}</span></div><div class="bd"><h4>${esc(c.t)}</h4>${c.comp ? `<div class="bar"><i style="width:${c.comp}%"></i></div>` : ""}<div class="st"><div><b>${s.enrC[i]}</b>enrolled</div><div><b>${money0(s.byC[i])}</b>revenue</div><div><b>${c.rating ? c.rating.toFixed(1) : "—"}</b>rating</div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn">Manage</button><button class="btn">Preview</button></div></div></article>`).join("")}</div>
+    <div class="row3"><section class="card"><h3>Recent activity</h3>${activity()}</section><section class="card"><h3>Latest reviews</h3>${reviews()}</section><section class="card"><h3>Student engagement</h3>${[["Average progress", 57], ["Finished at least one module", 71], ["Passed their quizzes", 82], ["Completed a course", 43]].map((r) => `<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13.5px"><span>${r[0]}</span><b>${r[1]}%</b></div><div class="bar" style="margin-top:4px"><i style="width:${r[1]}%"></i></div></div>`).join("")}</section></div>
+  </main></div>`,
+  C: (s, p) => `<div class="C app">${side()}<main class="main">${head()}
+    <div class="strip">${KP(s, p).slice(0, 5).map((k) => `<div><div class="k">${k[0]}</div><div class="v disp">${k[1]}</div>${k[2]}</div>`).join("")}</div>
+    <div class="big"><section><h3>Gross and DEL net revenue</h3><div class="fig" id="ch" style="height:280px"></div></section>
+      <section class="list"><h3>Revenue by course</h3><ul>${COURSES.map((c, i) => `<li><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.t)}</span><span class="num">${money(s.byC[i])}</span></li>`).join("")}</ul>
+      <h3 style="margin-top:22px">Learners</h3><ul><li><span>Average progress</span><span class="num">57%</span></li><li><span>Completion rate</span><span class="num">43%</span></li><li><span>Quiz average</span><span class="num">82%</span></li><li><span>Certificates issued</span><span class="num">38</span></li></ul></section></div>
+    <section style="margin-top:28px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3 style="margin:0">Courses</h3><input class="search" placeholder="Search courses" value="${esc(q)}" id="q"></div>${courseRows(s)}</section>
+    <div class="lower"><section><h3>Recent activity</h3>${activity()}</section><section><h3>Latest reviews</h3>${reviews()}<div class="empty" style="margin-top:12px">No Q&A waiting. New student questions appear here.</div></section></div>
+  </main></div>`,
+};
+const app = document.getElementById("app"); let redraw = null;
+function render() {
+  const s = stats(n()), p = stats(n(), n());
+  app.innerHTML = VIEWS[opt](s, p);
+  const el = document.getElementById("ch"); redraw = el ? chart(el, s, opt === "A" ? "area" : opt === "B" ? "bars" : "line") : null;
+  const qi = document.getElementById("q"); if (qi) qi.addEventListener("input", (e) => { q = e.target.value; const pos = e.target.selectionStart; render(); const nq = document.getElementById("q"); nq.focus(); nq.setSelectionRange(pos, pos); });
+}
+app.addEventListener("click", (e) => {
+  const r = e.target.closest("[data-r]"); if (r) { range = r.dataset.r; render(); return; }
+  const th = e.target.closest("th[data-sort]"); if (th) { const k = th.dataset.sort; sortDir = sortKey === k ? -sortDir : -1; sortKey = k; render(); return; }
+  if (e.target.closest("a[href='#'],.btn")) e.preventDefault();
+});
+document.getElementById("tabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; opt = b.dataset.v; document.querySelectorAll("#tabs button").forEach((x) => x.setAttribute("aria-selected", String(x === b))); render(); });
+const ro = new ResizeObserver(() => redraw && redraw()); ro.observe(app);
+render();
+}
+</script>
