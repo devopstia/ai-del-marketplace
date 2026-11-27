@@ -42,6 +42,10 @@ Every new request has a row in the register and a details block with all of thes
 ```
 Missing slides, labs, quizzes, assessments or documentation use the same template (only the relevant lines).
 
+**Status 2026-11-27 night:** GEN paused (weekly usage limit) until **Dec 1, 1 pm America/Chicago**. CR-005 and CR-007–010 are
+built but not QA'd: treat their folders as not ready. No AWS resources left running. CR-006 needs the owner's GitHub token.
+Each lesson arrives on its own after QA (lab included); ignore a folder until GEN's "ready-for-review" message.
+
 ## Register
 
 | Id | Course | Module / lesson | Request | Owner | Opened | Priority | Status | Delivered at | Upload |
