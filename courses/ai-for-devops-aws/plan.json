@@ -305,6 +305,12 @@
           "short": "Incident management"
         },
         {
+          "folder": "18-automation-n8n/21-n21-n8n-intelligent-alerting-live",
+          "title": "Intelligent alerting: grouping, suppression and urgency scoring",
+          "short": "Intelligent alerting",
+          "summary": "Turn a 200-alert flood into three clear Mattermost messages: group and de-duplicate, mute known noise and maintenance windows, score urgency with rules first and AI only for unclear cases, and send a daily \"what was noisy\" report."
+        },
+        {
           "folder": "18-automation-n8n/17-n17-n8n-ai-assisted-live",
           "title": "AI summaries in n8n workflows, safely",
           "summary": "Add AI to real automations with n8n: summaries of failed deployments and incidents with secrets removed first, logs treated as untrusted text, drafts labelled, and a human who decides.",

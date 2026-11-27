@@ -140,6 +140,12 @@
           "short": "Incident management"
         },
         {
+          "folder": "21-n21-n8n-intelligent-alerting-live",
+          "title": "Intelligent alerting: grouping, suppression and urgency scoring",
+          "short": "Intelligent alerting",
+          "summary": "Turn a 200-alert flood into three clear Mattermost messages: group and de-duplicate, mute known noise and maintenance windows, score urgency with rules first and AI only for unclear cases, and send a daily \"what was noisy\" report."
+        },
+        {
           "folder": "13-n13-n8n-scheduled-reports-live",
           "title": "Schedule a morning report for your team",
           "summary": "Answer the team's morning questions automatically: a scheduled workflow collects deployments, failures and service status, writes one short report and posts it to Mattermost every day.",
