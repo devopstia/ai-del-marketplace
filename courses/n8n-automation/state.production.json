@@ -23,7 +23,9 @@
     "17-n17-n8n-ai-assisted-live": "e66062c6-01b6-4cec-af96-7c0c23fcd70e",
     "00-n0-n8n-course-intro": "806241ef-7034-4445-ab1d-788d940a4d17",
     "09-n7-n8n-github-pr-live": "70dbd89e-b11b-41de-8117-dbff3a317a40",
-    "19-n19-n8n-ai-agent-live": "2d1b4c2b-881d-45bb-a9d9-0d68466fe700"
+    "19-n19-n8n-ai-agent-live": "2d1b4c2b-881d-45bb-a9d9-0d68466fe700",
+    "20-n20-n8n-ai-incident-triage-live": "f4a01e61-b1c8-4ad3-a3ea-fb258fef5836",
+    "22-n22-n8n-ai-cicd-live": "d1ced7bb-da09-4e6c-9408-c86c03db2949"
   },
   "quizzes": {
     "04-n4-n8n-tour-first-workflow-live": "2de1a028-b05f-44b6-9db1-97d6401d823e",
@@ -42,7 +44,9 @@
     "02-n2-deploy-n8n-mattermost-live": "ae605ee2-b02f-47dc-939e-3fcbfa3421f0",
     "03-n3-mattermost-webhook-live": "66946da7-c5d0-4080-9767-783d73ec183c",
     "09-n7-n8n-github-pr-live": "18fb5700-70de-4266-9917-b2b010e65b17",
-    "19-n19-n8n-ai-agent-live": "0d93a6da-9f9d-4343-99bf-1bf3daeed3fa"
+    "19-n19-n8n-ai-agent-live": "0d93a6da-9f9d-4343-99bf-1bf3daeed3fa",
+    "20-n20-n8n-ai-incident-triage-live": "d877f5ee-6918-4b4b-a363-ab30f6e06af3",
+    "22-n22-n8n-ai-cicd-live": "7702a1e1-5a58-46de-9e1c-35ba61444f52"
   },
   "files": {
     "02bb67db5e467a0546b68cb9d7a0445074c5a0b0b62fb8ecae27b729476474ce": {
@@ -350,6 +354,42 @@
       "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/a1d51985-eb85-4e91-9fa3-b0ed27c3889a/build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
       "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
       "at": "2026-11-27T12:18:43.734Z"
+    },
+    "2450d1bda79b95b60df6f1c06bff2840daddfb31b4507e89b3e21a6a27bbb6c6": {
+      "kind": "video",
+      "assetId": "83fed391-7516-47e0-a4b2-348b32b304f6",
+      "name": "ai-incident-triage-ranked-hypotheses-a-human-confirms.mp4",
+      "at": "2026-11-27T13:53:12.742Z"
+    },
+    "d8bb9fa954fa6efac454a92c11c26ffd726cfddb5df78f089471ac8cfe801ee8": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/829a7ac1-3aa0-46f1-b138-90ff75babb4b/ai-incident-triage-ranked-hypotheses-a-human-confirms-slides.pdf",
+      "name": "ai-incident-triage-ranked-hypotheses-a-human-confirms-slides.pdf",
+      "at": "2026-11-27T13:53:15.037Z"
+    },
+    "0598a5f0914ebdf1b66c988319fcf8722fd9724ac74f27a779b59be2b1978796": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/cb468b19-2777-4a4e-abc1-dddd329aff79/ai-incident-triage-ranked-hypotheses-a-human-confirms-lab.zip",
+      "name": "ai-incident-triage-ranked-hypotheses-a-human-confirms-lab.zip",
+      "at": "2026-11-27T13:53:15.336Z"
+    },
+    "cc9d42e4cb9c6d8f2be124d70ac37e0203706dcbf5a60cc493a1bacec28f9942": {
+      "kind": "video",
+      "assetId": "856f5db9-fb04-437b-8f51-c62fadeeda7f",
+      "name": "ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix.mp4",
+      "at": "2026-11-27T13:54:00.852Z"
+    },
+    "7bff994b633391a42b9ed2112a399c1094359d40b835a0bc628b3432510c3a8c": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/99b5f0d8-1cd1-4c6e-a170-3570a143e4a0/ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-slides.pdf",
+      "name": "ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-slides.pdf",
+      "at": "2026-11-27T13:54:02.972Z"
+    },
+    "6a7587d3a99d721948dcd39a8212e3423f8462257bd94b9696a6fe49ecd46536": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/27869ce9-f7ef-4a55-9fac-808c74d931cb/ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-lab.zip",
+      "name": "ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-lab.zip",
+      "at": "2026-11-27T13:54:03.254Z"
     }
   },
   "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c",

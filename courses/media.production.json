@@ -634,7 +634,9 @@
       "name": "claudemd-in-depth-instructions-for-ai-coding-agents.mp4",
       "at": "2026-11-27T06:51:38.873Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -644,7 +646,9 @@
       "name": "claudemd-in-depth-instructions-for-ai-coding-agents-slides.pdf",
       "at": "2026-11-27T06:51:41.237Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "bbe8ccf0d19672d25d780568daa34ef4f54c0a3ee7166665db475ef58a87caff": {
@@ -653,7 +657,9 @@
       "name": "write-claudemd-for-a-real-repository.mp4",
       "at": "2026-11-27T06:52:16.814Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -663,7 +669,9 @@
       "name": "write-claudemd-for-a-real-repository-slides.pdf",
       "at": "2026-11-27T06:52:18.873Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "c0198710f201711eb793dda1d2585246406a6f67cb1e646497709b52e06a8a2c": {
@@ -672,7 +680,9 @@
       "name": "write-claudemd-for-a-real-repository-lab.zip",
       "at": "2026-11-27T06:52:19.136Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "0a0c0b5fa2a9be959502d59298fac4fe702020988426ade8365afe64c4017441": {
@@ -681,7 +691,9 @@
       "name": "the-claude-folders-settings-permissions-and-deny-rules.mp4",
       "at": "2026-11-27T06:53:04.839Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -691,7 +703,9 @@
       "name": "the-claude-folders-settings-permissions-and-deny-rules-slides.pdf",
       "at": "2026-11-27T06:53:06.725Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "af3f61053582393e0ff75343bc66275d5732968e4de558582dd97ad0171104cc": {
@@ -700,7 +714,9 @@
       "name": "the-claude-folders-settings-permissions-and-deny-rules-lab.zip",
       "at": "2026-11-27T06:53:06.995Z",
       "courses": [
-        "vscode-masterclass"
+        "vscode-masterclass",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "93b5668cfc2fcb517143d14aad42b900527403f3b1b39ff8ef2181574fb0fb92": {
@@ -1463,6 +1479,74 @@
       "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/a1d51985-eb85-4e91-9fa3-b0ed27c3889a/build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
       "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
       "at": "2026-11-27T12:18:43.736Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "2450d1bda79b95b60df6f1c06bff2840daddfb31b4507e89b3e21a6a27bbb6c6": {
+      "kind": "video",
+      "assetId": "83fed391-7516-47e0-a4b2-348b32b304f6",
+      "name": "ai-incident-triage-ranked-hypotheses-a-human-confirms.mp4",
+      "at": "2026-11-27T13:53:12.745Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "d8bb9fa954fa6efac454a92c11c26ffd726cfddb5df78f089471ac8cfe801ee8": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/829a7ac1-3aa0-46f1-b138-90ff75babb4b/ai-incident-triage-ranked-hypotheses-a-human-confirms-slides.pdf",
+      "name": "ai-incident-triage-ranked-hypotheses-a-human-confirms-slides.pdf",
+      "at": "2026-11-27T13:53:15.038Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "0598a5f0914ebdf1b66c988319fcf8722fd9724ac74f27a779b59be2b1978796": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/cb468b19-2777-4a4e-abc1-dddd329aff79/ai-incident-triage-ranked-hypotheses-a-human-confirms-lab.zip",
+      "name": "ai-incident-triage-ranked-hypotheses-a-human-confirms-lab.zip",
+      "at": "2026-11-27T13:53:15.338Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "cc9d42e4cb9c6d8f2be124d70ac37e0203706dcbf5a60cc493a1bacec28f9942": {
+      "kind": "video",
+      "assetId": "856f5db9-fb04-437b-8f51-c62fadeeda7f",
+      "name": "ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix.mp4",
+      "at": "2026-11-27T13:54:00.854Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "7bff994b633391a42b9ed2112a399c1094359d40b835a0bc628b3432510c3a8c": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/99b5f0d8-1cd1-4c6e-a170-3570a143e4a0/ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-slides.pdf",
+      "name": "ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-slides.pdf",
+      "at": "2026-11-27T13:54:02.973Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "6a7587d3a99d721948dcd39a8212e3423f8462257bd94b9696a6fe49ecd46536": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/27869ce9-f7ef-4a55-9fac-808c74d931cb/ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-lab.zip",
+      "name": "ai-in-cicd-explain-a-failed-pipeline-and-suggest-the-fix-lab.zip",
+      "at": "2026-11-27T13:54:03.255Z",
       "courses": [
         "n8n-automation",
         "ai-for-devops-aws",
