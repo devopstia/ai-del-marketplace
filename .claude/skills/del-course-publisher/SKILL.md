@@ -125,6 +125,15 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
 11. **Learn**: add what you learned to `courses/LESSONS_LEARNED.md` and content problems for the video-generation agent to
     `courses/CONTENT_REQUESTS.md` (the request register; `GENERATION_FEEDBACK.md` is history); improve this skill when a step was wrong or missing.
 
+## Text lessons and removing lessons (2026-11-27)
+- **Text lesson** in a plan: `{"type": "article", "key": "next-steps", "title": "…", "summary": "…", "articleMd": "…"}`
+  anywhere in a section's `lessons`; kept by `state.articles[key]` and updated in place. Link to another planned course
+  with `{{course:<plan-slug>}}`: the publisher writes that course's real public URL (from its state file and the API), and
+  skips the article (reported) while the linked course doesn't exist yet. Free gateway courses end with one (standard §3c).
+- **Removing lessons**: `--prune` (session mode) deletes lessons the plan no longer has, their quiz lessons and empty
+  unplanned sections, **only on draft courses**. On a published course it refuses: students' progress would be lost; that
+  change needs a reviewed revision and the owner's explicit OK. Media is never deleted.
+
 ## Adding lessons to an existing course (insert, don't append)
 Insert each new lesson folder at its **correct position** in `plan.json` (the section and place a learner should watch it,
 not the end) and re-run step 6, first on staging, then production. Existing lessons, videos and files are matched

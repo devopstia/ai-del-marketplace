@@ -37,28 +37,63 @@
       "title": "AI foundations for DevOps",
       "lessons": [
         {
+          "folder": "01-before-ai/01-computers-before-ai",
+          "title": "How computers solved problems before AI",
+          "summary": "See how rule-based programs work, why most of the software you run still works that way, and where hand-written rules break down: everyday language, images and cases nobody planned for.",
+          "short": "Rules before AI"
+        },
+        {
+          "folder": "01-before-ai/03-short-history-of-ai",
+          "title": "A short history of AI, from rules to agents",
+          "summary": "Seventy years of AI in one walk: expert systems, machine learning, deep learning, chat assistants and agents, and what each step means for your work as a DevOps engineer.",
+          "short": "History of AI"
+        },
+        {
+          "folder": "01-before-ai/04-what-is-machine-learning",
+          "title": "What machine learning is: a spam filter, step by step",
+          "summary": "Learn machine learning with one example, a spam filter: training on examples, inference with a probability, and how the same idea routes alerts and spots unusual metrics.",
+          "short": "Machine learning"
+        },
+        {
           "folder": "02-ai-foundations/01-tm1-big-words",
           "title": "AI, machine learning, deep learning and generative AI",
-          "short": "The big words",
-          "summary": "The big words, one at a time: artificial intelligence, machine learning, deep learning, neural networks, generative and predictive AI, and where you meet each one as a DevOps engineer."
+          "summary": "The big words, one at a time: artificial intelligence, machine learning, deep learning, neural networks, generative and predictive AI, and where you meet each one as a DevOps engineer.",
+          "short": "The big words"
+        },
+        {
+          "folder": "02-ai-foundations/02-tm2-practice-architecture-application",
+          "title": "DevOps, MLOps, LLMOps, RAG and agentic AI, sorted",
+          "summary": "Five terms people mix up, sorted into practices, an architecture and an application type, so you can tell DevOps, MLOps, LLMOps, RAG and agentic AI apart in any conversation.",
+          "short": "Practices and architectures"
+        }
+      ]
+    },
+    {
+      "title": "The vocabulary of AI models",
+      "lessons": [
+        {
+          "folder": "02-ai-foundations/03-tm3-model-words",
+          "title": "Models: parameters, training, inference and model cards",
+          "summary": "What an LLM is, parameters, pre-training, fine-tuning, inference, the knowledge cut-off, model cards, and open versus closed models: what to check before you deploy one.",
+          "short": "Model words"
         },
         {
           "folder": "02-ai-foundations/04-tm4-talking-to-a-model",
           "title": "Prompts, tokens, context windows and temperature",
-          "short": "Talking to a model",
-          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill."
+          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill.",
+          "short": "Talking to a model"
         },
         {
           "folder": "02-ai-foundations/05-tm5-answer-quality",
           "title": "Hallucinations, grounding and judging AI answers",
-          "short": "Answer quality",
-          "summary": "Fluent is not correct. Learn hallucination, grounding, citations, groundedness, evaluation and the golden set, and how to measure whether an AI answer can be trusted."
+          "summary": "Fluent is not correct. Learn hallucination, grounding, citations, groundedness, evaluation and the golden set, and how to measure whether an AI answer can be trusted.",
+          "short": "Answer quality"
         },
         {
-          "folder": "02-ai-foundations/10-tm10-agent-words",
-          "title": "AI agents: tools, the agent loop, memory and guardrails",
-          "short": "Agent words",
-          "summary": "A chatbot answers, an agent acts. Tools, function calling, MCP, the agent loop, memory, multiple agents, the human in the loop and guardrails, with the DevOps limits that keep agents safe."
+          "folder": "02-ai-foundations/11-tm11-running-models",
+          "title": "Running models: GPUs, VRAM, quantisation and licences",
+          "summary": "What it takes to run a model yourself: runtime versus model, GPUs and VRAM, parameters and quantisation, self-hosted versus managed, and open source versus open weights.",
+          "short": "Running models"
         }
       ]
     },
@@ -68,20 +103,20 @@
         {
           "folder": "17-cloud-ai/01-aws-ai-services-map",
           "title": "The AWS AI services map",
-          "short": "AWS AI map",
-          "summary": "Every family of AWS AI services, what each is for, a DevOps example of each and where to find them in the console: Bedrock, SageMaker AI, task services and DevOps Guru."
+          "summary": "Every family of AWS AI services, what each is for, a DevOps example of each and where to find them in the console: Bedrock, SageMaker AI, task services and DevOps Guru.",
+          "short": "AWS AI map"
         },
         {
           "folder": "17-cloud-ai/03-choosing-ai-service",
           "title": "Choosing the right AI service on AWS or Azure",
-          "short": "Choosing a service",
-          "summary": "A few questions that pick the right service for a job, real DevOps scenarios, and the traps that cost money: task service, model platform or your own model."
+          "summary": "A few questions that pick the right service for a job, real DevOps scenarios, and the traps that cost money: task service, model platform or your own model.",
+          "short": "Choosing a service"
         },
         {
           "folder": "17-cloud-ai/04-amazon-bedrock-explained",
           "title": "Amazon Bedrock explained",
-          "short": "Bedrock explained",
           "summary": "What Amazon Bedrock is, how it works, choosing a model, what it costs, keeping it secure, and where everything lives in the console: catalog, playground, inference profiles and quotas.",
+          "short": "Bedrock explained",
           "preview": true
         }
       ]
@@ -90,75 +125,81 @@
       "title": "Getting started with Amazon Bedrock",
       "lessons": [
         {
-          "folder": "16-cloud-labs/02-s3-help-site-live",
-          "title": "Publish an AI assistant's help site on Amazon S3",
-          "short": "S3 help site",
-          "summary": "A first AWS hands-on: publish the help pages of an AI ops assistant as a website on Amazon S3, click by click in the console, then delete only what you created."
-        },
-        {
           "folder": "16-cloud-labs/04-bedrock-chatbot-live",
           "title": "Build an AI chatbot on Amazon Bedrock, the DevOps way",
-          "short": "Bedrock chatbot",
           "summary": "A chatbot on Amazon Bedrock with permission to call exactly one model, no long-lived keys, a container and a live browser test, then the same with Terraform and a clean exit.",
+          "short": "Bedrock chatbot",
           "preview": true
+        },
+        {
+          "folder": "16-cloud-labs/02-s3-help-site-live",
+          "title": "Publish an AI assistant's help site on Amazon S3",
+          "summary": "A first AWS hands-on: publish the help pages of an AI ops assistant as a website on Amazon S3, click by click in the console, then delete only what you created.",
+          "short": "S3 help site"
         }
       ]
     },
     {
-      "title": "AI applications on AWS",
+      "title": "AI applications on AWS: a real outage",
       "lessons": [
+        {
+          "folder": "01-before-ai/02-devops-before-ai",
+          "title": "Fix a 3 a.m. outage the classic way",
+          "summary": "Follow an on-call engineer through a real nginx outage without any AI: reproduce it, read the logs and config, check the docs, fix it and update the runbook. Then do it yourself in the lab.",
+          "short": "The classic fix"
+        },
         {
           "folder": "04-by-hand-vs-ai/01-devops-with-ai",
           "title": "The same outage, fixed with an AI helper on Amazon Bedrock",
-          "short": "AI on call",
-          "summary": "Replay the 3 a.m. 502 with an AI helper on Amazon Bedrock: what gets faster, what doesn't, and why the engineer still reviews every step. Then run it yourself in the lab."
+          "summary": "Replay the 3 a.m. 502 with an AI helper on Amazon Bedrock: what gets faster, what doesn't, and why the engineer still reviews every step. Then run it yourself in the lab.",
+          "short": "AI on call"
         }
       ]
     },
     {
-      "title": "Retrieval-Augmented Generation on AWS",
+      "title": "Retrieval-Augmented Generation (RAG)",
       "lessons": [
         {
           "folder": "02-ai-foundations/06-tm6-rag-words-preparing",
           "title": "Preparing knowledge for RAG: parsing, chunks and indexing",
-          "short": "Preparing knowledge",
-          "summary": "Follow one question through the first phase of RAG: the corpus, parsing, metadata, chunks and overlap, ingestion and indexing, and the first thing to check when an answer is missing."
+          "summary": "Follow one question through the first phase of RAG: the corpus, parsing, metadata, chunks and overlap, ingestion and indexing, and the first thing to check when an answer is missing.",
+          "short": "Preparing knowledge"
         },
         {
           "folder": "02-ai-foundations/07-tm7-embeddings-vectors",
           "title": "Embeddings and vectors: matching meaning, not words",
-          "short": "Embeddings",
-          "summary": "How embeddings place similar meanings close together, what vectors, dimensions and similarity are, and why chunks and questions must use the same embedding model."
+          "summary": "How embeddings place similar meanings close together, what vectors, dimensions and similarity are, and why chunks and questions must use the same embedding model.",
+          "short": "Embeddings"
         },
         {
           "folder": "02-ai-foundations/08-tm8-rag-search-answer",
           "title": "RAG search: keyword, vector, hybrid and reranking",
-          "short": "RAG search",
-          "summary": "What happens when a question arrives: keyword, vector and hybrid search, top K, rerankers, query rewriting, and the difference between RAG and fine-tuning."
+          "summary": "What happens when a question arrives: keyword, vector and hybrid search, top K, rerankers, query rewriting, and the difference between RAG and fine-tuning.",
+          "short": "RAG search"
         },
         {
           "folder": "02-ai-foundations/09-tm9-where-data-lives",
           "title": "Where RAG data lives: object storage and vector databases",
-          "short": "Where data lives",
-          "summary": "Object storage, vector databases, index records and metadata filters: where a RAG system keeps its data, how permissions are enforced, and how to choose a store your team can run."
+          "summary": "Object storage, vector databases, index records and metadata filters: where a RAG system keeps its data, how permissions are enforced, and how to choose a store your team can run.",
+          "short": "Where data lives"
         },
         {
           "folder": "07-building-rag/20-r7-one-architecture-three-implementations",
           "title": "One RAG architecture, three implementations",
-          "short": "One RAG architecture",
-          "summary": "Self-hosted with Docker, on Azure and on AWS: three RAG systems that do the same six jobs with different names on the boxes, so every platform feels familiar."
+          "summary": "Self-hosted with Docker, on Azure and on AWS: three RAG systems that do the same six jobs with different names on the boxes, so every platform feels familiar.",
+          "short": "One RAG architecture"
         },
         {
           "folder": "16-cloud-labs/06-rag-stack-live",
           "title": "Run a production-style RAG chatbot with Docker Compose",
-          "short": "Self-hosted RAG stack",
-          "summary": "Twenty-one containers answering from a company's own documents with sources, per-user document permissions and full observability in Grafana, on your computer or a VM."
+          "summary": "Twenty-one containers answering from a company's own documents with sources, per-user document permissions and full observability in Grafana, on your computer or a VM.",
+          "short": "Self-hosted RAG stack"
         },
         {
           "folder": "16-cloud-labs/08-aws-rag-live",
           "title": "Build a RAG system on AWS with Bedrock Knowledge Bases",
-          "short": "AWS RAG",
-          "summary": "S3, Amazon Bedrock Knowledge Bases, S3 Vectors and a Nova model, created with Terraform: answers with sources, refusals for what the documents don't cover, then destroy."
+          "summary": "S3, Amazon Bedrock Knowledge Bases, S3 Vectors and a Nova model, created with Terraform: answers with sources, refusals for what the documents don't cover, then destroy.",
+          "short": "AWS RAG"
         }
       ]
     },
@@ -166,51 +207,74 @@
       "title": "AI agents for DevOps",
       "lessons": [
         {
+          "folder": "02-ai-foundations/10-tm10-agent-words",
+          "title": "AI agents: tools, the agent loop, memory and guardrails",
+          "summary": "A chatbot answers, an agent acts. Tools, function calling, MCP, the agent loop, memory, multiple agents, the human in the loop and guardrails, with the DevOps limits that keep agents safe.",
+          "short": "Agent words"
+        },
+        {
           "folder": "05-agents-rag-ideas/19-agent-vs-chatbot",
           "title": "AI chatbot versus AI agent, side by side",
-          "short": "Chatbot vs agent",
-          "summary": "Same model, same question: a chatbot that answers and an agent that acts. See how each works, what each can do, when to use which, and the guardrails an agent needs. Lab included."
+          "summary": "Same model, same question: a chatbot that answers and an agent that acts. See how each works, what each can do, when to use which, and the guardrails an agent needs. Lab included.",
+          "short": "Chatbot vs agent"
         },
         {
           "folder": "05-agents-rag-ideas/20-s1-skill-based-agents",
           "title": "Skill-based agents: one job, clear limits",
-          "short": "Skill-based agents",
-          "summary": "Why DevOps agents should have one skill each: investigate, propose a fix, wait for your approval, verify and report, and fail safely when they can't."
+          "summary": "Why DevOps agents should have one skill each: investigate, propose a fix, wait for your approval, verify and report, and fail safely when they can't.",
+          "short": "Skill-based agents"
         },
         {
           "folder": "16-cloud-labs/10-s2-docker-skill-agents-live",
           "title": "Three skill agents fix 502s, crash loops and full disks",
-          "short": "Docker skill agents",
-          "summary": "Three single-skill agents investigate, propose a fix, wait for your yes, apply it, verify and report: a 502 Bad Gateway, a container crash loop and a full disk."
+          "summary": "Three single-skill agents investigate, propose a fix, wait for your yes, apply it, verify and report: a 502 Bad Gateway, a container crash loop and a full disk.",
+          "short": "Docker skill agents"
         },
         {
           "folder": "16-cloud-labs/09-k8s-doctor-live",
           "title": "An AI agent that fixes Kubernetes workloads",
-          "short": "Kubernetes doctor",
-          "summary": "An agent scans a namespace, finds broken workloads, fixes them one at a time with your approval, verifies and writes a report. Works on minikube, EKS or AKS."
+          "summary": "An agent scans a namespace, finds broken workloads, fixes them one at a time with your approval, verifies and writes a report. Works on minikube, EKS or AKS.",
+          "short": "Kubernetes doctor"
         },
         {
           "folder": "05-agents-rag-ideas/21-r10-kagent-explained",
           "title": "AI agents inside Kubernetes with kagent",
-          "short": "kagent",
-          "summary": "kagent runs AI agents as Kubernetes resources: Agent, ModelConfig and MCP tools, deployed with kubectl and Helm, limited by RBAC and approvals."
+          "summary": "kagent runs AI agents as Kubernetes resources: Agent, ModelConfig and MCP tools, deployed with kubectl and Helm, limited by RBAC and approvals.",
+          "short": "kagent"
         }
       ]
     },
     {
-      "title": "AI-powered DevOps automation",
+      "title": "AI in CI/CD and operations",
       "lessons": [
         {
           "folder": "19-ai-cicd/01-ci1-ai-in-cicd",
           "title": "Where AI fits in a CI/CD pipeline",
-          "short": "AI in CI/CD",
-          "summary": "Map a real pipeline: where an AI helper speeds up builds, tests, reviews and fixes, where a human must still say yes, and how fixes arrive as pull requests, GitOps included."
+          "summary": "Map a real pipeline: where an AI helper speeds up builds, tests, reviews and fixes, where a human must still say yes, and how fixes arrive as pull requests, GitOps included.",
+          "short": "AI in CI/CD"
+        }
+      ]
+    },
+    {
+      "title": "Automate it with n8n",
+      "lessons": [
+        {
+          "folder": "18-automation-n8n/06-n6-n8n-deploy-notifications-live",
+          "title": "Deployment notifications from CI with n8n",
+          "summary": "Your pipeline calls an n8n webhook after each deployment and the team sees a green or red message in Mattermost, protected by a token. The lab starts n8n and Mattermost with Docker Compose.",
+          "short": "Deployment notifications"
+        },
+        {
+          "folder": "18-automation-n8n/12-n12-n8n-incident-management-live",
+          "title": "Incident management with n8n: severity, escalation, resolution",
+          "summary": "Turn a flood of repeated alerts into one incident with a severity, escalate when nobody acknowledges, and post the resolution, on a real outage. The lab includes the full n8n and Mattermost stack.",
+          "short": "Incident management"
         },
         {
           "folder": "18-automation-n8n/17-n17-n8n-ai-assisted-live",
-          "title": "AI summaries in automation workflows, safely (n8n)",
-          "short": "AI summaries",
-          "summary": "Add AI to real automations with n8n: summaries of failed deployments and incidents with secrets removed first, logs treated as untrusted text, drafts labelled, and a human who decides."
+          "title": "AI summaries in n8n workflows, safely",
+          "summary": "Add AI to real automations with n8n: summaries of failed deployments and incidents with secrets removed first, logs treated as untrusted text, drafts labelled, and a human who decides.",
+          "short": "AI summaries"
         }
       ]
     },
@@ -220,20 +284,20 @@
         {
           "folder": "20-mcp/01-m1-what-is-mcp",
           "title": "What MCP is and why every platform adopted it",
-          "short": "What is MCP",
-          "summary": "The Model Context Protocol: the problem it solves, its three roles, why GitHub, AWS, Microsoft, Atlassian and Slack adopted it, and how an agent acts as a scoped delegate."
+          "summary": "The Model Context Protocol: the problem it solves, its three roles, why GitHub, AWS, Microsoft, Atlassian and Slack adopted it, and how an agent acts as a scoped delegate.",
+          "short": "What is MCP"
         },
         {
           "folder": "20-mcp/02-m2-inside-mcp",
           "title": "Inside MCP: tools, resources, prompts and transports",
-          "short": "Inside MCP",
-          "summary": "What an MCP server offers and how agents discover it: tools, resources and prompts, stdio and Streamable HTTP, and how a remote server checks who you are with OAuth."
+          "summary": "What an MCP server offers and how agents discover it: tools, resources and prompts, stdio and Streamable HTTP, and how a remote server checks who you are with OAuth.",
+          "short": "Inside MCP"
         },
         {
           "folder": "20-mcp/03-m3-first-mcp-server-live",
           "title": "Build your first MCP server and connect real agents",
-          "short": "First MCP server",
-          "summary": "Write an MCP server in Python with one tool, one resource and one prompt, run it with Docker Compose, test it in the MCP Inspector, and connect Claude Code and Codex to it."
+          "summary": "Write an MCP server in Python with one tool, one resource and one prompt, run it with Docker Compose, test it in the MCP Inspector, and connect Claude Code and Codex to it.",
+          "short": "First MCP server"
         }
       ]
     },
@@ -243,26 +307,26 @@
         {
           "folder": "02-ai-foundations/12-tm12-operating-securing",
           "title": "Operating and securing AI in production",
-          "short": "Operating and securing",
-          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI."
+          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
+          "short": "Operating and securing"
         },
         {
           "folder": "08-ai-production/19-r1-llmops-day-to-day",
           "title": "LLMOps day to day: what you manage once an AI app is live",
-          "short": "LLMOps",
-          "summary": "What changes from classic ML, and what you manage every day: prompts as production configuration, model versions, evaluation, knowledge freshness, cost, latency and feedback."
+          "summary": "What changes from classic ML, and what you manage every day: prompts as production configuration, model versions, evaluation, knowledge freshness, cost, latency and feedback.",
+          "short": "LLMOps"
         },
         {
           "folder": "08-ai-production/20-r6-who-builds-who-runs",
           "title": "Who builds a RAG system, and who runs it",
-          "short": "Who builds, who runs",
-          "summary": "The developer side, the operations side and the shared middle of a RAG system, and the four LLMOps pipelines: ingest, deploy, evaluate and observe."
+          "summary": "The developer side, the operations side and the shared middle of a RAG system, and the four LLMOps pipelines: ingest, deploy, evaluate and observe.",
+          "short": "Who builds, who runs"
         },
         {
           "folder": "08-ai-production/21-r8-managed-or-self-hosted",
           "title": "Managed AI or self-hosted: Bedrock, Foundry or Ollama",
-          "short": "Managed or self-hosted",
-          "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide."
+          "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide.",
+          "short": "Managed or self-hosted"
         }
       ]
     }

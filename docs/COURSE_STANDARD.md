@@ -82,6 +82,11 @@ previews and curriculum read well. Fix and look again before reporting.
 No generic filler, no exaggeration, nothing the videos don't teach. If the owner wants a topic the content doesn't
 cover (e.g. more AI), say so, describe only what exists, and send the gap to the generation agent (§7).
 
+### 3c. Free gateway courses (owner 2026-11-27)
+A free course is concise (about 12 videos): the essential terms and ideas plus one or two striking live demos, chosen for
+their hooks. It ends with a "your next step" text lesson that introduces the related paid courses (honest outcomes, the
+projects, direct links). Paid courses stay self-contained: they include every foundations lesson themselves.
+
 ## 4. Introduction video
 - Every course starts with an introduction: what the course is, why it matters, what you'll learn, who it's for,
   prerequisites, tools, projects, how it's organised, what you can do afterwards.

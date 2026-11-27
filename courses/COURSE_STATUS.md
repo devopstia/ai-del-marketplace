@@ -71,3 +71,11 @@ Catalog: `COURSE_CATALOG.md`; source inventory: `INVENTORY.md`. Shared videos ar
 | Content now | 6 lessons from the source groups (see `COURSE_CATALOG.md`); planned lessons in `CONTENT_REQUESTS.md` | — |
 | Cover | `blueprint-vscode` (template arrives with the covers release) | — |
 | Waiting | owner preview; the CRs listed in the catalog; production categories | owner sign-in, categories, approval |
+
+## Gateway restructure (2026-11-27, branch feat/intro-gateway)
+- Free **Introduction to AI for DevOps**: 12 videos (1.4 h) in 3 modules + the text lesson "Your next step" linking to
+  both masterclasses. Production currently holds the earlier 23-lesson draft: re-sync with `--prune` (draft only) after
+  this branch is merged; the article is written once the AWS and Azure courses have production ids.
+- **AWS** and **Azure** masterclasses: 40 videos each (5.0 h / 5.2 h), self-contained foundations, module "Automate it
+  with n8n" (06, 12, 17). Re-sync production after merge (no prune needed: lessons are only added and re-ordered).
+- n8n: CR-001 intro added to the plan (first lesson, preview, promo); sync after the pending revision is decided.
