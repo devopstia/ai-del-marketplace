@@ -1,0 +1,160 @@
+{
+  "sections": {
+    "Getting started: n8n and Mattermost": "792c8169-27ac-46ff-9a8f-183df37a5974",
+    "Core concepts and your first real automations": "482753d2-eaeb-4917-9b6b-663b6a071243",
+    "DevOps automations in practice": "af876583-3106-4ba7-b8d7-9fb177ba7620"
+  },
+  "lessons": {
+    "01-n1-n8n-mattermost-explained": "9ee48af5-2e7f-498f-b9f5-700a8e3a4278",
+    "02-n2-deploy-n8n-mattermost-live": "be3078f1-d98d-469e-9310-1cb8c69c137c",
+    "03-n3-mattermost-webhook-live": "e11d6440-e0b9-44e8-bb20-84a6bf4249c7",
+    "04-n4-n8n-tour-first-workflow-live": "151c3622-bab3-49b9-bca3-8d041f0f21cd",
+    "18-n18-n8n-cloud-vm-live": "b723b86e-b091-4e5a-ab4c-aefa8ff3c81d",
+    "05-nt1-n8n-words": "c804ea13-5063-4132-8cb4-3d049dbddf6e",
+    "06-n6-n8n-deploy-notifications-live": "afeda706-dcf4-4bd3-a41a-4b16d900270f",
+    "07-n5-n8n-errors-retries-debugging-live": "614fdc73-24a5-4b2e-8019-f83fe4735f63",
+    "08-nt2-automation-chatops-words": "abf70e48-f337-4b78-9217-08d69058b1f9"
+  },
+  "quizzes": {
+    "04-n4-n8n-tour-first-workflow-live": "2de1a028-b05f-44b6-9db1-97d6401d823e",
+    "18-n18-n8n-cloud-vm-live": "b170c997-d822-4656-9caf-1f83cab5d084",
+    "05-nt1-n8n-words": "2404f55f-4e7e-4b8e-a1b8-5b7867e31225",
+    "06-n6-n8n-deploy-notifications-live": "a0ca8d38-309f-44bc-ab92-8bd796d493dd",
+    "07-n5-n8n-errors-retries-debugging-live": "899172d6-c7b5-438f-979e-738c37e9138f"
+  },
+  "files": {
+    "02bb67db5e467a0546b68cb9d7a0445074c5a0b0b62fb8ecae27b729476474ce": {
+      "kind": "video",
+      "assetId": "e1b75d18-b223-4e4f-afe3-21ad5470853b",
+      "name": "what-n8n-and-mattermost-do-for-a-devops-team.mp4",
+      "at": "2026-11-27T02:39:58.209Z"
+    },
+    "f3973537d02cf8123d0f409d0b1799ae3f1a950de1cff763d95772415247a276": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/6835b53f-fb8d-4def-b418-4e993fa98516/what-n8n-and-mattermost-do-for-a-devops-team-slides.pdf",
+      "name": "what-n8n-and-mattermost-do-for-a-devops-team-slides.pdf",
+      "at": "2026-11-27T02:39:59.244Z"
+    },
+    "ee2f63084d879785d6218712b0bc4624346e50408396d46598401662c2743023": {
+      "kind": "video",
+      "assetId": "ad3840f7-46e1-4915-bd6e-a0f33b12e1ba",
+      "name": "deploy-n8n-and-mattermost-with-docker-compose.mp4",
+      "at": "2026-11-27T02:40:56.849Z"
+    },
+    "b4c5771d5d1add3fb6255b8e989e771ba153ac5ad32ed6f4b0078f68954c106c": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/18837752-9464-4512-8526-a45e25f9c426/deploy-n8n-and-mattermost-with-docker-compose-slides.pdf",
+      "name": "deploy-n8n-and-mattermost-with-docker-compose-slides.pdf",
+      "at": "2026-11-27T02:40:59.064Z"
+    },
+    "34ae5b45c8fedf2226a8c7c5402d9d92ccb32b8bdb3286a618d0ec9037e77817": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/38b0deba-451c-4ece-8e0f-c5df2ecedb2e/deploy-n8n-and-mattermost-with-docker-compose-lab.zip",
+      "name": "deploy-n8n-and-mattermost-with-docker-compose-lab.zip",
+      "at": "2026-11-27T02:40:59.340Z"
+    },
+    "bbb92b71e54bd338ea8d325f9e855258cf8f357a6f525a746117d4412820e7bd": {
+      "kind": "video",
+      "assetId": "cd2c2947-eaeb-4ebf-bb0c-96c32340a038",
+      "name": "set-up-mattermost-for-automation-channels-and-incoming-webhooks.mp4",
+      "at": "2026-11-27T02:41:36.810Z"
+    },
+    "00418b324c92e89eec7946533a7b20999a7c91a26345cedfa34f89c69378fec2": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/b035ad60-d857-4d7e-b9cc-c605a0e3a4d0/set-up-mattermost-for-automation-channels-and-incoming-webhooks-slides.pdf",
+      "name": "set-up-mattermost-for-automation-channels-and-incoming-webhooks-slides.pdf",
+      "at": "2026-11-27T02:41:38.538Z"
+    },
+    "70096e2f43423ed0837b5cb235b6bd3e66ecc391026424990c71cab7902bdf77": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/746c19cc-e8d5-4b2e-8049-116377a72875/set-up-mattermost-for-automation-channels-and-incoming-webhooks-lab.zip",
+      "name": "set-up-mattermost-for-automation-channels-and-incoming-webhooks-lab.zip",
+      "at": "2026-11-27T02:41:38.813Z"
+    },
+    "2ce4efeeb5a0f92f94b5c24f220f15d6c9fc318dfb81df63076b62a4cbdecd35": {
+      "kind": "video",
+      "assetId": "15ad6a43-babc-46c5-80ac-5a0037bb7bc5",
+      "name": "tour-n8n-and-build-your-first-workflows.mp4",
+      "at": "2026-11-27T02:42:17.488Z"
+    },
+    "7cf988f5b54e3c0776c4b175cf8a44e815c4e48367e41265de13b1d16f3b940b": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/b861cec4-e680-413c-9626-6861801f9fbe/tour-n8n-and-build-your-first-workflows-slides.pdf",
+      "name": "tour-n8n-and-build-your-first-workflows-slides.pdf",
+      "at": "2026-11-27T02:42:19.382Z"
+    },
+    "ae425722190233a65efd7d22e0d18ab90afaddbe7115b9891b71603f5ab282d9": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/90303e66-e974-42de-99fc-882a16831cc8/tour-n8n-and-build-your-first-workflows-lab.zip",
+      "name": "tour-n8n-and-build-your-first-workflows-lab.zip",
+      "at": "2026-11-27T02:42:19.684Z"
+    },
+    "8ab27bce4ba5a58af498d977f4c2cf61b4a6ea74b819b3d4359dcc5b03207045": {
+      "kind": "video",
+      "assetId": "cb38a0df-adc6-4e8c-a134-50a0e304b7dc",
+      "name": "run-the-automation-lab-on-a-cloud-vm-with-terraform.mp4",
+      "at": "2026-11-27T02:42:48.022Z"
+    },
+    "b02c7e0be8b99b75d54d20c7664b482de47108f9e000d6b87e59c86fadb1454e": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/e0b1f927-2f3b-40dc-8ddf-451263563e7e/run-the-automation-lab-on-a-cloud-vm-with-terraform-slides.pdf",
+      "name": "run-the-automation-lab-on-a-cloud-vm-with-terraform-slides.pdf",
+      "at": "2026-11-27T02:42:49.644Z"
+    },
+    "8209bca8b06f82a26d71964b8ad2f5a38cb254b09c6cc1e2d321c36fc499044a": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/785315fa-d60d-46c2-b1b5-b9557cb87bda/run-the-automation-lab-on-a-cloud-vm-with-terraform-lab.zip",
+      "name": "run-the-automation-lab-on-a-cloud-vm-with-terraform-lab.zip",
+      "at": "2026-11-27T02:42:49.926Z"
+    },
+    "c694d668833043d9653d647612ac6a19f3aa70419f1e9e887150257dfc7f5b2b": {
+      "kind": "video",
+      "assetId": "52adc848-4155-4f9a-ac9f-dda647fe18b0",
+      "name": "n8n-vocabulary-workflows-triggers-nodes-items-and-executions.mp4",
+      "at": "2026-11-27T02:43:10.984Z"
+    },
+    "8eab41adbc9b2f15a96589de73b086ac14bac637af067e5c275b02818624ff45": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/02fd518c-4fec-436f-a8b3-badcbaf6a616/n8n-vocabulary-workflows-triggers-nodes-items-and-executions-slides.pdf",
+      "name": "n8n-vocabulary-workflows-triggers-nodes-items-and-executions-slides.pdf",
+      "at": "2026-11-27T02:43:12.020Z"
+    },
+    "dac37cd4e911e7bbdfe2685c45684c7860469b4cf2894dc3886c870ad7ca582e": {
+      "kind": "video",
+      "assetId": "28dd27f7-82de-4496-84ac-5d20aab360a3",
+      "name": "deployment-notifications-from-your-ci-pipeline.mp4",
+      "at": "2026-11-27T02:43:40.671Z"
+    },
+    "0141c8c90c7cca27a5d5b49b369531c5f68ffe75478c1648c00bc2662c5bd0b5": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/1deefb20-d507-4715-a4df-b74cd657dd8a/deployment-notifications-from-your-ci-pipeline-slides.pdf",
+      "name": "deployment-notifications-from-your-ci-pipeline-slides.pdf",
+      "at": "2026-11-27T02:43:43.343Z"
+    },
+    "a9c3c7a1fcaf2f7b55a45fe1b0e6b1bda1cb1cbb0ebe4c79d36f21776c74cc1d": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/cfef3cf9-846b-4b49-9748-6e9cc5096c0c/deployment-notifications-from-your-ci-pipeline-lab.zip",
+      "name": "deployment-notifications-from-your-ci-pipeline-lab.zip",
+      "at": "2026-11-27T02:43:43.622Z"
+    },
+    "1abc2f0832a2f5343d838c77a89edeaf94e534fcef41429e8d6efc289f0a1bf4": {
+      "kind": "video",
+      "assetId": "0e11742e-faff-42a4-8d85-bc15e678f311",
+      "name": "errors-retries-and-debugging.mp4",
+      "at": "2026-11-27T02:44:20.934Z"
+    },
+    "29a8c45420cb3f8754961bdd8fb262fb21611965dd63699dafdf7b9bba544f68": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/d1a03d10-9c67-440e-9acb-c4fe08a1a58a/errors-retries-and-debugging-slides.pdf",
+      "name": "errors-retries-and-debugging-slides.pdf",
+      "at": "2026-11-27T02:44:22.410Z"
+    },
+    "b648c562fe50ee561c812d0bc74fd1028d5ce0f6080f4b8cd3285341455efbc1": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/efecdcdd-361f-4357-91b5-21c98b746f8d/errors-retries-and-debugging-lab.zip",
+      "name": "errors-retries-and-debugging-lab.zip",
+      "at": "2026-11-27T02:44:22.673Z"
+    }
+  },
+  "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c"
+}
