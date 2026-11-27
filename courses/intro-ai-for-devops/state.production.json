@@ -3,7 +3,8 @@
     "What AI is, and what it changes for DevOps": "9a786d9a-4eea-40ef-a752-f10dd2671baa",
     "The essential vocabulary": "13f27de8-7f41-4f62-81e3-b5fdd91ff08f",
     "AI agents and MCP": "312f5c80-7f9e-4138-8ade-d1263814dea7",
-    "AI in cloud computing and DevOps": "a295895f-7b66-4651-bf54-48042c13afc5"
+    "AI in cloud computing and DevOps": "a295895f-7b66-4651-bf54-48042c13afc5",
+    "Your next step": "fbb27091-7a23-49bf-a8bd-94ab121f9fff"
   },
   "lessons": {
     "01-before-ai/01-computers-before-ai": "dee56d6e-a9fd-4065-ac1b-f7187316a422",
@@ -332,5 +333,8 @@
       "at": "2026-11-27T06:48:50.614Z"
     }
   },
-  "courseId": "e9cdf994-15c0-44ff-aeda-445d012b9bad"
+  "courseId": "e9cdf994-15c0-44ff-aeda-445d012b9bad",
+  "articles": {
+    "next-steps": "67d27007-a2ed-4c3c-8688-98a0313cd53a"
+  }
 }

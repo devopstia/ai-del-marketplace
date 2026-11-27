@@ -20,7 +20,9 @@
     "13-n13-n8n-scheduled-reports-live": "291a698c-5490-43fb-913b-ac460abce6ff",
     "15-n15-n8n-advanced-design-live": "a925180e-1802-4368-b917-f11e571689ac",
     "16-n16-n8n-production-live": "b2c1c8b0-7645-4b6d-b6dd-162f6b6a5150",
-    "17-n17-n8n-ai-assisted-live": "e66062c6-01b6-4cec-af96-7c0c23fcd70e"
+    "17-n17-n8n-ai-assisted-live": "e66062c6-01b6-4cec-af96-7c0c23fcd70e",
+    "00-n0-n8n-course-intro": "806241ef-7034-4445-ab1d-788d940a4d17",
+    "09-n7-n8n-github-pr-live": "70dbd89e-b11b-41de-8117-dbff3a317a40"
   },
   "quizzes": {
     "04-n4-n8n-tour-first-workflow-live": "2de1a028-b05f-44b6-9db1-97d6401d823e",
@@ -37,7 +39,8 @@
     "17-n17-n8n-ai-assisted-live": "58bda9e1-51af-4fba-b4c4-f956a2a55807",
     "01-n1-n8n-mattermost-explained": "10815ad2-c57d-40ef-a8f6-0c289a7fc4a8",
     "02-n2-deploy-n8n-mattermost-live": "ae605ee2-b02f-47dc-939e-3fcbfa3421f0",
-    "03-n3-mattermost-webhook-live": "66946da7-c5d0-4080-9767-783d73ec183c"
+    "03-n3-mattermost-webhook-live": "66946da7-c5d0-4080-9767-783d73ec183c",
+    "09-n7-n8n-github-pr-live": "18fb5700-70de-4266-9917-b2b010e65b17"
   },
   "files": {
     "02bb67db5e467a0546b68cb9d7a0445074c5a0b0b62fb8ecae27b729476474ce": {
@@ -309,7 +312,26 @@
       "assetId": "baac121f-a09d-47bf-b0a1-d0bde97b776c",
       "name": "set-up-mattermost-channels-and-incoming-webhooks.mp4",
       "at": "2026-11-27T05:58:28.541Z"
+    },
+    "85327b1463f6bd7ccf712939b22a54f3e519b6b7dd61006588a57ed5ff771afc": {
+      "kind": "video",
+      "assetId": "651c6071-f86d-4fbe-8b43-0fb552e1ba75",
+      "name": "welcome-what-youll-build-in-this-course.mp4",
+      "at": "2026-11-27T12:12:26.217Z"
+    },
+    "502fe230700201926966a0ef7d67ea94b163602fdd090e8a668817910ceb0065": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/8afb0a61-d046-49c0-ad1c-1645ecfa137e/welcome-what-youll-build-in-this-course-slides.pdf",
+      "name": "welcome-what-youll-build-in-this-course-slides.pdf",
+      "at": "2026-11-27T12:12:27.202Z"
+    },
+    "c5b6ffaa8f5b49eb04b63d2d6d4f08ecf2b26f2c19d4199eb13003ea11aadf5b": {
+      "kind": "video",
+      "assetId": "61c85114-89be-4dc0-b832-bdfbcf45eba4",
+      "name": "set-up-mattermost-channels-and-incoming-webhooks.mp4",
+      "at": "2026-11-27T12:13:13.157Z"
     }
   },
-  "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c"
+  "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c",
+  "articles": {}
 }

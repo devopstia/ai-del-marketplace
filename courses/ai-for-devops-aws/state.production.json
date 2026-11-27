@@ -8,7 +8,12 @@
     "AI agents for DevOps": "b3022c4c-d72d-4c7b-8464-cf4e2953dee0",
     "AI-powered DevOps automation": "378592a1-878c-4c9f-86e8-9f0ee212c83c",
     "Model Context Protocol (MCP)": "b35d5c61-49db-469d-888a-f8b0939e1f67",
-    "Security, reliability and cost": "06843051-cbca-458b-8e85-e1d38dd7d6b5"
+    "Security, reliability and cost": "06843051-cbca-458b-8e85-e1d38dd7d6b5",
+    "The vocabulary of AI models": "3c1a6b16-9b91-46df-b3f3-60d2c54f96eb",
+    "AI applications on AWS: a real outage": "18638e2a-1762-49ad-92e9-2e6a906ad86e",
+    "Retrieval-Augmented Generation (RAG)": "23e03001-75f1-499a-878b-3f9e2a93238d",
+    "AI in CI/CD and operations": "ee654b79-1816-4fda-a6f5-09a6d9fecda5",
+    "Automate it with n8n": "572ba481-46f2-46be-b76c-d3c4bf10d028"
   },
   "lessons": {
     "02-ai-foundations/01-tm1-big-words": "bde7324a-152b-43f0-b7a8-d2383c9246f1",
@@ -41,7 +46,17 @@
     "02-ai-foundations/12-tm12-operating-securing": "7ef212c1-c7a7-470d-9380-1d637a246b45",
     "08-ai-production/19-r1-llmops-day-to-day": "82358998-c213-4749-82d3-e5a8a5c945a0",
     "08-ai-production/20-r6-who-builds-who-runs": "07e59c75-560b-4908-9fe9-e0e200df774a",
-    "08-ai-production/21-r8-managed-or-self-hosted": "259dd14e-218c-4f30-86bc-b6c81858c5f8"
+    "08-ai-production/21-r8-managed-or-self-hosted": "259dd14e-218c-4f30-86bc-b6c81858c5f8",
+    "01-before-ai/01-computers-before-ai": "ea464893-6892-42fb-bbc5-a062cdd350c3",
+    "01-before-ai/03-short-history-of-ai": "bf680b61-8465-4b39-902e-cf770a14146a",
+    "01-before-ai/04-what-is-machine-learning": "8c2a52c9-39f4-4214-892b-ef1c16f72666",
+    "02-ai-foundations/02-tm2-practice-architecture-application": "292d0058-c81d-4992-bb15-98f013f586f1",
+    "02-ai-foundations/03-tm3-model-words": "e6e03016-79ed-480b-83cb-eb89f134592e",
+    "02-ai-foundations/11-tm11-running-models": "500b6b04-4f63-46f1-903b-d8f9fa13b997",
+    "01-before-ai/02-devops-before-ai": "41f14f1a-a021-4ec0-913b-19aac01b8eed",
+    "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "5faad9a5-6389-456d-966d-f389c76cd223",
+    "18-automation-n8n/09-n7-n8n-github-pr-live": "55b81772-bd31-4bf7-ace0-55fc24f83b85",
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "42df9d6b-7981-4034-a070-0a03fd08777b"
   },
   "quizzes": {
     "17-cloud-ai/01-aws-ai-services-map": "b80a8649-5a07-4487-964a-30f43ffb1c08",
@@ -54,7 +69,10 @@
     "18-automation-n8n/17-n17-n8n-ai-assisted-live": "90d07e02-559b-4835-8d08-b13496734155",
     "20-mcp/01-m1-what-is-mcp": "4677b201-9227-4805-992c-e7085c0739e9",
     "20-mcp/02-m2-inside-mcp": "2337c06d-25a5-4de6-b170-50188f0f30ce",
-    "20-mcp/03-m3-first-mcp-server-live": "d91d54c0-38e5-4f9f-85f1-37a542d77fb5"
+    "20-mcp/03-m3-first-mcp-server-live": "d91d54c0-38e5-4f9f-85f1-37a542d77fb5",
+    "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "70e7ad71-21bb-433f-bce7-95d185174c2a",
+    "18-automation-n8n/09-n7-n8n-github-pr-live": "74b6f598-b1f7-483c-b31c-025bd0695b5b",
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "c103fb1f-a380-49c2-928f-5d2b0f43a164"
   },
   "files": {
     "93b5668cfc2fcb517143d14aad42b900527403f3b1b39ff8ef2181574fb0fb92": {
@@ -278,7 +296,62 @@
       "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/053d374f-abbc-46f6-86ef-cea50f59fde9/who-builds-a-rag-system-and-who-runs-it-slides.pdf",
       "name": "who-builds-a-rag-system-and-who-runs-it-slides.pdf",
       "at": "2026-11-27T06:59:15.254Z"
+    },
+    "dac37cd4e911e7bbdfe2685c45684c7860469b4cf2894dc3886c870ad7ca582e": {
+      "kind": "video",
+      "assetId": "480c2791-4381-403e-a587-1077caf5aacc",
+      "name": "deployment-notifications-from-ci-with-n8n.mp4",
+      "at": "2026-11-27T12:03:52.100Z"
+    },
+    "0141c8c90c7cca27a5d5b49b369531c5f68ffe75478c1648c00bc2662c5bd0b5": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/519850b7-0eff-4616-8d93-7d2f23903d41/deployment-notifications-from-ci-with-n8n-slides.pdf",
+      "name": "deployment-notifications-from-ci-with-n8n-slides.pdf",
+      "at": "2026-11-27T12:03:53.882Z"
+    },
+    "a9c3c7a1fcaf2f7b55a45fe1b0e6b1bda1cb1cbb0ebe4c79d36f21776c74cc1d": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/b46d134f-160a-487e-ae40-033064152643/deployment-notifications-from-ci-with-n8n-lab.zip",
+      "name": "deployment-notifications-from-ci-with-n8n-lab.zip",
+      "at": "2026-11-27T12:03:54.192Z"
+    },
+    "1f039ba260ae64545e02b0bb4e4f8b391fad92edca877be9b895f60cb72187cf": {
+      "kind": "video",
+      "assetId": "77919abc-d058-4de7-8f8e-31a4fd7c325e",
+      "name": "send-github-pull-request-updates-to-your-team-chat.mp4",
+      "at": "2026-11-27T12:04:34.403Z"
+    },
+    "efd563bdf1ed74744b5bc1c229db8b32c4edd9e4f107acea7334f516b347bb3a": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/036b32dc-b75c-44db-9a7a-04c8c29070bf/send-github-pull-request-updates-to-your-team-chat-slides.pdf",
+      "name": "send-github-pull-request-updates-to-your-team-chat-slides.pdf",
+      "at": "2026-11-27T12:04:35.840Z"
+    },
+    "0db850a849733a859e5e9ffe7a6beeb25c5b1ddbf18c56f1118587e608079f09": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/bb7e214d-4225-4947-9452-6eb9d9794bfd/send-github-pull-request-updates-to-your-team-chat-lab.zip",
+      "name": "send-github-pull-request-updates-to-your-team-chat-lab.zip",
+      "at": "2026-11-27T12:04:36.148Z"
+    },
+    "65eb2604044663f1d6d3c91ae5ce5d969b9a345a87e05ecdfa9910e7a15fb6fb": {
+      "kind": "video",
+      "assetId": "ec20d6b2-a589-4b6e-aaaa-acc4ae7e82ce",
+      "name": "incident-management-with-n8n-severity-escalation-resolution.mp4",
+      "at": "2026-11-27T12:05:06.346Z"
+    },
+    "2569f238798f0f3ff705ddd714b051afb19be43e678fd71bec30f5267ce48f44": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/ee971f4d-262a-4803-b9c2-32fb70291d98/incident-management-with-n8n-severity-escalation-resolution-slides.pdf",
+      "name": "incident-management-with-n8n-severity-escalation-resolution-slides.pdf",
+      "at": "2026-11-27T12:05:07.680Z"
+    },
+    "dfcb00ca81de79264f924d7570f00f10d706c9167f1ed2577c6b66fbbecd45e7": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b2375ce8-a6ef-480f-8ff2-8972362afb6e/resources/4eaea661-8c15-4d00-ab21-8cf8074d7f10/incident-management-with-n8n-severity-escalation-resolution-lab.zip",
+      "name": "incident-management-with-n8n-severity-escalation-resolution-lab.zip",
+      "at": "2026-11-27T12:05:07.971Z"
     }
   },
-  "courseId": "b2375ce8-a6ef-480f-8ff2-8972362afb6e"
+  "courseId": "b2375ce8-a6ef-480f-8ff2-8972362afb6e",
+  "articles": {}
 }
