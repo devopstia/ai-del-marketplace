@@ -101,6 +101,12 @@
           "short": "Deployment notifications"
         },
         {
+          "folder": "09-n7-n8n-github-pr-live",
+          "title": "Send GitHub pull request updates to your team chat",
+          "short": "GitHub pull requests",
+          "summary": "Turn every pull request event (opened, updated, reviewed, approved, merged, closed) from a real GitHub repository into a clear Mattermost message. Verify GitHub's signature, relay deliveries to a local n8n, and check the ping before you rely on it."
+        },
+        {
           "folder": "07-n5-n8n-errors-retries-debugging-live",
           "title": "Handle failures with retries, fallbacks and debugging",
           "summary": "Break an API on purpose and make your workflows survive it: retries for short blips, a fallback path, an error workflow that alerts the team, and debugging a failed run node by node.",

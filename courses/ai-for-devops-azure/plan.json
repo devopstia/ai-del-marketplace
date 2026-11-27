@@ -265,6 +265,12 @@
           "short": "Deployment notifications"
         },
         {
+          "folder": "18-automation-n8n/09-n7-n8n-github-pr-live",
+          "title": "Send GitHub pull request updates to your team chat",
+          "short": "GitHub pull requests",
+          "summary": "Turn every pull request event (opened, updated, reviewed, approved, merged, closed) from a real GitHub repository into a clear Mattermost message. Verify GitHub's signature, relay deliveries to a local n8n, and check the ping before you rely on it."
+        },
+        {
           "folder": "18-automation-n8n/12-n12-n8n-incident-management-live",
           "title": "Incident management with n8n: severity, escalation, resolution",
           "summary": "Turn a flood of repeated alerts into one incident with a severity, escalate when nobody acknowledges, and post the resolution, on a real outage. The lab includes the full n8n and Mattermost stack.",
