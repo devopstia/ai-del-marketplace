@@ -281,7 +281,8 @@ export class LearningService {
       update: { positionSec: pos, completed, ...watched },
     });
     const course = await this.progressFor(user.id, lecture.section.courseId);
-    return { lectureId, positionSec: row.positionSec, completed: row.completed, courseProgress: course };
+    const certificateCode = row.completed ? await this.issueIfComplete(user, lecture.section.courseId, course) : null;
+    return { lectureId, positionSec: row.positionSec, completed: row.completed, courseProgress: course, certificateCode };
   }
 
   async resources(user: AuthUser, lectureId: string) {
@@ -340,6 +341,11 @@ export class LearningService {
         create: { userId: user.id, lectureId, completed: true },
         update: { completed: true },
       });
+      const lecture = await this.prisma.lecture.findUnique({ where: { id: lectureId }, select: { section: { select: { courseId: true } } } });
+      if (lecture) {
+        const certificateCode = await this.issueIfComplete(user, lecture.section.courseId, await this.progressFor(user.id, lecture.section.courseId));
+        return { score, passed, results, certificateCode };
+      }
     }
     return { score, passed, results };
   }
@@ -363,23 +369,48 @@ export class LearningService {
   async certificate(user: AuthUser, slug: string) {
     const c = await this.prisma.course.findUnique({ where: { slug }, select: { id: true, instructorId: true } });
     if (!c) throw notFound('Course');
-    if ((await this.access(user, c)) !== 'enrolled') throw forbidden('Only enrolled students earn certificates', 'not_enrolled');
+    // An earned certificate is kept for good: new lessons or the end of the access period never take it away.
     const existing = await this.prisma.certificate.findUnique({ where: { userId_courseId: { userId: user.id, courseId: c.id } } });
     if (existing) return existing;
+    if ((await this.access(user, c)) !== 'enrolled') throw forbidden('Only enrolled students earn certificates', 'not_enrolled');
     const p = await this.progressFor(user.id, c.id);
     if (p.total === 0 || p.completed < p.total) throw conflict(`Complete every lecture first (${p.completed}/${p.total})`, 'not_complete');
-    const cert = await this.prisma.certificate.create({ data: { userId: user.id, courseId: c.id, code: `DEL-${randomToken(9).replace(/[-_]/g, 'X').toUpperCase()}` } });
-    await this.audit.log({ actorId: user.id, action: 'certificate.issued', targetType: 'certificate', targetId: cert.id, meta: { courseId: c.id, code: cert.code } });
-    return cert;
+    return this.issue(user.id, c.id);
+  }
+
+  private async issue(userId: string, courseId: string) {
+    try {
+      const cert = await this.prisma.certificate.create({ data: { userId, courseId, code: `DEL-${randomToken(9).replace(/[-_]/g, 'X').toUpperCase()}` } });
+      await this.audit.log({ actorId: userId, action: 'certificate.issued', targetType: 'certificate', targetId: cert.id, meta: { courseId, code: cert.code } });
+      return cert;
+    } catch (e) {
+      // Two requests finishing the course at once: the unique (user, course) keeps one certificate.
+      const again = await this.prisma.certificate.findUnique({ where: { userId_courseId: { userId, courseId } } });
+      if (again) return again;
+      throw e;
+    }
+  }
+
+  /**
+   * Automatic issuance (owner 2026-11-27): the moment an enrolled learner has completed every lesson, the certificate is
+   * created (code, date, verification record); nobody has to request or sign it. Returns its code, or null.
+   */
+  private async issueIfComplete(user: AuthUser, courseId: string, progress: { total: number; completed: number }) {
+    if (progress.total === 0 || progress.completed < progress.total) return null;
+    const existing = await this.prisma.certificate.findUnique({ where: { userId_courseId: { userId: user.id, courseId } }, select: { code: true } });
+    if (existing) return existing.code;
+    const c = await this.prisma.course.findUnique({ where: { id: courseId }, select: { id: true, instructorId: true } });
+    if (!c || (await this.access(user, c)) !== 'enrolled') return null;
+    return (await this.issue(user.id, courseId)).code;
   }
 
   async myCertificates(userId: string) {
     const rows = await this.prisma.certificate.findMany({
       where: { userId },
       orderBy: { issuedAt: 'desc' },
-      select: { code: true, issuedAt: true, course: { select: { slug: true, title: true } } },
+      select: { code: true, issuedAt: true, revokedAt: true, course: { select: { slug: true, title: true } } },
     });
-    return { items: rows };
+    return { items: rows.map(({ revokedAt, ...r }) => ({ ...r, status: revokedAt ? 'revoked' : 'valid' })) };
   }
 }
 

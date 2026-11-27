@@ -279,7 +279,11 @@ export interface Session {
 
 export interface Certificate {
   code: string;
+  /** Checked against the database; an unknown code is a 404 ("invalid"). */
+  status: "valid" | "revoked";
+  issuer: string;
   issuedAt: string;
+  revokedAt: string | null;
   user: { name: string };
   course: { title: string; slug: string; published?: boolean; instructorName?: string; designedBy?: boolean; brand?: string | null; totalDurationSec?: number; lessons?: number };
   skills: string[];

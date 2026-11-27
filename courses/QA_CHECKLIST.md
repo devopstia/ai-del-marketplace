@@ -30,6 +30,8 @@ course's report before saying "done", submitting for review, or closing a conten
 - [ ] Open "Files for this lesson" under a video and download one PDF and one ZIP per module; they open and hold the right files.
 - [ ] Take one quiz; answers and explanations show; progress updates.
 - [ ] 390, 768, 1440 and 1920 px; light and dark; `node scripts/qa-dark.mjs` passes on the course page.
+- [ ] Certificate: finish the course as a test student (staging); the certificate appears by itself; download the PDF
+      (one page) and PNG; scan the QR with a phone and see "Valid" (docs/CERTIFICATES.md).
 - [ ] Nothing broken elsewhere: home, catalogue, cart, checkout page load.
 
 ## Close-out

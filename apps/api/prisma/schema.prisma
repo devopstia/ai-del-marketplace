@@ -712,6 +712,10 @@ model Certificate {
   course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   code     String   @unique
   issuedAt DateTime @default(now())
+  /// Revoked by a super admin (docs/CERTIFICATES.md): the public check then says "Revoked"; the record is kept.
+  revokedAt     DateTime?
+  revokedReason String?
+  revokedById   String?
 
   @@unique([userId, courseId])
   @@map("certificates")

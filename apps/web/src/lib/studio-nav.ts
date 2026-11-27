@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
+import { Award,
   Activity, Archive, Bot, BadgeDollarSign, BookOpen, ChartNoAxesColumnIncreasing, ClipboardCheck, Clapperboard, CreditCard, FolderTree, Gauge, GraduationCap,
   Image as ImageIcon, KeyRound, Landmark, LockKeyhole, LayoutDashboard, LifeBuoy, Mail, MessageSquareText, MonitorPlay, Receipt, RotateCcw, Route,
   ScrollText, Settings, ShieldCheck, ShieldHalf, Tag, UserPlus, UserRound, Users, Wallet,
@@ -95,6 +95,7 @@ const adminGroups: { label?: string; items: AdminItem[] }[] = [
   { label: "Platform", items: [
     { href: "/admin/categories", label: "Categories", icon: FolderTree, perm: "content.manage" },
     { href: "/admin/covers", label: "Cover templates", icon: ImageIcon, perm: "content.manage" },
+    { href: "/admin/certificates", label: "Certificates", icon: Award, superOnly: true },
     { href: "/admin/protection", label: "Video protection", icon: ShieldCheck, perm: "content.manage" },
     { href: "/admin/payments", label: "Payments & Stripe", icon: CreditCard, superOnly: true },
     { href: "/admin/settings", label: "Settings", icon: Settings, superOnly: true },

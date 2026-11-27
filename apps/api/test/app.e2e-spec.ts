@@ -483,6 +483,62 @@ describe('e2e: buy and learn', () => {
     expect((await prisma.course.findUniqueOrThrow({ where: { id: draft.id } })).taughtBy).toBeNull();
   });
 
+  it('certificates: issued automatically on completion, public check (valid / revoked / invalid), downloads, super admin revoke (owner 2026-11-27)', async () => {
+    if (!available) return;
+    const del = await userAgent('c-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const learner = await userAgent('c-learner@e2e.example', ['student']);
+    const admin = await userAgent('c-admin@e2e.example', ['student', 'admin']);
+    const boss = await userAgent('c-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const c = await publishedCourse(del.user.id, 'c-cert-course', 0);
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: c.course.id, source: 'free' } });
+    // Not complete yet: no certificate, and asking for one is refused.
+    expect((await learner.send('post', `/api/courses/${c.course.slug}/certificate`).expect(409)).body.error.code).toBe('not_complete');
+    // Completing the last lesson issues it automatically.
+    const done = await learner.send('put', `/api/lectures/${c.lecture.id}/progress`, { positionSec: 20, completed: true }).expect(200);
+    const code: string = done.body.certificateCode;
+    expect(code).toMatch(/^DEL-[A-Z0-9]+$/);
+    const mine = await learner.agent.get('/api/me/certificates').expect(200);
+    expect(mine.body.items).toEqual([expect.objectContaining({ code, status: 'valid' })]);
+
+    // Public check: only what verification needs.
+    const pub = await request(app.getHttpServer()).get(`/api/certificates/${code}`).expect(200);
+    expect(pub.body).toMatchObject({ code, status: 'valid', valid: true, issuer: 'DevOps Easy Learning', studentName: 'c-learner', course: { title: 'c-cert-course' } });
+    expect(JSON.stringify(pub.body)).not.toContain('@e2e.example');
+    expect(pub.body.quizzes).toBeUndefined();
+    await request(app.getHttpServer()).get('/api/certificates/DEL-NOSUCHCODE').expect(404);
+
+    // Downloads: SVG, 300-dpi PNG, one-page PDF in Letter and A4.
+    const svg = await request(app.getHttpServer()).get(`/api/certificates/${code}/certificate.svg`).expect(200);
+    expect(svg.headers['content-type']).toContain('image/svg+xml');
+    const png = await request(app.getHttpServer()).get(`/api/certificates/${code}/certificate.png`).buffer(true).expect(200);
+    expect(png.headers['content-type']).toBe('image/png');
+    expect(png.headers['content-disposition']).toContain(`DEL-certificate-${code}.png`);
+    const pdf = await request(app.getHttpServer()).get(`/api/certificates/${code}/certificate.pdf?paper=a4`).buffer(true).parse((res, cb) => { const b: Buffer[] = []; res.on('data', (d: Buffer) => b.push(d)); res.on('end', () => cb(null, Buffer.concat(b))); }).expect(200);
+    expect(pdf.headers['content-type']).toBe('application/pdf');
+    expect((pdf.body as Buffer).toString('latin1')).toContain('/MediaBox [0 0 841.89 595.28]');
+    await request(app.getHttpServer()).get('/api/certificates/DEL-NOSUCHCODE/certificate.pdf').expect(404);
+
+    // Kept when the course grows and when access ends.
+    await prisma.lecture.create({ data: { sectionId: c.section.id, title: 'New lesson', position: 1, type: 'article', articleMd: 'x' } });
+    await prisma.enrollment.update({ where: { userId_courseId: { userId: learner.user.id, courseId: c.course.id } }, data: { revokedAt: new Date() } });
+    expect((await learner.send('post', `/api/courses/${c.course.slug}/certificate`).expect(200)).body.code).toBe(code);
+
+    // Super admin only: search, revoke (code + reason), restore; audited.
+    await admin.agent.get('/api/admin/certificates').expect(403);
+    const found = await boss.agent.get('/api/admin/certificates').query({ q: 'c-learner' }).expect(200);
+    expect(found.body.items[0]).toMatchObject({ code, status: 'valid', course: { title: 'c-cert-course' } });
+    expect((await boss.send('post', `/api/admin/certificates/${code}/revoke`, { reason: 'Issued in error' }).expect(400)).body.error.code).toBe('step_up_required');
+    await boss.send('post', `/api/admin/certificates/${code}/revoke`, { reason: 'Issued in error', code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+    const revoked = await request(app.getHttpServer()).get(`/api/certificates/${code}`).expect(200);
+    expect(revoked.body).toMatchObject({ status: 'revoked', valid: false, linkedInUrl: null });
+    expect(await prisma.auditLog.count({ where: { action: 'certificate.revoked', actorId: boss.user.id } })).toBe(1);
+    // A second super admin restores it (each code is single use per person).
+    const boss2 = await userAgent('c-super2@e2e.example', ['student', 'admin', 'super_admin']);
+    await boss2.send('post', `/api/admin/certificates/${code}/restore`, { reason: 'Checked again', code: codeAt(MFA_SEED, stepAt() + 1) }).expect(200);
+    expect((await request(app.getHttpServer()).get(`/api/certificates/${code}`).expect(200)).body.status).toBe('valid');
+    await boss.agent.get('/api/admin/certificates/template.svg').expect(200);
+  });
+
   it('payments: after-fee split, refund policy, hold + release, netting, super-admin terms', async () => {
     if (!available) return;
     const teacher = await userAgent('m-teacher@e2e.example', ['student', 'instructor'], {});

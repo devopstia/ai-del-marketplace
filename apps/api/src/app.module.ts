@@ -23,6 +23,7 @@ import { InstructorModule } from './instructor/instructor.module';
 import { LearningModule } from './learning/learning.module';
 import { MediaModule } from './media/media.module';
 import { PathsModule } from './paths/paths.module';
+import { CertificatesModule } from './certificates/certificates.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { PathsModule } from './paths/paths.module';
     InstructorModule,
     AdminModule,
     PathsModule,
+    CertificatesModule,
     AssistModule,
   ],
   providers: [
