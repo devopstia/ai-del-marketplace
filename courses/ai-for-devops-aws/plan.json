@@ -311,6 +311,12 @@
           "short": "AI summaries"
         },
         {
+          "folder": "18-automation-n8n/20-n20-n8n-ai-incident-triage-live",
+          "title": "AI incident triage: ranked hypotheses a human confirms",
+          "short": "AI incident triage",
+          "summary": "A bad deploy triggers an alert; n8n gathers the deploy history and logs, and an AI model drafts three ranked hypotheses with exact evidence lines. The on-call engineer checks them, rejects a wrong guess, confirms the cause and rolls back."
+        },
+        {
           "folder": "18-automation-n8n/19-n19-n8n-ai-agent-live",
           "title": "Build an AI ops agent in n8n with tools, memory and guardrails",
           "short": "AI ops agent",
