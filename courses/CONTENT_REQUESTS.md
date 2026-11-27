@@ -48,7 +48,7 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
 |---|---|---|---|---|---|---|---|---|---|
 | CR-001 | AI-Powered DevOps Automation with n8n | Module 1, first lesson | Course introduction / overview video | GEN | 2026-11-27 | P1 | ready-for-review (2026-11-27) | `18-automation-n8n/00-n0-n8n-course-intro` (3:32, mp4, captions, PDF; 'four parts' scene re-recorded to the page's module names; GEN validate PASS) | in the n8n plan (first lesson, preview, intro, promo); sync after the pending n8n revision is decided |
 | CR-002 | n8n | Module 1 · lesson 01 | Lab ZIP promised in the closing line | GEN | 2026-11-26 | P2 | ready-for-review | `01-n1-…/01-n1-n8n-mattermost-explained-lab.zip` | scanned 2026-11-27 (clean); upload on next sync |
-| CR-003 | n8n | Lessons 01–03 | Quiz options read aloud so the 12 questions can be imported | GEN | 2026-11-26 | P2 | in-progress (01, 02 re-recorded; 03 queued) | same folders (re-recorded quiz scenes) | — |
+| CR-003 | n8n | Lessons 01–03 | Quiz options read aloud so the 12 questions can be imported | GEN | 2026-11-26 | P2 | ready-for-review (01–03 delivered 2026-11-27, validate PASS) | same folders (re-recorded quiz scenes) | — |
 | CR-004 | n8n; also in both masterclasses' 'Automate it with n8n' module | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | in-progress (re-record + QA; early copy in Dropbox, ignore) | `09-n7-n8n-github-pr-live` | hold until ready-for-review |
 | CR-005 | n8n | Module 3 | AWS automation (CloudWatch, S3, SQS) — proposed by GEN | GEN | 2026-11-27 | P2 | in-progress (re-record + QA; early copy in Dropbox, ignore) | `11-n11-n8n-aws-automation-live` | hold until ready-for-review |
 | CR-006 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | blocked: owner creates the GitHub token | — | — |
@@ -113,6 +113,7 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
   secrets (`Sup3rSecretDemo`, `not-a-real-key`); upload with the next production sync.
 
 ### CR-003 Quiz options read aloud (01–03)
+- **Log:** 2026-11-27 GEN: quiz scenes of 01–03 re-recorded with spoken options ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …"); 03 true-peak fixed; 01 includes its lab (CR-002); validate PASS; delivered one lesson at a time. UPLOAD: an earlier copy of 01–03 already went into the pending production revision (12 quiz questions imported); the next n8n sync picks up any final changes by checksum.
 - **Why:** options only on slide images can't be imported (never invented); 12 questions are missing today.
 - **Deliverables:** re-recorded quiz scenes, same format as lessons 04–18 ("Question N of 4. … A: …; B: …; or C: …?" /
   "The answer is X: …"); the rest of each video unchanged. Updated captions.
