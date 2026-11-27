@@ -338,6 +338,13 @@
           "summary": "When a GitHub Actions job fails, n8n reads the failed log, an AI model explains it in plain words and suggests a fix, and the team sees the draft in Mattermost. The AI explains and suggests; it never merges or deploys."
         },
         {
+          "folder": "18-automation-n8n/23-n23-n8n-ai-pr-review-live",
+          "title": "Review pull requests with AI, a human still decides",
+          "summary": "On a real GitHub repository, n8n fetches each new pull request’s diff, an AI model drafts a review with risks on exact lines, a checklist and questions, and posts it to the PR. It catches a prompt injection hidden in the code, and never approves or merges: the reviewer does.",
+          "preview": false,
+          "short": "AI pull request review"
+        },
+        {
           "type": "article",
           "key": "go-further-n8n",
           "title": "Go further with n8n: the complete automation course",

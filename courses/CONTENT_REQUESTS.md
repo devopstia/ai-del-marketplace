@@ -71,7 +71,7 @@ basics + DevOps prompting (CR-077–CR-082, CR-096, CR-085–CR-088) → 4. LLMO
 | CR-003 | n8n | Lessons 01–03 | Quiz options read aloud so the 12 questions can be imported | GEN | 2026-11-26 | P2 | ready-for-review (01–03 delivered 2026-11-27, validate PASS) | same folders (re-recorded quiz scenes) | — |
 | CR-004 | n8n; also in both masterclasses' 'Automate it with n8n' module | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | completed (published 2026-11-28 in the n8n course and both masterclasses) | `09-n7-n8n-github-pr-live` (16:03, lab) | in the n8n plan (module 2, after 06) and both masterclasses (n8n module); staging next, production after sign-in |
 | CR-005 | n8n | Module 3 | AWS automation (CloudWatch, S3, SQS) — proposed by GEN | GEN | 2026-11-27 | P2 | validated (re-delivered 2026-11-28; publish at next sign-in) | `11-n11-n8n-aws-automation-live` (18:31, lab, PDF, captions) | narration now matches the screen; lab scanned clean; back in the n8n plan, module 3 after Kubernetes alerts |
-| CR-006 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | unblocked 2026-11-28 (owner gave a classic GitHub token; delete it on GitHub when CR-006 is recorded) | — | — |
+| CR-006 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | validated 2026-11-28 (publish at next sign-in; owner to delete the GitHub token and the demo repo demo-n8n-review-cd01) | `23-n23-n8n-ai-pr-review-live` (16:03, lab, PDF, captions) | lab and captions scanned clean (no tokens); after "AI in CI/CD" in the n8n course and both masterclasses |
 | CR-007 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | completed (published 2026-11-28: n8n module 4 after AI summaries; both masterclasses' n8n module) | `19-n19-n8n-ai-agent-live` | — |
 | CR-008 | n8n | Module 4 (AI) | AI incident triage and root-cause suggestions | GEN | 2026-11-27 | P1 | validated (lab scanned clean 2026-11-28) | `20-n20-n8n-ai-incident-triage-live` (16:18, lab) | in the n8n plan (after AI summaries) and both masterclasses (n8n module); publish at the next production sign-in |
 | CR-009 | n8n | Module 4 (AI) | AI in CI/CD (explain failed pipelines, suggest fixes; never auto-deploy) | GEN | 2026-11-27 | P1 | validated (lab scanned clean 2026-11-28) | `22-n22-n8n-ai-cicd-live` (17:05, lab) | in the n8n plan (after the AI ops agent) and both masterclasses (n8n module); publish at the next production sign-in |
@@ -194,8 +194,8 @@ basics + DevOps prompting (CR-077–CR-082, CR-096, CR-085–CR-088) → 4. LLMO
 | CR-126 | WEB: Entrepreneurship | — | From idea to MVP: building digital products responsibly | GEN | 2026-11-28 | P2 | requested | see details | — |
 | CR-127 | WEB: Templates | — | Template pack A: real estate (T4), restaurant (T5), professional services (T6) | GEN | 2026-11-28 | P2 | requested | see details | — |
 | CR-128 | WEB: Assessment | — | Module assessment: build and ship websites with AI | GEN | 2026-11-28 | P3 | requested | see details | — |
-| CR-129 | AI-Powered Terraform on AWS | M0 · 0.1 | Course introduction: what you will build and how to learn here [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
-| CR-130 | AI-Powered Terraform on Azure | M0 · 0.1 | Course introduction: what you will build and how to learn here [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-129 | AI-Powered Terraform on AWS | M0 · 0.1 | Course introduction: what you will build and how to learn here [new, proposed] | GEN | 2026-11-28 | P2 | superseded by the premium introduction request (CR-300+, coordinator) | — | — |
+| CR-130 | AI-Powered Terraform on Azure | M0 · 0.1 | Course introduction: what you will build and how to learn here [new, proposed] | GEN | 2026-11-28 | P2 | superseded by the premium introduction request (CR-300+, coordinator) | — | — |
 | CR-131 | AI-Powered Terraform on AWS | M0 · 0.2 | Your training account, safely: budgets, MFA and the cleanup habit [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-132 | AI-Powered Terraform on Azure | M0 · 0.2 | Your training account, safely: budgets, MFA and the cleanup habit [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-133 | Terraform AWS + Azure (shared video) | M1 · 1.1 | From click-ops to code: how infrastructure used to be managed [owner original] | GEN | 2026-11-28 | P1 | requested (planning; order waits for the owner's OK) | — | — |
@@ -347,6 +347,24 @@ basics + DevOps prompting (CR-077–CR-082, CR-096, CR-085–CR-088) → 4. LLMO
 | CR-279 | AI-Powered Terraform on Azure | M17 · 17.4 | Operate it: drift, promotion and destroy [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-280 | AI-Powered Terraform on AWS | M17 · 17.5 | Course wrap-up, final assessment and what to learn next [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-281 | AI-Powered Terraform on Azure | M17 · 17.5 | Course wrap-up, final assessment and what to learn next [new, proposed] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-282 | Terragrunt AWS + Azure (shared videos) | M1 Terragrunt 1.x essentials | 6 videos: 1.1 Why Terragrunt: the repetition problem in big Terraform estates; 1.2 Install Terragrunt 1.x and pin versions; 1.3 Units, root.hcl and include; 1.4 Inputs, locals and the common.yaml convention; 1.5 Generate blocks: providers and versions once; 1.6 The Terragrunt 1.x CLI: run, run --all, find, list and dag graph | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-283 | AI-Powered Terragrunt on AWS: Terraform at Scale | M2 Remote state generation | 2 videos: 2.1 Generate the backend for every unit; 2.2 Bootstrap and migrate state with terragrunt backend | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-284 | AI-Powered Terragrunt on Azure: Terraform at Scale | M2 Remote state generation | 2 videos: 2.1 Generate the backend for every unit; 2.2 Bootstrap and migrate state with terragrunt backend | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-285 | Terragrunt AWS + Azure (shared videos) | M3 Dependencies and orchestration | 3 videos: 3.1 dependency blocks and mock outputs; 3.2 run --all: order, filters, the affected units and parallelism; 3.3 Hooks, errors and retries | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-286 | AI-Powered Terragrunt on AWS: Terraform at Scale | M4 Environments and the multi-account / multi-subscription layout | 3 videos: 4.1 The live tree: environments, regions and units; 4.2 One account or subscription per environment; 4.3 Promote a module version from dev to staging to prod | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-287 | AI-Powered Terragrunt on Azure: Terraform at Scale | M4 Environments and the multi-account / multi-subscription layout | 3 videos: 4.1 The live tree: environments, regions and units; 4.2 One account or subscription per environment; 4.3 Promote a module version from dev to staging to prod | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-288 | Terragrunt AWS + Azure (shared videos) | M5 Catalogs and stacks | 3 videos: 5.1 A module catalog and scaffold; 5.2 Stacks: an environment from one terragrunt.stack.hcl; 5.3 Move a live tree to stacks without destroying anything | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-289 | AI-Powered Terragrunt on AWS: Terraform at Scale | M6 CI/CD with OIDC | 3 videos: 6.1 Plan affected units on every pull request; 6.2 Apply environment by environment with approvals; 6.3 Terragrunt in Jenkins | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-290 | AI-Powered Terragrunt on Azure: Terraform at Scale | M6 CI/CD with OIDC | 3 videos: 6.1 Plan affected units on every pull request; 6.2 Apply environment by environment with approvals; 6.3 Terragrunt in Jenkins | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-291 | AI-Powered Terragrunt on AWS: Terraform at Scale | M7 Drift detection and day-2 operations | 3 videos: 7.1 Nightly drift detection; 7.2 Keep versions current: Terraform, providers and Terragrunt; 7.3 Destroy safely and prove nothing is left | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-292 | AI-Powered Terragrunt on Azure: Terraform at Scale | M7 Drift detection and day-2 operations | 3 videos: 7.1 Nightly drift detection; 7.2 Keep versions current: Terraform, providers and Terragrunt; 7.3 Destroy safely and prove nothing is left | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-293 | Terragrunt AWS + Azure (shared videos) | M8 AI for Terragrunt | 2 videos: 8.1 AI generates units from the catalog; 8.3 A read-only MCP server for your Terragrunt repo | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-294 | AI-Powered Terragrunt on AWS: Terraform at Scale | M8 AI for Terragrunt | 1 video: 8.2 AI review of a Terragrunt pull request | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-295 | AI-Powered Terragrunt on Azure: Terraform at Scale | M8 AI for Terragrunt | 1 video: 8.2 AI review of a Terragrunt pull request | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-296 | Terragrunt AWS + Azure (shared videos) | M9 Capstone: a multi-account platform with Terragrunt | 1 video: 9.5 Wrap-up, final assessment and what to learn next | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-297 | AI-Powered Terragrunt on AWS: Terraform at Scale | M9 Capstone: a multi-account platform with Terragrunt | 4 videos: 9.1 Capstone design and cost; 9.2 Build the environments as stacks; 9.3 The pipeline: affected plans, AI review, approvals and drift; 9.4 Destroy the platform and prove it | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-298 | AI-Powered Terragrunt on Azure: Terraform at Scale | M9 Capstone: a multi-account platform with Terragrunt | 4 videos: 9.1 Capstone design and cost; 9.2 Build the environments as stacks; 9.3 The pipeline: affected plans, AI review, approvals and drift; 9.4 Destroy the platform and prove it | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-299 | Terragrunt AWS + Azure | Assessments | Module assessments (modules 1–9) and the final assessment (20 questions) | GEN | 2026-11-28 | P2 | requested (planning) | — | — |
 
 ## Details
 
@@ -1177,6 +1195,11 @@ one training domain (~$12–15/yr) with one subdomain per project (`shop.<domain
 **Production order:** CR-105 → CR-106 → CR-107 → CR-108/CR-109 → CR-110 → (CR-111/CR-112 when the domain is decided) → CR-113 → CR-114 → CR-115 + CR-127 → CR-116/CR-117 → CR-118 → CR-119 → CR-120 → CR-126 → CR-121 → CR-122 → CR-123 → CR-124 → CR-125 → CR-128.
 
 ### CR-129 … CR-281 Terraform masterclasses: AI-Powered Terraform on AWS / on Azure (planned 2026-11-28)
+**Owner 2026-11-28:** titles approved ("AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced"), 95 videos per
+course, $49.99 at launch → $69.99 once complete; "use new Terraform version": every request carries a Versions line
+(Terraform 1.17.x, aws ~> 6.0, azurerm ~> 5.0, `use_lockfile`, HCP Terraform naming, EKS access entries); [owner original,
+updated] lessons are re-recorded on them; the owner's repo code comes from `courses/terraform/code/owner-updated/`.
+CR-129/CR-130 (course intros) are superseded by the coordinator's premium introduction request (CR-300 onward).
 Plan: `courses/terraform/TERRAFORM_MASTERCLASS_PLAN.md` · curricula (full detail and the quiz questions with answers):
 `courses/terraform/TERRAFORM_AWS_CURRICULUM.md`, `TERRAFORM_AZURE_CURRICULUM.md` (same lesson ids) · deck and repo
 inventory: `courses/terraform/CONTENT_INVENTORY.md` · ready lab code: `courses/terraform/code/` (AWS) and `code/azure/`.
@@ -1193,20 +1216,22 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Course / module / position: AI-Powered Terraform on AWS · Module 0 Welcome and safe set-up · lesson 0.1, first in the module · [new, proposed]
 - Learning objectives: Describe the path from first resource to the enterprise capstone; Explain how lessons, labs, quizzes and the AI strand fit together; Plan a study rhythm that includes destroying every lab
 - Slides: owner's deck: slides 1–8 (table of contents) (PDF next to the PPTX, course standard) · Owner's repo: — (none in the owner's repo)
-- Live demonstration: The finished capstone pipeline first (a pull request, the plan, the AI review comment, a person approving, apply), then the module map and how labs and cleanup work. Shown on AWS (S3 state, GitHub OIDC, Bedrock).
+- Live demonstration: Premium introduction (8–12 min): the finished capstone first (a pull request, the plan, the AI review comment, a person approving, apply), an animated roadmap of the 18 modules, real previews of the projects (first resource, the owner's module projects, the RAG stack, the capstone), how labs, quizzes and cleanup work, and a clear call to action. Shown on AWS (S3 state, GitHub OIDC, Bedrock).
 - Lab ZIP / code: no lab (introduction video); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: nothing is created
-- Depends on: — · Length guide: ~5 min · Priority: P2 · Owner: GEN · Status: requested
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
+- Depends on: — · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: superseded by the premium introduction request (CR-300+, coordinator)
 - Quiz: 3 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 0.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
 #### CR-130 Course introduction: what you will build and how to learn here (Azure)
 - Course / module / position: AI-Powered Terraform on Azure · Module 0 Welcome and safe set-up · lesson 0.1, first in the module · [new, proposed]
 - Learning objectives: Describe the path from first resource to the enterprise capstone; Explain how lessons, labs, quizzes and the AI strand fit together; Plan a study rhythm that includes destroying every lab
 - Slides: owner's deck: slides 1–8 (table of contents) (PDF next to the PPTX, course standard) · Owner's repo: — (none in the owner's repo)
-- Live demonstration: The finished capstone pipeline first (a pull request, the plan, the AI review comment, a person approving, apply), then the module map and how labs and cleanup work. Shown on Azure (Storage state, workload identity, Foundry).
+- Live demonstration: Premium introduction (8–12 min): the finished capstone first (a pull request, the plan, the AI review comment, a person approving, apply), an animated roadmap of the 18 modules, real previews of the projects (first resource, the owner's module projects, the RAG stack, the capstone), how labs, quizzes and cleanup work, and a clear call to action. Shown on Azure (Storage state, workload identity, Foundry).
 - Lab ZIP / code: no lab (introduction video); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: nothing is created
-- Depends on: — · Length guide: ~5 min · Priority: P2 · Owner: GEN · Status: requested
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
+- Depends on: — · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: superseded by the premium introduction request (CR-300+, coordinator)
 - Quiz: 3 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 0.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
 #### CR-131 Your training account, safely: budgets, MFA and the cleanup habit (AWS)
@@ -1216,6 +1241,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: AWS: root MFA, IAM Identity Center user, AWS Budgets alert at $20 (student) and the Cost Explorer view; a Resource Groups tag search on Course=terraform-aws-masterclass.
 - Lab ZIP / code: checklist PDF and the CLI commands for budgets and tag searches (no Terraform); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: AWS Budgets, IAM Identity Center · Cost per run: $0 · Cleanup: keep the budget alert (free); nothing else is created
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 0.1 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 0.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1226,6 +1252,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Azure: MFA on the account, a dedicated subscription or resource-group convention, a Cost Management budget alert at $20, and an Azure Resource Graph query on the Course tag.
 - Lab ZIP / code: checklist PDF and the CLI commands for budgets and tag searches (no Terraform); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Cost Management budget, Resource Graph · Cost per run: $0 · Cleanup: keep the budget alert (free); nothing else is created
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 0.1 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 0.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1236,6 +1263,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's diagrams (slides 17–22): ticket, manual console clicks, configuration drift, then the same environment rebuilt from code in minutes.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/from-click-ops-to-code-how-infrastructure-used-t/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 0.2 · Length guide: ~8 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 1.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1246,6 +1274,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 24–27 with one example per benefit: rebuild after a deleted network, two identical environments, the code as documentation.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/what-iac-is-and-why-it-pays-off/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 1.1 · Length guide: ~7 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 1.2 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1256,6 +1285,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Terraform vs CloudFormation slide (32) extended with Bicep (Azure), Pulumi and OpenTofu; a decision table.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/iac-tools-compared-terraform-opentofu-cloudforma/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 1.2 · Length guide: ~10 min · Priority: P1 · Owner: GEN · Status: requested
 - Notes: Outdated: deck calls Terraform "open-source" (slide 29). Since Aug 2023 it is BSL 1.1 (source-available); OpenTofu (Linux Foundation, MPL) is the open-source fork (v1.13.10, 2026-11-23).
 - Quiz: 3 spoken questions with answers in both curricula › 1.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1267,6 +1297,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slide 36's plugin list reduced to the official HashiCorp Terraform extension (others are optional); format on save; hover docs. Links the free VS Code masterclass.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/vs-code-and-the-terraform-extensions/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 1.3 · Length guide: ~7 min · Priority: P1 · Owner: GEN · Status: requested
 - Notes: Improve: slide 36 lists several overlapping plugins; recommend the official one plus format-on-save.
 - Quiz: 3 spoken questions with answers in both curricula › 2.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1278,6 +1309,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's three platforms (slides 45–53) and Docker (54–55) with today's version; tfenv to switch; the official HashiCorp package repositories as an option.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/install-terraform-the-right-way-versions-tfenv-a/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 2.1 · Length guide: ~12 min · Priority: P1 · Owner: GEN · Status: requested
 - Notes: Outdated: slides 46–51 download 0.12/0.13 and slide 49 pins 1.0.0; current is 1.17.2 (2026-11-27). Terragrunt install (56–57) moves to lesson 9.4.
 - Quiz: 3 spoken questions with answers in both curricula › 2.2 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1289,6 +1321,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: AWS CLI v2 install (slides 39–41), then `aws configure sso` and `aws sso login`, `aws sts get-caller-identity`; why slide 42's admin user with access keys is replaced.
 - Lab ZIP / code: GEN builds `courses/terraform/code/your-cloud-cli-and-credentials/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: IAM Identity Center · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 0.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Improve: slide 42 creates an IAM admin user and downloads access keys; use IAM Identity Center (or short-lived role credentials) instead.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 2.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1300,6 +1333,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Azure CLI install, `az login`, `az account set`, `az account show`; how the azurerm provider picks up the CLI login; service principals saved for CI (module 13).
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/your-cloud-cli-and-credentials/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Microsoft Entra ID sign-in · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 0.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Improve: slide 42 creates an IAM admin user and downloads access keys; use IAM Identity Center (or short-lived role credentials) instead.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 2.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1311,6 +1345,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 61–69 annotated on screen with a cloud-neutral resource (local_file, random_pet), then the same anatomy on an aws_instance and an azurerm_resource_group.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/hcl-blocks-arguments-and-resources/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 2.3 · Length guide: ~10 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 3.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1321,6 +1356,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's command slides (82–93) and workflow (95–97) with a local_file and random_pet project: init downloads providers, fmt, validate, plan, apply, change, destroy.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/the-core-workflow-init-fmt-validate-plan-apply-d/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 3.1 · Length guide: ~12 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 3.2 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1331,6 +1367,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's comments example; commenting out a resource and what plan does next (it plans a destroy).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/comments-and-code-style/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 3.2 · Length guide: ~5 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 3.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1341,6 +1378,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 165–170 on a real folder; a .gitignore that excludes .terraform/, *.tfstate*, *.tfvars (keep *.tfvars.example).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/terraform-files-and-project-layout/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 3.3 · Length guide: ~8 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 3.4 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1351,6 +1389,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: hashicorp/aws ~> 6.0 (6.74.0 on 2026-11-27); region; default_tags; what the v6 major changed (per-resource `region` argument).
 - Lab ZIP / code: GEN builds `courses/terraform/code/providers-and-version-constraints/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 3.4 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: repo pins aws ~> 4.0 (269 folders) and ~> 3.0 (49), required_version >= 1.0.0; Azure folder azurerm >= 3.0.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 3.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1362,6 +1401,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: hashicorp/azurerm ~> 5.0 (5.15.0) with `features {}` and `subscription_id` (required since 4.0); azure/azapi ~> 2.0 for brand-new Azure APIs.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/providers-and-version-constraints/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 3.4 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: repo pins aws ~> 4.0 (269 folders) and ~> 3.0 (49), required_version >= 1.0.0; Azure folder azurerm >= 3.0.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 3.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1373,6 +1413,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 153–156; delete .terraform, init again (same version from the lock); init -upgrade; terraform providers lock for several platforms.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/the-dependency-lock-file/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 3.5 · Length guide: ~6 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 3.6 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1383,6 +1424,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's learning-basic-commands: an EC2 instance (t3.micro, AMI from SSM), tag change (update in place) vs AMI change (replace), destroy.
 - Lab ZIP / code: GEN builds `courses/terraform/code/your-first-resources-on-the-cloud/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro · Cost per run: ~$0.01 (t3.micro for under an hour; free tier eligible) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 2.3, 3.5 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Repo fix: learning-basic-commands fails `terraform init` today (Unsupported Terraform Core version: required_version ~> 1.0.0).
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 3.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1394,6 +1436,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Azure learning-basic-commands: resource group + virtual network + subnet; rename a tag (update) vs change the address space (replace or update), destroy.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/your-first-resources-on-the-cloud/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource group, VNet · Cost per run: $0 (resource groups and VNets are free) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 2.3, 3.5 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Repo fix: learning-basic-commands fails `terraform init` today (Unsupported Terraform Core version: required_version ~> 1.0.0).
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 3.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1405,6 +1448,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's six examples: EIP attached to an instance, VPC → subnet → instance, AMI lookup → instance, security group → instance, IAM user → group with a policy.
 - Lab ZIP / code: GEN builds `courses/terraform/code/resource-references-connect-resources-together/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, subnet, EC2, EIP, security group, IAM user/group · Cost per run: ~$0.02 per run (t3.micro + EIP for under an hour) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 3.7 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 4.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1415,6 +1459,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Resource group → VNet → subnet → NIC → Linux VM (B1s), each referencing the previous one; the graph with `terraform graph`.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/resource-references-connect-resources-together/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource group, VNet, subnet, NIC, B1s VM · Cost per run: ~$0.02 per run (B1s VM for under an hour) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 3.7 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 4.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1425,6 +1470,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples: latest Ubuntu/Amazon Linux/RHEL/Windows AMIs, a security group found by tag, the default VPC's subnets, aws_caller_identity.
 - Lab ZIP / code: GEN builds `courses/terraform/code/data-sources-read-what-already-exists/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro (optional) · Cost per run: $0–0.02 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 4.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Duplicate: slides 472–482 repeat 141–150 word for word (Terraform Blocks section); record once.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 4.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1436,6 +1482,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's data-parameters: an existing resource group and subnet, azurerm_client_config, a platform image lookup; launch a VM into the found subnet.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/data-sources-read-what-already-exists/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: B1s VM (optional) · Cost per run: $0–0.02 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 4.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Duplicate: slides 472–482 repeat 141–150 word for word (Terraform Blocks section); record once.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 4.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1447,6 +1494,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's naming convention (2560-dev-del-private-01-us-east-1a, slides 111–121) built with interpolation and format() in terraform console and on local_file names.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/interpolation-and-the-format-function/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 4.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 4.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1457,6 +1505,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's merge-tags examples (bastion host names, slides 124–129) plus provider `default_tags` (no merge needed for common tags) and a tag-based cost report.
 - Lab ZIP / code: GEN builds `courses/terraform/code/tags-merge-default-tags-and-a-tagging-standard/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 4.3 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 4.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1467,6 +1516,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's merge pattern with a `local.common_tags` map (azurerm has no default_tags), and Azure Policy "require a tag" as a preview of policy (module 12).
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/tags-merge-default-tags-and-a-tagging-standard/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 4.3 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 4.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1477,6 +1527,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 173–176; the same variable set four ways (default, terraform.tfvars, -var-file=dev.tfvars, TF_VAR_); precedence order on screen.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/input-variables-types-and-tfvars-files/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 4.4 · Length guide: ~10 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 5.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1487,6 +1538,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's local-variables example rewritten with local_file; a naming local reused in three places.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/locals-name-an-expression-once/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.1 · Length guide: ~6 min · Priority: P1 · Owner: GEN · Status: requested
 - Notes: Duplicate: slides 497–499 repeat 177–179.
 - Quiz: 3 spoken questions with answers in both curricula › 5.2 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1498,6 +1550,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples (create_instance = true/false, instance counts) shown with random_pet and count so they run anywhere.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/string-number-and-bool-variables/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.2 · Length guide: ~8 min · Priority: P1 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 5.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1508,6 +1561,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's comparison slides (204–206, 227–229) as a table; each type in terraform console; allowed IP set example.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/collections-list-set-and-tuple/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.3 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 5.4 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1518,6 +1572,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's object and map-of-object examples (slides 217–223) with try(); then optional(type, default) which replaces most try() workarounds (Terraform >= 1.3).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/structures-map-object-any-and-optional-attribute/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 5.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Improve: slides 218–220 use try() for optional attributes; optional() is the modern way.
 - Quiz: 3 spoken questions with answers in both curricula › 5.5 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1529,6 +1584,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 494–495; terraform output -json piped to jq; a sensitive output hidden in the CLI but present in state (link to lesson 8.8).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/outputs-share-results/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.5 · Length guide: ~6 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 5.6 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1539,6 +1595,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's validation examples (allowed environments, instance types) plus a regex naming rule; sensitive = true on a password variable.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/variable-validation-and-sensitive-values/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.6 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 5.7 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1549,6 +1606,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's EC2 examples: string/list/object variables launch instances; dev.tfvars and prod.tfvars; a map of objects for three instance profiles.
 - Lab ZIP / code: GEN builds `courses/terraform/code/variables-in-practice-on-the-cloud/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro x1–3 · Cost per run: ~$0.03 per run · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.7 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 5.8 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1559,6 +1617,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Azure variables and map-off-objects folders: VMs or storage accounts from a map of objects; dev.tfvars and prod.tfvars.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/variables-in-practice-on-the-cloud/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Storage accounts (or B1s VM) · Cost per run: ~$0.01 per run · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.7 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 5.8 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1569,6 +1628,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's var.context examples (slides 235–262): EKS-style map of any, map of objects, try, lookup, element, length, format.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/terraform-console-test-expressions-safely/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 5.8 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1579,6 +1639,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples (subnets across AZs with element) on local_file names; the risk of count when an item is removed from the middle (preview of for_each).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/count-length-and-element/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 6.1 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.2 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1589,6 +1650,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples: CIDR lists from a comma string, a join for names and security group descriptions.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/split-and-join/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 6.2 · Length guide: ~6 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1599,6 +1661,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's console examples (slides 245–253) and folders; when to prefer optional() (lesson 5.5).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/lookup-and-try-safe-access-to-maps-and-objects/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 6.3 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.4 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1609,6 +1672,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples (Route 53 only in prod, RDS backup retention, blue/green node sizes) shown with neutral values, then nested conditions and why to keep them readable.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/contains-and-conditional-expressions/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 6.4 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.5 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1619,6 +1683,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's variable.yaml examples; a YAML list of users turned into resources with for_each.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/yamldecode-keep-configuration-in-yaml/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 6.5 · Length guide: ~7 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.6 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1629,6 +1694,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's splat examples on several random_pet resources; the same with [for x in ... : x.id].
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/splat-expressions/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 6.6 · Length guide: ~6 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 6.7 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1639,6 +1705,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples: IAM users with count and with for_each, Secrets Manager secrets from a list, a set and a map, instances from a map of objects (slides 407–414); then a dynamic ingress block in a security group.
 - Lab ZIP / code: GEN builds `courses/terraform/code/loops-count-for-each-and-dynamic-blocks/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: IAM users, Secrets Manager secrets, security group · Cost per run: ~$0.01 (Secrets Manager $0.40/secret/month, prorated; destroy the same day) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 6.7 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Gap: dynamic blocks are not in the deck. Secrets Manager names are reserved 7–30 days after delete: use recovery_window_in_days = 0 in labs.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 7.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1650,6 +1717,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Azure loops: resource groups and subnets with count and for_each; a dynamic security_rule block in an NSG.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/loops-count-for-each-and-dynamic-blocks/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource groups, subnets, NSG · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 6.7 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Gap: dynamic blocks are not in the deck. Secrets Manager names are reserved 7–30 days after delete: use recovery_window_in_days = 0 in labs.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 7.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1661,6 +1729,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's depends_on examples; a case with no reference (a policy that must exist before use) shown with terraform_data.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/depends-on-hidden-dependencies/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.1 · Length guide: ~6 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 7.2 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1671,6 +1740,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's lifecycle examples: instance replaced create-before-destroy, prevent_destroy on an S3 bucket, ignore_changes on tags/password; replace_triggered_by.
 - Lab ZIP / code: GEN builds `courses/terraform/code/lifecycle-rules-create-before-destroy-prevent-de/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro, S3 bucket · Cost per run: ~$0.01 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 7.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1681,6 +1751,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same three rules on a storage account (prevent_destroy), a VM (ignore_changes on tags set by Azure Policy), and a public IP (create_before_destroy).
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/lifecycle-rules-create-before-destroy-prevent-de/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Storage account, public IP · Cost per run: ~$0.01 (public IP prorated) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 7.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1691,6 +1762,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The lesson code: free-tier precondition on the instance type, IMDSv2 postcondition, a check block on a website URL.
 - Lab ZIP / code: `courses/terraform/code/courses/terraform/terraform-checks-and-conditions` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro (optional) · Cost per run: $0 (plan only by default) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.3 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 7.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1701,6 +1773,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Mirror: a precondition that the VM size is in an allowed list, a postcondition that the storage account is private, a check block on an App Service URL.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/preconditions-postconditions-and-check-blocks/` (reuses `courses/terraform/code/terraform-checks-and-conditions`); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Storage account · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.3 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 7.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1711,6 +1784,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's alias example (us-east-1 and us-west-2 buckets); then provider v6's `region` argument on a resource as a simpler alternative for single-account multi-region.
 - Lab ZIP / code: GEN builds `courses/terraform/code/provider-aliases-several-regions-and-subscriptio/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: S3 buckets in two regions · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.4 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 7.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1721,6 +1795,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's multiple-providers example: two azurerm providers for two subscriptions (or one subscription and two features blocks), a resource in each.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/provider-aliases-several-regions-and-subscriptio/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource groups in two subscriptions or regions · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.4 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 7.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1731,6 +1806,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's user-data example installing nginx on Amazon Linux 2023; templatefile; /var/log/cloud-init-output.log; user_data_replace_on_change.
 - Lab ZIP / code: GEN builds `courses/terraform/code/bootstrap-servers-user-data-and-cloud-init/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro, security group · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.5 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 7.6 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1741,6 +1817,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: custom_data with cloud-init on a B1s Ubuntu VM installing nginx; templatefile; base64encode; checking with the serial console.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/bootstrap-servers-user-data-and-cloud-init/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: B1s VM, NSG, public IP · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.5 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 7.6 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1751,6 +1828,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's remote-exec and null_resource examples, rewritten: the SSH key generated with tls_private_key (never committed), terraform_data, and the SSM Session Manager alternative.
 - Lab ZIP / code: GEN builds `courses/terraform/code/provisioners-and-terraform-data-the-last-resort/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro, key pair (generated) · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 7.6 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Security: the repo commits private keys (provisioner/example-01,02 *.pem, testing/ssh-key, base-code/eks-mix, azure ssh-keys). Not reused; labs generate keys at run time. Duplicate: slides 504–508 repeat 397–401.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 7.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1762,6 +1840,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same on a B1s VM: local-exec calling az CLI, remote-exec over SSH with a generated key, and the Run Command alternative.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/provisioners-and-terraform-data-the-last-resort/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: B1s VM, public IP · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 7.6 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Security: the repo commits private keys (provisioner/example-01,02 *.pem, testing/ssh-key, base-code/eks-mix, azure ssh-keys). Not reused; labs generate keys at run time. Duplicate: slides 504–508 repeat 397–401.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 7.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1773,6 +1852,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 159–162 and 431; open terraform.tfstate of a neutral project; why it must not be edited by hand or committed.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/the-state-file-current-vs-desired-state/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 7.7 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fix: the repo's terraform-local-state/main.tf has a database password in plain text; the lesson shows it as the problem, not as code to copy.
 - Quiz: 3 spoken questions with answers in both curricula › 8.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1784,6 +1864,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: bucket with versioning, encryption and public access block; backend "s3" with use_lockfile = true; two applies at once to show the lock.
 - Lab ZIP / code: `courses/terraform/code/terraform-remote-state` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: S3 bucket, SSM parameter · Cost per run: ~$0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.1, 3.7 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: the repo's 78 backend configs use a DynamoDB lock table; dynamodb_table is deprecated since Terraform 1.11 (S3 native locking, use_lockfile).
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 8.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1795,6 +1876,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: storage account (Entra ID only, versioning, soft delete) and container; backend "azurerm" with use_azuread_auth; the blob lease lock.
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-remote-state` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource group, storage account, container · Cost per run: ~$0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.1, 3.7 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: the repo's 78 backend configs use a DynamoDB lock table; dynamodb_table is deprecated since Terraform 1.11 (S3 native locking, use_lockfile).
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 8.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1806,6 +1888,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's options (slides 417–422) on a neutral project, ranked from safest to riskiest: remove the code, destroy -target (exceptional), apply -replace, removed block (8.5), state rm, editing state (never).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/change-and-delete-resources-safely/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Improve: slides 421–422 show editing and deleting the state file; kept only as "what not to do".
 - Quiz: 3 spoken questions with answers in both curricula › 8.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1817,6 +1900,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: an IAM user created by hand, then import block, plan (1 to import), apply, generated config.
 - Lab ZIP / code: `courses/terraform/code/terraform-import` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: IAM user · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 8.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1827,6 +1911,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: a resource group created with az CLI, imported by its full resource id; aztfexport shown for whole groups.
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-import` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource group · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 8.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1837,6 +1922,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: two SSM parameters refactored into one for_each resource; a third forgotten with removed { lifecycle { destroy = false } }.
 - Lab ZIP / code: `courses/terraform/code/terraform-moved-removed` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: SSM parameters · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.4 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 8.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1847,6 +1933,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Mirror: two resource groups refactored into one for_each resource; a storage account forgotten with removed.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/refactor-without-destroying-moved-and-removed-bl/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource groups, storage account · Cost per run: ~$0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.4 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 8.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1857,6 +1944,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's commands section on a neutral project; why moved blocks (8.5) are preferred over state mv in a team.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/state-commands-list-show-mv-rm-and-pull/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.5 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 8.6 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1867,6 +1955,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples: a VPC stack's outputs read by an EC2 stack through the S3 backend.
 - Lab ZIP / code: GEN builds `courses/terraform/code/read-another-stack-s-outputs-terraform-remote-st/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, subnets, EC2 t3.micro · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.6 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 8.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1877,6 +1966,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same with a VNet stack and a VM stack through the azurerm backend.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/read-another-stack-s-outputs-terraform-remote-st/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VNet, subnets, B1s VM · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.6 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 8.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1887,6 +1977,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: ephemeral random_password → aws_ssm_parameter value_wo; the same pattern for RDS password_wo and Secrets Manager secret_string_wo; compare the state file.
 - Lab ZIP / code: `courses/terraform/code/terraform-ephemeral-write-only` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: SSM SecureString parameter · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.7 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 8.8 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1897,6 +1988,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: ephemeral random_password → azurerm_key_vault_secret value_wo with RBAC Key Vault.
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-ephemeral-write-only` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Key Vault, secret · Cost per run: ~$0.01 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.7 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 8.8 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1907,6 +1999,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's dev.tfvars/prod.tfvars workspace example on a neutral project; why separate state per environment folder or account is safer for production (lesson 9.3).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/workspaces/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 8.8 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 9.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1917,6 +2010,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's AWS_PROFILE method (slides 448–458) with SSO profiles; then provider assume_role into a dev and a prod account, and allowed_account_ids as a safety net.
 - Lab ZIP / code: GEN builds `courses/terraform/code/several-environments-and-accounts/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 9.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Improve: slides 449–450 store access keys per profile; use SSO profiles or roles.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 9.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1928,6 +2022,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Subscriptions per environment: subscription_id per tfvars, az account set, and a check that fails the plan on the wrong subscription.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/several-environments-and-accounts/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 9.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Improve: slides 449–450 store access keys per profile; use SSO profiles or roles.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 9.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1939,6 +2034,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A neutral layout used by the capstone: modules/, envs/dev, envs/prod with their own backend.hcl and tfvars; the same module version promoted.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/one-folder-per-environment/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 9.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 9.3 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1949,6 +2045,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's terragrunt/live layout (VPC, EC2, bastion, EKS control plane) with root.hcl, remote_state with use_lockfile, dependency blocks; terragrunt run --all plan.
 - Lab ZIP / code: GEN builds `courses/terraform/code/terragrunt-keep-environments-dry/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, EC2 t3.micro (EKS folder skipped) · Cost per run: ~$0.03 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 9.3 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: Terragrunt is now 1.x (v1.2.3, 2026-11-25): `run --all` replaces `run-all`, root.hcl replaces a root terragrunt.hcl, find_in_parent_folders("root.hcl"). Check commands at recording.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 9.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1960,6 +2057,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same layout for Azure: resource group, VNet, VM; remote_state backend azurerm generated per folder.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/terragrunt-keep-environments-dry/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Resource group, VNet, B1s VM · Cost per run: ~$0.03 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 9.3 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: Terragrunt is now 1.x (v1.2.3, 2026-11-25): `run --all` replaces `run-all`, root.hcl replaces a root terragrunt.hcl, find_in_parent_folders("root.hcl"). Check commands at recording.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 9.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1971,6 +2069,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slides 511–514 with a local neutral module (a naming module); source types (local, Git with ?ref=, registry).
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/what-modules-are-and-how-to-call-them/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 9.4 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Duplicate: slides 483–492 repeat 509–521.
 - Quiz: 3 spoken questions with answers in both curricula › 10.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -1982,6 +2081,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's examples with terraform-aws-modules/vpc and ec2-instance, updated to current versions; reading the module's examples and changelog.
 - Lab ZIP / code: GEN builds `courses/terraform/code/use-registry-modules/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC (no NAT), EC2 t3.micro · Cost per run: ~$0.02 (NAT gateway disabled) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 10.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 10.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -1992,6 +2092,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Azure Verified Modules (AVM): avm-res-network-virtualnetwork and a VM module; pinning, telemetry setting, reading inputs.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/use-registry-modules/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VNet, B1s VM · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 10.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 10.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2002,6 +2103,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's VPC modules (vpc-01 → vpc-03): public and private subnets across AZs, route tables, optional NAT; README with inputs/outputs.
 - Lab ZIP / code: GEN builds `courses/terraform/code/write-your-own-network-module/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, subnets, IGW, route tables (NAT optional) · Cost per run: $0 without NAT; NAT gateway ~$0.05/hour if turned on · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.2 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 10.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2012,6 +2114,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's vnet module: VNet, subnets from a map, NSG association, optional NAT gateway.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/write-your-own-network-module/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VNet, subnets, NSGs (NAT optional) · Cost per run: $0 without NAT; NAT gateway ~$0.05/hour if turned on · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.2 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 10.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2022,6 +2125,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's publish steps (slides 524–525): repo name terraform-<provider>-<name>, semantic version tags, registry sign-in; HCP Terraform private registry as the team option.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/version-source-and-publish-modules/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.3 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 10.4 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2032,6 +2136,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's VPC, security group and EC2 modules composed in one root module; outputs flow from network to compute.
 - Lab ZIP / code: GEN builds `courses/terraform/code/compose-modules-network-compute-and-data/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, SG, EC2 t3.micro · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 10.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2042,6 +2147,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's vnet and virtual-machine modules composed; outputs flow from network to compute.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/compose-modules-network-compute-and-data/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VNet, NSG, B1s VM · Cost per run: ~$0.02 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 10.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2052,6 +2158,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Slide 544's requirements: 3 public and 3 private subnets in 3 AZs, IGW, optional NAT per AZ, outputs for the next projects.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-a-production-style-network/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, 6 subnets, IGW, (NAT optional) · Cost per run: $0 without NAT; ~$0.15 per hour with 3 NAT gateways (turn on only for the demo minute) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2062,6 +2169,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Same requirements in Azure: VNet with public/private subnets, NSGs, optional NAT gateway, outputs.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-a-production-style-network/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VNet, subnets, NSGs, (NAT optional) · Cost per run: $0 without NAT; ~$0.05 per hour with one NAT gateway · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2072,6 +2180,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's EC2 and bastion modules (slides 545–546): instance profile, IMDSv2, SG from your IP only; then Session Manager as the keyless alternative.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-virtual-machines-and-a-secure-jump-host/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.micro x2, SG, IAM instance profile · Cost per run: ~$0.03 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 11.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Security: replace committed .pem keys with tls_private_key or ssh-keygen at run time.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2083,6 +2192,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The VM module with SSH key generated at run time, NSG from your IP only; Azure Bastion Developer (free tier where available) or just-in-time access as alternatives.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-virtual-machines-and-a-secure-jump-host/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: B1s VM x2, NSG, public IP · Cost per run: ~$0.03 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 11.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Security: replace committed .pem keys with tls_private_key or ssh-keygen at run time.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2094,6 +2204,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's security group module (loops, slide 551) and ECR module (one repo per app, scan on push, lifecycle policy, slide 552).
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-firewall-rules-and-a-container-registry/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Security groups, ECR repositories · Cost per run: ~$0 (ECR storage cents) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2104,6 +2215,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: An NSG module from a rules map and the owner's ACR module (Basic SKU), admin user off, RBAC pull.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-firewall-rules-and-a-container-registry/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: NSG, ACR Basic · Cost per run: ~$0.17 per day (ACR Basic); destroy the same day · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2114,6 +2226,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Secrets Manager and Postgres modules (slides 553–556) on db.t4g.micro, password_wo from an ephemeral password, Secrets Manager secret_string_wo; Aurora variants (557–558) explained, not deployed.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-a-database-with-secrets-done-right/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: RDS PostgreSQL db.t4g.micro, Secrets Manager secret, subnet group · Cost per run: ~$0.05 per run (db.t4g.micro free tier eligible; under an hour) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.8, 11.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2125,6 +2238,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Azure Database for PostgreSQL Flexible Server (B1ms) with administrator_password_wo, Key Vault secret value_wo, private access.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-a-database-with-secrets-done-right/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: PostgreSQL Flexible Server B1ms, Key Vault · Cost per run: ~$0.05 per run (B1ms under an hour) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.8, 11.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2136,6 +2250,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's s3-backend-with-replication module updated: use_lockfile, replication role, bucket policy that denies non-TLS and unknown principals.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-a-state-backend-module-with-replication/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: 2 S3 buckets, IAM replication role · Cost per run: ~$0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2146,6 +2261,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's storage-backend module updated: GRS or object replication to a second region, Entra ID only, resource lock (CanNotDelete).
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-a-state-backend-module-with-replication/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: 2 storage accounts (or GRS), management lock · Cost per run: ~$0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2156,6 +2272,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's ACM module: wildcard certificate, Route 53 validation records with for_each over domain_validation_options, aws_acm_certificate_validation.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-tls-certificates-and-dns/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: ACM certificate, Route 53 records (hosted zone $0.50/month) · Cost per run: ~$0.50 (hosted zone month) — needs the training domain (blocked, same owner decision as CR-111) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.5 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.6 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2166,6 +2283,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Azure DNS zone (owner's module) and an App Service managed certificate (or Key Vault certificate) validated by a TXT record.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-tls-certificates-and-dns/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: DNS zone, App Service managed certificate · Cost per run: ~$0.50 (DNS zone month) — needs the training domain · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.5 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.6 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2176,6 +2294,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's jenkins-master module and agent requirements (slides 547–548), the Packer-built AMI from lesson 13.4, access from your IP only.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-jenkins-on-the-cloud-with-an-agent/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EC2 t3.small x2, SG, EBS · Cost per run: ~$0.10 per run (two small instances under two hours) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.2 (13.4 optional) · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2186,6 +2305,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A Jenkins controller VM and agent VM with cloud-init, NSG from your IP only, managed identity for agents.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-jenkins-on-the-cloud-with-an-agent/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: B2s VM x2 (or B1ms), NSG, public IP · Cost per run: ~$0.15 per run · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.2 (13.4 optional) · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2196,6 +2316,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A neutral project with mistakes (unused variable, deprecated syntax, wrong type); TFLint core rules, then where the AWS and Azure rulesets plug in; pre-commit-terraform hooks.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/fmt-validate-and-tflint-before-every-commit/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.7 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 12.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2206,6 +2327,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: an S3 module tested for naming, public access block and versioning, with mock_provider "aws".
 - Lab ZIP / code: `courses/terraform/code/terraform-test` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (mocked) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.3 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 12.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2216,6 +2338,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: a storage-account module tested for naming, privacy and TLS, with mock_provider "azurerm".
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-test` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (mocked) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.3 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 12.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2226,6 +2349,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: a weak S3 bucket (Checkov 2026-11-27: 5 passed, 11 failed), fixed step by step; conftest on terraform show -json; HCP Terraform policy sets as the team option.
 - Lab ZIP / code: `courses/terraform/code/terraform-policy-checkov` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 12.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 12.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2236,6 +2360,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Mirror: a weak storage account and Key Vault scanned (CKV_AZURE checks), fixed; Azure Policy as the cloud-side guardrail.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/policy-as-code-checkov-opa-and-sentinel/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 12.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 12.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2246,6 +2371,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: OIDC provider, a read-only plan role and an apply role limited to the production environment; plan comment; approval gate.
 - Lab ZIP / code: `courses/terraform/code/terraform-with-github-action` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: IAM OIDC provider, 2 roles, SSM parameter · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.2 · Length guide: ~18 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: the owner's workflows use AWS access keys as GitHub secrets, setup-terraform@v2.0.2 and Terraform 1.0.0.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 13.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2257,6 +2383,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: two user-assigned managed identities with federated credentials (pull_request and environment:production), ARM_USE_OIDC, the approval gate.
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-with-github-action` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: 2 managed identities, federated credentials, role assignments · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 8.2 · Length guide: ~18 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: the owner's workflows use AWS access keys as GitHub secrets, setup-terraform@v2.0.2 and Terraform 1.0.0.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 13.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2268,6 +2395,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Terraform Cloud examples renamed to HCP Terraform; AWS credentials replaced by dynamic provider credentials (OIDC role); variable sets; the VPC module run.
 - Lab ZIP / code: GEN builds `courses/terraform/code/hcp-terraform-remote-runs-variable-sets-and-dyna/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (free tier; resources from the run are destroyed) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 13.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: "Terraform Cloud" is now HCP Terraform; slides 593 and 597 store AWS keys as variables (use dynamic credentials). Check the free plan's current limits before recording.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 13.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2279,6 +2407,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same with Azure dynamic credentials (federated identity), variable sets and a VNet module run.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/hcp-terraform-remote-runs-variable-sets-and-dyna/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 13.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: "Terraform Cloud" is now HCP Terraform; slides 593 and 597 store AWS keys as variables (use dynamic credentials). Check the free plan's current limits before recording.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 13.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2290,6 +2419,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A Jenkinsfile on the lesson 11.7 Jenkins: instance profile credentials, plan, input step, apply; a Terragrunt variant.
 - Lab ZIP / code: GEN builds `courses/terraform/code/terraform-with-jenkins-and-terragrunt-pipelines/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Jenkins EC2 (from 11.7) · Cost per run: ~$0.10 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.7 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Gap: the repo's Jenkins folders have no Jenkinsfile; written new.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 13.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2301,6 +2431,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same on the Azure Jenkins VM with its managed identity (ARM_USE_MSI) and the azurerm backend.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/terraform-with-jenkins-and-terragrunt-pipelines/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Jenkins VM (from 11.7) · Cost per run: ~$0.15 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.7 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Gap: the repo's Jenkins folders have no Jenkinsfile; written new.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 13.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2312,6 +2443,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Packer folders: inline and script provisioners, Jenkins and bastion images, variables; the AMI found by a data source in Terraform; deregister afterwards.
 - Lab ZIP / code: GEN builds `courses/terraform/code/machine-images-with-packer/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Temporary EC2 build instance, AMI, EBS snapshot · Cost per run: ~$0.05 per build; delete the AMI and snapshot · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.3 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 13.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2322,6 +2454,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: azure-arm builder to a managed image (or Azure Compute Gallery), the same provisioners; the image used by an azurerm VM; delete afterwards.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/machine-images-with-packer/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Temporary build VM, managed image · Cost per run: ~$0.05 per build; delete the image · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.3 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 13.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2332,6 +2465,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's upgrade method (state pull | grep terraform_version) from 1.0-era code to 1.17, then AWS provider 4 → 5 → 6 with the upgrade guides and a no-change plan as the goal.
 - Lab ZIP / code: GEN builds `courses/terraform/code/upgrade-terraform-and-providers-safely/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (plan only) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 13.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: README targets Terraform 1.0 and the 0.14 changelog.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 13.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2343,6 +2477,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same with azurerm 3 → 4 → 5 (features, subscription_id, renamed arguments) on the owner's Azure modules.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/upgrade-terraform-and-providers-safely/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 13.4 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Outdated: README targets Terraform 1.0 and the 0.14 changelog.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 13.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2354,6 +2489,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A neutral project with tofu init/plan; state encryption (an OpenTofu feature); where the two differ and how to stay compatible.
 - Lab ZIP / code: GEN builds `courses/terraform/code/shared/opentofu-what-changes-and-how-to-try-it/` (cloud-neutral providers: local, random, terraform_data); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.5 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 13.6 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2364,6 +2500,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The verification ladder on one slide; a real AI answer with an outdated argument caught by validate; what not to paste (state, tfvars with secrets, keys).
 - Lab ZIP / code: `courses/terraform/code/ai-terraform-prompts`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.6 · Length guide: ~8 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 14.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2374,6 +2511,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Both prompts run live in an AI coding agent for a private S3 log bucket; the poor one misses the public access block and pins nothing; the professional one passes after one fix.
 - Lab ZIP / code: `courses/terraform/code/ai-terraform-prompts/01-write-hcl-professional.md` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (plan only; model use under $0.50) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.1, CR-077–CR-082 (prompt engineering) · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 14.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2384,6 +2522,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same for a private storage account with Key Vault; the poor answer uses storage keys and azurerm 3.x syntax.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/prompt-ai-to-write-hcl-poor-vs-professional-prom/` (reuses `code/ai-terraform-prompts/01-write-hcl-professional.md`); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.1, CR-077–CR-082 (prompt engineering) · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 14.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2394,6 +2533,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A plan that replaces an RDS instance because of a changed engine version explained by AI; an IAM error diagnosed; one case where the AI invents an argument and validate proves it wrong.
 - Lab ZIP / code: `courses/terraform/code/ai-terraform-prompts/02-explain-plan.md` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (plan only) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 14.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2404,6 +2544,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A plan that replaces a storage account because of a changed replication type; a 403 from missing data-plane roles; one wrong AI answer caught by the docs.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/ai-explains-plans-and-errors-and-when-it-is-wron/` (reuses `code/ai-terraform-prompts/02-explain-plan.md`); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 14.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2414,6 +2555,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: AI adds tests to the S3 module (one useless test removed after the break-it check); AI refactors the owner's count-based IAM users into for_each with moved blocks; plan shows only moves.
 - Lab ZIP / code: `courses/terraform/code/ai-terraform-prompts/04-write-tests.md` (ready, validated), `courses/terraform/code/terraform-test` (ready, validated), `courses/terraform/code/terraform-moved-removed` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (mocked tests, plan) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 12.2, 8.5 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 14.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2424,6 +2566,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same on the storage module and a count-based resource-group set.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/ai-writes-tests-and-refactors-modules-with-moved/` (reuses `code/ai-terraform-prompts/04-write-tests.md`); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 12.2, 8.5 · Length guide: ~14 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 14.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2434,6 +2577,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The registry toolset in Claude Code or VS Code (Docker image hashicorp/terraform-mcp-server:1.4.1), the same question asked with and without MCP; HCP Terraform tools with a read-only token; destructive tools left off.
 - Lab ZIP / code: `courses/terraform/code/terraform-mcp-server`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none (local, random, terraform_data providers) · Cost per run: $0 (cloud-neutral demo, runs locally) · Cleanup: `terraform destroy` (local files only); nothing in any cloud
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.1 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in both curricula › 14.5 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2444,6 +2588,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The lesson 13.1 pipeline plus a review job: terraform show -json summarised, sent to a model with the review prompt, posted as a PR comment; a destroy of a bucket flagged HIGH RISK; a person still approves.
 - Lab ZIP / code: `courses/terraform/code/ai-terraform-prompts/03-review-pr-plan.md` (ready, validated), `courses/terraform/code/terraform-with-github-action` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: ~$0.10 (model calls) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.1, 14.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 14.6 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2454,6 +2599,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same on the Azure pipeline; a storage account replacement flagged HIGH RISK.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/ai-review-of-a-pull-request-s-plan-in-github-act/` (reuses `code/ai-terraform-prompts/03-review-pr-plan.md`); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: ~$0.10 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.1, 14.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 14.6 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2464,6 +2610,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: AI writes a CloudFront + S3 site module; the gate catches a public bucket and a missing test; fixed, then applied and destroyed.
 - Lab ZIP / code: `courses/terraform/code/terraform-policy-checkov` (ready, validated), `courses/terraform/code/terraform-test` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: S3, CloudFront (optional apply) · Cost per run: ~$0 (free tiers) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 12.2, 12.3, 14.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 14.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2474,6 +2621,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: AI writes a Static Web App + storage module; the gate catches shared keys enabled; fixed, applied, destroyed.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/an-ai-generated-module-through-the-full-gate/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Static Web App Free, storage account · Cost per run: ~$0 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 12.2, 12.3, 14.2 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 14.7 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2484,6 +2632,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: An IAM role that may invoke only chosen Bedrock models, model invocation logging to CloudWatch Logs and S3, a budget alert on Bedrock usage.
 - Lab ZIP / code: GEN builds `courses/terraform/code/ai-platform-foundations-as-code-model-access-ide/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: IAM role, Bedrock invocation logging, CloudWatch log group · Cost per run: ~$0 (nothing runs by the hour) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.7 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 15.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2494,6 +2643,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A Foundry resource (AIServices, project_management_enabled) and project, local auth off, Entra roles (Cognitive Services OpenAI User), diagnostic settings to Log Analytics.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/ai-platform-foundations-as-code-model-access-ide/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Foundry resource and project, Log Analytics workspace · Cost per run: ~$0 (Log Analytics ingestion cents) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 14.7 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 15.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2504,6 +2654,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: S3 documents → Bedrock Knowledge Base (Titan Text Embeddings v2) → S3 Vectors index; ingestion job; retrieve-and-generate answer citing the runbook. Validated with provider 6.74.0.
 - Lab ZIP / code: `courses/terraform/code/terraform-bedrock-knowledge-base` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: S3, S3 Vectors bucket and index, Bedrock Knowledge Base and data source, IAM role · Cost per run: < $0.50 per run (no OpenSearch Serverless) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 15.1 · Length guide: ~18 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Links the AI masterclasses' RAG module: there students use RAG, here they build its platform.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 15.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2515,6 +2666,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Lesson code: Foundry chat + embedding deployments, Azure AI Search Free tier, private Storage, Entra roles; import-and-vectorize; the playground answer citing the runbook.
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-foundry-ai-search` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Foundry resource, deployments, AI Search Free, storage account · Cost per run: < $0.50 per run (Search Free tier) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 15.1 · Length guide: ~18 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Links the AI masterclasses' RAG module: there students use RAG, here they build its platform.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 15.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2526,6 +2678,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: aws_bedrock_guardrail with PII (block access keys, anonymise emails) and a denied topic (destructive commands); versioned with aws_bedrock_guardrail_version; tested in the console.
 - Lab ZIP / code: `courses/terraform/code/terraform-bedrock-knowledge-base (guardrail)` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Bedrock Guardrail and version · Cost per run: ~$0.05 (guardrail checks) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 15.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 15.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2536,6 +2689,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: An azurerm_cognitive_account_rai_policy (content filters) attached to the deployment and a blocklist; tested in the Foundry playground.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/guardrails-as-code/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: RAI policy, blocklist · Cost per run: ~$0.05 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 15.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 15.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2546,6 +2700,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: aws_bedrockagentcore_agent_runtime (container in ECR) with an execution role allowed one tool, an endpoint, invocation from the CLI; cost estimated before recording.
 - Lab ZIP / code: GEN builds `courses/terraform/code/agents-as-code/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: AgentCore runtime and endpoint, ECR repo, IAM role · Cost per run: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 15.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fast-moving services: check resource names and pricing on the recording day.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 15.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2557,6 +2712,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A Foundry project agent (azapi or azurerm where available) with the AI Search tool from 15.2, a managed identity, invocation from the CLI or SDK.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/agents-as-code/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Foundry project agent, managed identity · Cost per run: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 15.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fast-moving services: check resource names and pricing on the recording day.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 15.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2568,6 +2724,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's eks-control-plane module (slide 561) on the 11.1 VPC, current EKS version, endpoint access, control plane logs; aws eks update-kubeconfig.
 - Lab ZIP / code: GEN builds `courses/terraform/code/a-managed-kubernetes-control-plane-module/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EKS cluster · Cost per run: ~$0.10/hour control plane + nodes (~$1–2 per two-hour session); estimate, log, destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2578,6 +2735,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's aks-controle-plane module: AKS with Entra ID integration, a system node pool, az aks get-credentials.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/a-managed-kubernetes-control-plane-module/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: AKS cluster (free tier control plane) · Cost per run: $0 control plane (Free tier) + nodes (~$0.50–1 per two-hour session); estimate, log, destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 11.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2588,6 +2746,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's node group modules: simple group, blue-green switch with var.green / desired sizes (slides 384, 563), spot instances.
 - Lab ZIP / code: GEN builds `courses/terraform/code/node-groups-simple-blue-green-and-spot/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EKS managed node groups (t3.medium) · Cost per run: ~$0.10/hour per small node; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 16.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2598,6 +2757,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's node pool modules: Linux user pool, spot pool with eviction policy, Windows pool explained; blue-green pool swap.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/node-groups-simple-blue-green-and-spot/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: AKS node pools (B2s) · Cost per run: ~$0.05/hour per B2s node; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 16.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2608,6 +2768,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's Fargate-only and EKS-plus-Fargate modules: kube-system on Fargate, a namespace profile, CoreDNS patch.
 - Lab ZIP / code: GEN builds `courses/terraform/code/serverless-and-mixed-capacity/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EKS Fargate profiles · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 16.2 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2618,6 +2779,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: AKS virtual nodes (ACI) or node auto-provisioning explained and deployed on a test namespace.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/serverless-and-mixed-capacity/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: AKS virtual nodes / ACI · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 16.2 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2628,6 +2790,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: EKS access entries and access policies (aws_eks_access_entry) replace the owner's aws-auth ConfigMap module; RBAC roles for IAM users and IAM roles (slides 572–573).
 - Lab ZIP / code: GEN builds `courses/terraform/code/cluster-access-identities-and-rbac/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: EKS access entries · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 16.3 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Notes: Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2639,6 +2802,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's aks-auth-config: Entra ID groups, Azure RBAC for Kubernetes, a namespace-scoped role.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/cluster-access-identities-and-rbac/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: AKS role assignments · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · re-recorded on these versions (no 0.12/1.0 syntax)
 - Depends on: 16.3 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Notes: Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2650,6 +2814,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's add-on modules: namespaces, cluster autoscaler, AWS Load Balancer Controller, EBS CSI driver, External DNS, Argo CD; Pod Identity as the current alternative to IRSA.
 - Lab ZIP / code: GEN builds `courses/terraform/code/cluster-add-ons-with-terraform-and-helm/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Add-ons, a load balancer (delete before cluster) · Cost per run: a full EKS lab is about $1–2 for two hours; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 16.4 · Length guide: ~18 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2660,6 +2825,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The owner's AKS modules: namespaces, NGINX ingress, cert-manager, External DNS with workload identity.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/cluster-add-ons-with-terraform-and-helm/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: Add-ons, a load balancer and public IP · Cost per run: a full AKS lab is about $0.50–1 for two hours; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 16.4 · Length guide: ~18 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2670,6 +2836,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: dev and prod (two accounts or two prefixes), S3 state with use_lockfile per environment, modules network/app/data, GitHub Actions with OIDC; cost table.
 - Lab ZIP / code: the capstone requirements and design PDF (no Terraform yet); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 (design) · Cleanup: nothing is created
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: all core modules · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 17.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2680,6 +2847,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: dev and prod (two subscriptions or resource-group sets), Storage state per environment, the same modules on Azure, workload identity pipeline; cost table.
 - Lab ZIP / code: the capstone requirements and design PDF (no Terraform yet); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: nothing is created
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: all core modules · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 17.1 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2690,6 +2858,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: Network (no NAT, or one for the demo), an ALB in front of a small ASG or ECS Fargate service, RDS PostgreSQL with write-only password; dev applied.
 - Lab ZIP / code: GEN builds `courses/terraform/code/build-the-modules-and-environments/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VPC, ALB, ASG t3.micro (or ECS Fargate), RDS db.t4g.micro · Cost per run: ~$0.50 per two-hour session (ALB and RDS by the hour); destroy the same day · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.5, 11.4, 8.2 · Length guide: ~20 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 17.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2700,6 +2869,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: VNet, Container Apps (consumption) or App Service B1, PostgreSQL Flexible B1ms with write-only password; dev applied.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/build-the-modules-and-environments/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: VNet, Container Apps environment, PostgreSQL Flexible B1ms · Cost per run: ~$0.40 per two-hour session; destroy the same day · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 10.5, 11.4, 8.2 · Length guide: ~20 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 17.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2710,6 +2880,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The 13.1 pipeline extended per environment: PR → checks → plan → AI review → merge → dev apply → prod approval → prod apply.
 - Lab ZIP / code: `courses/terraform/code/terraform-with-github-action` (ready, validated), `courses/terraform/code/ai-terraform-prompts` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: ~$0.20 (model calls; infra cost counted in 17.2) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.1, 14.6, 12.2, 12.3 · Length guide: ~18 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 17.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2720,6 +2891,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same on the Azure pipeline with workload identity per environment.
 - Lab ZIP / code: `courses/terraform/code/azure/terraform-with-github-action` (ready, validated); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: ~$0.20 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 13.1, 14.6, 12.2, 12.3 · Length guide: ~18 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 17.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2730,6 +2902,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: A console change detected by the nightly drift job; a module tag promoted to prod; destroy prod then dev, state buckets last; a tag search shows nothing left.
 - Lab ZIP / code: GEN builds `courses/terraform/code/operate-it-drift-promotion-and-destroy/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: counted in 17.2 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 17.3 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 17.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2740,6 +2913,7 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Live demonstration: The same with a portal change, a module tag promotion, destroy, and a Resource Graph query that shows nothing left.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/operate-it-drift-promotion-and-destroy/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: counted in 17.2 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 17.3 · Length guide: ~12 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 17.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2747,9 +2921,10 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Course / module / position: AI-Powered Terraform on AWS · Module 17 Capstone: an enterprise platform · lesson 17.5, after 17.4 · [new, proposed]
 - Learning objectives: Review the skills gained; Take the final assessment; Choose the next course
 - Slides: owner's deck: none in the deck (new lesson) (PDF next to the PPTX, course standard) · Owner's repo: — (none in the owner's repo)
-- Live demonstration: Recap of the AWS path; final assessment (20 questions); next: the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
+- Live demonstration: Recap of the AWS path; final assessment (20 questions); next: AI-Powered Terragrunt on AWS (Terraform at scale), the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
 - Lab ZIP / code: no lab (wrap-up; final assessment JSON); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: nothing is created
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 17.4 · Length guide: ~6 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 17.5 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2757,8 +2932,189 @@ waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need t
 - Course / module / position: AI-Powered Terraform on Azure · Module 17 Capstone: an enterprise platform · lesson 17.5, after 17.4 · [new, proposed]
 - Learning objectives: Review the skills gained; Take the final assessment; Choose the next course
 - Slides: owner's deck: none in the deck (new lesson) (PDF next to the PPTX, course standard) · Owner's repo: — (none in the owner's repo)
-- Live demonstration: Recap of the Azure path; final assessment; next: the AI for DevOps on Azure masterclass, n8n automation, and the AWS Terraform masterclass for multi-cloud.
+- Live demonstration: Recap of the Azure path; final assessment; next: AI-Powered Terragrunt on Azure (Terraform at scale), the AI for DevOps on Azure masterclass, n8n automation, and the AWS Terraform masterclass for multi-cloud.
 - Lab ZIP / code: no lab (wrap-up; final assessment JSON); README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: none or free resources only · Cost per run: $0 · Cleanup: nothing is created
+- Versions: Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - Depends on: 17.4 · Length guide: ~6 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 3 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 17.5 ("Question N of 3 … A: …; B: …; or C: …?" / "The answer is X: …")
+
+### CR-282 … CR-299 Terragrunt courses: AI-Powered Terragrunt on AWS / on Azure: Terraform at Scale (planned 2026-11-28)
+Owner: "we will also need Terragrunt and terraform course"; a separate third course (two listings, AWS and Azure, for
+self-contained certificates: `courses/terraform/TERRAFORM_MASTERCLASS_PLAN.md` § 12). Curriculum with every video's
+objectives, demo, code, cost, cleanup and quiz: `courses/terraform/TERRAGRUNT_CURRICULUM.md`; code:
+`courses/terraform/code/terragrunt/`. Requests are **module level** (shared videos one request; cloud videos one request per
+course). Foundation: the owner's deck slides 574–583 (+ 56–57, 620–622) and `aws-terraform/terragrunt/live`: use them,
+updated to Terragrunt 1.x. Versions: Terragrunt 1.x (1.2.3), Terraform 1.17.x, aws ~> 6.0 / azurerm ~> 5.0, `use_lockfile`.
+Budget: estimate, log, destroy; no owner pause; the $80/$100 alarms remain. The introduction video is the coordinator's
+premium introduction request (CR-300 onward). **Status: planning; the order waits for the owner's OK; not sent to GEN.**
+
+#### CR-282 Terragrunt module 1: Terragrunt 1.x essentials (shared videos)
+- Course / module / position: Terragrunt AWS + Azure (shared videos) · Module 1 · lessons 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **1.1 Why Terragrunt: the repetition problem in big Terraform estates** [owner original] · ~8 min · slides slides 576–577 · objectives: Name the repetition Terraform leaves in multi-environment code (backends, providers, inputs); Explain units and the live/modules split; Decide when Terragrunt is worth it · demo: The owner's slide 576 explanation with a neutral example: three environment folders of copy-pasted Terraform, then the same with one module, three small terragrunt.hcl files and one root.hcl. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **1.2 Install Terragrunt 1.x and pin versions** [owner original, updated] · ~8 min · slides slides 56–57 · objectives: Install Terragrunt 1.2.x with a checksum check; Pin Terraform and Terragrunt versions per repo; Know the 0.x to 1.x renames · demo: The owner's install steps (slides 56–57) with Terragrunt 1.2.3 and Terraform 1.17.2, checksum verification, mise or tgenv pins, terraform_version_constraint / terragrunt_version_constraint; the renames: run-all → run --all, terragrunt.hcl root → root.hcl, hclfmt → hcl fmt. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **1.3 Units, root.hcl and include** [owner original, updated] · ~10 min · slides slides 580–582 · objectives: Write a unit with terraform.source and inputs; Include a root.hcl with find_in_parent_folders("root.hcl"); Expose the root's locals to a unit · demo: The owner's development/vpc unit (slide 580) rebuilt with local_file and random_pet modules: source with the double slash, include "root" with expose, inputs; terragrunt render to see the final configuration. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **1.4 Inputs, locals and the common.yaml convention** [owner original] · ~9 min · slides slides 578–582 · objectives: Pass inputs that become TF_VAR values; Load the owner's common.yaml with yamldecode; Build names from assetid, environment and project · demo: The owner's common.yaml (assetid 2560, environment, project del) loaded in root.hcl and used for names like 2560-dev-del-*, the same convention as the Terraform masterclass naming lesson. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **1.5 Generate blocks: providers and versions once** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Generate provider.tf and versions.tf from root.hcl; Use if_exists safely; Keep modules free of provider configuration · demo: A generate "provider" block with a neutral provider, then if_exists = "overwrite_terragrunt" vs "skip"; why modules must not configure providers themselves. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **1.6 The Terragrunt 1.x CLI: run, run --all, find, list and dag graph** [new, proposed] · ~10 min · slides none in the deck (new lesson) · objectives: Run one unit and all units; List and find units and their dependencies; Draw the dependency graph · demo: terragrunt run plan, run --all plan, find, list --dag, dag graph (DOT), --filter and --parallelism on the course's neutral live tree. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-283 Terragrunt module 2: Remote state generation (AWS course)
+- Course / module / position: AI-Powered Terragrunt on AWS: Terraform at Scale · Module 2 · lessons 2.1, 2.2 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **2.1 Generate the backend for every unit** [owner original, updated] · ~12 min · slides slides 578–579 · objectives: Define remote_state once in root.hcl; Give every unit its own state key with path_relative_to_include(); Show locking with two runs · demo: Lesson code: backend "s3" generated with use_lockfile = true and a key per environment and unit (the owner's DynamoDB table removed); two applies at once show the lock. · code: `courses/terraform/code/terragrunt/aws/root.hcl` (ready, validated) · cost: ~$0 · quiz: 4 questions
+  - **2.2 Bootstrap and migrate state with terragrunt backend** [new, proposed] · ~9 min · slides none in the deck (new lesson) · objectives: Bootstrap the state store with terragrunt backend bootstrap; Move a unit's state with backend migrate; Delete state only on purpose · demo: terragrunt backend bootstrap creating a versioned, encrypted bucket; backend migrate when a unit is renamed; why --backend-bootstrap stays off in CI. · code: GEN builds it in `courses/terraform/code/terragrunt/` (aws) · cost: ~$0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-284 Terragrunt module 2: Remote state generation (Azure course)
+- Course / module / position: AI-Powered Terragrunt on Azure: Terraform at Scale · Module 2 · lessons 2.1, 2.2 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **2.1 Generate the backend for every unit** [owner original, updated] · ~12 min · slides slides 578–579 · objectives: Define remote_state once in root.hcl; Give every unit its own state key with path_relative_to_include(); Show locking with two runs · demo: Lesson code: backend "azurerm" generated with use_azuread_auth and a key per environment and unit; blob lease locking. · code: `courses/terraform/code/terragrunt/azure/root.hcl` (ready, validated) · cost: ~$0 · quiz: 4 questions
+  - **2.2 Bootstrap and migrate state with terragrunt backend** [new, proposed] · ~9 min · slides none in the deck (new lesson) · objectives: Bootstrap the state store with terragrunt backend bootstrap; Move a unit's state with backend migrate; Delete state only on purpose · demo: The state storage account created by the masterclass bootstrap; backend migrate after renaming a unit folder. · code: GEN builds it in `courses/terraform/code/terragrunt/` (azure) · cost: ~$0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-285 Terragrunt module 3: Dependencies and orchestration (shared videos)
+- Course / module / position: Terragrunt AWS + Azure (shared videos) · Module 3 · lessons 3.1, 3.2, 3.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **3.1 dependency blocks and mock outputs** [owner original, updated] · ~10 min · slides slide 583 · objectives: Read another unit's outputs with a dependency block; Plan before the dependency exists with mock outputs; Limit mocks to safe commands · demo: The owner's slide 583 (an RDS security group depending on the VPC) rebuilt with neutral units: dependency "network", outputs, mock_outputs with mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **3.2 run --all: order, filters, the affected units and parallelism** [new, proposed] · ~10 min · slides none in the deck (new lesson) · objectives: Predict the run order from the DAG; Run only what a change affects with --filter-affected; Destroy in reverse order safely · demo: run --all plan on the neutral tree, the order printed by list --dag, --filter-affected after a commit, run --all destroy in reverse order, --queue-ignore-dag-order and why not to use it. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **3.3 Hooks, errors and retries** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Run before and after hooks (fmt, tflint, checkov); Retry known transient errors; Ignore nothing silently · demo: before_hook running terraform fmt -check and TFLint, an after_hook posting a message, the errors block with retry rules for a throttling error. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-286 Terragrunt module 4: Environments and the multi-account / multi-subscription layout (AWS course)
+- Course / module / position: AI-Powered Terragrunt on AWS: Terraform at Scale · Module 4 · lessons 4.1, 4.2, 4.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **4.1 The live tree: environments, regions and units** [owner original, updated] · ~12 min · slides slides 576–582 · objectives: Lay out live/<environment>/<unit>; Keep environment values in common.yaml; Add an environment by copying four small files · demo: Lesson code: development, staging and production, each with common.yaml (assetid, environment, project, region, account_id) and network/app units; terragrunt dag graph. · code: `courses/terraform/code/terragrunt/aws/live` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **4.2 One account or subscription per environment** [new, proposed] · ~12 min · slides slides 447–458 (masterclass) · objectives: Generate a provider that assumes the environment's role or targets its subscription; Guard against the wrong account; Explain why prod is isolated · demo: The generated provider with assume_role per environment and allowed_account_ids; AWS Organizations layout explained; a deliberate wrong account id fails the plan. · code: `courses/terraform/code/terragrunt/aws/root.hcl` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **4.3 Promote a module version from dev to staging to prod** [new, proposed] · ~10 min · slides none in the deck (new lesson) · objectives: Source modules by Git tag; Promote a tag one environment at a time; Roll back by moving back a tag · demo: The network module tagged v1.1.0, used by development, then staging, then production; a bad change rolled back to v1.0.0. · code: GEN builds it in `courses/terraform/code/terragrunt/` (aws) · cost: $0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-287 Terragrunt module 4: Environments and the multi-account / multi-subscription layout (Azure course)
+- Course / module / position: AI-Powered Terragrunt on Azure: Terraform at Scale · Module 4 · lessons 4.1, 4.2, 4.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **4.1 The live tree: environments, regions and units** [owner original, updated] · ~12 min · slides slides 576–582 · objectives: Lay out live/<environment>/<unit>; Keep environment values in common.yaml; Add an environment by copying four small files · demo: Lesson code: the same tree with subscription_id, location and the state storage account in each common.yaml. · code: `courses/terraform/code/terragrunt/azure/live` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **4.2 One account or subscription per environment** [new, proposed] · ~12 min · slides slides 447–458 (masterclass) · objectives: Generate a provider that assumes the environment's role or targets its subscription; Guard against the wrong account; Explain why prod is isolated · demo: The generated provider with subscription_id per environment; management groups explained; a wrong subscription fails the guard. · code: `courses/terraform/code/terragrunt/azure/root.hcl` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **4.3 Promote a module version from dev to staging to prod** [new, proposed] · ~10 min · slides none in the deck (new lesson) · objectives: Source modules by Git tag; Promote a tag one environment at a time; Roll back by moving back a tag · demo: The same promotion on the Azure tree. · code: GEN builds it in `courses/terraform/code/terragrunt/` (azure) · cost: $0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-288 Terragrunt module 5: Catalogs and stacks (shared videos)
+- Course / module / position: Terragrunt AWS + Azure (shared videos) · Module 5 · lessons 5.1, 5.2, 5.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **5.1 A module catalog and scaffold** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Organise modules and unit templates as a catalog; Start a unit with terragrunt scaffold; Browse it with terragrunt catalog · demo: The course modules folder as a catalog, terragrunt scaffold for a new unit, terragrunt catalog to browse, and versioning the catalog repo. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+  - **5.2 Stacks: an environment from one terragrunt.stack.hcl** [new, proposed] · ~12 min · slides none in the deck (new lesson) · objectives: Write unit blocks with source, path and values; Generate and run a stack; Read values inside a unit template · demo: The course's production stack: unit "network" and unit "app" with values, terragrunt stack generate (.terragrunt-stack/), stack run plan, stack output, stack clean. · code: `courses/terraform/code/terragrunt/aws/stacks/production` (ready, validated), `courses/terraform/code/terragrunt/azure/stacks/production` (ready, validated) · cost: $0 · quiz: 3 questions
+  - **5.3 Move a live tree to stacks without destroying anything** [new, proposed] · ~10 min · slides none in the deck (new lesson) · objectives: Keep state keys stable while switching to stacks; Use backend migrate where keys change; Prove the change with a no-op plan · demo: The development tree turned into a stack: compare state keys, migrate where the path changes, and end with plans that show no changes. · code: GEN builds it in `courses/terraform/code/terragrunt/` (neutral providers) · cost: $0 · quiz: 3 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-289 Terragrunt module 6: CI/CD with OIDC (AWS course)
+- Course / module / position: AI-Powered Terragrunt on AWS: Terraform at Scale · Module 6 · lessons 6.1, 6.2, 6.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **6.1 Plan affected units on every pull request** [new, proposed] · ~14 min · slides slides 614–616 (masterclass) · objectives: Sign in with OIDC from GitHub Actions; Plan only affected units with --filter-affected; Post the plan on the pull request · demo: Lesson code: the plan workflow with configure-aws-credentials (plan role), Terragrunt installed with a checksum, hcl fmt --check, run --all --filter-affected plan, a PR comment. · code: `courses/terraform/code/terragrunt/.github/workflows/terragrunt-plan.yml` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **6.2 Apply environment by environment with approvals** [new, proposed] · ~12 min · slides none in the deck (new lesson) · objectives: Apply after merge one environment at a time; Require a reviewer per environment; Stop on the first failure · demo: Lesson code: the apply workflow with a matrix development → staging → production (max-parallel 1), each a GitHub environment with a required reviewer and its own role. · code: `courses/terraform/code/terragrunt/.github/workflows/terragrunt-apply.yml` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **6.3 Terragrunt in Jenkins** [owner original, updated] · ~10 min · slides slides 620–622 · objectives: Run run --all plan and apply from a Jenkinsfile; Use the agent's role or managed identity; Gate apply with an input step · demo: A Jenkinsfile for the owner's Jenkins (masterclass lesson 11.7): instance profile credentials, plan, input, apply per environment. · code: GEN builds it in `courses/terraform/code/terragrunt/` (aws) · cost: ~$0.10 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-290 Terragrunt module 6: CI/CD with OIDC (Azure course)
+- Course / module / position: AI-Powered Terragrunt on Azure: Terraform at Scale · Module 6 · lessons 6.1, 6.2, 6.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **6.1 Plan affected units on every pull request** [new, proposed] · ~14 min · slides slides 614–616 (masterclass) · objectives: Sign in with OIDC from GitHub Actions; Plan only affected units with --filter-affected; Post the plan on the pull request · demo: The Azure variant: azure/login with the plan identity's federated credential, ARM_USE_OIDC, the same affected-units plan. · code: `courses/terraform/code/terragrunt/.github/workflows/terragrunt-plan.yml` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **6.2 Apply environment by environment with approvals** [new, proposed] · ~12 min · slides none in the deck (new lesson) · objectives: Apply after merge one environment at a time; Require a reviewer per environment; Stop on the first failure · demo: The same with one managed identity per environment and its federated credential (environment:<name>). · code: `courses/terraform/code/terragrunt/.github/workflows/terragrunt-apply.yml` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **6.3 Terragrunt in Jenkins** [owner original, updated] · ~10 min · slides slides 620–622 · objectives: Run run --all plan and apply from a Jenkinsfile; Use the agent's role or managed identity; Gate apply with an input step · demo: The same on the Azure Jenkins VM with its managed identity (ARM_USE_MSI). · code: GEN builds it in `courses/terraform/code/terragrunt/` (azure) · cost: ~$0.15 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-291 Terragrunt module 7: Drift detection and day-2 operations (AWS course)
+- Course / module / position: AI-Powered Terragrunt on AWS: Terraform at Scale · Module 7 · lessons 7.1, 7.2, 7.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **7.1 Nightly drift detection** [new, proposed] · ~12 min · slides none in the deck (new lesson) · objectives: Plan every unit on a schedule with -detailed-exitcode; Open an issue when something drifted; Decide to revert or adopt the change · demo: Lesson code: the nightly workflow; a security group rule added in the console is reported the next morning and reverted by apply. · code: `courses/terraform/code/terragrunt/.github/workflows/terragrunt-drift.yml` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **7.2 Keep versions current: Terraform, providers and Terragrunt** [new, proposed] · ~10 min · slides slides 610–613 (masterclass) · objectives: Upgrade one version step in a branch; Use the provider cache for speed; Read upgrade guides before major versions · demo: A Terragrunt patch upgrade and an AWS provider minor upgrade across all units on a branch, with a no-change plan as the goal; --provider-cache. · code: GEN builds it in `courses/terraform/code/terragrunt/` (aws) · cost: $0 · quiz: 4 questions
+  - **7.3 Destroy safely and prove nothing is left** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Destroy in reverse order with run --all destroy; Protect production with prevent_destroy; Prove the account is clean by tags · demo: run --all destroy in development, prevent_destroy on production data units, the tag search. · code: GEN builds it in `courses/terraform/code/terragrunt/` (aws) · cost: $0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-292 Terragrunt module 7: Drift detection and day-2 operations (Azure course)
+- Course / module / position: AI-Powered Terragrunt on Azure: Terraform at Scale · Module 7 · lessons 7.1, 7.2, 7.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **7.1 Nightly drift detection** [new, proposed] · ~12 min · slides none in the deck (new lesson) · objectives: Plan every unit on a schedule with -detailed-exitcode; Open an issue when something drifted; Decide to revert or adopt the change · demo: The same with an NSG rule added in the portal. · code: `courses/terraform/code/terragrunt/.github/workflows/terragrunt-drift.yml` (ready, validated) · cost: $0 · quiz: 4 questions
+  - **7.2 Keep versions current: Terraform, providers and Terragrunt** [new, proposed] · ~10 min · slides slides 610–613 (masterclass) · objectives: Upgrade one version step in a branch; Use the provider cache for speed; Read upgrade guides before major versions · demo: The same with azurerm. · code: GEN builds it in `courses/terraform/code/terragrunt/` (azure) · cost: $0 · quiz: 4 questions
+  - **7.3 Destroy safely and prove nothing is left** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Destroy in reverse order with run --all destroy; Protect production with prevent_destroy; Prove the account is clean by tags · demo: The same with a Resource Graph query on the Course tag. · code: GEN builds it in `courses/terraform/code/terragrunt/` (azure) · cost: $0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-293 Terragrunt module 8: AI for Terragrunt (shared videos)
+- Course / module / position: Terragrunt AWS + Azure (shared videos) · Module 8 · lessons 8.1, 8.3 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **8.1 AI generates units from the catalog** [new, proposed: AI] · ~10 min · slides none in the deck (new lesson) · objectives: Give an AI assistant the repository conventions in a professional prompt; Verify its unit with hcl fmt, hcl validate, render and a plan; Reject output that breaks conventions · demo: The prompt file run live; the first answer adds a provider block (against the rule) and a wrong include; the checks catch both; the fixed unit plans cleanly with mocks. · code: `courses/terraform/code/terragrunt/ai/generate-unit.md` (ready, validated) · cost: $0 · quiz: 3 questions
+  - **8.3 A read-only MCP server for your Terragrunt repo** [new, proposed: AI] · ~10 min · slides none in the deck (new lesson) · objectives: Serve Terragrunt to an AI agent with terragrunt mcp (experiment) in read-only mode; Add the Terraform MCP registry toolset for current docs; Keep apply and exec off · demo: terragrunt mcp with the mcp-command experiment and no --allow flags (apply and destroy are off unless --dangerously-allow-apply), plus the Terraform MCP server's registry toolset; the agent explains the DAG and a unit's inputs; it cannot apply. · code: `courses/terraform/code/terraform-mcp-server` (ready, validated) · cost: $0 · quiz: 3 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-294 Terragrunt module 8: AI for Terragrunt (AWS course)
+- Course / module / position: AI-Powered Terragrunt on AWS: Terraform at Scale · Module 8 · lessons 8.2 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **8.2 AI review of a Terragrunt pull request** [new, proposed: AI] · ~14 min · slides none in the deck (new lesson) · objectives: Feed the AI the affected units, the DAG and the plans; Get risks, blast radius and environment checks as a comment; Keep the human approval as the gate · demo: The plan workflow plus a review job: affected units (find --filter-affected), dag graph and plans summarised by a model with the review prompt; a production change without staging is flagged HIGH RISK. · code: `courses/terraform/code/terragrunt/ai/review-terragrunt-plan.md` (ready, validated), `courses/terraform/code/terragrunt/.github/workflows/terragrunt-plan.yml` (ready, validated) · cost: ~$0.10 (model calls) · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-295 Terragrunt module 8: AI for Terragrunt (Azure course)
+- Course / module / position: AI-Powered Terragrunt on Azure: Terraform at Scale · Module 8 · lessons 8.2 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **8.2 AI review of a Terragrunt pull request** [new, proposed: AI] · ~14 min · slides none in the deck (new lesson) · objectives: Feed the AI the affected units, the DAG and the plans; Get risks, blast radius and environment checks as a comment; Keep the human approval as the gate · demo: The same on the Azure pipeline. · code: `courses/terraform/code/terragrunt/ai/review-terragrunt-plan.md` (ready, validated), `courses/terraform/code/terragrunt/.github/workflows/terragrunt-plan.yml` (ready, validated) · cost: ~$0.10 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-296 Terragrunt module 9: Capstone: a multi-account platform with Terragrunt (shared videos)
+- Course / module / position: Terragrunt AWS + Azure (shared videos) · Module 9 · lessons 9.5 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **9.5 Wrap-up, final assessment and what to learn next** [new, proposed] · ~5 min · slides none in the deck (new lesson) · objectives: Review the skills; Take the final assessment; Choose the next course · demo: Recap, final assessment (20 questions), next: the AI for DevOps masterclass of your cloud, the other cloud's Terragrunt course, n8n automation. · code: no lab (wrap-up; final assessment JSON) · cost: $0 · quiz: 3 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-297 Terragrunt module 9: Capstone: a multi-account platform with Terragrunt (AWS course)
+- Course / module / position: AI-Powered Terragrunt on AWS: Terraform at Scale · Module 9 · lessons 9.1, 9.2, 9.3, 9.4 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **9.1 Capstone design and cost** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Read the requirements; Design accounts or subscriptions, state, stacks and the pipeline; Estimate the cost · demo: Three accounts (or one with prefixes), state per account, a stack per environment from the catalog, the OIDC pipeline with AI review and approvals. · code: the capstone requirements and design PDF · cost: $0 (design) · quiz: 3 questions
+  - **9.2 Build the environments as stacks** [new, proposed] · ~16 min · slides none in the deck (new lesson) · objectives: Build development, staging and production stacks from the catalog; Apply development; Read stack outputs · demo: Network, app and a small RDS PostgreSQL (db.t4g.micro, write-only password) unit per stack; development applied. · code: `courses/terraform/code/terragrunt/aws/stacks` (ready, validated) · cost: ~$0.10 per session; destroy the same day · quiz: 4 questions
+  - **9.3 The pipeline: affected plans, AI review, approvals and drift** [new, proposed] · ~14 min · slides none in the deck (new lesson) · objectives: Run the full pipeline on a pull request; Promote through staging to production with approvals; Watch the nightly drift job · demo: A PR changing the app unit: affected-units plan, AI review comment, merge, development → staging → production with approvals; drift found the next morning and reverted. · code: `courses/terraform/code/terragrunt/.github/workflows` (ready, validated) · cost: ~$0.20 (model calls; infra in 9.2) · quiz: 4 questions
+  - **9.4 Destroy the platform and prove it** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Destroy production, staging, then development; Remove state stores last; Prove nothing is left · demo: stack run destroy per environment, state bucket emptied and deleted, tag search empty. · code: GEN builds it in `courses/terraform/code/terragrunt/` (aws) · cost: $0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-298 Terragrunt module 9: Capstone: a multi-account platform with Terragrunt (Azure course)
+- Course / module / position: AI-Powered Terragrunt on Azure: Terraform at Scale · Module 9 · lessons 9.1, 9.2, 9.3, 9.4 in this order
+- Versions: Terragrunt 1.x (checked 1.2.3) · Terraform 1.17.x · AWS provider ~> 6.0 / azurerm ~> 5.0 · S3 `use_lockfile` (no DynamoDB) / Azure blob lease
+- Videos (objectives, demo, code, resources, cost, cleanup and the quiz with answers for each: `courses/terraform/TERRAGRUNT_CURRICULUM.md` › the lesson id):
+  - **9.1 Capstone design and cost** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Read the requirements; Design accounts or subscriptions, state, stacks and the pipeline; Estimate the cost · demo: Three subscriptions (or one with prefixes), Storage state per subscription, a stack per environment, workload identity per environment. · code: the capstone requirements and design PDF · cost: $0 · quiz: 3 questions
+  - **9.2 Build the environments as stacks** [new, proposed] · ~16 min · slides none in the deck (new lesson) · objectives: Build development, staging and production stacks from the catalog; Apply development; Read stack outputs · demo: Network, app and PostgreSQL Flexible B1ms (write-only password) per stack; development applied. · code: `courses/terraform/code/terragrunt/azure/stacks` (ready, validated) · cost: ~$0.10 per session; destroy the same day · quiz: 4 questions
+  - **9.3 The pipeline: affected plans, AI review, approvals and drift** [new, proposed] · ~14 min · slides none in the deck (new lesson) · objectives: Run the full pipeline on a pull request; Promote through staging to production with approvals; Watch the nightly drift job · demo: The same on Azure. · code: `courses/terraform/code/terragrunt/.github/workflows` (ready, validated) · cost: ~$0.20 · quiz: 4 questions
+  - **9.4 Destroy the platform and prove it** [new, proposed] · ~8 min · slides none in the deck (new lesson) · objectives: Destroy production, staging, then development; Remove state stores last; Prove nothing is left · demo: The same with resource groups and the Resource Graph query. · code: GEN builds it in `courses/terraform/code/terragrunt/` (azure) · cost: $0 · quiz: 4 questions
+- Lab ZIP per lesson: the code folder, README with cost and cleanup (`terragrunt run --all destroy` + tag search), `.tfvars.example`/`common.yaml` with placeholders only
+- Priority: P2 · Owner: GEN · Status: requested (order waits for the owner's OK)
+
+#### CR-299 Terragrunt assessments (both courses)
+- Module assessments of 6–8 questions for modules 1–9 and a 20-question final assessment from the lesson objectives and quizzes in `TERRAGRUNT_CURRICULUM.md`; cloud questions per course.
+- Deliver: `assessments/module-<n>.json`, `assessments/final.json` per course · Priority: P2 · Owner: GEN · Status: requested
