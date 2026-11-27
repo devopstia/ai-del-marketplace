@@ -11,8 +11,8 @@ Owner, 2026-11-25: reuse Insurance Hub's email approach and templates, with the 
 3. Templates: `apps/api/src/email/templates.ts`; layout: `apps/api/src/email/layout.ts`, adapted from the Hub's
    `services/notification-service/app/templates/_base.html` (560px card, brand rule, logo + name in type,
    preheader, support footer, tables and inline styles). Added for DEL: DevOps Easy Learning branding and colours,
-   **one dark design for every email** (owner, 2026-11-25: independent of the website's light default; colours inline and as
-   `bgcolor` for Outlook, `color-scheme: dark` so dark-mode clients leave it alone), and a plain-text version of every email.
+   **one light design for every email** (owner 2026-11-28, replacing the dark design of 2026-11-25: white card on a soft
+   background, colours inline and as `bgcolor` for Outlook, `color-scheme: light only` so dark-mode clients keep it light), and a plain-text version of every email.
 4. Providers (`apps/api/src/email/sender.ts`, `EMAIL_PROVIDER`): `ses` in production (Amazon SES through the server's instance role; `resend` also supported), `smtp`
    locally (the Mailpit container: **http://127.0.0.1:8025** shows every email), `console` in tests.
    Logs show only the template name and a masked address; bodies, codes and links are never logged.

@@ -4,10 +4,10 @@ import { env } from '../config/env';
  * DEL email layout, adapted from Insurance Hub's notification-service `_base.html` (docs/EMAIL.md): a 560px card on a
  * soft background, a brand rule, the logo with the name in type (images may be blocked), a hidden preheader, and the
  * footer with the support address. Tables and inline styles throughout because email clients strip most CSS.
- * Differences from the Hub: DEL branding and colours, and **one dark design for every email** (owner, 2026-11-25),
- * independent of the website's theme. Colours are inline and repeated as `bgcolor` attributes so Gmail and Outlook
- * (which ignore <style> blocks or CSS backgrounds) draw the same dark card; `color-scheme: dark` tells clients with a
- * dark mode that the email is already dark, so they leave it alone.
+ * Differences from the Hub: DEL branding and colours, and **one light design for every email** (owner 2026-11-28;
+ * it replaced the dark design of 2026-11-25), independent of the website's theme. Colours are inline and repeated as
+ * `bgcolor` attributes so Gmail and Outlook (which ignore <style> blocks or CSS backgrounds) draw the same card;
+ * `color-scheme: light` asks clients with a dark mode to keep the email light.
  */
 export type Block =
   | { h1: string }
@@ -20,8 +20,9 @@ export type Block =
   | { link: string }
   | { note: string };
 
-// Dark palette (the site's dark tokens). Contrast on the card: ink 14:1, ink2 10:1, muted 5.9:1, link 6.4:1, button text 7.9:1.
-const C = { bg: '#0C0F22', card: '#141834', foot: '#10142B', line: '#262C52', ink: '#E8EAF7', ink2: '#C9CCE3', muted: '#9599B8', violet: '#9D8FFF', cyan: '#58C3F2', soft: '#1B2045', onBtn: '#12143A', fine: '#8A8DAA' };
+// Light palette (the site's light tokens). Contrast on the white card: ink 17:1, ink2 9.8:1, muted 5.6:1, link 8.2:1,
+// button text on violet 8.2:1; fine print on the page background 4.6:1.
+const C = { bg: '#F3F4F9', card: '#FFFFFF', foot: '#F7F8FC', line: '#E3E5EE', ink: '#141833', ink2: '#3C4263', muted: '#626886', violet: '#4F3FB0', cyan: '#1E9BD7', soft: '#F2F0FC', onBtn: '#FFFFFF', fine: '#6E7390' };
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 /** Escapes text; `**bold**` becomes <strong> (the only markup the templates use). */
@@ -73,11 +74,11 @@ export function layout(input: { subject: string; preheader?: string; blocks: Blo
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="x-apple-disable-message-reformatting">
-<meta name="color-scheme" content="dark">
-<meta name="supported-color-schemes" content="dark">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
 <title>${esc(input.subject)}</title>
 <style>
-  :root { color-scheme: dark; supported-color-schemes: dark; }
+  :root { color-scheme: light only; supported-color-schemes: light; }
   body, .bg { background:${C.bg} !important; }
   a { color:${C.violet}; }
   @media (max-width: 600px) { .pad { padding-left:20px !important; padding-right:20px !important; } }
