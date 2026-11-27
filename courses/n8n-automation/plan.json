@@ -133,12 +133,6 @@
           "short": "Kubernetes alerts"
         },
         {
-          "folder": "11-n11-n8n-aws-automation-live",
-          "title": "Bring AWS alarms and S3 events into your team chat",
-          "short": "AWS automation",
-          "summary": "Build it for real with Terraform: a CloudWatch alarm, an S3 bucket, an SQS queue and a read-only IAM user. n8n polls the queue, posts each alarm and upload to Mattermost, sends a daily AWS summary, and never sees the same message twice."
-        },
-        {
           "folder": "12-n12-n8n-incident-management-live",
           "title": "Manage incidents: severity, escalation and resolution",
           "summary": "Turn a flood of repeated alerts into one incident with a severity. Escalate when nobody acknowledges, show who is on it, and close the loop with a resolved message, on a real outage.",
