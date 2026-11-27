@@ -3,9 +3,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Award, BookOpen, CalendarClock, MessageSquareText, PlayCircle } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
-import { list, obj, toLearningItem } from "@/lib/normalize";
+import { list, obj, toLearningItem, toRelatedCourse } from "@/lib/normalize";
 import { date } from "@/lib/format";
-import type { LearningItem } from "@/lib/types";
+import type { LearningItem, RelatedCourse } from "@/lib/types";
 import { useAuth } from "@/components/AuthProvider";
 import { CourseCover } from "@/components/CourseCover";
 import { LoopMeter } from "@/components/LoopMeter";
@@ -13,6 +13,7 @@ import { Empty, Skeleton } from "@/components/Empty";
 import { Kpis, PageHead } from "@/components/shell/AppShell";
 import { resumeHref, useNow } from "@/components/student/MyCourses";
 import { ProgramNote } from "@/components/promo/FullProgram";
+import { RelatedCourses } from "@/components/RelatedCourses";
 
 const DAY = 86_400_000;
 
@@ -24,7 +25,10 @@ export default function StudentDashboard() {
   const [expired, setExpired] = useState<LearningItem[]>([]);
   const [toReview, setToReview] = useState<{ slug: string; title: string }[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  // "Continue your learning journey" (owner 2026-11-28): related courses of the courses you own, never ones you own.
+  const [related, setRelated] = useState<RelatedCourse[]>([]);
   useEffect(() => {
+    api("/me/related-courses").then((r) => setRelated(list(r, "items").map(toRelatedCourse).filter((x) => !x.owned))).catch(() => {});
     api("/me/learning").then((r) => {
       setItems(list(r, "courses", "enrollments").map(toLearningItem));
       setExpired(Array.isArray(obj(r).expired) ? (obj(r).expired as unknown[]).map(toLearningItem) : []);
@@ -122,7 +126,8 @@ export default function StudentDashboard() {
                     </ul>
                   ) : <p className="mt-3 rounded-tile border border-line bg-surface px-4 py-4 text-sm text-ink-2">Nothing waiting. Enjoy your next lesson.</p>}
                 </section>
-                <ProgramNote placement="student-dashboard" />
+                {/* One recommendation block at a time: your next courses when there are any, else DEL's full program. */}
+                {related.length ? <RelatedCourses items={related} variant="compact" /> : <ProgramNote placement="student-dashboard" />}
               </div>
             </div>
           ) : null}

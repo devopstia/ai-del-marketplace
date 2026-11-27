@@ -6,6 +6,7 @@ import { ListEditor } from "./ListEditor";
 import { LANGUAGES } from "@/lib/format";
 import { useApi } from "@/lib/useApi";
 import { obj } from "@/lib/normalize";
+import { RelatedCoursesEditor } from "./RelatedCoursesEditor";
 
 export function DetailsStep({ course, categories, patch, goto, locked }: EditorCtx) {
   const [f, setF] = useState({
@@ -25,6 +26,7 @@ export function DetailsStep({ course, categories, patch, goto, locked }: EditorC
     return ok;
   };
   return (
+    <>
     <fieldset disabled={locked} className="grid max-w-5xl gap-10 lg:grid-cols-[1fr_280px]">
       <div className="space-y-6">
         <div>
@@ -74,5 +76,8 @@ export function DetailsStep({ course, categories, patch, goto, locked }: EditorC
       </div>
       <div className="lg:col-span-2"><StepFooter onSave={save} saving={saving} next="media" goto={goto} disabled={locked} /></div>
     </fieldset>
+    {/* Outside the fieldset: related courses aren't course content, so they stay editable while a revision is in review. */}
+    <RelatedCoursesEditor courseId={course.id} />
+    </>
   );
 }

@@ -3,7 +3,7 @@
 // nested slightly differently (e.g. `instructor.name` vs `instructorName`).
 import type { CourseRefund, SaleInfo, SaleRow, StudioRevision,
   AdminInstructor, AdminStats, AdminUser, AuditEntry, Cart, Category, Certificate, CourseCard, CourseDetail,
-  InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, Review, ReviewSummary, Role,
+  InstructorSummary, LearningItem, LectureOutline, Level, Me, Order, Paged, RelatedCourse, Review, ReviewSummary, Role,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
 } from "./types";
 import { toSizes } from "./data-saver";
@@ -203,6 +203,23 @@ export function toCourseDetail(x: unknown): CourseDetail {
       return { state: a.state as "active" | "expiring" | "expired", expiresAt: (a.expiresAt as string) ?? null, daysLeft: a.daysLeft == null ? null : Number(a.daysLeft), canRenew: a.canRenew === true };
     })(),
     hasCaptions: Boolean(raw.hasCaptions ?? o.hasCaptions),
+    related: arr(raw.related ?? o.related).map(toRelatedCourse).filter((r) => r.slug),
+  };
+}
+
+export function toRelatedCourse(x: unknown): RelatedCourse {
+  const o = obj(x);
+  return {
+    id: str(o.id),
+    slug: str(o.slug),
+    title: str(o.title),
+    subtitle: str(o.subtitle),
+    coverUrl: img(o.coverUrl),
+    priceCents: num(o.priceCents),
+    listPriceCents: num(o.listPriceCents ?? o.priceCents),
+    currency: str(o.currency, "usd"),
+    reason: str(o.reason),
+    owned: o.owned === true,
   };
 }
 

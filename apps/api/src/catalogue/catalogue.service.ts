@@ -13,6 +13,7 @@ import { MediaService } from '../media/media.service';
 import { cardInclude, toCard } from './course-card';
 import { priceSelect, SalePricingService, toPriceInput } from '../common/sale-pricing';
 import { brandOf, brandSelect, isOfficial } from '../common/brand';
+import { RelatedCoursesService } from './related-courses.service';
 
 export interface CourseQuery {
   q?: string;
@@ -43,6 +44,7 @@ export class CatalogueService {
     private readonly media: MediaService,
     private readonly settings: SettingsService,
     private readonly pricing: SalePricingService,
+    private readonly related: RelatedCoursesService,
   ) {}
 
   /** Public marketplace terms (pricing rules + revenue share) so the web never hard-codes them. */
@@ -244,6 +246,8 @@ export class CatalogueService {
         lectures: s.lectures.map(({ resources, quiz, videoAsset, ...l }) => ({ ...l, resourceCount: resources.length, hasQuiz: !!quiz, hasCaptions: !!videoAsset?.captionsKey })),
       })),
       viewer: viewerState,
+      // "Continue your learning journey" (owner 2026-11-28): published related courses only; `owned` only for a signed-in viewer.
+      related: await this.related.forCourse(c.id, viewer),
     };
   }
 

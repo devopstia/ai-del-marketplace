@@ -56,6 +56,22 @@ export interface CoursePlan {
     quizzes?: 'from-captions';
   };
   sections: SectionPlan[];
+  /** "Continue your learning journey" (owner 2026-11-28): recommended next courses, in order. `course` is another plan's
+   *  folder name under courses/ (resolved through its state.<env>.json); set directly, no revision review. */
+  related?: RelatedPlan[];
+}
+export interface RelatedPlan { course: string; reason?: string }
+
+/** Related plan slugs → course ids (from the other plans' state files). Unknown ones are reported, never guessed. */
+export function resolveRelated(related: RelatedPlan[], ids: Record<string, string | undefined>): { items: { courseId: string; reason?: string }[]; missing: string[] } {
+  const items: { courseId: string; reason?: string }[] = [];
+  const missing: string[] = [];
+  for (const r of related) {
+    const id = ids[r.course];
+    if (id) items.push({ courseId: id, ...(r.reason ? { reason: r.reason } : {}) });
+    else missing.push(r.course);
+  }
+  return { items, missing };
 }
 
 // ---------- upload rules (skill: del-course-publisher) ----------
@@ -660,6 +676,25 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
     const pick = plan.course.cover === 'suggested' ? (items.find((x) => x.suggested) ?? items[0]) : items.find((x) => x.id === plan.course.cover || x.key === plan.course.cover);
     if (!pick) issues.push(`no cover template found: ${plan.course.cover}`);
     else if (pick.id !== c.coverTemplateId) { await del.call('PUT', `/courses/${courseId}/cover`, { templateId: pick.id }); log(`Cover template ${pick.name ?? pick.id}`); }
+  }
+
+  // 6b. Related courses ("Continue your learning journey"): only when the plan lists them; a course not uploaded yet in
+  // this environment is skipped and reported, and the list is set again on the next run.
+  if (plan.related) {
+    const ids: Record<string, string | undefined> = {};
+    for (const r of plan.related) {
+      const sp = join(planDir, '..', r.course, `state.${plan.environment}.json`);
+      ids[r.course] = existsSync(sp) ? (JSON.parse(await readFile(sp, 'utf8')) as State).courseId : undefined;
+    }
+    const { items, missing } = resolveRelated(plan.related, ids);
+    missing.forEach((m) => issues.push(`related course not in ${plan.environment} yet (skipped): ${m}`));
+    try {
+      await del.call('PUT', `/courses/${courseId}/related`, { items });
+      log(`Related courses: ${items.length}`);
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'session_ended') throw e;
+      issues.push(`related courses not set: ${(e as Error).message}`);
+    }
   }
 
   // 7. Wait for video processing, then validate.
