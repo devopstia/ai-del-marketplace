@@ -123,6 +123,13 @@
       "title": "Your next step",
       "lessons": [
         {
+          "folder": "23-intro-ai-devops/99-ai-next-step-recommendation",
+          "title": "Your next step in AI-powered DevOps",
+          "short": "Your next step",
+          "role": "conclusion",
+          "summary": "Where to go from here: the AWS and Azure masterclasses for building AI systems yourself, and the n8n course for automating your team's work, shown with real moments from their lessons."
+        },
+        {
           "type": "article",
           "key": "next-steps",
           "title": "Your next step: the AI for DevOps masterclasses on AWS and Azure",
