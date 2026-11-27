@@ -17,8 +17,10 @@ would duplicate the three above.
 | Introduction to Artificial Intelligence for DevOps | `intro-ai-for-devops` | Free | ai-foundations | beginner |
 | Visual Studio Code Masterclass for DevOps and AI | `vscode-masterclass` | Free | developer-tools | beginner |
 | AI-Powered DevOps Automation with n8n | `n8n-automation` | $29.99 now, $49.99 after the AI lessons | automation-n8n | intermediate |
-| *planned:* AI-Powered Terraform on AWS: From Beginner to Advanced | `terraform-aws` | suggested $49.99 launch, $69.99 later (owner decides) | infrastructure-as-code (new) | beginner → advanced |
-| *planned:* AI-Powered Terraform on Azure: From Beginner to Advanced | `terraform-azure` | same | infrastructure-as-code (new) | beginner → advanced |
+| *planned (title and price approved 2026-11-28):* AI-Powered Terraform on AWS: From Beginner to Advanced | `terraform-aws` | $49.99 at launch, $69.99 once complete and reviewed | infrastructure-as-code (new) | beginner → advanced |
+| *planned (title and price approved 2026-11-28):* AI-Powered Terraform on Azure: From Beginner to Advanced | `terraform-azure` | $49.99 at launch, $69.99 once complete and reviewed | infrastructure-as-code (new) | beginner → advanced |
+| *planned (third course, owner 2026-11-28):* AI-Powered Terragrunt on AWS: Terraform at Scale | `terragrunt-aws` | suggested $39.99 launch, $49.99 later (owner decides) | infrastructure-as-code (new) | advanced |
+| *planned (third course):* AI-Powered Terragrunt on Azure: Terraform at Scale | `terragrunt-azure` | same | infrastructure-as-code (new) | advanced |
 
 **Titles:** the owner's titles are kept. They already lead with AI and DevOps, are under 60 characters, and the two
 cloud courses share one pattern (`AI for DevOps on <cloud>: From Fundamentals to Production`) that reads as a series.
@@ -447,8 +449,9 @@ Sources: [App Runner availability change](https://docs.aws.amazon.com/apprunner/
 [Static Web Apps FAQ](https://learn.microsoft.com/en-us/azure/static-web-apps/faq).
 
 ## Terraform masterclasses: AWS and Azure (planned, owner 2026-11-28)
-Built on the owner's Terraform deck and repo (`courses/terraform/`; plan `TERRAFORM_MASTERCLASS_PLAN.md`). Titles must
-contain AI (owner); recommended "AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced". The Azure course is a
+Built on the owner's Terraform deck and repo (`courses/terraform/`; plan `TERRAFORM_MASTERCLASS_PLAN.md`). Titles
+approved by the owner (2026-11-28): "AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced"; price $49.99 at launch,
+$69.99 once complete and reviewed. The Azure course is a
 full mirror (owner: some students use only AWS, others only Azure): same 18 modules and order, 95 videos each
 (~17 h 27 min), 37 cloud-neutral videos shared, 58 lessons with an AWS and an Azure version. AI strand: module 14
 "AI-Powered Terraform" (prompts, plan explanations, tests and refactors, Terraform MCP server, AI PR review) and module 15
@@ -457,4 +460,15 @@ Search, content filters, Agent Service); rule: AI drafts, Terraform and a person
 **Recommends:** the AI for DevOps masterclass of the same cloud, n8n automation, the other cloud's Terraform course,
 VS Code (free). **Recommended by:** both AI masterclasses (website hosting CR-108/CR-109, CR-028/CR-038, prompt
 engineering projects CR-097/CR-098, which point to module 14), the free AI intro, the VS Code masterclass (CR-044).
+
+## Terragrunt: Terraform at scale (planned, owner 2026-11-28)
+"We will also need Terragrunt and terraform course": a separate third course after the Terraform masterclass, as two
+listings (AWS, Azure) so each certifies on its own (`courses/terraform/TERRAFORM_MASTERCLASS_PLAN.md` § 12). 10 modules,
+32 videos (~5 h 27 min) per course, 15 shared; built from the owner's Terragrunt slides (574–583) and
+`aws-terraform/terragrunt/live`, on Terragrunt 1.x: root.hcl, generated backends with `use_lockfile`, dependency blocks,
+`run --all` and `--filter-affected`, one account or subscription per environment, stacks, OIDC pipelines, drift
+detection, an AI strand (AI-generated units, AI PR review with the DAG's blast radius, `terragrunt mcp` read-only) and a
+capstone. Curriculum `courses/terraform/TERRAGRUNT_CURRICULUM.md`, requests CR-282 … CR-299.
+**Path:** Terraform masterclass of the same cloud → Terragrunt. **Recommends:** the AI for DevOps masterclass of the same
+cloud, the other cloud's Terragrunt course, n8n automation. **Recommended by:** the Terraform masterclass (17.5; preview in 9.4).
 

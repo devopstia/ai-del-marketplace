@@ -75,7 +75,7 @@ Lessons: `TERRAFORM_AWS_CURRICULUM.md` / `TERRAFORM_AZURE_CURRICULUM.md` (same i
 
 ## Counts
 - **Deck sections:** 56 in slide 3's contents, 55 rows above (split/join, lookup/try and the two Jenkins sections merged). Status: **ready 30 · ready/improve 2 · improve 21 · missing code 1 · duplicate block 1**.
-- **Curriculum (per course):** 95 videos, ~17 h 27 min; 68 come from the owner's deck (48 as taught, 20 updated),
+- **Curriculum (per course):** 95 videos, ~17 h 32 min; 68 come from the owner's deck (48 as taught, 20 updated),
   16 new, 11 AI. 37 are cloud-neutral and shared by both courses; 58 have an AWS and an Azure version.
 - **Gaps in the deck** (no slides, no code): `moved`/`removed` blocks, `check` blocks and pre/postconditions, ephemeral
   values and write-only arguments, `terraform test`, TFLint, policy as code (Checkov/OPA/Sentinel), OIDC in CI,
@@ -90,15 +90,12 @@ Lessons: `TERRAFORM_AWS_CURRICULUM.md` / `TERRAFORM_AZURE_CURRICULUM.md` (same i
   `terraform-variables/map-of-object-variable/example-02/main.tf`).
 - **Validate:** 285 of 386 folders validate on Terraform 1.17.2 (`init -backend=false` + `validate`, no credentials);
   45 fail for real reasons, 56 could not be checked here (details in "Validation results" below).
-- **Security (for the owner, outside the course):** the public repo contains **private keys**:
-  `terraform-concepts/terraform-provisioner/example-01|02/private-key/terraform-aws.pem`,
-  `terraform-top-level-blocks/terraform-provisioner/example-01/private-key/terraform-aws.pem`,
-  `terraform-concepts/testing/ssh-key/terraform`, `base-code/eks-mix/private-key/jenkins-key.pem`, and in Azure
-  `modules/aks-controle-plane/vm-ssh-key/azure-terraform` and four `ssh-keys/*.pem`. Recommended: delete the matching
-  key pairs in AWS/Azure if they still exist and remove the files from the repo history. Hard-coded database passwords:
-  `terraform-local-state/main.tf`, `terraform-contitions/example-09`, `terraform-loops/others-examples-02/example-005`,
-  `terraform-lifcycle/ignore_changes/example-003`, `base-code/aurora-mysql-cluster`. No AWS access keys, no state
-  files. Nothing from these files is copied into the marketplace.
+- **Keys and passwords in the repo:** the public repo contains private keys (provisioner examples, `testing/ssh-key`,
+  `base-code/eks-mix`, Azure `vm-ssh-key` and `ssh-keys/*.pem`) and hard-coded database passwords
+  (`terraform-local-state`, `terraform-contitions/example-09`, `terraform-loops/others-examples-02/example-005`,
+  `terraform-lifcycle/ignore_changes/example-003`, `base-code/aurora-mysql-cluster`). The owner said not to worry about
+  them (2026-11-28); the rule stays: **never copy them** into the marketplace, labs generate keys at run time and use
+  write-only passwords. No AWS access keys, no state files.
 - **Also in the repo:** `helm/` (Argo CD, External DNS charts), `k8s/` (manifests for the EKS lessons),
   `terraform-interview-questions/` (a good source for module assessments).
 
@@ -111,6 +108,61 @@ Lessons: `TERRAFORM_AWS_CURRICULUM.md` / `TERRAFORM_AZURE_CURRICULUM.md` (same i
 - azurerm `>= 3.0` (33), `>= 2.0` (8), one exact `3.75.0`; current is **5.15.0** (`features {}` and
   `subscription_id` required since 4.0). 9 `backend "azurerm"` configs (lease locking, nothing to replace).
 - No Azure slides in the deck: the Azure course reuses the shared slides and gets new cloud slides.
+
+## Fixes for the 45 failing folders (owner 2026-11-28: "use new Terraform version")
+"Fixed" = an updated copy in `code/owner-updated/<same path>` validates on Terraform 1.17.2 (2026-11-28). "Documented" =
+not used by a lesson as is (the lesson uses another folder or new code), so only the fix is recorded here.
+
+| Folder (`aws-terraform/…` unless Azure) | Problem | Fix | Status |
+|---|---|---|---|
+| `terraform-concepts/learning-basic-commands` (3.7) | `required_version ~> 1.0.0` | `>= 1.11.0`, aws `~> 6.0` | fixed |
+| `terraform-concepts/youtube/terraform-workflow` (3.2) | `~> 1.0.0` | `>= 1.11.0`, aws `~> 6.0` | fixed |
+| `terraform-concepts/youtube/vs-code-plugins` (2.1) | `~> 1.0.0`; typo `vpc_security_group_idsht` | version; `vpc_security_group_ids` | fixed |
+| `terraform-concepts/youtube/write-module/modules/sample` (10.3) | `~> 1.0.0` | `>= 1.11.0` | fixed |
+| `terraform-concepts/terraform-remote-state-data-source/example-001/ec2` (8.7) | `~> 1.0.0` | `>= 1.11.0`, aws `~> 6.0` | fixed |
+| `terraform-concepts/terraform-lock-file/terraform-v1` (3.6) | `~> 1.0.0` | `>= 1.11.0`, aws `~> 6.0` | fixed |
+| `terraform-concepts/terraform-lock-file/terrafom-v12`, `terraform-v13`, `terraform-v14` | pins 0.12/0.13/0.14 on purpose (lock-file history) | not taught: lesson 3.6 shows the lock file on 1.17 only | documented |
+| `terraform-concepts/sessions/s5/{modules/ec2,resources/dev/ec2,resources/prod/ec2,resources/prod/s3-backend}` | `~> 1.0.0`; DynamoDB lock | `>= 1.11.0`, aws `~> 6.0`, `use_lockfile` | documented (class session notes, not a lesson) |
+| `terraform-concepts/terraform-comments/example-02` (3.3) | `random_string.numeric` with an old random provider | pin random `~> 3.7` | fixed |
+| `terraform-concepts/terraform-commands/input-file-variable` (5.1) | same | pin random `~> 3.7` | fixed |
+| `terraform-concepts/terraform-contitions/example-08` (6.5) | `region` on `aws_s3_bucket` needs provider 6 | aws `~> 6.0` (v6 per-resource region) | fixed |
+| `terraform-concepts/terraform-join-function/example-03` (6.3) | `concat("tia", var.args)` (string, not list) | `concat(["tia"], var.args)` | fixed |
+| `terraform-concepts/terraform-loops/others-examples-01/example-001`, `-004` (7.1) | outputs reference an undefined `vpc` | `[for vpc in aws_vpc.example : vpc.id]` / `.arn` | fixed |
+| `terraform-concepts/terraform-module/ec2` (10.2) | unpinned registry module now v6: `root_block_device` list, `ebs_block_device` | `version = "~> 6.0"`, `root_block_device = {…}`, `ebs_volumes = {…}`, aws `~> 6.0` | fixed |
+| `terraform-concepts/terraform-top-level-blocks/terraform-module-block/ec2` | duplicate of the above | same fix | documented (duplicate) |
+| `resources/vpc-02` (11.1) + `modules/vpc-02` | passes `tags` the module does not declare; `aws_eip.vpc = true` removed in aws 5+ | drop the input (module default `common_tags`); `domain = "vpc"`; aws `~> 6.0` | fixed |
+| `resources/vpc-03` | same pattern as vpc-02 | same fix | documented (11.1 uses vpc-02) |
+| `modules/aws-load-balancer-controller`, `aws-ebs-csi-driver`, `cluster-auto-scaler`, `external-dns` (16.5) | Helm provider 3.x: `kubernetes {}` block and `set {}` blocks removed | `kubernetes = {…}`, `set = [{…}, …]`, helm `~> 3.0`, kubernetes `~> 2.38`, aws `~> 6.0` | fixed |
+| `resources/aws-load-balancer-controller`, `aws-ebs-csi-driver`, `cluster-auto-scaler`, `external-dns` | call the four modules above | point at the fixed modules | documented (callers) |
+| Azure `modules/nginx-ingress` (16.5) | Helm 3.x provider syntax | as above, helm `~> 3.0`, azurerm `~> 5.0` | fixed |
+| Azure `modules/aks-all-in-one/terraform` | Helm 3.x syntax, azurerm renames | same fixes as the split modules | documented (16.x uses the split modules) |
+| Azure `modules/aks-controle-plane` (16.1) | azurerm 5: `automatic_channel_upgrade`, `enable_auto_scaling` renamed; `node_provisioning_profile` required; SSH key read from a committed file | `automatic_upgrade_channel`, `auto_scaling_enabled`, `node_provisioning_profile { mode = "Manual" }`, `var.ssh_public_key` (key not copied) | fixed |
+| Azure `modules/aks-linux-node-group`, `aks-linux-spot-node-group`, `aks-windows-node-group` (16.2) | `enable_auto_scaling` renamed | `auto_scaling_enabled`, azurerm `~> 5.0` | fixed |
+| Azure `modules/acr` (11.3) | references a resource group and AKS cluster not in the module | inputs `resource_group_name`, `location`, `kubelet_object_id`; Basic SKU | fixed |
+| Azure `modules/azure-mysql` | azurerm 5: `service_endpoints` on the subnet and `private_dns_zone_name` on the link changed (`private_dns_zone_id`) | use `private_dns_zone_id`; the Azure lesson 11.4 uses PostgreSQL Flexible instead | documented |
+| `base-code/vpc` | routes reference NAT gateways not defined in the folder | add the `aws_nat_gateway` resources (or drop NAT routes) | documented (16.x builds from modules) |
+| `base-code/eks-blue-green-node`, `base-code/eks-mix/iam-roles` | fragments that reference a cluster, roles and subnets in other folders | run with the cluster folder, or turn into a module with inputs | documented |
+| `terraform-concepts/youtube/manage-credentials/db` | references Secrets Manager data sources not in the folder | add the data blocks, or `manage_master_user_password = true` (preferred) | documented |
+| `resources/all`, Azure `resources/sc` | point at module folders that are not in the repo | — (cannot be completed from the repo) | documented |
+
+Totals: 45 folders → 24 fixed in lab copies (plus `modules/vpc-02`, which `resources/vpc-02` needs), 21 documented.
+
+## Terragrunt course: deck and repo (2026-11-28)
+| Slides | Section | Owner's repo | Status | Notes | Terragrunt lesson |
+|---|---|---|---|---|---|
+| 56–57 | Terragrunt compatibility and installation | — | improve | 0.x links; Terragrunt is 1.2.3 (2026-11-25) | 1.2 |
+| 574–577 | Terragrunt: what and why | `terragrunt/README.md` | ready | | 1.1 |
+| 578–579 | remote_state with generated backend.tf | `terragrunt/live/<env>/terragrunt.hcl`, `backend.tf` | improve | DynamoDB lock table → `use_lockfile`; root file → `root.hcl` | 2.1 |
+| 580–582 | units for VPC, EC2, S3 with include and inputs | `terragrunt/live/development/{vpc,ec2,bastion-host,eks-control-plane}` | improve | `include { path = find_in_parent_folders() }` → `include "root" { path = find_in_parent_folders("root.hcl") }` | 1.3, 1.4, 4.1 |
+| 583 | dependencies between units | `live/development/eks-control-plane` | improve | `dependencies { paths }` → `dependency` blocks with mock outputs | 3.1 |
+| 620–622 | Jenkins and Terragrunt | `terraform-concepts/terraform-with-jenkins-and-terragrunt` (README only) | missing (code) | Jenkinsfile written new | 6.3 |
+| — | (not in the deck) stacks, `--filter-affected`, `backend bootstrap/migrate`, hooks/errors, drift, `terragrunt mcp` | — | missing | new lessons | 2.2, 3.2, 3.3, 5.x, 7.x, 8.x |
+
+Repo: `aws-terraform/terragrunt/live/{development,staging,production}` with `common.yaml` (assetid 2560, environment,
+project del) and units vpc, ec2, bastion-host, eks-control-plane (development only; staging and production hold only
+their root file). No Azure Terragrunt code. Public variant `devopstia/s4` (`terroform/session04/terragrunt`), same
+pattern. Slides 584–609 (Terraform Cloud, Packer) stay in the masterclass (lessons 13.2, 13.4).
+New code: `code/terragrunt/` (validated with Terragrunt 1.2.3 and Terraform 1.17.2, see its README).
 
 ## Current facts used (checked 2026-11-27)
 | Item | Value | Source |

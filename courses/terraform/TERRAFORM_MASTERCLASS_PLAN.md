@@ -1,9 +1,12 @@
 # Terraform masterclasses: plan (AWS and Azure)
 
-Phase 1 planning, 2026-11-27/28. **Waiting for the owner:** titles, price, production order, training domain (lesson 11.6). Nothing is sent to the video agent until the owner says OK.
+Phase 1 planning, 2026-11-27/28. **Owner 2026-11-28:** "use new Terraform version. we will also need Terragrunt and terraform course. I am okay with the
+suggested price". **Approved by the owner (2026-11-28):** the titles, 95 videos per course, $49.99 → $69.99, Terragrunt as a separate
+third course. **Still waiting for the owner:** production order, training domain (lesson 11.6). Nothing is sent to the video agent until the owner says OK.
 
 Files: `CONTENT_INVENTORY.md` (deck and repo, slide by slide) · `TERRAFORM_AWS_CURRICULUM.md` ·
-`TERRAFORM_AZURE_CURRICULUM.md` (same ids, same detail) · `code/` (ready lab code) · requests **CR-129 … CR-281** in
+`TERRAFORM_AZURE_CURRICULUM.md` (same ids, same detail) · `TERRAGRUNT_CURRICULUM.md` (the third course, § 12) ·
+`code/` (ready lab code) · requests **CR-129 … CR-281** (masterclasses) and **CR-282 … CR-299** (Terragrunt) in
 `courses/CONTENT_REQUESTS.md`.
 
 ## 1. Vision (the owner's words)
@@ -15,14 +18,14 @@ Files: `CONTENT_INVENTORY.md` (deck and repo, slide by slide) · `TERRAFORM_AWS_
   and others only with Azure": same modules and order, one Azure counterpart for every AWS lesson, same projects and
   capstone, each course self-contained.
 
-## 2. Titles (owner decides)
+## 2. Titles (owner approved 2026-11-28)
 | | AWS | Azure |
 |---|---|---|
-| **Recommended** | **AI-Powered Terraform on AWS: From Beginner to Advanced** | **AI-Powered Terraform on Azure: From Beginner to Advanced** |
+| **Approved** | **AI-Powered Terraform on AWS: From Beginner to Advanced** | **AI-Powered Terraform on Azure: From Beginner to Advanced** |
 | Alternative | Terraform on AWS with AI: From Beginner to Advanced | Terraform on Azure with AI: From Beginner to Advanced |
 | Alternative | AI-Powered Terraform Masterclass for AWS | AI-Powered Terraform Masterclass for Azure |
 
-Why the recommended pair: it matches the catalogue's "AI-Powered DevOps Automation with n8n", reads as a series, says
+Why this pair (approved): it matches the catalogue's "AI-Powered DevOps Automation with n8n", reads as a series, says
 the level range, is under 60 characters (54 / 56), and "AI-Powered" is honest: two AI modules (11 videos) plus AI
 gates in CI and the capstone. Slugs: `terraform-aws`, `terraform-azure`. Category: new `infrastructure-as-code`
 (Infrastructure as Code, icon `layers`), level beginner → advanced.
@@ -34,7 +37,7 @@ on every pull request with a person approving; and Terraform for AI infrastructu
 Vectors, Guardrails and AgentCore (AWS) / Foundry, Azure AI Search, content filters and the Agent Service (Azure).
 
 ## 3. Structure
-- **18 modules, 95 videos per course, ~17 h 27 min** (module table at the top of each curriculum).
+- **18 modules, 95 videos per course, ~17 h 32 min** (module table at the top of each curriculum).
 - **Shared:** 37 cloud-neutral videos (5 h 20 min) are recorded once and used by both courses. Their demos use the
   local, random and terraform_data providers, so a student with only one cloud follows without an account.
 - **Cloud-specific:** 58 lessons have an AWS video and an Azure video with their own lab (116 videos).
@@ -51,6 +54,14 @@ Vectors, Guardrails and AgentCore (AWS) / Foundry, Azure AI Search, content filt
   → tested and policy-checked modules (12.x) → gated pipeline (13.1) → AI review in the pipeline (14.6) → AI platform
   as code (15.x) → **enterprise capstone** (17.x: dev and prod, remote state per environment, the owner's modules,
   terraform test, Checkov, GitHub Actions with OIDC, AI review comment, human approval, drift detection, full destroy).
+
+## 3a. Versions (owner 2026-11-28: "use new Terraform version")
+Terraform **1.17.x** (checked 1.17.2) · AWS provider **~> 6.0** (6.74.0) · azurerm **~> 5.0** (5.15.0) · Terragrunt **1.x**
+(1.2.3) · S3 native locking `use_lockfile` (no DynamoDB) / Azure blob lease · **HCP Terraform** naming · **EKS access
+entries** (no aws-auth ConfigMap). Every lesson, lab and request states them (a "Versions" line in each curriculum entry
+and request). No lesson teaches 0.12/1.0 syntax; lesson 13.5 shows old code only as the starting point of an upgrade.
+The 20 [owner original, updated] lessons are re-recorded on these versions. The owner's repo code is used from
+re-pinned, validated lab copies in `code/owner-updated/` (fix for every failing folder: `CONTENT_INVENTORY.md` › Fixes).
 
 ## 4. The AI strand (where AI appears)
 | Where | What | Lessons |
@@ -118,14 +129,15 @@ default tags (`Course`, `Lesson`, `ManagedBy`), no public buckets/accounts unles
 
 **Ready now:** 17 lesson folders in `code/` (11 AWS or shared, including the AI prompt files and the MCP set-up; 6 Azure in `code/azure/`), 20 Terraform root configurations, all `fmt` and `validate` clean on Terraform 1.17.2 with
 aws 6.74.0 / azurerm 5.15.0; both `terraform test` suites pass (3/3) and fail when a rule is broken; Checkov run on
-the policy lab. The video agent builds the rest from the curricula.
+the policy lab. Also ready: `code/owner-updated/` (24 of the owner's folders fixed for current versions, all validate) and
+`code/terragrunt/` (§ 12). The video agent builds the rest from the curricula.
 
-## 8. Price (suggestion; the owner decides)
-Catalogue today: AI masterclasses $99.99, n8n $29.99 (→ $49.99), free intro and VS Code courses.
-- **Launch: $49.99 each** (17 h, the most complete Terraform course in the catalogue, cheaper than the AI masterclass
-  it feeds). **$69.99** once complete and reviewed (~10 good reviews). Early access (after week T7), if chosen: $39.99.
-- Later bundle (when the platform supports bundles): both Terraform courses $79.99; Terraform + AI masterclass of the
-  same cloud $129.99.
+## 8. Price (owner approved 2026-11-28: "I am okay with the suggested price")
+- **Terraform masterclasses (AWS and Azure): $49.99 at launch, $69.99 once complete and reviewed** (~10 good reviews).
+  Early access after week T7, if the owner chooses it: $39.99.
+- **Terragrunt courses** (§ 12, suggestion, not yet approved): $39.99 at launch, $49.99 once complete and reviewed.
+- Later bundles, when the platform supports them: both Terraform masterclasses $79.99; Terraform + Terragrunt of the
+  same cloud $79.99; Terraform + AI masterclass of the same cloud $129.99.
 
 ## 9. Catalogue fit
 | Course | Recommends | Recommended by |
@@ -150,3 +162,36 @@ Last lesson 17.5 is the "continue your learning journey" lesson; module 2.1 poin
 > Azure: estimate each run, log it in CLOUD_BUDGET.md, destroy and verify right after recording (no owner pause; the
 > $80/$100 alarms remain). Order: <the owner's approved
 > order>. Shared videos once for both courses; AWS and Azure lessons of a module back to back.
+
+## 12. Third course: AI-Powered Terragrunt (owner 2026-11-28: "we will also need Terragrunt and terraform course")
+**Recommendation: two courses, AWS and Azure, like the masterclasses** (not one course with two tracks).
+Reason: certificates are issued only when every lesson of a course is complete (`docs/CERTIFICATES.md`), so a single
+course with an AWS and an Azure track would never certify an AWS-only or Azure-only student; two courses keep each
+self-contained (the owner's mirror rule), and the 15 shared videos are recorded once and used by both, so the extra
+cost is only the cloud lessons.
+
+| | AI-Powered Terragrunt on AWS: Terraform at Scale | AI-Powered Terragrunt on Azure: Terraform at Scale |
+|---|---|---|
+| Size | 10 modules, 32 videos, ~5 h 27 min | same; 15 videos shared |
+| Built from | deck slides 574–583 (+ 56–57, 620–622), `aws-terraform/terragrunt/live` | the same, mirrored on Azure (no Azure Terragrunt code in the repo) |
+| Origin | 2 [owner original] + 6 [owner original, updated], 21 new, 3 AI | same |
+| Requests | CR-282 … CR-299 at module level (shared, AWS and Azure per module; CR-299 assessments) | same |
+| Code | `code/terragrunt/` (live trees for dev/staging/prod, stacks, CI, drift, AI prompts; validated) | same |
+| Price (suggested) | $39.99 launch, $49.99 after reviews | same |
+
+Modules: 0 Introduction (premium intro, coordinator's request) · 1 Terragrunt 1.x essentials · 2 Remote state
+generation (`use_lockfile` / blob lease, `backend bootstrap`/`migrate`) · 3 Dependencies and orchestration (dependency
+blocks, mocks, `run --all`, `--filter-affected`, hooks, errors) · 4 Environments and the multi-account /
+multi-subscription layout (the owner's dev/staging/production tree, a role or subscription per environment, promotion
+by tag) · 5 Catalogs and stacks (`scaffold`, `catalog`, `terragrunt.stack.hcl`, moving a live tree to stacks) ·
+6 CI/CD with OIDC (affected-units plans, per-environment approvals, Jenkins) · 7 Drift and day-2 operations · 8 AI for
+Terragrunt (AI-generated units checked by `hcl validate`/`render`/plan, AI PR review with the DAG's blast radius,
+`terragrunt mcp` read-only plus the Terraform MCP registry toolset) · 9 Capstone (three environments as stacks, the
+full pipeline, drift, destroy).
+
+**Learning path:** after the Terraform masterclass of the same cloud (prerequisite: modules 8–10 and 13). Related
+courses: it recommends the AI for DevOps masterclass of the same cloud, the other cloud's Terragrunt course and n8n
+automation; it is recommended by the Terraform masterclass (last lesson 17.5, and lesson 9.4 "Terragrunt" as a preview)
+and by nothing earlier. **Production:** after the Terraform masterclass's module 13 is recorded (week T7 or later), the
+shared Terragrunt videos first, then each module's AWS and Azure videos back to back.
+

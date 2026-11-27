@@ -6,12 +6,14 @@ DEPS = {"2.3": "0.2", "3.7": "2.3, 3.5", "8.2": "8.1, 3.7", "8.4": "8.2", "11.1"
         "12.2": "10.3", "13.1": "8.2", "13.2": "13.1", "13.3": "11.7", "14.2": "14.1, CR-077–CR-082 (prompt engineering)", "14.4": "12.2, 8.5",
         "14.5": "14.1", "14.6": "13.1, 14.3", "14.7": "12.2, 12.3, 14.2", "15.2": "15.1", "15.3": "15.2", "15.4": "15.3",
         "16.1": "11.1", "17.1": "all core modules", "17.2": "10.5, 11.4, 8.2", "17.3": "13.1, 14.6, 12.2, 12.3", "17.4": "17.3"}
+VERSIONS = "Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries"
+INTRO_CR = "the premium introduction request (CR-300 onward, written by the coordinator); CR-129/CR-130 are superseded by it"
 NOLAB = {"0.1": "no lab (introduction video)", "0.2": "checklist PDF and the CLI commands for budgets and tag searches (no Terraform)", "17.1": "the capstone requirements and design PDF (no Terraform yet)", "17.5": "no lab (wrap-up; final assessment JSON)"}
 FUNDAMENTALS = ["1.1", "1.2", "1.3", "2.1", "2.2", "3.1", "3.2", "3.3", "3.4", "3.6", "5.1", "5.2", "5.3"]
 
-def parse():
+def parse(pattern="data*.txt"):
     mods = []; cur = None; last = None
-    for f in sorted(glob.glob(os.path.join(HERE, "data*.txt"))):
+    for f in sorted(glob.glob(os.path.join(HERE, pattern))):
         for raw in open(f, encoding="utf-8"):
             line = raw.rstrip("\n")
             if not line.strip(): continue
@@ -152,7 +154,9 @@ def curriculum(mods, cloud, stats):
            "**Labels:** [owner original] = a deck section taught as the owner teaches it · [owner original, updated] = the owner's lesson with outdated parts fixed (each fix listed) · [new, proposed] = a gap filled · [new, proposed: AI] = the AI strand · **[shared]** = one cloud-neutral video used by both the AWS and the Azure course (demos use the local, random and terraform_data providers, so a student of either cloud follows without an account).",
            f"**Self-contained:** a student of this course never needs the {other} course. Every lesson that touches a cloud has its own {cname} video and lab.",
            "**Budget (rule in `CONTENT_REQUESTS.md`):** $100/month for AWS and Azure together; the video agent estimates each run, logs it in its CLOUD_BUDGET.md and destroys and verifies right after recording (no owner pause, owner 2026-11-28); the $80/$100 budget alarms in both clouds stay as the safety net.",
-           "**The AI rule, in every lesson that uses AI:** AI drafts; fmt, validate, tests, policy, the plan and a person verify; never auto-apply.", ""]
+           "**The AI rule, in every lesson that uses AI:** AI drafts; fmt, validate, tests, policy, the plan and a person verify; never auto-apply.",
+           f"**Versions (owner 2026-11-28: \"use new Terraform version\"):** {VERSIONS}. Every lesson, lab and request uses them; no lesson teaches 0.12/1.0 syntax (13.5 shows old code only as the starting point of an upgrade). [owner original, updated] lessons are re-recorded on these versions; the owner's repo code is used from re-pinned, validated lab copies (`code/owner-updated/`, fixes listed in `CONTENT_INVENTORY.md`).",
+           "**Title, size and price approved by the owner (2026-11-28):** this title, 95 videos, $49.99 at launch and $69.99 once complete and reviewed. The recording order is not confirmed yet.", ""]
     tot = stats["mins_course"]
     out.append(f"**Size:** {len(mods)} modules, {stats['lessons']} videos, about {tot//60} h {tot%60:02d} min. {stats['shared']} videos are shared with the {other} course.")
     out.append("")
@@ -169,7 +173,12 @@ def curriculum(mods, cloud, stats):
             cr = l["cr"]["shared"] if l["scope"] == "shared" else l["cr"][cloud]
             tag = ORIGIN[l["origin"]] + (" **[shared]**" if l["scope"] == "shared" else "")
             out.append(f"### {l['id']} {l['title']}  {tag}")
-            out.append(f"- **Request:** {cr} · **Duration:** ~{l['mins']} min · **Depends on:** {deps(l, prev)}")
+            reqtxt = INTRO_CR if l["id"] == "0.1" else cr
+            out.append(f"- **Request:** {reqtxt} · **Duration:** ~{l['mins']} min · **Depends on:** {deps(l, prev)}")
+            vline = VERSIONS
+            if l["origin"] == "owner+improved": vline += " · **re-recorded on these versions**; the owner's code is shown from its updated lab copy"
+            elif l["origin"] == "owner" and l["repo"] != "-": vline += " · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)"
+            out.append(f"- **Versions:** {vline}")
             out.append(f"- **Objectives:** " + "; ".join(l["O"]))
             out.append(f"- **Slides:** {sl(l)} · **Owner's repo:** {repo_text(l, cloud)}")
             out.append(f"- **Demo:** {demo(l, cloud)}")
@@ -191,7 +200,8 @@ def cr_blocks(crs):
         course = {"shared": "Terraform AWS + Azure (shared video)", "aws": "AI-Powered Terraform on AWS", "azure": "AI-Powered Terraform on Azure"}[cloud]
         tag = ORIGIN[l["origin"]]
         pri = "P1" if l["id"] in FUNDAMENTALS else ("P3" if m["n"] in ("16",) else "P2")
-        rows.append(f"| {cid} | {course} | M{m['n']} · {l['id']} | {l['title']} {tag} | GEN | 2026-11-28 | {pri} | requested (planning; order waits for the owner's OK) | — | — |")
+        status = "superseded by the premium introduction request (CR-300+, coordinator)" if l["id"] == "0.1" else "requested (planning; order waits for the owner's OK)"
+        rows.append(f"| {cid} | {course} | M{m['n']} · {l['id']} | {l['title']} {tag} | GEN | 2026-11-28 | {pri} | {status} | — | — |")
         q = quiz(l, cloud if cloud != "shared" else "shared")
         b = [f"#### {cid} {l['title']}" + (" (AWS)" if cloud == "aws" else " (Azure)" if cloud == "azure" else " (shared)"),
              f"- Course / module / position: {course} · Module {m['n']} {m['title']} · lesson {l['id']}" + (f", after {prev}" if prev else ", first in the module") + f" · {tag}" + (" · one video for both courses" if cloud == "shared" else ""),
@@ -200,7 +210,8 @@ def cr_blocks(crs):
              f"- Live demonstration: {demo(l, cloud)}",
              f"- Lab ZIP / code: {code_text(l, cloud if cloud!='shared' else 'aws')}; README with requirements, cost, steps, cleanup; `.tfvars.example` only",
              f"- Cloud resources: {resources(l, cloud)} · Cost per run: {cost(l, cloud)} · Cleanup: {cleanup(l, cloud)}",
-             f"- Depends on: {deps(l, prev)} · Length guide: ~{l['mins']} min · Priority: {'P1' if l['id'] in FUNDAMENTALS else ('P3' if m['n']=='16' else 'P2')} · Owner: GEN · Status: requested"]
+             f"- Versions: {VERSIONS}" + (" · re-recorded on these versions (no 0.12/1.0 syntax)" if l["origin"] == "owner+improved" else ""),
+             f"- Depends on: {deps(l, prev)} · Length guide: ~{l['mins']} min · Priority: {'P1' if l['id'] in FUNDAMENTALS else ('P3' if m['n']=='16' else 'P2')} · Owner: GEN · Status: " + ("superseded by the premium introduction request (CR-300+, coordinator)" if l["id"] == "0.1" else "requested")]
         if l["N"]: b.append("- Notes: " + " ".join(l["N"]))
         where = {"shared": "both curricula", "aws": "`courses/terraform/TERRAFORM_AWS_CURRICULUM.md`", "azure": "`courses/terraform/TERRAFORM_AZURE_CURRICULUM.md`"}[cloud]
         b.append(f"- Quiz: {len(q)} spoken questions with answers in {where} › {l['id']} (\"Question N of {len(q)} … A: …; B: …; or C: …?\" / \"The answer is X: …\")")

@@ -96,12 +96,23 @@ Foundry full-stack chat app on Azure) and a description section (available now /
 changes need a production sync (session) to go live.
 
 ## Terraform on AWS and on Azure: planning (owner 2026-11-28)
-| | AI-Powered Terraform on AWS | AI-Powered Terraform on Azure |
+| | AI-Powered Terraform on AWS: From Beginner to Advanced | AI-Powered Terraform on Azure: From Beginner to Advanced |
 |---|---|---|
-| Status | **planning** (no course on staging or production) | **planning** (full mirror of AWS) |
+| Status | **planning**; title, size and price **approved** (owner 2026-11-28) | same (full mirror of AWS) |
 | Plan | `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` | `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` |
-| Size | 18 modules, 95 videos, ~17 h 27 min | same; 37 videos shared with AWS |
-| Requests | CR-129 … CR-281 (153 videos for both), not yet sent to GEN | same |
-| Code | 11 lesson folders ready in `courses/terraform/code/` | 6 in `code/azure/` |
-| Waiting | owner: titles, price, production order, training domain | owner: same |
+| Size | 18 modules, 95 videos, ~17 h 32 min | same; 37 videos shared with AWS |
+| Price | $49.99 at launch, $69.99 once complete and reviewed | same |
+| Versions | Terraform 1.17.x, aws ~> 6.0, Terragrunt 1.x, `use_lockfile`, HCP Terraform, EKS access entries | Terraform 1.17.x, azurerm ~> 5.0 |
+| Requests | CR-129 … CR-281 (CR-129/130 superseded by the coordinator's premium intro, CR-300+); not yet sent to GEN | same |
+| Code | 11 lesson folders in `courses/terraform/code/` + 24 updated owner folders in `code/owner-updated/` | 6 in `code/azure/` |
+| Waiting | owner: recording order, training domain (11.6) | same |
 
+## Terragrunt on AWS and on Azure: planning (owner 2026-11-28)
+| | AI-Powered Terragrunt on AWS: Terraform at Scale | AI-Powered Terragrunt on Azure: Terraform at Scale |
+|---|---|---|
+| Status | **planning** (third course; two listings recommended, owner to confirm) | same |
+| Plan | `courses/terraform/TERRAGRUNT_CURRICULUM.md` | same file, Azure entries |
+| Size | 10 modules, 32 videos, ~5 h 27 min | same; 15 shared |
+| Price | suggested $39.99 launch, $49.99 later | same |
+| Requests | CR-282 … CR-299 (module level), not sent to GEN | same |
+| Code | `courses/terraform/code/terragrunt/aws` (validated) | `code/terragrunt/azure` (validated) |

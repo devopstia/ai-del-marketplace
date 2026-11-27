@@ -1,0 +1,9 @@
+# The owner's convention (aws-terraform/terragrunt/live/production/common.yaml) plus the account and role for this environment.
+# One account for every environment is fine for the lab; separate accounts are the production layout (lesson 4.2).
+environment: "prod"
+assetid: "2560"
+project: "del"
+region: "us-east-1"
+account_id: "111111111111"
+deploy_role_arn: "arn:aws:iam::111111111111:role/terragrunt-deploy-prod"
+cidr_prefix: "10.30"
