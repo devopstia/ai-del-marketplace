@@ -196,6 +196,14 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     before structuring; never upload PowerPoint, thumbnails or secrets; idempotent re-runs; report, then update
     `courses/LESSONS_LEARNED.md` and `courses/GENERATION_FEEDBACK.md`.
 
+30. **Course Creation and Publishing Standard** (owner 2026-11-26, global): `docs/COURSE_STANDARD.md` is the authority
+    for every agent that generates, organises, uploads or publishes courses (generation agent, `del-course-publisher`,
+    `del-course-agent`). Think like an instructor; study every lesson's content before placing it; an honest, compelling
+    course page; an introduction video first (position reserved, never an empty lesson); at least two free previews;
+    modules in a learning order; new lessons inserted where they belong with existing lesson ids kept (progress,
+    enrolments, quiz results preserved); agents talk through `course.manifest.json`, `courses/GENERATION_FEEDBACK.md`
+    and `courses/LESSONS_LEARNED.md`; instructor, student and customer review before anything goes to students.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
@@ -212,4 +220,4 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 `docs/ROADMAP.md` (2026-11-24 roadmap, historical) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
 `docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md` · **`docs/HANDOFF.md`** ·
 `docs/FINAL_REVIEW_2026-11-26.md` (latest audit + release) · `docs/AWS_COSTS.md` · `docs/STORAGE.md` · `docs/PAYMENTS.md` ·
-`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md`. Local email inbox: http://127.0.0.1:8025.
+`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md`. Local email inbox: http://127.0.0.1:8025.
