@@ -30,7 +30,10 @@
       "Basic Terraform and command-line experience",
       "Python or JavaScript reading skills for the labs (no ML background needed)"
     ],
-    "priceCents": 9999
+    "priceCents": 9999,
+    "share": {
+      "template": "azure"
+    }
   },
   "sections": [
     {
