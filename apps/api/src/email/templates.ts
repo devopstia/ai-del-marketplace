@@ -155,8 +155,11 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
   'learn-next-courses': (d) => mk(`Where to go after ${s(d.course)}`, [
     { h1: 'Ready for the next step?' },
     { p: `Hi ${first(d)}, if **${s(d.course)}** got you interested, these courses go further with hands-on projects:` },
-    { list: (Array.isArray(d.courses) ? (d.courses as D[]) : []).map((c) => `**${s(c.title)}**${s(c.subtitle) ? `: ${s(c.subtitle)}` : ''} (${web()}/courses/${s(c.slug)})`) },
-    { cta: { href: `${web()}/courses/${s((Array.isArray(d.courses) ? (d.courses as D[])[0] : {})?.slug as string)}`, label: 'See the course' } },
+    // One short block per course: its title and line, then its own button (no raw URLs in the HTML; the text part shows them).
+    ...(Array.isArray(d.courses) ? (d.courses as D[]) : []).slice(0, 3).flatMap((c): Block[] => [
+      { p: `**${s(c.title)}**${s(c.subtitle) ? `: ${s(c.subtitle)}` : ''}` },
+      { cta: { href: `${web()}/courses/${s(c.slug)}`, label: 'See the course' } },
+    ]),
     { muted: 'No pressure: your free course stays yours either way.' },
     ...learningFooter(d),
   ], 'Courses that build on what you learned', LEARNING_WHY),
@@ -164,9 +167,10 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { h1: `Congratulations, ${first(d)}` },
     { p: `You completed every lesson of **${s(d.course)}**. Your certificate of completion is ready to download, print or share.` },
     { cta: { href: s(d.certUrl, `${web()}/certificates/${s(d.code)}`), label: 'View your certificate' } },
-    { rows: [['Certificate ID', s(d.code)], ['Verify at', s(d.certUrl)]] },
-    ...(s(d.linkedInUrl) ? [{ p: `Add it to your LinkedIn profile in one click: ${s(d.linkedInUrl)}` } as Block] : []),
-    ...(d.reviewed ? [] : [{ note: `How was the course? A short rating helps other learners choose: ${web()}/learn/${s(d.slug)}?tab=review` } as Block]),
+    { rows: [['Certificate ID', s(d.code)]] },
+    ...(s(d.linkedInUrl) ? [{ p: 'Show it on your LinkedIn profile in one click:' } as Block, { cta: { href: s(d.linkedInUrl), label: 'Add to LinkedIn' } } as Block] : []),
+    ...(d.reviewed ? [] : [{ p: 'How was the course? A short rating helps other learners choose.' } as Block, { cta: { href: `${web()}/learn/${s(d.slug)}?tab=review`, label: 'Rate the course' } } as Block]),
+    { muted: `Anyone can check your certificate at ${s(d.certUrl, `${web()}/certificates/${s(d.code)}`)}` },
   ], 'Your certificate is ready'),
   'access-expiring': (d) => mk(`Your access to ${s(d.course)} ends in ${Number(d.daysLeft)} day${Number(d.daysLeft) === 1 ? '' : 's'}`, [
     { h1: 'Your access ends soon' },

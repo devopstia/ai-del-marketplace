@@ -100,7 +100,7 @@ describe('e2e: checkout safety net and free-course growth', () => {
   let seq = 0;
   async function course(priceCents: number, extra: { articleMd?: string; slug?: string } = {}) {
     const n = ++seq;
-    const teacher = await prisma.user.create({ data: { email: `t${n}@growth.e2e`, name: `Teacher ${n}`, roles: ['student', 'instructor'] } });
+    const teacher = await prisma.user.create({ data: { email: `t${n}@growth-e2e.example`, name: `Teacher ${n}`, roles: ['student', 'instructor'] } });
     const c = await prisma.course.create({ data: { title: `Growth course ${n}`, slug: extra.slug ?? `growth-course-${n}`, instructorId: teacher.id, status: 'published', priceCents, publishedAt: new Date() } });
     const s = await prisma.section.create({ data: { courseId: c.id, title: 'One', position: 0 } });
     const l1 = await prisma.lecture.create({ data: { sectionId: s.id, title: 'First lesson', position: 0, type: 'article', articleMd: 'Hello' } });
@@ -115,7 +115,7 @@ describe('e2e: checkout safety net and free-course growth', () => {
 
   it('#4 confirm first: fulfils once, the later webhook changes nothing', async () => {
     if (!available) return;
-    const s = await student('confirm-first@growth.e2e');
+    const s = await student('confirm-first@growth-e2e.example');
     const { course: c } = await course(2999);
     const o = await pendingOrder(s.user.id, c);
     session = paidSession(o);
@@ -131,7 +131,7 @@ describe('e2e: checkout safety net and free-course growth', () => {
 
   it('#4 webhook first: confirm is a no-op and does not ask Stripe', async () => {
     if (!available) return;
-    const s = await student('webhook-first@growth.e2e');
+    const s = await student('webhook-first@growth-e2e.example');
     const { course: c } = await course(2999);
     const o = await pendingOrder(s.user.id, c);
     session = paidSession(o);
@@ -144,8 +144,8 @@ describe('e2e: checkout safety net and free-course growth', () => {
 
   it('#4 unpaid stays pending; mismatches are refused and logged; another user gets 404', async () => {
     if (!available) return;
-    const s = await student('mismatch@growth.e2e');
-    const other = await student('stranger@growth.e2e');
+    const s = await student('mismatch@growth-e2e.example');
+    const other = await student('stranger@growth-e2e.example');
     const { course: c } = await course(2999);
     const o = await pendingOrder(s.user.id, c);
     session = paidSession(o, { payment_status: 'unpaid' });
@@ -163,13 +163,13 @@ describe('e2e: checkout safety net and free-course growth', () => {
     if (!available) return;
     const paid = await course(4999, { slug: 'growth-paid-next' });
     const { course: free, lecture } = await course(0, { articleMd: 'Next: [the paid course](https://example.test/courses/growth-paid-next)' });
-    const s = await student('free-learner@growth.e2e');
+    const s = await student('free-learner@growth-e2e.example');
     // A free enrolment (the checkout path is covered by the app suite; the emails are what this test checks).
     await prisma.enrollment.create({ data: { userId: s.user.id, courseId: free.id, source: 'free' } });
 
     const jobs = { sendEmail: jest.fn() } as any;
     await sendLearningNudges(prisma, jobs, new Date());
-    expect(jobs.sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'free-learner@growth.e2e', template: 'learn-welcome', dedupeKey: `nudge:welcome:${s.user.id}:${free.id}` }));
+    expect(jobs.sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'free-learner@growth-e2e.example', template: 'learn-welcome', dedupeKey: `nudge:welcome:${s.user.id}:${free.id}` }));
     await sendLearningNudges(prisma, jobs, new Date());
     expect(jobs.sendEmail).toHaveBeenCalledTimes(1); // once
 
@@ -193,7 +193,7 @@ describe('e2e: checkout safety net and free-course growth', () => {
     for (const l of lectures) await s.send('put', `/api/lectures/${l.id}/progress`, { positionSec: 0, completed: true }).expect(200);
     const done = sendEmail.mock.calls.map(([j]) => j).filter((j) => j.template === 'course-completed');
     expect(done).toHaveLength(1);
-    expect(done[0]).toMatchObject({ to: 'free-learner@growth.e2e', data: expect.objectContaining({ reviewed: false, code: expect.stringMatching(/^DEL-/), linkedInUrl: expect.stringContaining('linkedin.com') }) });
+    expect(done[0]).toMatchObject({ to: 'free-learner@growth-e2e.example', data: expect.objectContaining({ reviewed: false, code: expect.stringMatching(/^DEL-/), linkedInUrl: expect.stringContaining('linkedin.com') }) });
     // Asking for the certificate again doesn't send another email.
     await s.send('post', `/api/courses/${free.slug}/certificate`).expect((res) => expect([200, 201]).toContain(res.status));
     expect(sendEmail.mock.calls.filter(([j]) => j.template === 'course-completed')).toHaveLength(1);
