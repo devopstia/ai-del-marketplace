@@ -7,7 +7,7 @@
   "course": {
     "title": "AI for DevOps on Azure: From Fundamentals to Production",
     "subtitle": "Deploy models in Microsoft Foundry, build RAG with Azure AI Search and run troubleshooting agents, with Terraform, Docker, Entra ID and a clean exit every time.",
-    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
+    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## Prompt engineering: talk to AI like a professional\nMost people use AI tools without knowing how to give them instructions. This course teaches prompting as an engineering skill: context, requirements, constraints, deliverables and acceptance criteria, then checking the answer instead of trusting it.\n- **Available now:** how you talk to a model (system prompt, tokens, context window, temperature, structured output), judging answers (hallucination, grounding, citations, golden sets), and instruction files for AI coding agents: what to put in them, how they load, and permissions that really block an agent.\n- **Coming next (in production now, added as each lesson is finished):** poor versus professional prompts run side by side; zero-, one- and few-shot, structured JSON output, task decomposition and prompt chaining; master prompts and reusable templates; the same prompt across Microsoft Foundry, ChatGPT, Claude and local Ollama models; prompting for Terraform, Kubernetes, GitHub Actions, log analysis and incident reports, with every result validated; AI coding agents that plan, branch, test and ask before risky changes; building a reusable DevOps AI agent; grounded RAG prompts with citations; prompt security; and a downloadable Prompt Engineering Toolkit of templates and checklists.\n\n## LLMOps: run AI applications in production\nBuilding an AI app is the start; operating it is the job. This course treats LLMOps as a core skill, the way DevOps treats running any service.\n- **Available now:** what LLMOps is and how it differs from DevOps and MLOps, the four LLMOps pipelines (ingestion, deployment, evaluation, observability), who builds and who runs an AI system, managed versus self-hosted models, operating and securing AI (versions, latency, token cost, drift, prompt injection, least privilege), a production-style RAG stack with Prometheus, Loki, Jaeger and Grafana, and AI in your CI/CD pipeline.\n- **Coming next (in production now, added as each lesson is finished):** prompt versioning in Git with rollback, automated LLM evaluation that blocks a bad prompt in a pull request, LLM observability with Langfuse and OpenTelemetry (traces, tokens, latency, cost), caching, fallbacks and cost control, CI/CD and Kubernetes deployment for LLM apps, and an end-to-end LLMOps project on Microsoft Foundry, Azure Monitor and Application Insights, managed identities and Key Vault.\n\n## Build websites and digital products with AI\nDevOps engineers no longer need to wait for a developer to turn an idea into a working website. In this module you use AI to plan, design, build and ship it, then host it on Azure with your own domain and HTTPS, and keep it running with CI/CD.\n- **Available now:** a full-stack AI chat app (React, Express and nginx in Docker Compose) on Microsoft Foundry, tested in the browser and built again with Terraform.\n- **Coming next (in production now, added as each lesson is finished):** from business idea to requirements with AI; \"build me a website\" versus a professional master prompt; a professional business website and your DevOps portfolio built with an AI coding agent; hosting on Azure Static Web Apps; custom domains and HTTPS with Azure DNS and managed certificates; App Service and Container Apps for dynamic sites; CI/CD for website changes; website security; contact-form automation with n8n; an AI-powered business site with a RAG support chatbot; an online store and a subscription SaaS app in Stripe test mode; a business directory capstone; and ten downloadable website templates.\n- Honest about the business side: you learn the skills and the responsibilities (costs, security, privacy, maintenance). No income promises.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
     "level": "intermediate",
     "language": "en",
     "categorySlug": "cloud-ai",
@@ -78,12 +78,6 @@
           "short": "Model words"
         },
         {
-          "folder": "02-ai-foundations/04-tm4-talking-to-a-model",
-          "title": "Prompts, tokens, context windows and temperature",
-          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill.",
-          "short": "Talking to a model"
-        },
-        {
           "folder": "02-ai-foundations/05-tm5-answer-quality",
           "title": "Hallucinations, grounding and judging AI answers",
           "summary": "Fluent is not correct. Learn hallucination, grounding, citations, groundedness, evaluation and the golden set, and how to measure whether an AI answer can be trusted.",
@@ -94,6 +88,35 @@
           "title": "Running models: GPUs, VRAM, quantisation and licences",
           "summary": "What it takes to run a model yourself: runtime versus model, GPUs and VRAM, parameters and quantisation, self-hosted versus managed, and open source versus open weights.",
           "short": "Running models"
+        }
+      ]
+    },
+    {
+      "title": "Prompt engineering for DevOps",
+      "lessons": [
+        {
+          "folder": "02-ai-foundations/04-tm4-talking-to-a-model",
+          "title": "Prompts, tokens, context windows and temperature",
+          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill.",
+          "short": "Talking to a model"
+        },
+        {
+          "folder": "21-claude-code/01-cc1-claude-md-in-depth",
+          "title": "Agent instruction files in depth: how CLAUDE.md tells a coding agent your rules",
+          "short": "CLAUDE.md",
+          "summary": "How a coding agent learns your build commands, conventions and mistakes to avoid: where instruction files live, the order they load, imports and rules, and what to put in or keep out. The same thinking applies to AGENTS.md and other agents."
+        },
+        {
+          "folder": "21-claude-code/02-cc1-claude-md-live",
+          "title": "Write instruction files for a coding agent, live",
+          "short": "Instruction files lab",
+          "summary": "On a real sample repository, generate a first instruction file, trim it, add rules and an import, then check exactly what the agent loads and when. The lab gives you the repository and the finished files."
+        },
+        {
+          "folder": "21-claude-code/03-cc2-claude-folder-live",
+          "title": "Set an AI coding agent's permissions and project settings",
+          "short": "Agent permissions",
+          "summary": "Global versus project settings for a coding agent: what goes where, which wins, what goes into Git, and a live proof that a deny rule really blocks the agent from running a command."
         }
       ]
     },
@@ -136,13 +159,6 @@
       "title": "AI applications on Azure",
       "lessons": [
         {
-          "folder": "16-cloud-labs/05-foundry-chat-live",
-          "title": "Deploy a full-stack AI chat app on Microsoft Foundry",
-          "summary": "A React front end, an Express back end and nginx in Docker Compose, talking to a model you deploy in Microsoft Foundry: the key stays on the server, tested in the browser, built again with Terraform.",
-          "short": "Foundry chat app",
-          "preview": true
-        },
-        {
           "folder": "01-before-ai/02-devops-before-ai",
           "title": "Fix a 3 a.m. outage the classic way",
           "summary": "Follow an on-call engineer through a real nginx outage without any AI: reproduce it, read the logs and config, check the docs, fix it and update the runbook. Then do it yourself in the lab.",
@@ -153,6 +169,18 @@
           "title": "The same outage, fixed with an AI helper on Amazon Bedrock",
           "summary": "Replay the 3 a.m. 502 with an AI helper on Amazon Bedrock: what gets faster, what doesn't, and why the engineer still reviews every step. Then run it yourself in the lab. Shown with Amazon Bedrock; the same pattern works with Microsoft Foundry, which you use from module 4 on.",
           "short": "AI on call"
+        }
+      ]
+    },
+    {
+      "title": "Build and ship websites with AI",
+      "lessons": [
+        {
+          "folder": "16-cloud-labs/05-foundry-chat-live",
+          "title": "Deploy a full-stack AI chat app on Microsoft Foundry",
+          "summary": "A React front end, an Express back end and nginx in Docker Compose, talking to a model you deploy in Microsoft Foundry: the key stays on the server, tested in the browser, built again with Terraform.",
+          "short": "Foundry chat app",
+          "preview": true
         }
       ]
     },
@@ -281,6 +309,19 @@
           "title": "AI summaries in n8n workflows, safely",
           "summary": "Add AI to real automations with n8n: summaries of failed deployments and incidents with secrets removed first, logs treated as untrusted text, drafts labelled, and a human who decides.",
           "short": "AI summaries"
+        },
+        {
+          "folder": "18-automation-n8n/19-n19-n8n-ai-agent-live",
+          "title": "Build an AI ops agent in n8n with tools, memory and guardrails",
+          "short": "AI ops agent",
+          "summary": "Ask \"why is payments slow?\" and let an n8n AI Agent check health, metrics, logs and the runbook with read-only tools. Risky actions become requests: a separate approval workflow restarts only after a human clicks."
+        },
+        {
+          "type": "article",
+          "key": "go-further-n8n",
+          "title": "Go further with n8n: the complete automation course",
+          "summary": "You have seen what n8n does for AI and DevOps. Here is what the dedicated n8n course adds, if you want to go deeper.",
+          "articleMd": "You have just used n8n to send deployment notifications from CI, follow pull requests in your team chat, summarise failures with AI and run an AI ops agent that asks before it acts. That is enough to start automating your own team's work.\n\nIf you want to go deeper, **AI-Powered DevOps Automation with n8n** is our complete course on the tool. It is optional: nothing in this masterclass depends on it.\n\n## What the complete n8n course adds\n- **Your own automation stack:** n8n and Mattermost with Docker Compose, locally or on an AWS VM built with Terraform.\n- **Alerts people trust:** Kubernetes crash loops, stuck rollouts and unschedulable pods, one clear message per problem, plus a daily health report.\n- **Incident management:** repeated alerts become one incident with a severity, escalation when nobody acknowledges, and a resolved message.\n- **Failing safely:** retries, fallback paths, error workflows and node-by-node debugging.\n- **Scheduled reports** your team reads every morning.\n- **n8n in production:** Postgres, queue mode with workers, the encryption key, backups, upgrades and rollback.\n- **Advanced patterns:** signed webhooks, idempotency, rate limits, pagination and loop guards.\n\nEvery hands-on lesson comes with its lab and a short quiz.\n\n[See the complete n8n course]({{course:n8n-automation}})"
         }
       ]
     },
@@ -308,14 +349,8 @@
       ]
     },
     {
-      "title": "Security, reliability and cost",
+      "title": "LLMOps: run AI applications in production",
       "lessons": [
-        {
-          "folder": "02-ai-foundations/12-tm12-operating-securing",
-          "title": "Operating and securing AI in production",
-          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
-          "short": "Operating and securing"
-        },
         {
           "folder": "08-ai-production/19-r1-llmops-day-to-day",
           "title": "LLMOps day to day: what you manage once an AI app is live",
@@ -333,6 +368,19 @@
           "title": "Managed AI or self-hosted: Bedrock, Foundry or Ollama",
           "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide.",
           "short": "Managed or self-hosted"
+        },
+        {
+          "folder": "02-ai-foundations/12-tm12-operating-securing",
+          "title": "Operating and securing AI in production",
+          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
+          "short": "Operating and securing"
+        },
+        {
+          "type": "article",
+          "key": "continue-journey",
+          "title": "Continue your learning journey",
+          "summary": "Where to go from here: the AWS masterclass for multi-cloud AI, the complete n8n course for automation, and the free VS Code masterclass.",
+          "articleMd": "You can now build, secure and run AI systems on Azure: models, RAG, agents that fix real problems, MCP servers and AI in your pipelines. Here are three optional next steps, depending on where you want to grow.\n\n## Multi-cloud AI: AI for DevOps on AWS\nMany teams run on more than one cloud. The AWS masterclass builds the same kinds of systems with Amazon Bedrock, Knowledge Bases and AWS's identity and guardrail tools. The AI foundations are the same, so you can go straight to the hands-on modules.\n\n[See the AWS masterclass]({{course:ai-for-devops-aws}})\n\n## Automation: AI-Powered DevOps Automation with n8n\nThe complete n8n course goes far beyond the module you took here: Kubernetes alerts, incident management with escalation, scheduled reports and n8n in production.\n\n[See the n8n course]({{course:n8n-automation}})\n\n## Productivity: Visual Studio Code Masterclass for DevOps and AI (free)\nWork faster in the editor you use every day: remote development on cloud VMs, Docker, Kubernetes and Terraform tooling, and AI coding assistants.\n\n[See the VS Code masterclass]({{course:vscode-masterclass}})"
         }
       ]
     }

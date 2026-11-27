@@ -79,6 +79,12 @@ previews and curriculum read well. Fix and look again before reporting.
 - Free courses are complete and genuinely useful on their own, never only an advert for paid ones. Paid courses carry
   substantial exclusive, cloud-specific labs and projects; shared foundation lessons don't count towards that.
 
+### 3d. A connected learning path (owner 2026-11-28)
+Courses recommend each other at natural end points (end of a course or of a module taken from another course), with
+a short "continue your learning journey" lesson: what the next course adds, 2–3 real projects from it, and a direct
+link (`{{course:<plan-slug>}}`). Optional and calm; never inside a demonstration, never for a course the student owns;
+every paid course stands on its own. The map of who recommends what: `courses/COURSE_CATALOG.md` › Learning path.
+
 No generic filler, no exaggeration, nothing the videos don't teach. If the owner wants a topic the content doesn't
 cover (e.g. more AI), say so, describe only what exists, and send the gap to the generation agent (§7).
 
@@ -174,6 +180,35 @@ A student must be able to reproduce the demonstration alone after the lesson.
 A cloud-agnostic video (AI concepts, RAG, MCP, agents, Claude Code, Ollama, Docker) may serve several courses. It is
 uploaded once per environment (`courses/media.<env>.json`) and attached to each course's own lesson; every course keeps its
 own curriculum, lesson text, quizzes, progress, access and certificate. Never copy a whole course into another.
+
+## 8e. Progressive hands-on lessons and LLMOps (owner 2026-11-28)
+LLMOps (deploy, evaluate, observe, secure, run and improve LLM apps) is a core strand of the AI for DevOps masterclasses,
+not an appendix; plan new AI lessons with it in mind (`courses/COURSE_CATALOG.md` › LLMOps). Students are working
+professionals who may know nothing about AI: start simple, then go deep. Every hands-on lesson follows this order:
+1 the concept with a simple example → 2 the problem → 3 the architecture → 4 the technologies → 5 prepare the environment →
+6 walk through the source → 7 implement → 8 deploy → 9 verify in the browser or the right interface → 10 common failures
+and troubleshooting → 11 how organisations use it in production → 12 clean up → 13 a short assessment. For every major
+concept say what it is, why organisations need it, when to use it, the problem it solves, how it works, how DevOps
+engineers use it in production and how students do it themselves. Labs follow §8b/§8c and the $100/month training
+cloud budget rule in `courses/CONTENT_REQUESTS.md`.
+
+## 8f. Prompt engineering is a core strand (owner 2026-11-28)
+Prompt engineering is taught as an engineering skill in both AI for DevOps masterclasses (module "Prompt engineering
+for DevOps"), with the same weight as RAG, agents, MCP and LLMOps. **The poor-vs-professional rule:** every prompting
+lesson runs a vague prompt and a professional one (role, objective, context, instructions, requirements, constraints,
+deliverables, format, examples, acceptance criteria, validation) live, compares the real results, shows failures
+honestly, and validates generated code or infrastructure with real tools. Teach what works across models; label
+model-specific features. A good prompt raises the odds; it never replaces checking the answer. Templates go into the
+Prompt Engineering Toolkit (CR-103) with guidance on adapting them.
+
+## 8g. AI website development is a core strand (owner 2026-11-28)
+Both masterclasses teach students to turn an idea into a live, secure website with AI (module "Build and ship
+websites with AI"). **Simplest first:** a beautiful static site, hosted, with a domain and HTTPS, before any backend;
+containers, sign-in and CI/CD next; AI features and payments after; Kubernetes last and only where it's worth it.
+**Show the real process:** the prompt, the AI's answer, wrong attempts, the fix, the browser; never only a finished
+site. Students review AI-generated code for security before it ships. Templates have distinct identities and only
+original or licensed assets. Payments only in Stripe test mode. **Entrepreneurship is taught honestly:** skills,
+costs and responsibilities (security, privacy, accessibility, maintenance), never promised income.
 
 ## 9. Before students see it: three reviews
 - **Instructor:** sound, logically ordered, accurate, practical; every promise ("download the lab") kept.

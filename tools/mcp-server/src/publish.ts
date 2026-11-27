@@ -308,8 +308,8 @@ export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections
  * left empty that the plan doesn't name. Only for draft courses: on a published course students' progress would be
  * lost, so the change must go through a reviewed revision with the owner's OK. Media is never deleted (shared videos).
  */
-export function pruneTargets(status: string, plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[]): { lectures: { id: string; title: string }[]; sections: { id: string; title: string }[] } {
-  if (status !== 'draft') throw new Error(`--prune refused: the course is ${status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK.`);
+export function pruneTargets(status: string, plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[], allowPublished = false): { lectures: { id: string; title: string }[]; sections: { id: string; title: string }[] } {
+  if (status !== 'draft' && !allowPublished) throw new Error(`--prune refused: the course is ${status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK.`);
   const keep = new Set<string>();
   for (const sp of plan.sections) {
     for (const l of sp.lessons) { const a = state.lessons[l.folder]; if (a) keep.add(a); const q = withQuiz.has(l.folder) ? state.quizzes?.[l.folder] : undefined; if (q) keep.add(q); }
@@ -399,7 +399,7 @@ export async function lessonFolders(plan: Pick<CoursePlan, 'sourceDir' | 'sectio
 
 type Log = (msg: string) => void;
 
-export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean } = {}) {
+export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean; /** Owner-approved removal from a published course: the deletions go into its draft revision and take effect only when an admin approves it (owner 2026-11-28). */ prunePublished?: boolean } = {}) {
   const log = opts.log ?? ((m: string) => console.log(m));
   const plan = forEnv(normalizePlan(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan), opts.env);
   const planDir = dirname(resolve(planPath));
@@ -499,7 +499,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
 
   const detail = () => del.call<CourseDetail>('GET', `/courses/${courseId}`);
   let c = await detail();
-  if (opts.prune && c.status !== 'draft') throw new Error(`--prune refused: the course is ${c.status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK. Nothing was removed.`);
+  if (opts.prune && c.status !== 'draft' && !opts.prunePublished) throw new Error(`--prune refused: the course is ${c.status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK. Nothing was removed.`);
   if (opts.prune && auth !== 'session') throw new Error('--prune needs session mode (the agent API cannot delete lessons). Nothing was removed.');
   // Public URLs of the account's other planned courses, for `{{course:<plan-slug>}}` (their state file has the id).
   let links: Record<string, string | undefined> | undefined;
@@ -634,7 +634,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   await del.call('PUT', `/courses/${courseId}/curriculum`, { sections: arranged });
   if (opts.prune) {
     c = await detail();
-    const t = pruneTargets(c.status, plan, state, withQuiz, c.sections);
+    const t = pruneTargets(c.status, plan, state, withQuiz, c.sections, !!opts.prunePublished);
     for (const l of t.lectures) { await del.call('DELETE', `/courses/${courseId}/lectures/${l.id}`); log(`- lesson removed: ${l.title}`); }
     for (const s of t.sections) { await del.call('DELETE', `/courses/${courseId}/sections/${s.id}`); log(`- section removed: ${s.title}`); }
     // Forget ids that no longer exist, so a later run can't match them.
@@ -716,7 +716,7 @@ if (process.argv[1] && ['publish.js', 'del-publish-course'].includes(basename(pr
   const auth = val('--auth') as AuthMode | undefined;
   const planPath = args.find((a, i) => !a.startsWith('--') && !['--wait', '--env', '--auth'].includes(args[i - 1] ?? ''));
   if (!planPath || (env && !['staging', 'production'].includes(env)) || (auth && !['agent', 'session'].includes(auth))) { console.error('Usage: DEL_AGENT_TOKEN=del_agent_… node dist/publish.js <plan.json> [--env staging|production] [--dry-run] [--wait minutes]\n       DEL_SESSION_JAR=<cookie jar from scripts/del-signin.sh> node dist/publish.js <plan.json> --auth session [...]'); process.exit(2); }
-  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env, auth, prune: args.includes('--prune') })
+  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env, auth, prune: args.includes('--prune') || args.includes('--prune-published'), prunePublished: args.includes('--prune-published') })
     .then((r) => { if ('dryRun' in r) console.log(JSON.stringify({ environment: r.environment, apiUrl: r.apiUrl, priceCents: r.priceCents, quizzes: r.quizzes, issues: r.issues, quizSkips: r.quizSkips?.length }, null, 2)); else console.log(JSON.stringify({ courseId: r.courseId, counts: r.counts, issues: r.issues.length }, null, 2)); })
     .catch((e) => { console.error(e instanceof ApiError ? `${e.code} (${e.status}): ${e.message}` : (e as Error).message); process.exit(1); });
 }

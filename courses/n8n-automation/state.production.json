@@ -20,7 +20,10 @@
     "13-n13-n8n-scheduled-reports-live": "291a698c-5490-43fb-913b-ac460abce6ff",
     "15-n15-n8n-advanced-design-live": "a925180e-1802-4368-b917-f11e571689ac",
     "16-n16-n8n-production-live": "b2c1c8b0-7645-4b6d-b6dd-162f6b6a5150",
-    "17-n17-n8n-ai-assisted-live": "e66062c6-01b6-4cec-af96-7c0c23fcd70e"
+    "17-n17-n8n-ai-assisted-live": "e66062c6-01b6-4cec-af96-7c0c23fcd70e",
+    "00-n0-n8n-course-intro": "806241ef-7034-4445-ab1d-788d940a4d17",
+    "09-n7-n8n-github-pr-live": "70dbd89e-b11b-41de-8117-dbff3a317a40",
+    "19-n19-n8n-ai-agent-live": "2d1b4c2b-881d-45bb-a9d9-0d68466fe700"
   },
   "quizzes": {
     "04-n4-n8n-tour-first-workflow-live": "2de1a028-b05f-44b6-9db1-97d6401d823e",
@@ -37,7 +40,9 @@
     "17-n17-n8n-ai-assisted-live": "58bda9e1-51af-4fba-b4c4-f956a2a55807",
     "01-n1-n8n-mattermost-explained": "10815ad2-c57d-40ef-a8f6-0c289a7fc4a8",
     "02-n2-deploy-n8n-mattermost-live": "ae605ee2-b02f-47dc-939e-3fcbfa3421f0",
-    "03-n3-mattermost-webhook-live": "66946da7-c5d0-4080-9767-783d73ec183c"
+    "03-n3-mattermost-webhook-live": "66946da7-c5d0-4080-9767-783d73ec183c",
+    "09-n7-n8n-github-pr-live": "18fb5700-70de-4266-9917-b2b010e65b17",
+    "19-n19-n8n-ai-agent-live": "0d93a6da-9f9d-4343-99bf-1bf3daeed3fa"
   },
   "files": {
     "02bb67db5e467a0546b68cb9d7a0445074c5a0b0b62fb8ecae27b729476474ce": {
@@ -309,7 +314,46 @@
       "assetId": "baac121f-a09d-47bf-b0a1-d0bde97b776c",
       "name": "set-up-mattermost-channels-and-incoming-webhooks.mp4",
       "at": "2026-11-27T05:58:28.541Z"
+    },
+    "85327b1463f6bd7ccf712939b22a54f3e519b6b7dd61006588a57ed5ff771afc": {
+      "kind": "video",
+      "assetId": "651c6071-f86d-4fbe-8b43-0fb552e1ba75",
+      "name": "welcome-what-youll-build-in-this-course.mp4",
+      "at": "2026-11-27T12:12:26.217Z"
+    },
+    "502fe230700201926966a0ef7d67ea94b163602fdd090e8a668817910ceb0065": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/8afb0a61-d046-49c0-ad1c-1645ecfa137e/welcome-what-youll-build-in-this-course-slides.pdf",
+      "name": "welcome-what-youll-build-in-this-course-slides.pdf",
+      "at": "2026-11-27T12:12:27.202Z"
+    },
+    "c5b6ffaa8f5b49eb04b63d2d6d4f08ecf2b26f2c19d4199eb13003ea11aadf5b": {
+      "kind": "video",
+      "assetId": "61c85114-89be-4dc0-b832-bdfbcf45eba4",
+      "name": "set-up-mattermost-channels-and-incoming-webhooks.mp4",
+      "at": "2026-11-27T12:13:13.157Z"
+    },
+    "c9a6ed7a5b260db2d861ecc910d145cfc6216d6e40dfaa71d434baffa343809e": {
+      "kind": "video",
+      "assetId": "2710ec3d-76f3-4160-9023-83fe10a64a5f",
+      "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails.mp4",
+      "at": "2026-11-27T12:18:41.641Z"
+    },
+    "3d2b5db430fee8ca7bc3bb550039a0a28bec42210f8e5e2b33f4567318374d56": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/e473ccea-0c56-454f-a93d-755098b24b24/build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-slides.pdf",
+      "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-slides.pdf",
+      "at": "2026-11-27T12:18:43.444Z"
+    },
+    "44a04f4abefa12bf95c09fbd82402ad938ba835bec630d9d65e98ff217d5abed": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/a1d51985-eb85-4e91-9fa3-b0ed27c3889a/build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
+      "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
+      "at": "2026-11-27T12:18:43.734Z"
     }
   },
-  "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c"
+  "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c",
+  "articles": {
+    "continue-journey": "db3b86ff-26da-4c8f-ac1b-cc20a34dcd48"
+  }
 }

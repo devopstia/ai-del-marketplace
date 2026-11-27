@@ -79,6 +79,13 @@
           "title": "The .claude folders: settings, permissions and deny rules",
           "short": "The .claude folder",
           "summary": "The global and project .claude folders of Claude Code: what goes where, which wins, what goes into git, and proof that a deny rule really blocks Claude."
+        },
+        {
+          "type": "article",
+          "key": "continue-journey",
+          "title": "Continue your learning journey",
+          "summary": "Where to go next: the free Introduction to AI for DevOps, then the AWS and Azure masterclasses.",
+          "articleMd": "VS Code is where you will build everything else. If AI is next on your list, here is a path.\n\n## Start free: Introduction to Artificial Intelligence for DevOps\nThe essential AI vocabulary in short lessons: models, prompts and tokens, hallucinations, embeddings, agents and MCP, with a real outage fixed by hand and with an AI helper.\n\n[See the free AI course]({{course:intro-ai-for-devops}})\n\n## Go hands-on: the AI for DevOps masterclasses\nBuild AI systems on the cloud your team uses: chatbots, RAG, AI agents that fix real problems, MCP servers and AI in CI/CD.\n\n- [AI for DevOps on AWS]({{course:ai-for-devops-aws}})\n- [AI for DevOps on Azure]({{course:ai-for-devops-azure}})"
         }
       ]
     }
