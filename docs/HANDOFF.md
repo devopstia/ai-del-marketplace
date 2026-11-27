@@ -1,4 +1,4 @@
-# Handoff: current state (updated 2026-11-26)
+# Handoff: current state (updated 2026-11-28)
 
 Read this after `AGENTS.md` (rules) and before starting work. It says what is live, what is waiting on the owner, and how to
 build, test and release without breaking anything. Details live in the linked docs; this page is the index of "where are we".
@@ -7,15 +7,15 @@ build, test and release without breaking anything. Details live in the linked do
 
 | Environment | URL | Version | Data |
 | --- | --- | --- | --- |
-| Production | https://ai-devopseasylearning.com | tag `release-2026-11-27-course-publisher`, images `6307ad1c77f2` (2026-11-27) | indexed by search engines (robots/sitemap live); empty catalogue; only 2 accounts: DEL platform instructor + Super Admin `support@devopseasylearning.com` |
-| Staging | https://staging.ai-devopseasylearning.com (noindex) | same images (`6307ad1c77f2`); **no sign-in or confirmation codes on staging** (owner 2026-11-26, SSM `staging/MFA_REQUIRED=false`; production always asks); Stripe test keys saved by the owner | **cleared 2026-11-26 for real course entry** (owner: "clean up data in stage"; snapshot `pre-staging-cleanup-20261126-2037`): no courses, orders, videos or test accounts; Stripe test mode, demo accounts `student@del.example`, `nadia@instructor.example`, `admin@del.example` (password + authenticator seed in SSM `/del-marketplace/staging/SEED_PASSWORD`, `SEED_MFA_SECRET`) |
+| Production | https://ai-devopseasylearning.com | tag `release-2026-11-28-social-sharing` (commit `f2a4a3f308dc`, ECR images tagged with the release name; 2026-11-28) | live catalogue: 5 published courses (n8n $29.99, AI for DevOps on AWS / Azure $99.99, free Intro to AI for DevOps and VS Code Masterclass); live Stripe payments authorised by the owner |
+| Staging | https://staging.ai-devopseasylearning.com (noindex) | same release (`release-2026-11-28-social-sharing`); **no sign-in or confirmation codes on staging** (owner 2026-11-26, SSM `staging/MFA_REQUIRED=false`; production always asks); Stripe test keys saved by the owner | **cleared 2026-11-26 for real course entry** (owner: "clean up data in stage"; snapshot `pre-staging-cleanup-20261126-2037`): no courses, orders, videos or test accounts; Stripe test mode, demo accounts `student@del.example`, `nadia@instructor.example`, `admin@del.example` (password + authenticator seed in SSM `/del-marketplace/staging/SEED_PASSWORD`, `SEED_MFA_SECRET`) |
 | Owner's local | http://127.0.0.1:3000 (api :4000, Mailpit :8025) | `main` | `MFA_REQUIRED=false` on purpose: **never change the owner's `.env` or reseed their stack** |
 | Test stack | http://127.0.0.1:3100 (api :4100, Mailpit :8125) | whatever you build | `COMPOSE_PROJECT_NAME=del-test COMPOSE_FILE=docker-compose.yml:docker-compose.test.yml`, MFA on; run all suites here |
 
 Both cloud environments share **one EC2 t3a.medium and one RDS instance** (separate databases `marketplace` /
 `marketplace_staging`, buckets, secrets). This is accepted: the owner will delete staging once production is stable.
-Previous stable production version (rollback target): `release-2026-11-26-official-instructors-checkout`, images `2f7adaccdb41`.
-Pre-release snapshot of the last release: `pre-release-6307ad1c77f2-20261127-0156`. Release 2026-11-27 (owner: "deploy to production"): course publisher (production profile, quizzes, folder watcher), "Taught by", agent captions, docs/COURSE_STANDARD.md; production is about to receive the n8n course at $1 for the live Stripe test (owner).
+Previous stable production version (rollback target): `release-2026-11-28-student-growth`.
+Pre-release snapshot of the last release: `pre-release-f2a4a3f308dc-20261127-1645`. Release 2026-11-28 (owner: "Any build code that is done can be release to prod"): social sharing (server-drawn 1200×630 sharing banners in three families, link-preview tags, Super Admin › Social Media & Sharing, studio sharing banner, share buttons; docs/SOCIAL_SHARING.md), publisher lab/slides replacement, import skips unfinished video files. Owner to check previews on a phone (docs/SOCIAL_SHARING.md §8).
 
 Git: `main` is current and pushed (`origin` = github.com/devopstia/ai-del-marketplace). `prompts.md` (the owner's prompt
 history) is deliberately untracked. Restore points: tags `checkpoint-*`, `release-*`, branches `backup/*`.
