@@ -9,4 +9,7 @@ export const OFFICIAL_LABEL = "Official DevOps Easy Learning Instructor";
 export const courseBy = (i: { name: string; brand?: string | null }) => i.brand || i.name;
 
 /** True when the brand differs from the person (an official instructor's course), so "Taught by" is worth showing. */
-export const taughtBy = (i: { name: string; brand?: string | null }) => (i.brand && i.brand !== i.name ? i.name : null);
+export const taughtBy = (i: { name: string; brand?: string | null; taughtBy?: string | null }) => i.taughtBy || (i.brand && i.brand !== i.name ? i.name : null);
+
+/** The person shown as the instructor: the named teacher of a DEL course, otherwise the account's name. */
+export const instructorShown = (i: { name: string; taughtBy?: string | null }) => i.taughtBy || i.name;

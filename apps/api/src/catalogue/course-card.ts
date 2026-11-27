@@ -25,7 +25,7 @@ export function toCard(c: CardRow, imageUrl: (k: string | null) => string | null
     // The generated standard cover (custom uploads are not used: owner 2026-11-25).
     thumbnailUrl: imageUrl(c.coverKey),
     // `brand`: "DevOps Easy Learning" for DEL and its official instructors (common/brand.ts); null = the instructor's own name.
-    instructor: { id: c.instructor.id, name: c.instructor.name, brand: brandOf(c.instructor.instructorProfile) },
+    instructor: { id: c.instructor.id, name: c.instructor.name, brand: brandOf(c.instructor.instructorProfile), taughtBy: c.instructor.instructorProfile?.isPlatform ? (c.taughtBy ?? null) : null },
     category: c.category,
     priceCents: price?.priceCents ?? c.priceCents,
     listPriceCents: c.priceCents,

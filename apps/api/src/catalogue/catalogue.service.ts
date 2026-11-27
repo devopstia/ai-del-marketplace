@@ -235,6 +235,8 @@ export class CatalogueService {
         bio: c.instructor.instructorProfile?.bio ?? '',
         brand: brandOf(c.instructor.instructorProfile),
         official: isOfficial(c.instructor.instructorProfile),
+        // DEL courses may name the person who teaches them ("Taught by Tia"); ownership stays with DEL.
+        taughtBy: c.instructor.instructorProfile?.isPlatform ? (c.taughtBy ?? null) : null,
       },
       curriculum: c.sections.map((s) => ({
         id: s.id,
@@ -392,7 +394,7 @@ export class CatalogueService {
         user: { select: { name: true } },
         course: {
           select: {
-            title: true, slug: true, status: true, objectives: true, instructor: { select: { name: true, instructorProfile: { select: brandSelect } } },
+            title: true, slug: true, status: true, objectives: true, taughtBy: true, instructor: { select: { name: true, instructorProfile: { select: brandSelect } } },
             sections: { select: { lectures: { select: { durationSec: true, quiz: { select: { id: true } } } } } },
           },
         },
@@ -412,7 +414,7 @@ export class CatalogueService {
         title: cert.course.title,
         slug: cert.course.slug,
         published: cert.course.status === 'published',
-        instructorName: cert.course.instructor.name,
+        instructorName: (cert.course.instructor.instructorProfile?.isPlatform && cert.course.taughtBy) || cert.course.instructor.name,
         brand: brandOf(cert.course.instructor.instructorProfile),
         totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
         lessons: lectures.length,

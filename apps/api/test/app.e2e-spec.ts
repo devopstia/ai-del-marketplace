@@ -463,6 +463,26 @@ describe('e2e: buy and learn', () => {
     expect(again.body.instructor).toMatchObject({ brand: null, official: false });
   });
 
+  it('DEL courses can name the instructor who teaches them; other instructors cannot (owner 2026-11-26)', async () => {
+    if (!available) return;
+    const del = await userAgent('t-del@e2e.example', ['student', 'instructor'], {});
+    await prisma.instructorProfile.update({ where: { userId: del.user.id }, data: { isPlatform: true } });
+    const indie = await userAgent('t-indie@e2e.example', ['student', 'instructor'], {});
+    const c = await publishedCourse(del.user.id, 't-del-course', 1500);
+    const mine = await publishedCourse(indie.user.id, 't-indie-course', 1500);
+    // Published course: the change goes to the draft revision, applied on approval; drafts change directly.
+    const draft = await prisma.course.create({ data: { title: 'DEL draft', slug: 't-del-draft', instructorId: del.user.id } });
+    await del.send('patch', `/api/instructor/courses/${draft.id}`, { taughtBy: '  Tia ' }).expect(200);
+    expect((await prisma.course.findUniqueOrThrow({ where: { id: draft.id } })).taughtBy).toBe('Tia');
+    await prisma.course.update({ where: { id: c.course.id }, data: { taughtBy: 'Tia' } });
+    const page = await request(app.getHttpServer()).get(`/api/courses/${c.course.slug}`).expect(200);
+    expect(page.body.instructor).toMatchObject({ brand: 'DevOps Easy Learning', taughtBy: 'Tia' });
+    const err = await indie.send('patch', `/api/instructor/courses/${mine.course.id}`, { taughtBy: 'Someone else' }).expect(400);
+    expect(err.body.error.code).toBe('taught_by_platform_only');
+    await del.send('patch', `/api/instructor/courses/${draft.id}`, { taughtBy: null }).expect(200);
+    expect((await prisma.course.findUniqueOrThrow({ where: { id: draft.id } })).taughtBy).toBeNull();
+  });
+
   it('payments: after-fee split, refund policy, hold + release, netting, super-admin terms', async () => {
     if (!available) return;
     const teacher = await userAgent('m-teacher@e2e.example', ['student', 'instructor'], {});

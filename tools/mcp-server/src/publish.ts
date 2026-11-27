@@ -1,0 +1,513 @@
+#!/usr/bin/env node
+/**
+ * del-publish-course: sync a course plan to the marketplace through the agent API (owner 2026-11-26, Course Upload and
+ * Publishing Agent; .claude/skills/del-course-publisher/SKILL.md).
+ *
+ *   DEL_AGENT_TOKEN=del_agent_… node dist/publish.js courses/<course>/plan.json [--env staging|production] [--dry-run] [--wait 45]
+ *
+ * Idempotent: the course, its sections and lessons are matched (state file, then title) and never duplicated; files are
+ * de-duplicated by checksum on the server; a lesson's file is attached once per title. Re-running after new videos are
+ * added to the plan uploads only what is new and re-arranges the curriculum in plan order. Never publishes.
+ */
+import { existsSync } from 'node:fs';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { basename, dirname, extname, join, resolve } from 'node:path';
+import { ApiError, DelClient } from './client.js';
+
+// ---------- plan ----------
+export type LessonRole = 'intro' | 'lesson' | 'vocabulary' | 'project' | 'conclusion';
+export interface LessonPlan { folder: string; title: string; summary?: string; preview?: boolean; role?: LessonRole }
+export interface SectionPlan { title: string; lessons: LessonPlan[] }
+export type Env = 'staging' | 'production';
+/** Per-environment settings; the chosen one overrides `apiUrl` and `course.priceCents`. */
+export interface EnvProfile { apiUrl: string; priceCents?: number }
+export interface CoursePlan {
+  /** Default environment when `--env` isn't given. */
+  environment: Env;
+  apiUrl: string;
+  environments?: Partial<Record<Env, EnvProfile>>;
+  /** The course introduction video: a folder matching `folderPattern` (or role "intro") goes first in `sections[section]`;
+   *  `promo` also makes it the course page's promo video. No empty placeholder lesson is ever created. */
+  intro?: { folderPattern?: string; section?: number; promo?: boolean };
+  provider: string;
+  /** Name of the account the agent token belongs to (checked with whoami before anything is written). */
+  instructorName: string;
+  sourceDir: string;
+  course: {
+    title: string; subtitle?: string; description?: string; level?: 'beginner' | 'intermediate' | 'advanced'; language?: string;
+    objectives?: string[]; requirements?: string[]; categorySlug?: string; priceCents?: number;
+    /** DEL courses only: the instructor name shown ("Taught by Tia"). */
+    taughtBy?: string;
+    /** "suggested" (the template the platform suggests for the category) or a template id. */
+    cover?: string;
+    /** "from-captions": import the in-video multiple-choice questions as a quiz lesson after each video. */
+    quizzes?: 'from-captions';
+  };
+  sections: SectionPlan[];
+}
+
+// ---------- upload rules (skill: del-course-publisher) ----------
+const VIDEO = new Set(['.mp4', '.m4v', '.mov', '.webm']);
+const NEVER = [/^\.env$/i, /\.pem$/i, /\.key$/i, /^id_(rsa|ed25519|ecdsa)/i, /credential/i, /secret.*\.(json|txt|ya?ml)$/i];
+const SKIP_EXT = new Set(['.pptx', '.ppt', '.png', '.jpg', '.jpeg', '.psd', '.aep', '.prproj', '.tmp', '.log', '.md']);
+
+export interface LessonFiles { video?: string; captions?: string; slides?: string; lab?: string; skipped: { file: string; why: string }[]; problems: string[] }
+
+/** What a lesson folder holds, by the upload rules: one video, captions, the PDF slides, the lab ZIP; never PowerPoint or secrets. */
+export async function discover(folder: string): Promise<LessonFiles> {
+  const out: LessonFiles = { skipped: [], problems: [] };
+  if (!existsSync(folder)) return { ...out, problems: [`folder not found: ${folder}`] };
+  const names = (await readdir(folder, { withFileTypes: true })).filter((e) => e.isFile()).map((e) => e.name).sort();
+  const videos = names.filter((n) => VIDEO.has(extname(n).toLowerCase()));
+  if (videos.length === 1) out.video = join(folder, videos[0]!);
+  else if (!videos.length) out.problems.push('no video');
+  else out.problems.push(`several videos: ${videos.join(', ')}`);
+  const pdfs = names.filter((n) => extname(n).toLowerCase() === '.pdf');
+  out.slides = pdfs.find((n) => /presentation|slides/i.test(n)) ? join(folder, pdfs.find((n) => /presentation|slides/i.test(n))!) : pdfs[0] ? join(folder, pdfs[0]) : undefined;
+  if (!out.slides && names.some((n) => /\.pptx?$/i.test(n))) out.problems.push('PowerPoint without a PDF: convert it to PDF and check it first');
+  const zips = names.filter((n) => extname(n).toLowerCase() === '.zip');
+  out.lab = zips.find((n) => /lab|exercise/i.test(n)) ? join(folder, zips.find((n) => /lab|exercise/i.test(n))!) : zips[0] ? join(folder, zips[0]) : undefined;
+  for (const n of names) {
+    const p = join(folder, n);
+    if ([out.video, out.slides, out.lab].includes(p)) continue;
+    if (NEVER.some((r) => r.test(n))) out.skipped.push({ file: n, why: 'looks like a secret: never uploaded' });
+    else if (SKIP_EXT.has(extname(n).toLowerCase())) out.skipped.push({ file: n, why: /\.pptx?$/i.test(n) ? 'PowerPoint: the PDF is uploaded instead' : 'production file, not for learners' });
+    else out.skipped.push({ file: n, why: 'not part of the upload rules' });
+  }
+  const capDir = join(folder, 'captions');
+  if (existsSync(capDir)) {
+    const caps = (await readdir(capDir)).filter((n) => /\.(srt|vtt)$/i.test(n)).sort((a, b) => Number(/\.en\./.test(b)) - Number(/\.en\./.test(a)));
+    if (caps[0]) out.captions = join(capDir, caps[0]);
+  }
+  return out;
+}
+
+export const slug = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 80);
+export const SLIDES_TITLE = 'Slides (PDF)';
+export const LAB_TITLE = 'Hands-on lab (ZIP)';
+export const quizTitle = (lessonTitle: string) => `Check your understanding: ${lessonTitle}`.slice(0, 200);
+
+// ---------- quiz import (in-video questions read from the captions; never invented) ----------
+export interface QuizQuestion { q: string; options: string[]; correct: number; why: string }
+export interface ParsedQuiz { questions: QuizQuestion[]; skipped: string[] }
+
+/** Caption text as one string: cue numbers and timings removed, lines joined (questions span cues). */
+export function captionText(srtOrVtt: string): string {
+  return srtOrVtt.replace(/^\uFEFF/, '').split(/\r?\n/).map((l) => l.trim())
+    .filter((l) => l && l !== 'WEBVTT' && !/^\d+$/.test(l) && !l.includes('-->'))
+    .join(' ').replace(/\s+/g, ' ');
+}
+
+const END = /\s(?:Let's recap|Let us recap|To remember|Recap:|Thanks for watching)\b/;
+
+/**
+ * The in-video quiz: "Question N of M. <question>? A: x; B: y; or C: z? … The answer is B: y. <why>". Questions read
+ * aloud without their options ("Pause and think") are skipped and reported: the options are only on the slide images,
+ * and options are never made up. A repeated question number keeps its first version.
+ */
+export function parseQuiz(text: string): ParsedQuiz {
+  const out: ParsedQuiz = { questions: [], skipped: [] };
+  const parts = text.split(/(?=Question \d+ of \d+\.\s)/).filter((p) => p.startsWith('Question '));
+  const seen = new Set<number>();
+  for (let raw of parts) {
+    const end = raw.search(END);
+    if (end > 0) raw = raw.slice(0, end);
+    const m = /^Question (\d+) of (\d+)\.\s+(.*)$/s.exec(raw.trim());
+    if (!m) continue;
+    const n = Number(m[1]);
+    if (seen.has(n)) continue;
+    seen.add(n);
+    const body = m[3]!;
+    const ans = /The answer is ([A-E])\s*:\s*/.exec(body);
+    // Options: the last "A: …; B: …; or C: …?" before the pause (a question can say them in words first, then in symbols).
+    const stop = body.search(/\s(?:Pause|The answer)/);
+    const region = stop > 0 ? body.slice(0, stop) : body;
+    const firstA = region.search(/\sA:\s/);
+    const lastA = region.lastIndexOf(' A: ');
+    const opt = firstA < 0 ? null : /^\s*A:\s+(.+?);\s+B:\s+(.+?);\s+(?:or\s+)?C:\s+(.+?)(?:;\s+(?:or\s+)?D:\s+(.+?))?(?:;\s+(?:or\s+)?E:\s+(.+?))?\?\s*$/s.exec(region.slice(lastA));
+    if (opt) opt.splice(1, 0, region.slice(0, firstA));
+    if (!ans || !opt) { out.skipped.push(`question ${n}: ${ans ? 'its options are not read aloud (only on the slide)' : 'no answer found'}`); continue; }
+    const options = opt.slice(2, 7).filter((x): x is string => !!x).map((x) => x.trim().replace(/\?$/, ''));
+    const correct = ans[1]!.charCodeAt(0) - 65;
+    if (correct >= options.length) { out.skipped.push(`question ${n}: answer ${ans[1]} is not one of the options`); continue; }
+    // The answer repeats the option, then the explanation follows.
+    let rest = body.slice(ans.index + ans[0].length).trim();
+    const said = options[correct]!;
+    if (rest.startsWith(said)) rest = rest.slice(said.length);
+    else { const dot = rest.search(/[.?!]\s/); rest = dot >= 0 ? rest.slice(dot + 1) : ''; }
+    const why = rest.replace(/^[.?!]\s*/, '').trim();
+    const q = opt[1]!.trim();
+    if (q.length < 3 || !why) { out.skipped.push(`question ${n}: ${why ? 'question text missing' : 'no explanation after the answer'}`); continue; }
+    out.questions.push({ q: q.slice(0, 500), options: options.map((o) => o.slice(0, 300)), correct, why: why.slice(0, 1000) });
+  }
+  return out;
+}
+
+export async function quizFromCaptions(path: string): Promise<ParsedQuiz> {
+  return parseQuiz(captionText(await readFile(path, 'utf8')));
+}
+
+/** Plan with the chosen environment applied (`environments[env]` overrides apiUrl and the price). */
+export function forEnv(plan: CoursePlan, env?: Env): CoursePlan {
+  const e = env ?? plan.environment;
+  const prof = plan.environments?.[e];
+  if (env && env !== plan.environment && !prof) throw new Error(`The plan has no "${e}" profile (environments.${e}).`);
+  return { ...plan, environment: e, apiUrl: prof?.apiUrl ?? plan.apiUrl, course: { ...plan.course, ...(prof?.priceCents !== undefined ? { priceCents: prof.priceCents } : {}) } };
+}
+
+/** Production only when courses/publisher.config.json says productionAllowed: true (the owner's decision). */
+export async function assertEnvAllowed(env: Env, configPath: string) {
+  if (env !== 'production') return;
+  const cfg = existsSync(configPath) ? JSON.parse(await readFile(configPath, 'utf8')) : {};
+  if (cfg.productionAllowed !== true) throw new Error(`Production is not allowed: ${configPath} has productionAllowed=${JSON.stringify(cfg.productionAllowed)}. Ask the owner.`);
+}
+
+// ---------- plan checks (the API's limits, the intro rule, previews) ----------
+export const DEFAULT_INTRO = '^00-';
+export const isIntro = (plan: Pick<CoursePlan, 'intro'>, l: Pick<LessonPlan, 'folder' | 'role'>) => l.role === 'intro' || new RegExp(plan.intro?.folderPattern ?? DEFAULT_INTRO).test(l.folder);
+
+export function validatePlan(plan: CoursePlan): { errors: string[]; warnings: string[] } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const c = plan.course;
+  const len = (v: string | undefined, max: number, what: string) => { if (v && v.length > max) errors.push(`${what} is ${v.length} characters (max ${max})`); };
+  len(c.title, 120, 'course title'); len(c.subtitle, 200, 'subtitle'); len(c.description, 20000, 'description'); len(c.taughtBy, 80, 'taughtBy');
+  if ((c.objectives?.length ?? 0) > 20) errors.push('more than 20 objectives');
+  if ((c.requirements?.length ?? 0) > 20) errors.push('more than 20 requirements');
+  c.objectives?.forEach((o, i) => len(o, 200, `objective ${i + 1}`));
+  c.requirements?.forEach((o, i) => len(o, 200, `requirement ${i + 1}`));
+  const folders = new Set<string>();
+  const intros: string[] = [];
+  plan.sections.forEach((s, si) => {
+    len(s.title, 200, `section ${si + 1} title`);
+    s.lessons.forEach((l, li) => {
+      if (folders.has(l.folder)) errors.push(`${l.folder} is in the plan twice`);
+      folders.add(l.folder);
+      len(l.title, 200, `${l.folder} title`); len(l.summary, 300, `${l.folder} summary`);
+      if (isIntro(plan, l)) {
+        intros.push(l.folder);
+        if (si !== (plan.intro?.section ?? 0) || li !== 0) errors.push(`${l.folder} is the course introduction: put it first in section ${(plan.intro?.section ?? 0) + 1}`);
+        if (!l.preview) warnings.push(`${l.folder}: the introduction should be a free preview`);
+      }
+    });
+  });
+  if (intros.length > 1) errors.push(`more than one introduction: ${intros.join(', ')}`);
+  const previews = plan.sections.flatMap((s) => s.lessons).filter((l) => l.preview).length;
+  const want = intros.length ? 3 : 2;
+  if (previews !== 2 && previews !== want) warnings.push(`${previews} free previews (the standard: 2, plus the introduction when it exists)`);
+  return { errors, warnings };
+}
+
+// ---------- manifest (hints from the generation agent; the plan stays the source of truth) ----------
+export interface LessonHint { folder: string; title?: string; description?: string; objectives?: string[]; prerequisites?: string[]; role?: LessonRole; position?: { section?: string | number; after?: string; order?: number }; resources?: string[]; quiz?: QuizQuestion[] }
+export interface CourseManifest { course?: { title?: string; subtitle?: string; description?: string; sections?: { title: string; lessons: string[] }[] }; lessons: LessonHint[] }
+
+/** course.manifest.json in the course folder plus lesson.json in each lesson folder (lesson.json wins). Never throws: a
+ *  broken manifest is reported, not trusted. */
+export async function readManifest(sourceDir: string): Promise<{ manifest: CourseManifest; problems: string[] }> {
+  const problems: string[] = [];
+  const manifest: CourseManifest = { lessons: [] };
+  const read = async (p: string) => { try { return JSON.parse(await readFile(p, 'utf8')); } catch (e) { problems.push(`${basename(dirname(p))}/${basename(p)}: ${(e as Error).message}`); return null; } };
+  const top = join(sourceDir, 'course.manifest.json');
+  if (existsSync(top)) {
+    const m = await read(top);
+    if (m) { manifest.course = m.course; for (const l of Array.isArray(m.lessons) ? m.lessons : []) if (l?.folder) manifest.lessons.push(l); }
+  }
+  if (existsSync(sourceDir)) for (const e of await readdir(sourceDir, { withFileTypes: true })) {
+    if (!e.isDirectory()) continue;
+    const p = join(sourceDir, e.name, 'lesson.json');
+    if (!existsSync(p)) continue;
+    const l = await read(p);
+    if (!l) continue;
+    const i = manifest.lessons.findIndex((x) => x.folder === e.name);
+    const merged = { ...(i >= 0 ? manifest.lessons[i] : {}), ...l, folder: e.name };
+    if (i >= 0) manifest.lessons[i] = merged; else manifest.lessons.push(merged);
+  }
+  return { manifest, problems };
+}
+
+/** Where the manifest and the plan disagree (for the agent to check against the captions; never applied blindly). */
+export function manifestNotes(plan: CoursePlan, m: CourseManifest): string[] {
+  const notes: string[] = [];
+  const planned = new Map(plan.sections.flatMap((s) => s.lessons.map((l) => [l.folder, l] as const)));
+  for (const h of m.lessons) {
+    const l = planned.get(h.folder);
+    if (!l) { notes.push(`manifest: ${h.folder} is not in the plan${h.role ? ` (role ${h.role})` : ''}`); continue; }
+    if (h.title && h.title !== l.title) notes.push(`manifest: ${h.folder} suggests the title "${h.title}" (plan: "${l.title}")`);
+    if (h.role === 'intro' && !isIntro(plan, l)) notes.push(`manifest: ${h.folder} is marked as the introduction; the plan doesn't treat it as one`);
+  }
+  return notes;
+}
+
+// ---------- curriculum (existing ids always reused: progress, completions and quiz results stay) ----------
+export interface SiteSection { id: string; title: string; lectures: { id: string; title: string }[] }
+export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes'>, withQuiz: Set<string>, site: SiteSection[]) {
+  const issues: string[] = [];
+  const used = new Set<string>();
+  const arranged = plan.sections.map((sp) => {
+    const ids = sp.lessons.flatMap((l) => [state.lessons[l.folder], withQuiz.has(l.folder) ? state.quizzes?.[l.folder] : undefined]).filter((x): x is string => !!x);
+    ids.forEach((i) => used.add(i));
+    return { id: state.sections[sp.title]!, lectureIds: ids };
+  });
+  for (const s of site) {
+    const extra = s.lectures.filter((l) => !used.has(l.id));
+    extra.forEach((l) => issues.push(`lesson on the site but not in the plan (kept): ${l.title}`));
+    const target = arranged.find((a) => a.id === s.id);
+    if (target) target.lectureIds.push(...extra.map((l) => l.id));
+    else { arranged.push({ id: s.id, lectureIds: extra.map((l) => l.id) }); issues.push(`section on the site but not in the plan (kept at the end): ${s.title}`); }
+  }
+  return { arranged, issues };
+}
+
+// ---------- API shapes (subset) ----------
+interface Resource { id: string; title: string }
+interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
+interface Section { id: string; title: string; lectures: Lecture[] }
+interface CourseDetail { id: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string> }
+
+type Log = (msg: string) => void;
+
+export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string } = {}) {
+  const log = opts.log ?? ((m: string) => console.log(m));
+  const plan = forEnv(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan, opts.env);
+  const planDir = dirname(resolve(planPath));
+  if (!opts.dryRun) await assertEnvAllowed(plan.environment, opts.configPath ?? join(planDir, '..', 'publisher.config.json'));
+  const statePath = join(planDir, `state.${plan.environment}.json`);
+  const state: State = existsSync(statePath) ? JSON.parse(await readFile(statePath, 'utf8')) : { sections: {}, lessons: {} };
+  state.quizzes ??= {};
+  const saveState = () => writeFile(statePath, JSON.stringify(state, null, 2) + '\n');
+  const report: string[] = [];
+  const issues: string[] = [];
+  const counts = { lessons: 0, videos: 0, videoSec: 0, slides: 0, labs: 0, captions: 0, quizzes: 0, quizQuestions: 0, uploaded: 0, reused: 0, failed: 0 };
+  const quizSkips: string[] = [];
+
+  // 1. Inventory (no network).
+  const inventory = new Map<string, LessonFiles>();
+  for (const s of plan.sections) for (const l of s.lessons) {
+    const f = await discover(join(plan.sourceDir, l.folder));
+    inventory.set(l.folder, f);
+    f.problems.forEach((p) => issues.push(`${l.folder}: ${p}`));
+  }
+  const checks = validatePlan(plan);
+  checks.errors.forEach((e) => issues.push(`plan: ${e}`));
+  const warnings = [...checks.warnings.map((w) => `plan: ${w}`)];
+  const { manifest, problems: mprob } = await readManifest(plan.sourceDir);
+  warnings.push(...mprob.map((p) => `manifest unreadable: ${p}`), ...manifestNotes(plan, manifest));
+  const planned = new Set(plan.sections.flatMap((s) => s.lessons.map((l) => l.folder)));
+  const unplanned = (await readdir(plan.sourceDir, { withFileTypes: true })).filter((e) => e.isDirectory() && !planned.has(e.name)).map((e) => e.name);
+  unplanned.forEach((d) => issues.push(`folder not in the plan (not uploaded): ${d}`));
+  log(`Inventory: ${planned.size} lessons in ${plan.sections.length} sections; ${issues.length} issue(s).`);
+  for (const [k, f] of inventory) log(`  ${k}: video ${f.video ? 'yes' : 'NO'}, captions ${f.captions ? 'yes' : 'no'}, slides ${f.slides ? 'yes' : 'no'}, lab ${f.lab ? 'yes' : 'no'}${f.skipped.length ? `; skipped ${f.skipped.map((x) => x.file.replace(k, '…')).join(', ')}` : ''}`);
+  const quizzes = new Map<string, ParsedQuiz>();
+  if (plan.course.quizzes === 'from-captions') {
+    for (const [k, f] of inventory) {
+      if (!f.captions) continue;
+      let qz = await quizFromCaptions(f.captions);
+      // Options only on the slides: the manifest's quiz is used when every answer is the one the video says.
+      const hinted = manifest.lessons.find((h) => h.folder === k)?.quiz;
+      if (hinted?.length && hinted.length > qz.questions.length) {
+        const spoken = captionText(await readFile(f.captions, 'utf8')).toLowerCase();
+        const ok = hinted.every((q) => q.options?.length >= 3 && q.options.length <= 5 && q.options[q.correct] && spoken.includes(`the answer is ${String.fromCharCode(65 + q.correct)}: ${q.options[q.correct]!}`.toLowerCase()));
+        if (ok) qz = { questions: hinted.map((q) => ({ q: q.q, options: q.options, correct: q.correct, why: q.why })), skipped: [] };
+        else qz.skipped.push('the manifest quiz does not match the answers said in the video: not used');
+      }
+      quizzes.set(k, qz);
+      qz.skipped.forEach((x) => quizSkips.push(`${k}: ${x}`));
+      log(`  ${k}: quiz ${qz.questions.length} question(s) from the captions${qz.skipped.length ? `, ${qz.skipped.length} skipped` : ''}`);
+    }
+  }
+  warnings.forEach((w) => log(`  note: ${w}`));
+  if (opts.dryRun) return { dryRun: true, environment: plan.environment, apiUrl: plan.apiUrl, priceCents: plan.course.priceCents, issues, warnings, quizSkips, inventory: Object.fromEntries(inventory), quizzes: Object.fromEntries([...quizzes].map(([k, v]) => [k, v.questions.length])) };
+  if (checks.errors.length || [...inventory.values()].some((f) => f.problems.length)) throw new Error(`Fix these before uploading:\n${issues.join('\n')}`);
+
+  const token = opts.token ?? process.env.DEL_AGENT_TOKEN ?? '';
+  const del = new DelClient(plan.apiUrl, token, [plan.sourceDir], opts.fetchImpl);
+
+  // 2. Right account?
+  const me = await del.call<{ instructor: { id: string; name: string } }>('GET', '/whoami');
+  if (me.instructor.name !== plan.instructorName) throw new Error(`The token works for "${me.instructor.name}", the plan says "${plan.instructorName}". Nothing was changed.`);
+  log(`Working for ${me.instructor.name} on ${plan.apiUrl}`);
+
+  // 3. Course: state → title → create. Then the details.
+  const cats = (await del.call<{ items: { id: string; slug: string }[] }>('GET', '/categories')).items;
+  const categoryId = plan.course.categorySlug ? cats.find((c) => c.slug === plan.course.categorySlug)?.id : undefined;
+  if (plan.course.categorySlug && !categoryId) throw new Error(`Unknown category ${plan.course.categorySlug}`);
+  const mine = await del.call<{ id: string; title: string }[] | { items: { id: string; title: string }[] }>('GET', '/courses');
+  const list = Array.isArray(mine) ? mine : mine.items;
+  let courseId = state.courseId && list.some((c) => c.id === state.courseId) ? state.courseId : list.find((c) => c.title === plan.course.title)?.id;
+  if (!courseId) {
+    courseId = (await del.call<{ id: string }>('POST', '/courses', { title: plan.course.title })).id;
+    log(`Created draft course ${courseId}`);
+  } else log(`Using existing course ${courseId}`);
+  state.courseId = courseId;
+  await saveState();
+  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, ...fields } = plan.course;
+  issues.push(...warnings);
+  await del.call('PATCH', `/courses/${courseId}`, { ...fields, ...(categoryId ? { categoryId } : {}) });
+
+  const detail = () => del.call<CourseDetail>('GET', `/courses/${courseId}`);
+  let c = await detail();
+
+  // 4. Sections and lessons.
+  for (const sp of plan.sections) {
+    let sec = c.sections.find((s) => s.id === state.sections[sp.title]) ?? c.sections.find((s) => s.title === sp.title);
+    if (!sec) {
+      const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections`, { title: sp.title });
+      c = await detail();
+      sec = c.sections.find((s) => s.id === made.id)!;
+      log(`+ section ${sp.title}`);
+    }
+    state.sections[sp.title] = sec.id;
+    for (const lp of sp.lessons) {
+      const files = inventory.get(lp.folder)!;
+      const all = c.sections.flatMap((s) => s.lectures);
+      let lec = all.find((l) => l.id === state.lessons[lp.folder]) ?? all.find((l) => l.title === lp.title);
+      if (!lec) {
+        const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections/${sec.id}/lectures`, { title: lp.title, type: 'video', summary: lp.summary ?? '', isPreview: !!lp.preview });
+        c = await detail();
+        lec = c.sections.flatMap((s) => s.lectures).find((l) => l.id === made.id)!;
+        log(`+ lesson ${lp.title}`);
+      }
+      state.lessons[lp.folder] = lec.id;
+      await saveState();
+      counts.lessons++;
+      const patch: Record<string, unknown> = {};
+      if (lec.title !== lp.title) patch.title = lp.title;
+      if ((lec.summary ?? '') !== (lp.summary ?? '')) patch.summary = lp.summary ?? '';
+      if (lec.isPreview !== !!lp.preview) patch.isPreview = !!lp.preview;
+
+      // Video (checksum de-duplication makes a re-run cheap).
+      try {
+        const v = await del.upload(files.video!, { courseId, name: `${slug(lp.title)}${extname(files.video!)}` });
+        if (v.duplicate) counts.reused++; else counts.uploaded++;
+        if (lec.videoAssetId !== v.assetId) patch.videoAssetId = v.assetId;
+        counts.videos++;
+        if (files.captions && !(lec.video?.id === v.assetId && lec.video?.hasCaptions)) {
+          try { await del.uploadCaptions(v.assetId!, files.captions); counts.captions++; } catch (e) { issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
+        } else if (files.captions) counts.captions++;
+      } catch (e) {
+        counts.failed++;
+        issues.push(`${lp.folder}: video upload failed: ${(e as Error).message}`);
+      }
+      if (Object.keys(patch).length) await del.call('PATCH', `/courses/${courseId}/lectures/${lec.id}`, patch);
+
+      // Study materials, attached once per title, with names learners understand.
+      for (const [path, title, suffix, kind] of [[files.slides, SLIDES_TITLE, 'slides', 'slides'], [files.lab, LAB_TITLE, 'lab', 'labs']] as const) {
+        if (!path) continue;
+        if (lec.resources.some((r) => r.title === title)) { counts[kind]++; continue; }
+        try {
+          const r = await del.upload(path, { courseId, name: `${slug(lp.title)}-${suffix}${extname(path)}` });
+          if (r.duplicate) counts.reused++; else counts.uploaded++;
+          await del.call('POST', `/courses/${courseId}/lectures/${lec.id}/resources`, { title, storageKey: r.storageKey });
+          counts[kind]++;
+        } catch (e) {
+          counts.failed++;
+          issues.push(`${lp.folder}: ${title} failed: ${(e as Error).message}`);
+        }
+      }
+      // Quiz lesson right after the video (questions only from the captions).
+      const qz = quizzes.get(lp.folder);
+      if (qz?.questions.length) {
+        const title = quizTitle(lp.title);
+        const everything = c.sections.flatMap((s) => s.lectures);
+        let ql = everything.find((l) => l.id === state.quizzes![lp.folder]) ?? everything.find((l) => l.title === title && (l.type ?? 'quiz') === 'quiz');
+        try {
+          if (!ql) {
+            const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections/${sec.id}/lectures`, { title, type: 'quiz', summary: `${qz.questions.length} questions from the video, with the answers explained.`.slice(0, 300) });
+            c = await detail();
+            ql = c.sections.flatMap((s) => s.lectures).find((l) => l.id === made.id)!;
+            log(`+ quiz ${title}`);
+          } else if (ql.title !== title) await del.call('PATCH', `/courses/${courseId}/lectures/${ql.id}`, { title });
+          state.quizzes![lp.folder] = ql.id;
+          await saveState();
+          const same = JSON.stringify((ql.quiz?.questions ?? []).map((q) => ({ q: q.q, options: q.options, correct: q.correct, why: q.why }))) === JSON.stringify(qz.questions);
+          if (!same) await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: qz.questions });
+          counts.quizzes++;
+          counts.quizQuestions += qz.questions.length;
+        } catch (e) {
+          counts.failed++;
+          issues.push(`${lp.folder}: quiz failed: ${(e as Error).message}`);
+        }
+      }
+      log(`  ✓ ${lp.title}`);
+    }
+  }
+  await saveState();
+
+  // 5. Curriculum in plan order (new lessons inserted where the plan puts them; ids never recreated). Lessons and
+  // sections that are not in the plan stay, at the end, and are reported.
+  c = await detail();
+  const withQuiz = new Set([...quizzes].filter(([, q]) => q.questions.length).map(([k]) => k));
+  const { arranged, issues: arrangeIssues } = arrangeCurriculum(plan, state, withQuiz, c.sections);
+  issues.push(...arrangeIssues);
+  await del.call('PUT', `/courses/${courseId}/curriculum`, { sections: arranged });
+
+  // Intro video as the course page's promo video (only when the plan asks for it and the video exists).
+  const introLesson = plan.intro?.promo ? plan.sections.flatMap((x) => x.lessons).find((l) => isIntro(plan, l)) : undefined;
+  if (introLesson) {
+    const vid = c.sections.flatMap((x) => x.lectures).find((l) => l.id === state.lessons[introLesson.folder])?.videoAssetId;
+    if (vid && c.promoVideo?.id !== vid) { await del.call('PATCH', `/courses/${courseId}`, { promoVideoAssetId: vid }); log('Promo video: the introduction'); }
+  }
+
+  // 6. Cover from the platform templates (never a video frame).
+  if (plan.course.cover && (!c.coverTemplateId || (plan.course.cover !== 'suggested' && plan.course.cover !== c.coverTemplateId))) {
+    const t = await del.call<{ templates: { id: string; name?: string; suggested?: boolean }[] }>('GET', `/courses/${courseId}/covers`);
+    const items = t.templates ?? [];
+    const pick = plan.course.cover === 'suggested' ? (items.find((x) => x.suggested) ?? items[0]) : items.find((x) => x.id === plan.course.cover);
+    if (pick) { await del.call('PUT', `/courses/${courseId}/cover`, { templateId: pick.id }); log(`Cover template ${pick.name ?? pick.id}`); }
+    else issues.push('no cover template found');
+  }
+
+  // 7. Wait for video processing, then validate.
+  const deadline = Date.now() + (opts.waitMinutes ?? 45) * 60_000;
+  for (;;) {
+    c = await detail();
+    const vids = c.sections.flatMap((s) => s.lectures).map((l) => l.video).filter((v): v is NonNullable<Lecture['video']> => !!v);
+    const pending = vids.filter((v) => v.status !== 'ready' && v.status !== 'failed');
+    if (!pending.length || Date.now() > deadline) {
+      counts.videoSec = vids.filter((v) => v.status === 'ready').reduce((n, v) => n + (v.durationSec || 0), 0);
+      vids.filter((v) => v.status === 'failed').forEach((v) => issues.push(`video ${v.id} failed processing`));
+      if (pending.length) issues.push(`${pending.length} video(s) still processing after the wait`);
+      break;
+    }
+    log(`  waiting for ${pending.length} video(s) to finish processing…`);
+    await new Promise((ok) => setTimeout(ok, 30_000));
+  }
+  const validation = await del.call<{ ok?: boolean; errors?: unknown[]; warnings?: unknown[] }>('GET', `/courses/${courseId}/validation`);
+  const preview = await del.call<{ studioUrl?: string }>('GET', `/courses/${courseId}/preview`);
+
+  const hms = (s: number) => `${Math.floor(s / 3600)} h ${Math.round((s % 3600) / 60)} min`;
+  report.push(
+    `# Course upload report: ${plan.course.title}`, '',
+    `| | |`, `|---|---|`,
+    `| Environment | ${plan.environment} (${plan.apiUrl}) |`, `| Source | \`${plan.sourceDir}\` |`, `| Provider / account | ${plan.provider} / ${me.instructor.name} |`,
+    `| Course id | ${courseId} |`, `| Studio | ${preview.studioUrl ?? ''} |`, `| Status | ${c.status} |`,
+    `| Sections / lessons | ${c.sections.length} / ${c.sections.reduce((n, s) => n + s.lectures.length, 0)} |`,
+    `| Videos | ${counts.videos} (${hms(counts.videoSec)} processed) |`, `| Captions | ${counts.captions} |`,
+    `| Slides (PDF) / labs (ZIP) | ${counts.slides} / ${counts.labs} |`, `| Quiz lessons / questions | ${counts.quizzes} / ${counts.quizQuestions} |`, `| Price | ${plan.course.priceCents !== undefined ? `$${(plan.course.priceCents / 100).toFixed(2)}` : 'unchanged'} |`, `| Files sent / reused / failed | ${counts.uploaded} / ${counts.reused} / ${counts.failed} |`, '',
+    `## Validation`, '```json', JSON.stringify(validation, null, 2), '```', '',
+    `## Issues and skipped items`, ...(issues.length ? issues.map((i) => `- ${i}`) : ['- none']), '',
+    `## Quiz questions not imported`, ...(quizSkips.length ? quizSkips.map((i) => `- ${i}`) : ['- none']), '',
+    `## Skipped files (by the upload rules)`, ...[...inventory].flatMap(([k, f]) => f.skipped.map((x) => `- ${k}/${x.file}: ${x.why}`)),
+  );
+  const reportsDir = join(planDir, 'reports');
+  await mkdir(reportsDir, { recursive: true });
+  const reportPath = join(reportsDir, `${plan.environment}-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.md`);
+  await writeFile(reportPath, report.join('\n') + '\n');
+  log(`Report: ${reportPath}`);
+  return { courseId, counts, issues, validation, studioUrl: preview.studioUrl, reportPath };
+}
+
+// CLI
+if (process.argv[1] && ['publish.js', 'del-publish-course'].includes(basename(process.argv[1]))) {
+  const args = process.argv.slice(2);
+  const val = (k: string) => (args.includes(k) ? args[args.indexOf(k) + 1] : undefined);
+  const wait = val('--wait') !== undefined ? Number(val('--wait')) : undefined;
+  const env = val('--env') as Env | undefined;
+  const planPath = args.find((a, i) => !a.startsWith('--') && !['--wait', '--env'].includes(args[i - 1] ?? ''));
+  if (!planPath || (env && !['staging', 'production'].includes(env))) { console.error('Usage: DEL_AGENT_TOKEN=del_agent_… node dist/publish.js <plan.json> [--env staging|production] [--dry-run] [--wait minutes]'); process.exit(2); }
+  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env })
+    .then((r) => { if ('dryRun' in r) console.log(JSON.stringify({ environment: r.environment, apiUrl: r.apiUrl, priceCents: r.priceCents, quizzes: r.quizzes, issues: r.issues, quizSkips: r.quizSkips?.length }, null, 2)); else console.log(JSON.stringify({ courseId: r.courseId, counts: r.counts, issues: r.issues.length }, null, 2)); })
+    .catch((e) => { console.error(e instanceof ApiError ? `${e.code} (${e.status}): ${e.message}` : (e as Error).message); process.exit(1); });
+}

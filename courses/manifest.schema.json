@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-devopseasylearning.com/schemas/course.manifest.json",
+  "title": "DEL course manifest (written by the Course Generation Agent)",
+  "description": "Hints for the Course Upload and Publishing Agent: course.manifest.json in the course folder, and optionally lesson.json in a lesson folder (lesson.json wins for that lesson; its `folder` is implied). The upload agent checks every hint against the captions, slides and lab; courses/<slug>/plan.json stays the source of truth. Standard: docs/COURSE_STANDARD.md.",
+  "type": "object",
+  "properties": {
+    "version": { "const": 1 },
+    "course": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 120 },
+        "subtitle": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 20000, "description": "Markdown; only what the videos and labs really cover." },
+        "level": { "enum": ["beginner", "intermediate", "advanced"] },
+        "objectives": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 200 } },
+        "requirements": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 200 } },
+        "sections": {
+          "type": "array",
+          "description": "Suggested sections in learning order, each with its lesson folders in order.",
+          "items": {
+            "type": "object",
+            "required": ["title", "lessons"],
+            "properties": { "title": { "type": "string", "maxLength": 200 }, "lessons": { "type": "array", "items": { "type": "string" } } }
+          }
+        }
+      }
+    },
+    "lessons": { "type": "array", "items": { "$ref": "#/$defs/lesson" } }
+  },
+  "$defs": {
+    "lesson": {
+      "type": "object",
+      "required": ["folder"],
+      "properties": {
+        "folder": { "type": "string", "description": "The lesson folder name, e.g. 06-n6-n8n-deploy-notifications-live." },
+        "status": { "enum": ["draft", "ready"], "description": "Only `ready` lessons are uploaded; the watcher also waits for the files to settle." },
+        "role": { "enum": ["intro", "lesson", "vocabulary", "project", "conclusion"], "description": "`intro` = the course introduction: first lesson of section 1, free preview, course promo video." },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 300, "description": "The lesson summary learners see." },
+        "objectives": { "type": "array", "items": { "type": "string", "maxLength": 200 } },
+        "prerequisites": { "type": "array", "items": { "type": "string" }, "description": "Earlier lesson folders or skills this lesson needs (e.g. the lab it continues)." },
+        "position": {
+          "type": "object",
+          "description": "Where a learner should watch it.",
+          "properties": { "section": { "type": ["string", "integer"] }, "after": { "type": "string", "description": "Lesson folder it follows." }, "order": { "type": "integer" } }
+        },
+        "resources": {
+          "type": "array",
+          "description": "Files in the lesson folder for learners: the slides PDF and the lab ZIP (never PowerPoint).",
+          "items": { "type": "string" }
+        },
+        "quiz": {
+          "type": "array",
+          "maxItems": 50,
+          "description": "The lesson's questions, the same as in the video. 3 to 5 options; `correct` is the 0-based index.",
+          "items": {
+            "type": "object",
+            "required": ["q", "options", "correct", "why"],
+            "properties": {
+              "q": { "type": "string", "maxLength": 500 },
+              "options": { "type": "array", "minItems": 3, "maxItems": 5, "items": { "type": "string", "maxLength": 300 } },
+              "correct": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "why": { "type": "string", "maxLength": 1000 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

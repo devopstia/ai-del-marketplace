@@ -29,6 +29,7 @@ export interface CourseInput {
   categoryId?: string | null;
   thumbnailKey?: string | null;
   promoVideoAssetId?: string | null;
+  taughtBy?: string | null;
 }
 
 export interface LectureInput {
@@ -178,6 +179,12 @@ export class InstructorService {
       throw badRequest('Upload the thumbnail again', 'invalid_thumbnail', [{ field: 'thumbnailKey', message: 'Upload the thumbnail again' }]);
     }
     if (input.promoVideoAssetId) await this.media.ownedAsset(userId, input.promoVideoAssetId);
+    // "Taught by" is for DEL's own courses: an instructor's course always shows the instructor (owner 2026-11-26).
+    if (input.taughtBy) {
+      const p = await this.prisma.instructorProfile.findUnique({ where: { userId }, select: { isPlatform: true } });
+      if (!p?.isPlatform) throw badRequest('Only DevOps Easy Learning courses can show another instructor name', 'taught_by_platform_only', [{ field: 'taughtBy', message: 'Only for DEL courses' }]);
+    }
+    if (input.taughtBy !== undefined) input.taughtBy = input.taughtBy?.trim() || null;
   }
 
   async createCourse(a: Actor, input: CourseInput & { title: string }) {

@@ -1,0 +1,26 @@
+{
+  "_comment": "Course Upload and Publishing Agent defaults (owner 2026-11-26). Standard: docs/COURSE_STANDARD.md. Skill: .claude/skills/del-course-publisher/SKILL.md. Never put a token here.",
+  "environment": "staging",
+  "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+  "provider": "DevOps Easy Learning",
+  "instructorName": "DevOps Easy Learning",
+  "instructorAccount": "courses@del.example (the DEL platform account on staging; DEL Studio)",
+  "videosRoot": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos",
+  "videosRootWindows": "C:\\Users\\tiaje\\Dropbox\\AI-VIDEOS\\ai-devops\\videos",
+  "productionAllowed": true,
+  "publishAllowed": "owner approves in Review queue",
+  "environments": {
+    "staging": "https://staging.ai-devopseasylearning.com/api",
+    "production": "https://ai-devopseasylearning.com/api"
+  },
+  "productionAllowedNote": "Owner, 2026-11-26: upload 'AI-Powered DevOps Automation with n8n' to production at $1.00 for the live purchase test. Staging first, then production.",
+  "publishNote": "The agent may submit a validated course (or a published course's draft revision) for review after the three-perspective final review; only a super admin approves it in Super Admin › Review queue.",
+  "watcher": {
+    "command": "node tools/mcp-server/dist/watch.js",
+    "env": "staging",
+    "settleMinutes": 10,
+    "intervalMinutes": 15,
+    "introFolderPattern": "^00-",
+    "note": "Planned lessons with changed files are synced automatically; new folders go to courses/<slug>/inbox.json for the agent to review and place in plan.json."
+  }
+}

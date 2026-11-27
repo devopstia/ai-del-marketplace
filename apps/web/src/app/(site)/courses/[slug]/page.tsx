@@ -66,7 +66,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               {c.studentCount ? <span className="inline-flex items-center gap-1.5 text-white/80"><Users className="size-4" />{plural(c.studentCount, "learner")}</span> : null}
             </div>
             {taughtBy(c.instructor) ? (
-              <p className="mt-4 text-sm text-white/80" data-testid="course-brand">Created by <b className="text-white">{courseBy(c.instructor)}</b> · Taught by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
+              <p className="mt-4 text-sm text-white/80" data-testid="course-brand">Created by <b className="text-white">{courseBy(c.instructor)}</b> · Taught by {c.instructor.taughtBy ? <b className="text-[#9fd9f5]">{c.instructor.taughtBy}</b> : <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link>}</p>
             ) : (
               <p className="mt-4 text-sm text-white/80">Created by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
             )}
@@ -116,6 +116,16 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
           <section className="mt-12" aria-labelledby="instructor-h">
             <h2 id="instructor-h" className="font-display text-2xl font-extrabold">Your instructor</h2>
+            {c.instructor.taughtBy ? (
+              // A DEL course taught by a named member of the DEL team (owner 2026-11-26): the person, under the DEL brand.
+              <div className="mt-5 flex flex-col gap-5 sm:flex-row" data-testid="taught-by">
+                <Avatar name={c.instructor.taughtBy} size={88} />
+                <div className="min-w-0">
+                  <p className="font-display text-xl font-bold text-ink">{c.instructor.taughtBy}</p>
+                  <p className="text-ink-2">Instructor at <Link href={`/instructors/${c.instructor.id}`} className="link">{courseBy(c.instructor)}</Link></p>
+                </div>
+              </div>
+            ) : (
             <div className="mt-5 flex flex-col gap-5 sm:flex-row">
               <Avatar name={c.instructor.name} src={c.instructor.avatarUrl} size={88} />
               <div className="min-w-0">
@@ -130,6 +140,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                 {c.instructor.bio ? <Markdown source={c.instructor.bio} className="prose-del mt-3 text-[0.95rem]" /> : null}
               </div>
             </div>
+            )}
           </section>
 
           <CourseFaq c={c} policy={policy} />

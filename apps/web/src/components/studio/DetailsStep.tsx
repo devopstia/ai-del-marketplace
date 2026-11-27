@@ -4,17 +4,23 @@ import type { EditorCtx } from "./CourseEditor";
 import { StepFooter } from "./CourseEditor";
 import { ListEditor } from "./ListEditor";
 import { LANGUAGES } from "@/lib/format";
+import { useApi } from "@/lib/useApi";
+import { obj } from "@/lib/normalize";
 
 export function DetailsStep({ course, categories, patch, goto, locked }: EditorCtx) {
   const [f, setF] = useState({
     title: course.title, subtitle: course.subtitle, description: course.description, language: course.language && course.language.length <= 3 ? course.language : "en",
     level: course.level, categoryId: course.categoryId ?? "", objectives: course.objectives, requirements: course.requirements,
+    taughtBy: course.taughtBy ?? "",
   });
+  // DEL Studio only: a DEL course can name the person who teaches it (owner 2026-11-26).
+  const { data: isDel } = useApi("/instructor/terms", (r) => Boolean(obj(r).isPlatform));
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
   const save = async () => {
     setSaving(true);
-    const ok = await patch({ ...f, categoryId: f.categoryId || undefined, objectives: f.objectives.map((s) => s.trim()).filter(Boolean), requirements: f.requirements.map((s) => s.trim()).filter(Boolean) }, "Details saved.");
+    const { taughtBy, ...rest } = f;
+    const ok = await patch({ ...rest, ...(isDel ? { taughtBy: taughtBy.trim() || null } : {}), categoryId: f.categoryId || undefined, objectives: f.objectives.map((s) => s.trim()).filter(Boolean), requirements: f.requirements.map((s) => s.trim()).filter(Boolean) }, "Details saved.");
     setSaving(false);
     return ok;
   };
@@ -52,6 +58,13 @@ export function DetailsStep({ course, categories, patch, goto, locked }: EditorC
             <option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option>
           </select>
         </div>
+        {isDel ? (
+          <div>
+            <label className="label" htmlFor="taught-by">Instructor name shown</label>
+            <input id="taught-by" className="field" maxLength={80} value={f.taughtBy} onChange={(e) => set("taughtBy", e.target.value)} placeholder="e.g. Tia" data-testid="taught-by-input" />
+            <p className="hint">Shown as “Taught by …” on the course page. The course stays DevOps Easy Learning’s. Leave empty to show only DevOps Easy Learning.</p>
+          </div>
+        ) : null}
         <div>
           <label className="label" htmlFor="lang">Language</label>
           <select id="lang" className="field" value={f.language} onChange={(e) => set("language", e.target.value)}>

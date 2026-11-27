@@ -23,6 +23,8 @@ export interface TreeCourse {
   categoryId: string | null;
   thumbnailKey: string | null;
   promoVideoAssetId: string | null;
+  /** DEL courses only: the instructor name shown ("Taught by"). */
+  taughtBy?: string | null;
 }
 export interface TreeResource {
   id: string;
@@ -73,6 +75,7 @@ export const COURSE_FIELDS = [
   'categoryId',
   'thumbnailKey',
   'promoVideoAssetId',
+  'taughtBy',
 ] as const satisfies readonly (keyof TreeCourse)[];
 
 /** Shape of a course row loaded with sections → lectures → resources + quiz (ordered by position). */
@@ -316,6 +319,7 @@ const LABEL: Record<(typeof COURSE_FIELDS)[number], string> = {
   categoryId: 'Category',
   thumbnailKey: 'Thumbnail',
   promoVideoAssetId: 'Promo video',
+  taughtBy: 'Instructor name shown',
 };
 const q = (s: string) => `“${s}”`;
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -324,8 +328,8 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 export function diffTrees(live: CourseTree, draft: CourseTree, categoryName: (id: string | null) => string = (id) => id ?? 'none'): Change[] {
   const out: Change[] = [];
   for (const k of COURSE_FIELDS) {
-    const a = live.course[k];
-    const b = draft.course[k];
+    const a = live.course[k] ?? null;
+    const b = draft.course[k] ?? null;
     if (same(a, b)) continue;
     if (k === 'priceCents') {
       const fmt = (c: number) => (c === 0 ? 'free' : usd(c));

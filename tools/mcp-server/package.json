@@ -5,7 +5,9 @@
   "description": "MCP server for AI agents building DevOps Easy Learning courses for one instructor (docs/SUPPORT_SESSIONS_AND_AGENTS.md)",
   "type": "module",
   "bin": {
-    "del-courses-mcp": "dist/index.js"
+    "del-courses-mcp": "dist/index.js",
+    "del-publish-course": "dist/publish.js",
+    "del-watch-courses": "dist/watch.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

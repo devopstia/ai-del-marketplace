@@ -271,6 +271,10 @@ describe('e2e: support sessions and AI agents', () => {
       expect(v).toMatchObject({ ready: false, stats: { videosProcessing: 1 } });
       // The worker (mocked here) finishes processing.
       await prisma.videoAsset.update({ where: { id: start.assetId }, data: { status: 'ready', durationSec: 42 } });
+      // Captions for the agent's own video (course publisher, 2026-11-26): a signed PUT for WebVTT; never another owner's video.
+      const cap = (await ai.post(`/api/agent/videos/${start.assetId}/captions`).expect(200)).body;
+      expect(cap).toMatchObject({ method: 'PUT', headers: { 'Content-Type': 'text/vtt' } });
+      expect(cap.uploadUrl).toMatch(/^https?:\/\//);
 
       const pdf = Buffer.from('%PDF-1.4 slides');
       const f = (await ai.post('/api/agent/uploads', { kind: 'resource', filename: 'pods slides.pdf', contentType: 'application/pdf', sizeBytes: pdf.length, courseId: c.id }).expect(201)).body;
