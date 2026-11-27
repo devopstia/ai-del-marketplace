@@ -1,0 +1,139 @@
+{
+  "sections": {
+    "AI foundations for DevOps": "00e857b9-fe9b-4163-a37d-a4ebe2e2fa4c",
+    "The Azure AI services": "f983fead-633a-4b52-aa5e-32aa8117304c",
+    "Getting started with Microsoft Foundry": "f1de5a30-1014-4257-96a6-ad66e77a89b4",
+    "AI applications on Azure": "de7d5762-a8d0-44bf-93d5-3e3ca3626259",
+    "Retrieval-Augmented Generation on Azure": "ae590487-dccd-4811-8fd3-a37e35f0efd6",
+    "AI agents for DevOps": "58b958de-9028-408b-8de3-95e603bdc849",
+    "AI-powered DevOps automation": "09e74eeb-1a4a-4528-8ee0-510dc4ba4d9c",
+    "Model Context Protocol (MCP)": "a6aaf54d-75c3-4ef4-95a3-e1b1eab05c09",
+    "Security, reliability and cost": "0b131c3c-99f2-4627-b71d-8940f2254bb1"
+  },
+  "lessons": {
+    "02-ai-foundations/01-tm1-big-words": "9992cd87-e075-471c-8d87-0c18a8e13859",
+    "02-ai-foundations/04-tm4-talking-to-a-model": "a7db3d66-2def-406c-9f28-aa06e1877679",
+    "02-ai-foundations/05-tm5-answer-quality": "09e78ab7-e674-4945-84b8-0c323f95333f",
+    "02-ai-foundations/10-tm10-agent-words": "961bbb80-ad75-43a4-bd9c-c4c918f14206",
+    "17-cloud-ai/02-azure-ai-services-map": "e90d4d9e-bb12-48f8-b23d-3bdee8c1ba12",
+    "17-cloud-ai/03-choosing-ai-service": "60d1accf-aa89-4c92-a866-a7cdd29cd5d4",
+    "17-cloud-ai/11-azure-ai-foundry-explained": "4c9f76c2-b9ad-4f02-9520-dfa07cc7acd5",
+    "16-cloud-labs/03-azure-foundry-model-live": "9075a05d-a4bb-46c2-81dc-5a618bd93732",
+    "16-cloud-labs/05-foundry-chat-live": "b5e1c884-ce33-4cde-abeb-bdc4f22283d6",
+    "02-ai-foundations/06-tm6-rag-words-preparing": "22208107-189c-4414-99c3-ba49ba1dc1cc",
+    "02-ai-foundations/07-tm7-embeddings-vectors": "64254d72-be5f-4005-86aa-221aea0a538a",
+    "02-ai-foundations/08-tm8-rag-search-answer": "9972071e-c243-4f8e-9a15-3334be3c5b6e",
+    "02-ai-foundations/09-tm9-where-data-lives": "c0ce5058-b7f4-4a08-9d50-73ecaff4f45f",
+    "07-building-rag/20-r7-one-architecture-three-implementations": "20455d4e-a447-4b4e-9ff9-e6ad160caf0a",
+    "16-cloud-labs/06-rag-stack-live": "57709395-e71e-4df6-909a-0fc54f4e8ffd",
+    "16-cloud-labs/07-azure-rag-live": "2ebd5db2-239f-4da7-a144-de7e1f21cfa5",
+    "05-agents-rag-ideas/19-agent-vs-chatbot": "35671833-4601-4943-b57d-030fcfb38894",
+    "05-agents-rag-ideas/20-s1-skill-based-agents": "e12591ee-cb5f-46c2-a91e-1e9e4a3f936d",
+    "16-cloud-labs/10-s2-docker-skill-agents-live": "1ed85c86-75e3-4592-9eb3-b6ac1019a501",
+    "16-cloud-labs/09-k8s-doctor-live": "939be6ea-f55d-4891-9647-5aa8d2ea4f3d",
+    "05-agents-rag-ideas/21-r10-kagent-explained": "72c8756d-6bd6-464a-9460-ad417d050674",
+    "19-ai-cicd/01-ci1-ai-in-cicd": "b53a1676-1231-4f66-9089-cd1dece9b1c8",
+    "18-automation-n8n/17-n17-n8n-ai-assisted-live": "24d6a9ea-ea82-4a79-aeea-700b0c3a4392",
+    "20-mcp/01-m1-what-is-mcp": "4ea2b344-a88a-4d4b-a6ac-2476d7d9a082",
+    "20-mcp/02-m2-inside-mcp": "bb228878-6a1c-43de-86f7-3730d36338b0",
+    "20-mcp/03-m3-first-mcp-server-live": "104a0948-61de-4e6f-923f-41aeeeca6d67",
+    "02-ai-foundations/12-tm12-operating-securing": "58de8dd4-db4f-470c-bbcc-4d9241c29b81",
+    "08-ai-production/19-r1-llmops-day-to-day": "9bd08f25-346c-44ab-8d4f-0941acc05258",
+    "08-ai-production/20-r6-who-builds-who-runs": "4127a41b-a771-4837-819d-ddeb663e32f8",
+    "08-ai-production/21-r8-managed-or-self-hosted": "09eceeca-d82d-4aae-8245-d65ef0a3f578"
+  },
+  "quizzes": {
+    "17-cloud-ai/02-azure-ai-services-map": "df556a89-a441-47d8-8cc1-be2acd69a792",
+    "17-cloud-ai/03-choosing-ai-service": "48727fea-03bd-47ec-bc0a-8f365fbc978d",
+    "16-cloud-labs/05-foundry-chat-live": "48d3914f-1a9e-49b2-952f-b71024c89ce9",
+    "16-cloud-labs/07-azure-rag-live": "2d9698a6-4071-4c7a-9141-df8449d1c177",
+    "05-agents-rag-ideas/19-agent-vs-chatbot": "4e4de684-110b-43a7-a4a1-6cd9007bab4a",
+    "16-cloud-labs/09-k8s-doctor-live": "900061b0-bbc8-4cd5-a813-f2563fc12311",
+    "19-ai-cicd/01-ci1-ai-in-cicd": "961b5c17-c60e-4f44-a404-12f1195060e9",
+    "18-automation-n8n/17-n17-n8n-ai-assisted-live": "fd8728a4-8ac8-44ed-a72e-0cad768c06e7",
+    "20-mcp/01-m1-what-is-mcp": "19f78dea-67ea-4072-87ad-7edf502bf6a7",
+    "20-mcp/02-m2-inside-mcp": "ac98ea47-1524-426f-8073-3228af8a8d54",
+    "20-mcp/03-m3-first-mcp-server-live": "dc11f57d-a2a5-4eef-ab3d-d054021f9ebd"
+  },
+  "files": {
+    "bcf79e95b624063084e39f151e51558bcdbd8affd5d4c72ab5fc69a1430a0adc": {
+      "kind": "video",
+      "assetId": "4a474a07-fbb5-494f-90c9-56d2cc3c69a2",
+      "name": "the-azure-ai-services-map.mp4",
+      "at": "2026-11-27T06:59:35.634Z"
+    },
+    "84d14c9e1b063a13c3a4abe7313ff91b8d14ccc3107d963a3d18f8373f897e3e": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/134f7821-ba1a-416f-8422-c200d64df0b4/the-azure-ai-services-map-slides.pdf",
+      "name": "the-azure-ai-services-map-slides.pdf",
+      "at": "2026-11-27T06:59:36.595Z"
+    },
+    "292ec10dc87f07ebcb6c8799864d5cdfd20c468e81019b1964eae5d14bb7986d": {
+      "kind": "video",
+      "assetId": "201d58d6-eba3-4193-9555-c6a57b3735a2",
+      "name": "microsoft-foundry-explained.mp4",
+      "at": "2026-11-27T06:59:46.844Z"
+    },
+    "732c6e79512625ff2abd2d150e997e3229e9dd7859e9e40db98cdd4a9f591f22": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/be1c9331-8395-4f09-a751-9621137a9234/microsoft-foundry-explained-slides.pdf",
+      "name": "microsoft-foundry-explained-slides.pdf",
+      "at": "2026-11-27T06:59:47.667Z"
+    },
+    "ec933e97731251ab86c0158fcd7382888faafba6c88fa4d78926a8df329791e5": {
+      "kind": "video",
+      "assetId": "5830c066-fdc9-4fe7-9d8b-846c45c82d49",
+      "name": "deploy-your-first-model-in-microsoft-foundry.mp4",
+      "at": "2026-11-27T07:00:19.361Z"
+    },
+    "82595dbc226820a053fe73aff899e9cb8e509c3b998d69cff83488a3968e7334": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/ff102fa2-114d-4210-8366-b7d722f4cda9/deploy-your-first-model-in-microsoft-foundry-slides.pdf",
+      "name": "deploy-your-first-model-in-microsoft-foundry-slides.pdf",
+      "at": "2026-11-27T07:00:21.050Z"
+    },
+    "4ad00e1b1382faef1e7051c1505ceec44fbd3cca09ae2fa4a86905f4e50677b6": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/9e55bd23-4965-4046-90f6-602c49dae38e/deploy-your-first-model-in-microsoft-foundry-lab.zip",
+      "name": "deploy-your-first-model-in-microsoft-foundry-lab.zip",
+      "at": "2026-11-27T07:00:21.364Z"
+    },
+    "101c069a466532ee3330ae6fddbd3b8d58b1429e40597df2cb571a696be281dd": {
+      "kind": "video",
+      "assetId": "e0eb3be8-bb4e-449d-b438-42aa15cb812e",
+      "name": "deploy-a-full-stack-ai-chat-app-on-microsoft-foundry.mp4",
+      "at": "2026-11-27T07:00:39.975Z"
+    },
+    "cf927f1a0f50acb4ef430097b99707d0cbff03411c884c4316e830cfb2d06cfa": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/665c47d4-8f7b-4872-8883-b8e83a6ccb08/deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-slides.pdf",
+      "name": "deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-slides.pdf",
+      "at": "2026-11-27T07:00:41.275Z"
+    },
+    "9628138f274fd2f2661e7e76639068d5f9768fa931e6d0d69cfa2d83af6263e3": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/e36144ce-f0b8-4f68-9290-d13be767255c/deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-lab.zip",
+      "name": "deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-lab.zip",
+      "at": "2026-11-27T07:00:41.548Z"
+    },
+    "46b5f8f832fba8c26259684db53feca7cb7437597d91c15de2b524abcf73ea0e": {
+      "kind": "video",
+      "assetId": "a2d201e6-f8b2-49cb-9d50-45c46154e334",
+      "name": "build-a-rag-system-on-azure-with-terraform.mp4",
+      "at": "2026-11-27T07:01:17.325Z"
+    },
+    "fa8d073a5322ba06d24527ddb666d7c7b503a4ac793bba828b102fd3aeb4e233": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/70ebb3e5-3970-421e-81e8-e19950470b57/build-a-rag-system-on-azure-with-terraform-slides.pdf",
+      "name": "build-a-rag-system-on-azure-with-terraform-slides.pdf",
+      "at": "2026-11-27T07:01:19.298Z"
+    },
+    "a699139ff1fe0f40e21cbb1e2d22afaccbdd5cdd05735f01d83932b756506373": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/b9cb84d1-52e8-4188-a797-9488d0154b67/resources/e756e143-ec63-4154-891c-231b2b9759ea/build-a-rag-system-on-azure-with-terraform-lab.zip",
+      "name": "build-a-rag-system-on-azure-with-terraform-lab.zip",
+      "at": "2026-11-27T07:01:19.635Z"
+    }
+  },
+  "courseId": "b9cb84d1-52e8-4188-a797-9488d0154b67"
+}

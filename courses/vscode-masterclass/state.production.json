@@ -1,0 +1,116 @@
+{
+  "sections": {
+    "Start here": "f649e717-4f48-4ac3-a322-e59e6c7f5e35",
+    "Install and set up": "212a18c0-22a7-4192-b710-ea59721fe558",
+    "Cloud and AI": "b029b024-7840-4086-aad3-8e3381038048"
+  },
+  "lessons": {
+    "22-vscode/01-vsc-01-why-vscode": "9beaa324-2271-476f-acfb-6e8f524e0f81",
+    "22-vscode/02-vsc-02-vscode-words": "87ba4ccf-0a5b-470e-b1f3-6d62586dbb79",
+    "22-vscode/03-vsc-03-interface-tour": "7e314f0c-a5a3-49be-8017-7bf621223527",
+    "21-claude-code/01-cc1-claude-md-in-depth": "c4ad6095-5c27-498c-8fdb-dd62f97f3de8",
+    "21-claude-code/02-cc1-claude-md-live": "b6212860-2ae8-49ed-9146-22b8c7d47a13",
+    "21-claude-code/03-cc2-claude-folder-live": "c276f789-c366-43ca-8f24-a1aecd5bf24e"
+  },
+  "quizzes": {
+    "22-vscode/01-vsc-01-why-vscode": "f8662872-3b53-431d-b861-a20d08151731",
+    "22-vscode/02-vsc-02-vscode-words": "f2a6da65-d4b3-4e3d-bc6f-c82c6ed4b124",
+    "22-vscode/03-vsc-03-interface-tour": "94aa6e6b-0137-4794-91fb-1f965d6a9559",
+    "21-claude-code/01-cc1-claude-md-in-depth": "91e7cb7c-2b20-4178-b482-f670f6a28614",
+    "21-claude-code/02-cc1-claude-md-live": "64d735c5-678a-46f6-8e43-056d8cab2d72",
+    "21-claude-code/03-cc2-claude-folder-live": "b96280ad-13bf-4984-bdd1-5a4d28be976f"
+  },
+  "files": {
+    "533bbf7bb37aaeb6469f38711fa7964a846c0a8b71519d4ef9bcfbbbe85a1467": {
+      "kind": "video",
+      "assetId": "429cc104-02ab-4bb2-82b5-58f0c7f9098b",
+      "name": "why-vs-code-is-the-devops-engineers-editor.mp4",
+      "at": "2026-11-27T06:49:08.883Z"
+    },
+    "473cea0ed934b858e14ddc01eff0fe1140266f9ccf37b28445a9b593b51c1966": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/0dc032e5-fca3-4b9a-8f1d-490135ff40b8/why-vs-code-is-the-devops-engineers-editor-slides.pdf",
+      "name": "why-vs-code-is-the-devops-engineers-editor-slides.pdf",
+      "at": "2026-11-27T06:49:09.939Z"
+    },
+    "e356e8d46f49e61f57ad753c47e95bc0f823d3dfbfaead2933662ab2babcc723": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/29cc4de1-7683-48ff-ad9f-b6c1ec796887/why-vs-code-is-the-devops-engineers-editor-lab.zip",
+      "name": "why-vs-code-is-the-devops-engineers-editor-lab.zip",
+      "at": "2026-11-27T06:49:10.184Z"
+    },
+    "c8e0e8fc59729799de4c5edb19b470f00621a4a0064c60a60e90c0034dc0b6b0": {
+      "kind": "video",
+      "assetId": "553ab723-dc48-46a8-93f7-bbfe0f1710e5",
+      "name": "vs-code-vocabulary-workspaces-extensions-and-dev-containers.mp4",
+      "at": "2026-11-27T06:49:26.545Z"
+    },
+    "85e6bf47e7663fc7ac6c9cba5c91810d8193aedc95a9cf190923624644c97315": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/b4c550f4-6160-4343-baa9-91f3f2419733/vs-code-vocabulary-workspaces-extensions-and-dev-containers-slides.pdf",
+      "name": "vs-code-vocabulary-workspaces-extensions-and-dev-containers-slides.pdf",
+      "at": "2026-11-27T06:49:27.578Z"
+    },
+    "36c1e4562f72b3b421127abf660782245469a06b2cde69c3afa7f9b4390341ea": {
+      "kind": "video",
+      "assetId": "959bb08b-2a8e-4df5-a7cb-1ab78635f342",
+      "name": "a-complete-tour-of-the-vs-code-interface.mp4",
+      "at": "2026-11-27T06:50:46.372Z"
+    },
+    "351314018cf0c718acde6b81b30256d57c0d9b2db39586fd535b00f712eaa35c": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/8d336432-fab5-422f-801b-f6c91100ae82/a-complete-tour-of-the-vs-code-interface-slides.pdf",
+      "name": "a-complete-tour-of-the-vs-code-interface-slides.pdf",
+      "at": "2026-11-27T06:50:49.101Z"
+    },
+    "a21a2457af1686ebee707a44712493b4196b3e6c22996d6db84ff8766afe0f81": {
+      "kind": "video",
+      "assetId": "ec5d4ad8-b853-4b9c-8b98-c9006286b066",
+      "name": "claudemd-in-depth-instructions-for-ai-coding-agents.mp4",
+      "at": "2026-11-27T06:51:38.871Z"
+    },
+    "f0780312ac823a619e1512fc2f14626a5fba9acda6631efbb12a97140dc8f3a1": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/1e4eba2e-4950-4b77-a20e-08f1c1da0b2a/claudemd-in-depth-instructions-for-ai-coding-agents-slides.pdf",
+      "name": "claudemd-in-depth-instructions-for-ai-coding-agents-slides.pdf",
+      "at": "2026-11-27T06:51:41.234Z"
+    },
+    "bbe8ccf0d19672d25d780568daa34ef4f54c0a3ee7166665db475ef58a87caff": {
+      "kind": "video",
+      "assetId": "de729d8a-495d-4e61-90ea-faa36f323500",
+      "name": "write-claudemd-for-a-real-repository.mp4",
+      "at": "2026-11-27T06:52:16.813Z"
+    },
+    "d8b5bea27ca3e65f872e51f466d437c89729a30f25d57179ac1ef8551effdbc5": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/2ee487b2-5d09-4882-98ad-2f69c2cf8291/write-claudemd-for-a-real-repository-slides.pdf",
+      "name": "write-claudemd-for-a-real-repository-slides.pdf",
+      "at": "2026-11-27T06:52:18.870Z"
+    },
+    "c0198710f201711eb793dda1d2585246406a6f67cb1e646497709b52e06a8a2c": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/d1d47314-c709-4edd-aea8-efd2e60ee1a2/write-claudemd-for-a-real-repository-lab.zip",
+      "name": "write-claudemd-for-a-real-repository-lab.zip",
+      "at": "2026-11-27T06:52:19.135Z"
+    },
+    "0a0c0b5fa2a9be959502d59298fac4fe702020988426ade8365afe64c4017441": {
+      "kind": "video",
+      "assetId": "78b46ccb-6516-42f1-ab25-27f90221da9b",
+      "name": "the-claude-folders-settings-permissions-and-deny-rules.mp4",
+      "at": "2026-11-27T06:53:04.837Z"
+    },
+    "9a4e6435370ddd31548563bfa0dbdc769953ecf91e464f8ecd78f028e6f9308d": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/747190a8-45db-42e8-84ca-9a1e7394b481/the-claude-folders-settings-permissions-and-deny-rules-slides.pdf",
+      "name": "the-claude-folders-settings-permissions-and-deny-rules-slides.pdf",
+      "at": "2026-11-27T06:53:06.724Z"
+    },
+    "af3f61053582393e0ff75343bc66275d5732968e4de558582dd97ad0171104cc": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/c6d45976-d59a-436c-8a05-8b7802c4551c/resources/370e1d77-af3e-49b6-a94b-5f4e2582dc8c/the-claude-folders-settings-permissions-and-deny-rules-lab.zip",
+      "name": "the-claude-folders-settings-permissions-and-deny-rules-lab.zip",
+      "at": "2026-11-27T06:53:06.992Z"
+    }
+  },
+  "courseId": "c6d45976-d59a-436c-8a05-8b7802c4551c"
+}
