@@ -40,7 +40,7 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     design, make sure the current working version is committed, mark it with an annotated tag (`design-approved-<date>`) and a
     `backup/…` branch, record the hash, and do the work on a dedicated `feat/…` branch. Never merge or deploy a redesign without the
     owner's approval. Rollback on request: `git checkout <tag> -- apps/web` (or the affected paths) on the working branch, then
-    rebuild the web container; unrelated work stays. Current baseline: `main` = production release `release-2026-11-28-social-sharing` (commit `f2a4a3f308dc`; light default theme); earlier approved design tags `design-approved-2026-11-24` = `9b0170e`, `release-local-2026-11-24`.
+    rebuild the web container; unrelated work stays. Current baseline: `main` = production release `release-2026-11-28-preview-cta` (commit `201b63d7299b`; light default theme); earlier approved design tags `design-approved-2026-11-24` = `9b0170e`, `release-local-2026-11-24`.
 14. **Natural, not AI-generated design** (owner, 2026-11-24): clean typography, consistent spacing, proper alignment, professional
     colour; avoid excessive gradients, glows, repetitive cards, oversized headings, needless animation and decoration. Improve the
     existing identity, don't replace it. Preserve the course listing and course detail pages (owner likes them).
