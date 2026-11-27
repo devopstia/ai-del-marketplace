@@ -19,7 +19,22 @@
     "13-n13-n8n-scheduled-reports-live": "97b9e548-32b1-476c-8498-6a63917a94cb",
     "15-n15-n8n-advanced-design-live": "f94346a4-36f8-4188-a065-60a6535bd859",
     "16-n16-n8n-production-live": "7991e6dd-7da2-41a6-985a-5289be01dff9",
-    "17-n17-n8n-ai-assisted-live": "019737ec-3658-4cbe-8ca7-ff90b7d7abd3"
+    "17-n17-n8n-ai-assisted-live": "019737ec-3658-4cbe-8ca7-ff90b7d7abd3",
+    "18-n18-n8n-cloud-vm-live": "8cbe1313-695e-4ce5-967c-f541511a37c9"
   },
-  "courseId": "cc53b627-6390-44e1-97c6-577eaa88fd9d"
+  "courseId": "cc53b627-6390-44e1-97c6-577eaa88fd9d",
+  "quizzes": {
+    "04-n4-n8n-tour-first-workflow-live": "4fbc161e-152d-4969-9c5d-81ae334e9978",
+    "18-n18-n8n-cloud-vm-live": "03ec839b-82b9-472b-937c-dcbb68b0ea1d",
+    "05-nt1-n8n-words": "b6b5f705-cffa-4dec-96dd-7a8a4aa2ece3",
+    "06-n6-n8n-deploy-notifications-live": "86e17766-3183-4320-bfdb-283c5cf497f9",
+    "07-n5-n8n-errors-retries-debugging-live": "32fd664a-53a8-4e92-9ee3-abdc9ca6667d",
+    "08-nt2-automation-chatops-words": "fa71aab1-15b5-4275-b422-4dc5a8e5e100",
+    "10-n10-n8n-kubernetes-alerts-live": "0b11f88b-c59d-4343-859e-b77ac9b002ff",
+    "12-n12-n8n-incident-management-live": "ce6dd581-bd43-456c-9b3a-344017c387aa",
+    "13-n13-n8n-scheduled-reports-live": "fa978987-a831-4569-a5d9-60545f9f5991",
+    "15-n15-n8n-advanced-design-live": "8789c810-5a47-420e-94d3-d49eb08da8ee",
+    "16-n16-n8n-production-live": "1b9637ba-627c-435a-86f1-a51459016bc7",
+    "17-n17-n8n-ai-assisted-live": "0f8b84a5-c0bd-434f-91af-99032fe7a243"
+  }
 }
