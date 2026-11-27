@@ -637,6 +637,7 @@ function layoutFrame(l: Layout, p: Palette): Frame {
     case 'spotlight':
       return { bg: '', motif: { x: 290, y: 20, w: 700, h: 680 }, motifOpacity: 0.22, title: { x: 150, y: 150, w: COVER_W - 300, h: 420, anchor: 'center', align: 'middle', maxLines: 3, max: 88, min: 44 }, label: { x: COVER_W / 2, y: M, align: 'middle' }, mark: { x: COVER_W / 2, y: COVER_H - M + 4, align: 'middle' } };
     case 'night-blueprint': // drawn by nightBlueprintSvg; this frame only keeps the switch exhaustive
+    case 'light-editorial': // drawn by lightEditorialSvg
     case 'column':
       return { bg: `<rect x="0" y="0" width="400" height="${COVER_H}" fill="${p.tone === 'dark' ? '#000' : '#fff'}" fill-opacity="${p.tone === 'dark' ? 0.24 : 0.5}"/><rect x="400" y="0" width="6" height="${COVER_H}" fill="url(#acc)"/>`, motif: { x: 20, y: 150, w: 360, h: 420 }, title: { x: 470, y: 150, w: 740, h: 440, anchor: 'center', align: 'start', maxLines: 4, max: 80, min: 42 }, label: { x: 470, y: M, align: 'start' }, mark: { x: 470, y: COVER_H - M + 4, align: 'start' } };
   }
@@ -654,13 +655,15 @@ export function splitTitle(title: string): { main: string; sub: string | null } 
   return { main: t.slice(0, i), sub: t.slice(i + 2) };
 }
 
-function nightBlueprintSvg(spec: CoverSpec, input: { title: string; topic?: string | null }): string {
-  const p = spec.palette;
-  const X = 80;
-  const W = 680; // the title column ends well before the symbol
-  const { main, sub } = splitTitle(input.title);
+/** The catalog families' title block: "Title: Subtitle" split, fitted to a column, centred between y 150 and 492. */
+function catalogTitleBlock(title: string, X: number, W: number, ink: string, opts: { max?: number; oneLineMin?: number } = {}): { text: string; ruleY: number } {
+  const p = { ink };
+  const { main, sub } = splitTitle(title);
   const tf = fonts();
-  const t = fitTitle(main, W, sub ? 2 : 3, 84, 46);
+  const max = opts.max ?? 84;
+  // Light editorial keeps a "Title: Subtitle" main line on one line when it still reads large (as in the prototype).
+  const one = sub && opts.oneLineMin ? fitTitle(main, W, 1, max, opts.oneLineMin) : null;
+  const t = one && !one.lines[0]!.endsWith('…') && one.lines.length === 1 ? one : fitTitle(main, W, sub ? 2 : 3, max, 46);
   const st = sub ? fitTitle(sub, W, 2, Math.max(30, Math.min(44, Math.round(t.size * 0.52))), 26, tf.label) : null;
   const cap = ((tf.title.tables.os2 as { sCapHeight?: number } | undefined)?.sCapHeight ?? tf.title.ascender * 0.7) / tf.title.unitsPerEm;
   const gap = st ? Math.round(st.size * 0.95) : 0;
@@ -677,6 +680,14 @@ function nightBlueprintSvg(spec: CoverSpec, input: { title: string; topic?: stri
     y = sy + (st.lines.length - 1) * st.lineHeight;
   }
   const ruleY = Math.max(520, Math.round(y + 34));
+  return { text, ruleY };
+}
+
+function nightBlueprintSvg(spec: CoverSpec, input: { title: string; topic?: string | null }): string {
+  const p = spec.palette;
+  const X = 80;
+  const tf = fonts();
+  const { text, ruleY } = catalogTitleBlock(input.title, X, 680, p.ink); // the title column ends well before the symbol
 
   let label = '';
   if (input.topic) {
@@ -711,9 +722,55 @@ ${mark}
 </svg>`;
 }
 
+// ---------- the light-editorial family (owner 2026-11-27: Family B, the approved alternative) ----------
+const PAPER = '#f7f8fc';
+const INK = '#0f1330';
+function luminance(hex: string): number {
+  const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * v[0]! + 0.7152 * v[1]! + 0.0722 * v[2]!;
+}
+/** WCAG contrast ratio of two #rrggbb colours. */
+export function contrast(a: string, b: string): number {
+  const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m) as [number, number];
+  return (x + 0.05) / (y + 0.05);
+}
+/** The accent mixed toward the ink until small text on the paper reaches 4.5:1 (AWS orange becomes a deep amber). */
+export function readableAccent(accent: string, ground = PAPER): string {
+  const mix = (t: number) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(accent.slice(i, i + 2), 16) * (1 - t) + parseInt(INK.slice(i, i + 2), 16) * t).toString(16).padStart(2, '0')).join('');
+  for (let k = 0; k <= 50; k++) if (contrast(mix(k / 50), ground) >= 4.5) return mix(k / 50);
+  return INK;
+}
+
+function lightEditorialSvg(spec: CoverSpec, input: { title: string; topic?: string | null }): string {
+  const p = spec.palette;
+  const X = 80;
+  const { text, ruleY } = catalogTitleBlock(input.title, X, 690, INK, { max: 74, oneLineMin: 54 });
+  const label = input.topic ? `<text x="${X}" y="120" font-family="${FAMILY}" font-weight="700" font-size="24" fill="${readableAccent(p.a)}">${esc(input.topic)}</text>` : '';
+  const my = COVER_H - M + 4 - 28;
+  const mark = `<g transform="translate(${X} ${my}) scale(${56 / 120})" fill="none" stroke-width="10" stroke-linecap="round"><path d="${LOOP}" stroke="url(#delmark)"/></g><text x="${X + 70}" y="${my + 22}" font-family="${FAMILY}" font-weight="700" font-size="24" fill="${INK}" fill-opacity="0.86">DevOps Easy Learning</text>`;
+  // The symbol sits in a dark ink circle, so motifs keep the dark-ground colours they were drawn for.
+  const symbolPalette: Palette = { ...p, bg: [INK, INK] };
+  const box: Box = { x: 870, y: 180, w: 360, h: 360 };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${COVER_W}" height="${COVER_H}" viewBox="0 0 ${COVER_W} ${COVER_H}">
+<defs>
+  <linearGradient id="delmark" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6f5fe0"/><stop offset="1" stop-color="#1e9bd7"/></linearGradient>
+</defs>
+<rect width="${COVER_W}" height="${COVER_H}" fill="${PAPER}"/>
+<rect x="820" y="0" width="${COVER_W - 820}" height="${COVER_H}" fill="${p.a}"/>
+<rect x="820" y="0" width="${COVER_W - 820}" height="${COVER_H}" fill="${INK}" fill-opacity="0.18"/>
+<circle cx="1050" cy="360" r="190" fill="${INK}" fill-opacity="0.92"/>
+${motifSvg(spec.motif, box, symbolPalette)}
+${label}
+${text}
+<rect x="${X}" y="${ruleY}" width="90" height="6" rx="3" fill="${p.a}"/>
+${mark}
+</svg>`;
+}
+
 
 export function coverSvg(spec: CoverSpec, input: { title: string; topic?: string | null }): string {
   if (spec.layout === 'night-blueprint') return nightBlueprintSvg(spec, input);
+  if (spec.layout === 'light-editorial') return lightEditorialSvg(spec, input);
   const p = spec.palette;
   const f = layoutFrame(spec.layout, p) as Frame & { veil?: string };
   const t = fitTitle(input.title, f.title.w, f.title.maxLines, f.title.max, f.title.min);

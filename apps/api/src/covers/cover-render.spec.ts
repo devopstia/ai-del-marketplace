@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { coverPng, coverSvg, fitTitle, splitTitle } from './cover-render';
+import { contrast, coverPng, coverSvg, fitTitle, readableAccent, splitTitle } from './cover-render';
 import { BLUEPRINT_TOPICS, BUILT_IN_TEMPLATES, LAYOUTS, MOTIFS, PALETTES } from './cover-templates';
 
 describe('cover renderer', () => {
@@ -79,5 +79,53 @@ describe('night-blueprint family (owner 2026-11-27)', () => {
     const sorted = BUILT_IN_TEMPLATES.map((t, i) => ({ t, sort: t.sort ?? (i + 1) * 10 })).sort((a, b) => a.sort - b.sort);
     const expected: [string, string][] = [['automation-n8n', 'blueprint-n8n'], [BLUEPRINT_TOPICS.aws[0], 'blueprint-aws'], [BLUEPRINT_TOPICS.azure[0], 'blueprint-azure'], [BLUEPRINT_TOPICS.ai[0], 'blueprint-ai'], [BLUEPRINT_TOPICS.vscode[0], 'blueprint-vscode']];
     for (const [slug, key] of expected) expect(sorted.find(({ t }) => t.topics.includes(slug))?.t.key).toBe(key);
+  });
+});
+
+describe('light-editorial family, the approved alternative (owner 2026-11-27)', () => {
+  const CASES: [string, string, string][] = [
+    ['editorial-aws', 'AI for DevOps on AWS: From Fundamentals to Production', 'AWS · Amazon Bedrock'],
+    ['editorial-azure', 'AI for DevOps on Azure: From Fundamentals to Production', 'Microsoft Azure · Foundry'],
+    ['editorial-ai', 'Introduction to AI for DevOps', 'Artificial Intelligence'],
+    ['editorial-vscode', 'VS Code Masterclass for DevOps and AI', 'Visual Studio Code'],
+    ['editorial-n8n', 'AI-Powered DevOps Automation with n8n', 'n8n · Automation'],
+  ];
+  const out = process.env.COVER_SAMPLES_DIR;
+
+  it.each(CASES)('%s renders long and short titles at 1280x720 with no third-party logo', (key, title, topic) => {
+    const t = BUILT_IN_TEMPLATES.find((x) => x.key === key)!;
+    expect(t.layout).toBe('light-editorial');
+    const variants: [string, string][] = [['', title], ['-short', 'Bash'], ['-long', `${title} with Kubernetes, Terraform, GitHub Actions and Argo CD in production`]];
+    for (const [suffix, tt] of variants) {
+      const spec = { layout: t.layout, palette: PALETTES[t.palette], motif: t.motif };
+      const svg = coverSvg(spec, { title: tt, topic });
+      expect(svg).not.toMatch(/<image|href=/);
+      const png = coverPng(spec, { title: tt, topic });
+      expect(png.readUInt32BE(16)).toBe(1280);
+      expect(png.readUInt32BE(20)).toBe(720);
+      if (out) {
+        writeFileSync(join(out, `${key}${suffix}.png`), png);
+        if (!suffix) writeFileSync(join(out, `${key}-320.png`), coverPng(spec, { title: tt, topic }, 320));
+      }
+    }
+  });
+
+  it('every text colour on the paper reaches 4.5:1 (the topic label is the accent, darkened where needed)', () => {
+    for (const [key] of CASES) {
+      const t = BUILT_IN_TEMPLATES.find((x) => x.key === key)!;
+      const label = readableAccent(PALETTES[t.palette].a);
+      expect(contrast(label, '#f7f8fc')).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrast('#0f1330', '#f7f8fc')).toBeGreaterThanOrEqual(4.5); // title and DEL name
+    expect(readableAccent('#ff9900')).not.toBe('#ff9900'); // AWS orange is too light for small text on paper
+  });
+
+  it('the blueprint family stays suggested first; editorial comes next as the alternative', () => {
+    const sorted = BUILT_IN_TEMPLATES.map((t, i) => ({ t, sort: t.sort ?? (i + 1) * 10 })).sort((a, b) => a.sort - b.sort);
+    for (const slug of ['automation-n8n', BLUEPRINT_TOPICS.aws[0], BLUEPRINT_TOPICS.azure[0], BLUEPRINT_TOPICS.ai[0], BLUEPRINT_TOPICS.vscode[0]]) {
+      const keys = sorted.filter(({ t }) => t.topics.includes(slug)).map(({ t }) => t.key);
+      expect(keys[0]).toMatch(/^blueprint-/);
+      expect(keys[1]).toMatch(/^editorial-/);
+    }
   });
 });
