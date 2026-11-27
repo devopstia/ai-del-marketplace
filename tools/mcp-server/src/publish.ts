@@ -139,6 +139,37 @@ export const quizTitle = (lesson: { title: string; short?: string } | string) =>
 export interface QuizQuestion { q: string; options: string[]; correct: number; why: string }
 export interface ParsedQuiz { questions: QuizQuestion[]; skipped: string[] }
 
+/**
+ * Read a lesson's quiz.json (GEN's bank, courses/quiz.schema.json) into the quiz format the platform accepts today
+ * ({q, options 3–5, correct, why}). The explanation keeps why it is right, the takeaway and, when they fit, why each
+ * other option is wrong. Questions the platform can't hold yet are skipped and reported, never changed.
+ */
+export async function quizFromFile(path: string): Promise<ParsedQuiz | null> {
+  let raw: string;
+  try { raw = await readFile(path, 'utf8'); } catch { return null; }
+  const out: ParsedQuiz = { questions: [], skipped: [] };
+  let data: { questions?: Array<{ id?: string; q?: string; code?: string; options?: string[]; correct?: number; why?: string; explanations?: string[]; takeaway?: string }> };
+  try { data = JSON.parse(raw); } catch { out.skipped.push('quiz.json is not valid JSON: not used'); return out; }
+  const seen = new Set<string>();
+  for (const [i, x] of (data.questions ?? []).entries()) {
+    const id = x.id ?? `#${i + 1}`;
+    const opts = x.options ?? [];
+    const q = [x.q?.trim(), x.code ? `\n${x.code.trim()}` : ''].join('').trim();
+    if (!q || q.length > 500) { out.skipped.push(`${id}: question missing or longer than 500 characters`); continue; }
+    if (opts.length < 3 || opts.length > 5 || opts.some((o) => !o?.trim() || o.length > 300)) { out.skipped.push(`${id}: needs 3–5 options of at most 300 characters`); continue; }
+    if (!Number.isInteger(x.correct) || x.correct! < 0 || x.correct! >= opts.length) { out.skipped.push(`${id}: correct answer index invalid`); continue; }
+    if (!x.why?.trim()) { out.skipped.push(`${id}: no explanation`); continue; }
+    if (seen.has(q.toLowerCase())) { out.skipped.push(`${id}: duplicate question`); continue; }
+    seen.add(q.toLowerCase());
+    let why = x.why.trim();
+    if (x.takeaway?.trim()) why += ` Takeaway: ${x.takeaway.trim()}`;
+    const wrong = (x.explanations ?? []).map((e, j) => (j === x.correct || !e?.trim() ? '' : ` ${String.fromCharCode(65 + j)}: ${e.trim()}`)).join('');
+    if (wrong && why.length + wrong.length + 18 <= 1000) why += ` Why not the others:${wrong}`;
+    out.questions.push({ q, options: opts.map((o) => o.trim()), correct: x.correct!, why: why.slice(0, 1000) });
+  }
+  return out;
+}
+
 /** Caption text as one string: cue numbers and timings removed, lines joined (questions span cues). */
 export function captionText(srtOrVtt: string): string {
   return srtOrVtt.replace(/^\uFEFF/, '').split(/\r?\n/).map((l) => l.trim())
@@ -476,6 +507,14 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   const quizzes = new Map<string, ParsedQuiz>();
   if (plan.course.quizzes === 'from-captions') {
     for (const [k, f] of inventory) {
+      // GEN's full question bank (quiz.json, standard §8a) wins over the spoken questions in the captions.
+      const fromFile = f.video ? await quizFromFile(join(dirname(f.video), 'quiz.json')) : null;
+      if (fromFile) {
+        quizzes.set(k, fromFile);
+        fromFile.skipped.forEach((x) => quizSkips.push(`${k}: ${x}`));
+        log(`  ${k}: quiz ${fromFile.questions.length} question(s) from quiz.json${fromFile.skipped.length ? `, ${fromFile.skipped.length} skipped` : ''}`);
+        continue;
+      }
       if (!f.captions) continue;
       let qz = await quizFromCaptions(f.captions);
       // Options only on the slides: the manifest's quiz is used when every answer is the one the video says.

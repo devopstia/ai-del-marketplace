@@ -285,3 +285,18 @@ test('sharing banner: only what the plan sets and the course lacks is sent; bad 
   const bad = validatePlan({ ...base, course: { title: 'T', share: { template: 'k8s', family: 'loud' as 'pro', headline: 'x'.repeat(91) } } } as CoursePlan).errors;
   assert.equal(bad.length, 3);
 });
+
+test('quiz.json: full bank mapped to the platform format, bad questions skipped and reported', async () => {
+  const { mkdtemp, writeFile } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { quizFromFile } = await import('./publish.js');
+  const dir = await mkdtemp(join(tmpdir(), 'quizjson-'));
+  const good = { id: 'a', q: 'Which node starts a workflow?', options: ['Schedule trigger', 'If', 'HTTP Request'], correct: 0, why: 'Triggers start runs.', explanations: ['Correct.', 'If routes data.', 'HTTP calls a service.'], takeaway: 'One start event.' };
+  await writeFile(join(dir, 'quiz.json'), JSON.stringify({ version: 1, questions: [good, { ...good, id: 'dup' }, { ...good, id: 'bad', q: 'Other?', correct: 7 }, { ...good, id: 'two', q: 'Two?', options: ['a', 'b'] }] }));
+  const r = (await quizFromFile(join(dir, 'quiz.json')))!;
+  assert.equal(r.questions.length, 1);
+  assert.match(r.questions[0]!.why, /Takeaway: One start event\. Why not the others: B: If routes data\. C: HTTP calls a service\./);
+  assert.equal(r.skipped.length, 3);
+  assert.equal(await quizFromFile(join(dir, 'missing.json')), null);
+});
