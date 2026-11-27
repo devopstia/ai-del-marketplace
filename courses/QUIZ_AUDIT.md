@@ -23,6 +23,13 @@ Findings:
 - **No course has module or final assessments yet** (standard §8a already asks for them).
 - Answer check: an automatic word-overlap check between each answer and its explanation flagged many questions, but a manual read of a sample (n8n lesson 10, AWS RAG, VS Code) found the explanations paraphrase the right answer correctly; no wrong answer key found. The full re-check happens when GEN's `quiz.json` banks are validated by the publisher.
 
+## Banks delivered since (GEN `quiz.json`)
+| Course | Lessons with `quiz.json` | Questions | Publisher check |
+|---|---:|---:|---|
+| AI-Powered DevOps Automation with n8n | 21 of 21 video lessons (2026-11-28) | 239 (7–12 per lesson, all with explanations per option, takeaway, difficulty, type, topic, timestamp) | 0 errors; every count within the range for its video length |
+
+The table below is the caption-only count before these banks (the baseline the brief asked for).
+
 ## Per lesson
 
 ### AI for DevOps on AWS: From Fundamentals to Production

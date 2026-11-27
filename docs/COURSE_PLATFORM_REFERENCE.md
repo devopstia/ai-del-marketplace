@@ -66,7 +66,7 @@ GEN copies files as `*.part` and renames when complete; the watcher waits for th
   `PALETTES` (same ink ground, accent `a` and light `b`), a motif case in `cover-render.ts` drawn in ±100 units scaled by
   `u / 266`, a `blueprint-<tech>` template (sort 1–5 range) and an `editorial-<tech>` one right after it, then `npx jest src/covers` (set `COVER_SAMPLES_DIR` to save
   PNGs) and look at them. A course that already has a template keeps it; switch it in the studio's cover picker. **Previews** `lectures.isPreview` →
-  `catalogue.service.ts previewPlayback`. **Quizzes** `quizzes` per quiz lecture (3–5 options, `correct`, `why`).
+  `catalogue.service.ts previewPlayback`. **Quizzes** `quizzes` per quiz lecture: `questions` (1–60; `id`, `q`, 2–6 `options`, `correct`, `why`, and since 2026-11-28 `explanations` per option, `takeaway`, `difficulty`, `type`, `topic`, `timestamp`, `code`, `fixedOrder`) and `settings` (`kind` lesson/module/final/scenario, `scenario`, `sampleSize`, `pool`). `quiz_attempts.answers` is a number array (old) or `{ v: 2, mode, items: [{ id, chosen, correct }] }`; `quiz_bookmarks` per student. Model and checks: `apps/api/src/learning/quiz-model.ts`.
 
 ## 5. What students see (apps/web, Next.js)
 | Place | Component | Notes |
@@ -74,7 +74,7 @@ GEN copies files as `*.part` and renames when complete; the watcher waits for th
 | Course page | `app/(site)/courses/[slug]/page.tsx` | header (title, subtitle, "Created by … · Designed by Tia"), What you'll learn (objectives), Course content (curriculum, Preview links), Requirements, About this course (`components/Markdown.tsx`: `##`, lists, bold), Course designer/instructor, FAQ |
 | Buy box | `components/PurchaseCard.tsx` | cover with "Preview this course" (first preview), price, cart/buy, what's included (video hours, captions, quizzes, files) |
 | Player | `components/learn/LearnPlayer.tsx` | video, Previous/Next, autoplay countdown; tabs; **Overview tab → "Files for this lesson"** (`ResourcesPanel`): the lesson's slides PDF and lab ZIP directly under the video, one Download button each; only shown when the lesson has files (owner approved this placement 2026-11-27) |
-| Quiz | `components/learn/QuizPanel.tsx` | quiz lessons ("Quiz: …"), answers explained |
+| Quiz | `components/learn/QuizPanel.tsx` | quiz lessons ("Quiz: …") and assessments: questions and options shuffled per attempt (graded by id), progress bar, explanation of the chosen and the right option, takeaway, per-topic summary, "Watch this part" (seeks the lesson video), retry missed questions (practice, not recorded), bookmarks |
 | Studio | `components/studio/*` (CurriculumStep, DetailsStep, PricingStep) | what instructors (and DEL Studio) edit by hand |
 Resource titles the publisher uses: **"Slides (PDF)"** and **"Hands-on lab (ZIP)"**; download names
 `<lesson-title>-slides.pdf`, `<lesson-title>-lab.zip`.
@@ -116,3 +116,19 @@ Staging https://staging.ai-devopseasylearning.com (no sign-in codes; seed admin 
 https://ai-devopseasylearning.com (owner's sign-in with authenticator; no agent keys unless the owner says so). Code
 releases: `scripts/deploy-aws.sh` (build → staging → verify → RDS snapshot → production), only on the owner's
 "deploy to production". Course content: staging first, then production, through the publisher.
+
+## Quiz banks and assessments (owner 2026-11-28)
+- **Counts follow the lesson**, not a fixed four (standard §8a; owner's table by video length). Audit and status: `courses/QUIZ_AUDIT.md`.
+- **Lesson quiz**: GEN delivers `quiz.json` in the lesson folder (schema `courses/quiz.schema.json`): every option explained,
+  takeaway, difficulty, type, topic, timestamp. It wins over the spoken questions in the captions (the caption parser stays the fallback).
+- **Assessments**: plan field `"assessments": "<folder>"` (relative to `sourceDir`) with `module-<n>-assessment.json` (closes module n),
+  `final-assessment.json` (closes the last module), `scenario-<name>.json` (closes module `section`, default the last). Settings:
+  `sampleSize` (questions per attempt) and `pool` (`module`/`course`: also draw from those lesson quizzes).
+- **Publisher** (`tools/mcp-server/src/quizfile.ts`): blocks on a wrong answer index, a missing explanation per option, repeated
+  questions/ids, a timestamp past the video's end or an answer given away by the question; warns when the count is outside the range
+  for the video's length. A changed file replaces the quiz in place (checksum in `state.<env>.json` › `quizFiles`), same quiz lesson,
+  so students' results stay. **Switch**: full banks and assessments need the quiz-bank API release; until `"quizBanks": true` is set
+  in `courses/publisher.config.json` (or `DEL_QUIZ_BANKS=1`), `quiz.json` is folded into today's format (`quizFromFile`: why +
+  takeaway + why the others are wrong) and assessments are not uploaded.
+- **Grading**: by question id with a signed draw (a sampled assessment is graded on exactly what was handed out); retry-missed is
+  practice only; best and latest scores from full attempts; instructor insights count misses by question id.

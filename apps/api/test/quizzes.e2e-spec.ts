@@ -114,6 +114,8 @@ describe('e2e: quiz banks and assessments', () => {
     return { c, s1, video, q1, q2, fin };
   }
   const enrol = (userId: string, courseId: string) => prisma.enrollment.create({ data: { userId, courseId, source: 'free' } });
+  /** Quizzes are set while the course is a draft (a published course's edits go to its reviewed revision), then it goes live. */
+  const publishNow = (courseId: string) => prisma.course.update({ where: { id: courseId }, data: { status: 'published', publishedAt: new Date() } });
 
   it('old quizzes and old attempts keep working (answers in order; results unchanged)', async () => {
     if (!available) return;
@@ -139,9 +141,10 @@ describe('e2e: quiz banks and assessments', () => {
     if (!available) return;
     const t = await as('quiz-teacher2@e2e.example', ['student', 'instructor']);
     const s = await as('quiz-student2@e2e.example', ['student']);
-    const k = await course(t.user.id);
+    const k = await course(t.user.id, 'draft');
     await enrol(s.user.id, k.c.id);
     await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.q1.id}/quiz`).send({ questions: bank(12) }).expect(200);
+    await publishNow(k.c.id);
 
     const g = (await s.agent.get(`/api/lectures/${k.q1.id}/quiz`).expect(200)).body;
     expect(g.questions).toHaveLength(12);
@@ -182,7 +185,7 @@ describe('e2e: quiz banks and assessments', () => {
     if (!available) return;
     const t = await as('quiz-teacher3@e2e.example', ['student', 'instructor']);
     const s = await as('quiz-student3@e2e.example', ['student']);
-    const k = await course(t.user.id);
+    const k = await course(t.user.id, 'draft');
     await enrol(s.user.id, k.c.id);
     await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.q1.id}/quiz`).send({ questions: bank(10) }).expect(200);
     await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.q2.id}/quiz`).send({ questions: bank(10).map((q) => ({ ...q, q: q.q.replace('Terraform', 'Plan') })) }).expect(200);
@@ -190,6 +193,7 @@ describe('e2e: quiz banks and assessments', () => {
     await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.fin.id}/quiz`).send({ questions: own, settings: { kind: 'final', pool: 'course', sampleSize: 15, scenario: 'Your team inherits a broken pipeline.' } }).expect(200);
     // too large a sample for the quiz's own questions is refused when it doesn't pool
     await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.fin.id}/quiz`).send({ questions: own, settings: { kind: 'final', sampleSize: 15 } }).expect(400);
+    await publishNow(k.c.id);
 
     const g = (await s.agent.get(`/api/lectures/${k.fin.id}/quiz`).expect(200)).body;
     expect(g).toMatchObject({ kind: 'final', poolSize: 25, scenario: 'Your team inherits a broken pipeline.' });
@@ -209,9 +213,10 @@ describe('e2e: quiz banks and assessments', () => {
     const t = await as('quiz-teacher4@e2e.example', ['student', 'instructor']);
     const s = await as('quiz-student4@e2e.example', ['student']);
     const o = await as('quiz-other4@e2e.example', ['student']);
-    const k = await course(t.user.id);
+    const k = await course(t.user.id, 'draft');
     await enrol(s.user.id, k.c.id);
     await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.q1.id}/quiz`).send({ questions: bank(4) }).expect(200);
+    await publishNow(k.c.id);
 
     await s.send('put', `/api/lectures/${k.q1.id}/quiz/bookmarks/t2`).expect(200);
     await s.send('put', `/api/lectures/${k.q1.id}/quiz/bookmarks/t2`).expect(200); // idempotent

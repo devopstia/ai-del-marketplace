@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-devopseasylearning.com/schemas/quiz.schema.json",
+  "title": "DevOps Easy Learning quiz bank (owner 2026-11-28)",
+  "description": "A lesson's quiz (lesson folder / quiz.json) or an assessment (<assessments>/module-<n>-assessment.json, final-assessment.json, scenario-<name>.json). Questions only from the course's own content. Counts follow docs/COURSE_STANDARD.md §8a (by video length: <5 min 3–5, 5–10 5–8, 10–20 8–12, 20–30 10–15, 30–45 15–20, 45–60 20–25, >60 25–30+; module assessment 15–30, final 30–60). The publisher checks it (tools/mcp-server/src/quizfile.ts) and the API checks it again.",
+  "type": "object",
+  "required": ["questions"],
+  "properties": {
+    "version": { "const": 1 },
+    "lesson": { "type": "string", "description": "The lesson folder (informational)." },
+    "title": { "type": "string", "maxLength": 200, "description": "Assessments: the lesson title shown (default 'Module <n> assessment', 'Final assessment', 'Scenario: <name>')." },
+    "section": { "type": "integer", "minimum": 1, "description": "Scenario assessments: the module (1-based) it closes; default the last." },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["lesson", "module", "final", "scenario"], "description": "Set by the publisher from the file name for assessments." },
+        "scenario": { "type": "string", "maxLength": 8000, "description": "The situation shown above the questions (scenario assessments)." },
+        "sampleSize": { "type": "integer", "minimum": 1, "maximum": 60, "description": "Questions drawn per attempt from the bank." },
+        "pool": { "enum": ["own", "module", "course"], "description": "Also draw from the lesson quizzes of this module or of the whole course." }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 60,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["q", "options", "correct", "why", "explanations"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$", "description": "Stable id (keep it when editing the question, so results stay linked)." },
+          "q": { "type": "string", "minLength": 3, "maxLength": 1000 },
+          "options": { "type": "array", "minItems": 2, "maxItems": 6, "items": { "type": "string", "minLength": 1, "maxLength": 400 }, "description": "Realistic options; no 'obviously wrong' fillers." },
+          "correct": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Index of the right option (0 = the first)." },
+          "why": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "Why the right answer is right." },
+          "explanations": { "type": "array", "minItems": 2, "maxItems": 6, "items": { "type": "string", "minLength": 1, "maxLength": 1000 }, "description": "One per option, same order: why it is right or wrong." },
+          "takeaway": { "type": "string", "maxLength": 600, "description": "The lesson or best practice to remember." },
+          "difficulty": { "enum": ["foundation", "applied", "advanced"] },
+          "type": { "enum": ["concept", "technical", "scenario", "troubleshooting", "architecture", "code", "command", "security", "code/config analysis", "real-world scenario"], "description": "The last two are accepted names for code and scenario." },
+          "topic": { "type": "string", "maxLength": 80, "description": "Used for the per-topic score summary." },
+          "timestamp": { "type": "integer", "minimum": 0, "description": "Seconds into the lesson video where this is taught ('Watch this part')." },
+          "code": { "type": "string", "maxLength": 4000, "description": "A snippet shown with the question (config, command output, code)." },
+          "fixedOrder": { "type": "boolean", "description": "Keep the options in this order (e.g. 'all of the above')." }
+        }
+      }
+    }
+  }
+}
