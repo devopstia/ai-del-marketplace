@@ -531,6 +531,58 @@ describe('e2e: buy and learn', () => {
     expect((await request(app.getHttpServer()).get('/api/courses/rel-a').expect(200)).body.related).toEqual([]);
   });
 
+  it('student dashboard: continue learning, expiring access, certificates, quizzes, activity, purchases; only the student\'s own data (owner 2026-11-28)', async () => {
+    if (!available) return;
+    const del = await userAgent('sd-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const fresh = await userAgent('sd-new@e2e.example', ['student']);
+    const learner = await userAgent('sd-learner@e2e.example', ['student']);
+    const other = await userAgent('sd-other@e2e.example', ['student']);
+    await request(app.getHttpServer()).get('/api/me/dashboard').expect(401);
+
+    // A brand-new student: empty sections and the free courses to start with.
+    const free = await publishedCourse(del.user.id, 'sd-free-course', 0);
+    const empty = (await fresh.agent.get('/api/me/dashboard').expect(200)).body;
+    expect(empty.continueLearning).toBeNull();
+    expect(empty.learning.items).toEqual([]);
+    expect(empty.quizzes.averageScore).toBeNull();
+    expect(empty.activity.days).toHaveLength(30);
+    expect(empty.activity.streak).toBe(0);
+    expect(empty.purchases).toEqual([]);
+    expect(empty.freeCourses.map((c: { slug: string }) => c.slug)).toContain('sd-free-course');
+
+    // An active learner: two lessons, one done; a quiz attempt; access ending in 10 days.
+    const c = await publishedCourse(del.user.id, 'sd-course', 0);
+    const l2 = await prisma.lecture.create({ data: { sectionId: c.section.id, title: 'L2', position: 1, type: 'video', videoAssetId: c.lecture.videoAssetId, durationSec: 40 } });
+    const ql = await prisma.lecture.create({ data: { sectionId: c.section.id, title: 'Quiz: basics', position: 2, type: 'quiz' } });
+    const quiz = await prisma.quiz.create({ data: { lectureId: ql.id, questions: [{ q: 'Two plus two?', options: ['3', '4', '5'], correct: 1, why: 'Arithmetic.' }] } });
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: c.course.id, source: 'free', accessExpiresAt: new Date(Date.now() + 10 * 86_400_000) } });
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: free.course.id, source: 'free' } });
+    await learner.send('put', `/api/lectures/${c.lecture.id}/progress`, { positionSec: 20, completed: true }).expect(200);
+    await learner.send('put', `/api/lectures/${l2.id}/progress`, { positionSec: 12 }).expect(200);
+    await prisma.quizAttempt.create({ data: { userId: learner.user.id, quizId: quiz.id, score: 100, answers: [1] } });
+    await prisma.playbackSession.create({ data: { ref: 'sd-ref-1', userId: learner.user.id, assetId: c.lecture.videoAssetId!, lectureId: l2.id, expiresAt: new Date(Date.now() + 3_600_000) } });
+    // The free course finished: a certificate.
+    await learner.send('put', `/api/lectures/${free.lecture.id}/progress`, { positionSec: 20, completed: true }).expect(200);
+    // Someone else's activity must never show up.
+    await prisma.enrollment.create({ data: { userId: other.user.id, courseId: c.course.id, source: 'free' } });
+    await prisma.quizAttempt.create({ data: { userId: other.user.id, quizId: quiz.id, score: 0, answers: [0] } });
+
+    const d = (await learner.agent.get('/api/me/dashboard').expect(200)).body;
+    expect(d.continueLearning).toMatchObject({ slug: 'sd-course', lectureId: l2.id, lectureTitle: 'L2', moduleTitle: 'S1', positionSec: 12, lessonsLeft: 2, remainingSec: 40 });
+    const item = d.learning.items.find((i: { course: { slug: string } }) => i.course.slug === 'sd-course');
+    expect(item.access.daysLeft).toBeLessThanOrEqual(10);
+    expect(d.certificates).toEqual([expect.objectContaining({ course: expect.objectContaining({ slug: 'sd-free-course' }), status: 'valid' })]);
+    expect(d.quizzes).toMatchObject({ averageScore: 100, quizzesTaken: 1, attempts: 1 });
+    expect(d.quizzes.recent[0]).toMatchObject({ lectureId: ql.id, score: 100, course: { slug: 'sd-course' } });
+    expect(d.activity.days[29]).toMatchObject({ lessons: 1, quizzes: 1 });
+    expect(d.activity.streak).toBe(1);
+    expect(d.freeCourses).toEqual([]);
+    expect(JSON.stringify(d)).not.toContain('sd-other');
+    const o = (await other.agent.get('/api/me/dashboard').expect(200)).body;
+    expect(o.quizzes.averageScore).toBe(0);
+    expect(o.certificates).toEqual([]);
+  });
+
   it('certificates: issued automatically on completion, public check (valid / revoked / invalid), downloads, super admin revoke (owner 2026-11-27)', async () => {
     if (!available) return;
     const del = await userAgent('c-del@e2e.example', ['student', 'instructor'], { isPlatform: true });

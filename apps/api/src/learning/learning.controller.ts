@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { CurrentUser, type AuthUser, Cap } from '../common/auth-context';
 import { ZBody } from '../common/zod';
 import { LearningService } from './learning.service';
+import { StudentDashboardService } from './student-dashboard.service';
 
 /** `played`: [start, end] seconds actually played since the last save (unique-viewing tracking for the refund rule). */
 const progressSchema = z.object({ positionSec: z.number().int().min(0).max(24 * 3600), completed: z.boolean().optional(), played: z.array(z.tuple([z.number().min(0).max(24 * 3600), z.number().min(0).max(24 * 3600)])).max(200).optional() });
@@ -12,7 +13,13 @@ const reviewSchema = z.object({ rating: z.number().int().min(1).max(5), body: z.
 
 @Controller()
 export class LearningController {
-  constructor(private readonly svc: LearningService) {}
+  constructor(private readonly svc: LearningService, private readonly dashboard: StudentDashboardService) {}
+
+  /** Student Studio home (dashboard phase 2, owner 2026-11-28): the student's own learning, quizzes, activity and purchases. */
+  @Get('me/dashboard')
+  myDashboard(@CurrentUser() u: AuthUser) {
+    return this.dashboard.forStudent(u.id);
+  }
 
   @Get('me/learning')
   learning(@CurrentUser() u: AuthUser) {
