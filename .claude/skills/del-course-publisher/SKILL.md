@@ -24,14 +24,24 @@ final review below; only a super admin approves (Super Admin › Review queue).
 - Staging, and production only when `productionAllowed` is true. Never live Stripe settings, never a payment, never
   another course, never delete content, never delete and recreate a lesson (progress, completions and quiz results
   hang on its id).
-- Work only through an **agent key** (Super Admin › AI agents, scopes `courses:read courses:write uploads`, ≤ 7 days,
-  for the course's account). Never a password, cookie or database. Keep the key in the session scratchpad
-  (`umask 077`), never in the repo, and delete it at the end. A super admin issues it; on staging the admin can do it
-  through `/api/admin/agents/tokens`. **Production key:** the owner signs in to production (with their authenticator),
-  creates the key in Super Admin › AI agents for the DevOps Easy Learning account (scopes `courses:read courses:write
-  uploads submit`, 7 days) and saves it themselves without showing it in the chat:
-  `! umask 077; read -rs -p 'Agent key: ' K && printf %s "$K" > <scratchpad>/agent-token.production && unset K`.
-  Never ask for passwords or codes, never put a key in a file in the repo, a plan, a report or a commit.
+- **Two ways to sign in; production uses session mode** (owner 2026-11-27: "Please do not use agents"):
+  - **Session mode (production, and whenever the owner prefers it):** the owner signs in themselves with
+    `! scripts/del-signin.sh https://ai-devopseasylearning.com <scratchpad>/session.production.jar` (email, hidden
+    password, the 6-digit authenticator code; it writes only the cookie jar, mode 600). Tell them it ends their other
+    browser session (one session per account). The publisher then works as **DEL Studio** (`act_as=platform`, the
+    platform account) through the studio routes: `DEL_SESSION_JAR=<jar> node tools/mcp-server/dist/publish.js
+    courses/<slug>/plan.json --env production --auth session --wait 0` (the watcher takes `--auth session` too). It
+    keeps the session alive with the heartbeat; if the session ends (401, idle or lifetime limit) the run stops with
+    "sign in again": ask the owner to run the sign-in again, then re-run (nothing is lost). The studio has no server-side
+    checksum de-duplication, so the state file's `files` map (sha256 → asset/storage key) is what prevents
+    re-uploads: never delete `state.<env>.json`. The report's validation is computed by the publisher (no server-side
+    validation route in the studio). **At the end:** `! scripts/del-signin.sh --logout https://ai-devopseasylearning.com
+    <jar>` (or run it yourself: it signs out and deletes the jar).
+  - **Agent key (staging, or when the owner asks for it):** Super Admin › AI agents, scopes `courses:read
+    courses:write uploads submit`, ≤ 7 days, for the course's account; kept in the session scratchpad (`umask 077`),
+    deleted at the end. On staging the admin can issue it through `/api/admin/agents/tokens`.
+  - Never ask for passwords or codes in the chat (the owner types them into the script only), never put a key, jar,
+    password or code in the repo, a plan, a report or a commit; never use the database directly.
 - New courses stay **drafts** until the final review passes and the owner wants them live; then `submit_for_review`
   and a super admin approves. A **published** course changes only through its draft revision: the publisher's edits
   land there, the agent submits the revision, a super admin approves it in the Review queue; learners see nothing
@@ -75,7 +85,8 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
    exists. Prices are the owner's decision, per environment in `environments.<env>.priceCents`.
 5. **Dry run**: `node tools/mcp-server/dist/publish.js courses/<slug>/plan.json [--env production] --dry-run`. It checks
    the API limits, the intro rule, previews, the manifest, and counts the quiz questions. Fix every problem it lists.
-6. **Upload**: `DEL_AGENT_TOKEN=$(cat <scratchpad>/agent-token) node tools/mcp-server/dist/publish.js courses/<slug>/plan.json [--env production] --wait 0`
+6. **Upload**: production: `DEL_SESSION_JAR=<scratchpad>/session.production.jar node tools/mcp-server/dist/publish.js courses/<slug>/plan.json --env production --auth session --wait 0`;
+   staging with a key: `DEL_AGENT_TOKEN=$(cat <scratchpad>/agent-token) node tools/mcp-server/dist/publish.js courses/<slug>/plan.json --wait 0`
    (run in the background; ~2 GB takes a while). It creates or reuses the draft, sections, lessons, uploads videos,
    captions, slides and labs, attaches them, arranges the curriculum, picks the cover, validates and writes
    `courses/<slug>/reports/<env>-<time>.md`. Re-running is safe and only adds what's new. **Failed or interrupted

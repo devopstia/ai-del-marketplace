@@ -4,6 +4,8 @@
  * Publishing Agent; .claude/skills/del-course-publisher/SKILL.md).
  *
  *   DEL_AGENT_TOKEN=del_agent_… node dist/publish.js courses/<course>/plan.json [--env staging|production] [--dry-run] [--wait 45]
+ *   DEL_SESSION_JAR=<jar> node dist/publish.js courses/<course>/plan.json --auth session …   (owner's session as DEL Studio;
+ *     sign in with `! scripts/del-signin.sh <site> <jar>`; no agent token)
  *
  * Idempotent: the course, its sections and lessons are matched (state file, then title) and never duplicated; files are
  * de-duplicated by checksum on the server; a lesson's file is attached once per title. Re-running after new videos are
@@ -12,7 +14,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
-import { ApiError, DelClient } from './client.js';
+import { ApiError, DelClient, SessionClient, type FileRecord, type FileStore, type PublisherClient } from './client.js';
 
 // ---------- plan ----------
 export type LessonRole = 'intro' | 'lesson' | 'vocabulary' | 'project' | 'conclusion';
@@ -264,11 +266,23 @@ interface Resource { id: string; title: string }
 interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
 interface Section { id: string; title: string; lectures: Lecture[] }
 interface CourseDetail { id: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
-interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string> }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
+
+export type AuthMode = 'agent' | 'session';
+
+/** Session-mode memory of uploaded files, kept in the state file. */
+export function stateFileStore(state: { files?: Record<string, FileRecord> }, save: () => Promise<void>): FileStore {
+  state.files ??= {};
+  return {
+    get: (sha) => state.files![sha],
+    set: async (sha, r) => { state.files![sha] = r; await save(); },
+    knowsAsset: (id) => Object.values(state.files!).some((f) => f.assetId === id),
+  };
+}
 
 type Log = (msg: string) => void;
 
-export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string } = {}) {
+export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number } = {}) {
   const log = opts.log ?? ((m: string) => console.log(m));
   const plan = forEnv(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan, opts.env);
   const planDir = dirname(resolve(planPath));
@@ -321,12 +335,26 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   if (opts.dryRun) return { dryRun: true, environment: plan.environment, apiUrl: plan.apiUrl, priceCents: plan.course.priceCents, issues, warnings, quizSkips, inventory: Object.fromEntries(inventory), quizzes: Object.fromEntries([...quizzes].map(([k, v]) => [k, v.questions.length])) };
   if (checks.errors.length || [...inventory.values()].some((f) => f.problems.length)) throw new Error(`Fix these before uploading:\n${issues.join('\n')}`);
 
-  const token = opts.token ?? process.env.DEL_AGENT_TOKEN ?? '';
-  const del = new DelClient(plan.apiUrl, token, [plan.sourceDir], opts.fetchImpl);
+  const auth: AuthMode = opts.auth ?? (process.env.DEL_AUTH === 'session' ? 'session' : 'agent');
+  let del: PublisherClient;
+  if (auth === 'session') {
+    const jarPath = opts.jarPath ?? process.env.DEL_SESSION_JAR ?? '';
+    if (!jarPath || !existsSync(jarPath)) throw new Error('Session mode needs DEL_SESSION_JAR (the cookie jar from `! scripts/del-signin.sh`).');
+    del = new SessionClient(plan.apiUrl, await readFile(jarPath, 'utf8'), [plan.sourceDir], stateFileStore(state, saveState), opts.fetchImpl, 1000, opts.heartbeatMs);
+  } else {
+    const token = opts.token ?? process.env.DEL_AGENT_TOKEN ?? '';
+    del = new DelClient(plan.apiUrl, token, [plan.sourceDir], opts.fetchImpl);
+  }
+  try {
+    return await run();
+  } finally {
+    del.close?.();
+  }
+  async function run() {
 
   // 2. Right account?
   const me = await del.call<{ instructor: { id: string; name: string } }>('GET', '/whoami');
-  if (me.instructor.name !== plan.instructorName) throw new Error(`The token works for "${me.instructor.name}", the plan says "${plan.instructorName}". Nothing was changed.`);
+  if (me.instructor.name !== plan.instructorName) throw new Error(`${auth === 'session' ? 'The session works as' : 'The token works for'} "${me.instructor.name}", the plan says "${plan.instructorName}". Nothing was changed.`);
   log(`Working for ${me.instructor.name} on ${plan.apiUrl}`);
 
   // 3. Course: state → title → create. Then the details.
@@ -379,14 +407,14 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
 
       // Video (checksum de-duplication makes a re-run cheap).
       try {
-        const v = await del.upload(files.video!, { courseId, name: `${slug(lp.title)}${extname(files.video!)}` });
+        const v = await del.upload(files.video!, { courseId, name: `${slug(lp.title)}${extname(files.video!)}`, existingAssetId: lec.videoAssetId });
         if (v.duplicate) counts.reused++; else counts.uploaded++;
         if (lec.videoAssetId !== v.assetId) patch.videoAssetId = v.assetId;
         counts.videos++;
         if (files.captions && !(lec.video?.id === v.assetId && lec.video?.hasCaptions)) {
-          try { await del.uploadCaptions(v.assetId!, files.captions); counts.captions++; } catch (e) { issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
+          try { await del.uploadCaptions(v.assetId!, files.captions); counts.captions++; } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
         } else if (files.captions) counts.captions++;
-      } catch (e) {
+      } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
         counts.failed++;
         issues.push(`${lp.folder}: video upload failed: ${(e as Error).message}`);
       }
@@ -401,7 +429,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
           if (r.duplicate) counts.reused++; else counts.uploaded++;
           await del.call('POST', `/courses/${courseId}/lectures/${lec.id}/resources`, { title, storageKey: r.storageKey });
           counts[kind]++;
-        } catch (e) {
+        } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
           counts.failed++;
           issues.push(`${lp.folder}: ${title} failed: ${(e as Error).message}`);
         }
@@ -425,7 +453,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
           if (!same) await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: qz.questions });
           counts.quizzes++;
           counts.quizQuestions += qz.questions.length;
-        } catch (e) {
+        } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
           counts.failed++;
           issues.push(`${lp.folder}: quiz failed: ${(e as Error).message}`);
         }
@@ -497,6 +525,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   await writeFile(reportPath, report.join('\n') + '\n');
   log(`Report: ${reportPath}`);
   return { courseId, counts, issues, validation, studioUrl: preview.studioUrl, reportPath };
+  }
 }
 
 // CLI
@@ -505,9 +534,10 @@ if (process.argv[1] && ['publish.js', 'del-publish-course'].includes(basename(pr
   const val = (k: string) => (args.includes(k) ? args[args.indexOf(k) + 1] : undefined);
   const wait = val('--wait') !== undefined ? Number(val('--wait')) : undefined;
   const env = val('--env') as Env | undefined;
-  const planPath = args.find((a, i) => !a.startsWith('--') && !['--wait', '--env'].includes(args[i - 1] ?? ''));
-  if (!planPath || (env && !['staging', 'production'].includes(env))) { console.error('Usage: DEL_AGENT_TOKEN=del_agent_… node dist/publish.js <plan.json> [--env staging|production] [--dry-run] [--wait minutes]'); process.exit(2); }
-  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env })
+  const auth = val('--auth') as AuthMode | undefined;
+  const planPath = args.find((a, i) => !a.startsWith('--') && !['--wait', '--env', '--auth'].includes(args[i - 1] ?? ''));
+  if (!planPath || (env && !['staging', 'production'].includes(env)) || (auth && !['agent', 'session'].includes(auth))) { console.error('Usage: DEL_AGENT_TOKEN=del_agent_… node dist/publish.js <plan.json> [--env staging|production] [--dry-run] [--wait minutes]\n       DEL_SESSION_JAR=<cookie jar from scripts/del-signin.sh> node dist/publish.js <plan.json> --auth session [...]'); process.exit(2); }
+  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env, auth })
     .then((r) => { if ('dryRun' in r) console.log(JSON.stringify({ environment: r.environment, apiUrl: r.apiUrl, priceCents: r.priceCents, quizzes: r.quizzes, issues: r.issues, quizSkips: r.quizSkips?.length }, null, 2)); else console.log(JSON.stringify({ courseId: r.courseId, counts: r.counts, issues: r.issues.length }, null, 2)); })
     .catch((e) => { console.error(e instanceof ApiError ? `${e.code} (${e.status}): ${e.message}` : (e as Error).message); process.exit(1); });
 }

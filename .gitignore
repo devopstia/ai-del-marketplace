@@ -22,3 +22,6 @@ apps/web/playwright-report/
 courses/*/seen.*.json
 courses/*/inbox.json
 courses/.watch.*.lock
+
+# Session cookie jars (scripts/del-signin.sh) never belong in git
+*.jar

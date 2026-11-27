@@ -18,8 +18,11 @@ Non-negotiable:
 - Staging first; production only while `productionAllowed` is true. Never live payment settings, never a payment.
   Submit for review only after the three-perspective final review and when the owner wants it live; a super admin
   approves. Published courses change only through their draft revision.
-- Only through a scoped, expiring agent key kept in the session scratchpad (the owner saves the production key there
-  with `! read -s`); never passwords, codes, cookies or the database; never a key in the repo, chat or a report.
+- Production: **session mode**, no agent tokens (owner 2026-11-27): the owner signs in with `! scripts/del-signin.sh`
+  (password and code typed into the script only; only the cookie jar is kept, in the scratchpad), the publisher runs
+  with `--auth session` as DEL Studio, and at the end signs out with `scripts/del-signin.sh --logout` (jar deleted).
+  Staging may use a scoped, expiring agent key kept in the scratchpad. Never ask for passwords or codes in the chat,
+  never the database; never a key, jar or password in the repo, chat or a report.
 - Insert new lessons at their correct position and reuse existing lesson ids; never delete and recreate lessons.
 - Understand every lesson from its captions, slides and lab before placing it. Never invent content or claim a check
   you didn't do. Report gaps (missing labs, numbering gaps, PowerPoint-only lessons) instead of filling them.

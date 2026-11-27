@@ -3,6 +3,20 @@
 What the Course Upload and Publishing Agent learned on each course (skill: `.claude/skills/del-course-publisher`).
 Read before every upload; add to it after every upload. Newest first.
 
+## 2026-11-27: production without agent keys (session mode)
+- **The owner doesn't want agent tokens for production** ("Please do not use agents"). The publisher now has
+  `--auth session`: the owner signs in with `! scripts/del-signin.sh <site> <jar>` (email, hidden password, authenticator
+  code, nothing stored but the cookie jar) and the publisher works as DEL Studio (`act_as=platform`) through the studio
+  routes. Audit entries name the real super admin. Sign out with `scripts/del-signin.sh --logout` at the end.
+- **No server-side checksum de-duplication in the studio**: idempotency comes from `state.<env>.json` → `files`
+  (sha256 → asset id / storage key). Keep the state file; a lesson video that the state never saw is adopted, not
+  uploaded again; a changed video (new checksum) is uploaded and replaces the old one.
+- **Sessions end** (inactivity, maximum lifetime, a new sign-in elsewhere): the publisher sends the heartbeat every few
+  minutes, and on a 401 it stops with "sign in again"; re-running resumes. Studio video uploads are one presigned PUT per
+  file (no multipart resume): an interrupted video is sent again from the start on the re-run.
+- Tested end to end on the del-test stack (sign-in script with the seed admin + TOTP, upload, captions, slides,
+  re-run = 0 sent, sign-out).
+
 ## 2026-11-26 (later): production profile, quizzes, monitoring
 - **One plan, two environments:** `environments.staging/production` hold the API and the price (staging $15, production
   $1 for the owner's live purchase test); `--env production` refuses unless `publisher.config.json` says

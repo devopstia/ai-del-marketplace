@@ -4,6 +4,7 @@
  * Publishing Agent; .claude/skills/del-course-publisher/SKILL.md, "Monitoring").
  *
  *   DEL_AGENT_TOKEN=… node dist/watch.js [--courses courses] [--env staging|production] [--settle 10] [--interval 15]
+ *   DEL_SESSION_JAR=<jar> node dist/watch.js --auth session …   (owner's session as DEL Studio, no agent token)
  *                                        [--once] [--dry-run] [--agent "<command>"]
  *
  * Every pass, for each courses/<slug>/plan.json:
@@ -20,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream, existsSync } from 'node:fs';
 import { open, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, extname, join, relative, resolve } from 'node:path';
-import { captionText, DEFAULT_INTRO, publish, readManifest, type CoursePlan, type Env, type LessonHint, type LessonRole } from './publish.js';
+import { captionText, DEFAULT_INTRO, publish, readManifest, type AuthMode, type CoursePlan, type Env, type LessonHint, type LessonRole } from './publish.js';
 
 const VIDEO = new Set(['.mp4', '.m4v', '.mov', '.webm']);
 /** Only these files can change what learners get (PowerPoint, thumbnails and production files never are uploaded). */
@@ -104,7 +105,7 @@ export interface PassResult {
 }
 
 /** One pass over every plan. */
-export async function watchOnce(opts: { coursesDir: string; env: Env; settleMinutes: number; dryRun?: boolean; agentCmd?: string; probe?: Probe; now?: number; publishImpl?: typeof publish; log?: (m: string) => void }): Promise<PassResult[]> {
+export async function watchOnce(opts: { coursesDir: string; env: Env; settleMinutes: number; auth?: AuthMode; dryRun?: boolean; agentCmd?: string; probe?: Probe; now?: number; publishImpl?: typeof publish; log?: (m: string) => void }): Promise<PassResult[]> {
   const log = opts.log ?? ((m: string) => console.log(m));
   const results: PassResult[] = [];
   const slugs = (await readdir(opts.coursesDir, { withFileTypes: true })).filter((e) => e.isDirectory() && existsSync(join(opts.coursesDir, e.name, 'plan.json'))).map((e) => e.name).sort();
@@ -133,7 +134,7 @@ export async function watchOnce(opts: { coursesDir: string; env: Env; settleMinu
     }
     if (res.synced.length && !opts.dryRun) {
       try {
-        const out = await (opts.publishImpl ?? publish)(planPath, { env: opts.env, waitMinutes: 0, log });
+        const out = await (opts.publishImpl ?? publish)(planPath, { env: opts.env, waitMinutes: 0, log, auth: opts.auth });
         if ('dryRun' in out) throw new Error('unexpected dry run');
         res.publish = { ok: true, courseId: out.courseId, issues: out.issues.length };
         Object.assign(seen.files, pendingRecs);
@@ -206,8 +207,9 @@ if (process.argv[1] && ['watch.js', 'del-watch-courses'].includes(basename(proce
   const once = args.includes('--once');
   const dryRun = args.includes('--dry-run');
   const agentCmd = val('--agent');
-  if (!['staging', 'production'].includes(env) || !existsSync(coursesDir)) { console.error('Usage: del-watch-courses [--courses courses] [--env staging|production] [--settle 10] [--interval 15] [--once] [--dry-run] [--agent "<cmd>"]'); process.exit(2); }
-  const pass = () => withLock(join(coursesDir, `.watch.${env}.lock`), () => watchOnce({ coursesDir, env, settleMinutes, dryRun, agentCmd }));
+  const auth = val('--auth', process.env.DEL_AUTH === 'session' ? 'session' : 'agent') as AuthMode;
+  if (!['staging', 'production'].includes(env) || !['agent', 'session'].includes(auth) || !existsSync(coursesDir)) { console.error('Usage: del-watch-courses [--courses courses] [--env staging|production] [--auth agent|session] [--settle 10] [--interval 15] [--once] [--dry-run] [--agent "<cmd>"]'); process.exit(2); }
+  const pass = () => withLock(join(coursesDir, `.watch.${env}.lock`), () => watchOnce({ coursesDir, env, settleMinutes, dryRun, agentCmd, auth }));
   const run = async () => {
     const r = await pass();
     if (r === 'locked') console.log('Another watcher is running; skipped this pass.');
