@@ -24,3 +24,50 @@ labs): to be reviewed, added to the plan in their place, synced to staging, then
 Production update **submitted 2026-11-27 05:59 UTC** (draft revision f2088294, in the Review queue): price $4.99 → **$29.99**,
 rewritten course page, module renames, lesson renames and summaries, re-recorded 01–03 videos with 12 new quiz
 questions (15 quizzes, 60 questions), lesson 01's lab, previews 01 + 17. Goes live when the owner approves.
+
+# AI for DevOps catalogue (owner brief 2026-11-27)
+Catalog: `COURSE_CATALOG.md`; source inventory: `INVENTORY.md`. Shared videos are uploaded once per environment (`media.<env>.json`).
+
+## AI for DevOps on AWS: From Fundamentals to Production (`courses/ai-for-devops-aws`)
+| | Staging | Production |
+|---|---|---|
+| Course id | `f26f445e-5f71-48ff-b68d-92d8b6db5a71` | not created |
+| Studio | https://staging.ai-devopseasylearning.com/studio/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71 | — |
+| Status | **draft** (not submitted) | — |
+| Price | $99.99 (planned; paid enrolment only after the owner approves) | same |
+| Content now | 31 lessons from the source groups (see `COURSE_CATALOG.md`); planned lessons in `CONTENT_REQUESTS.md` | — |
+| Cover | `blueprint-aws` (template arrives with the covers release) | — |
+| Waiting | owner preview; the CRs listed in the catalog; production categories | owner sign-in, categories, approval |
+
+## AI for DevOps on Azure: From Fundamentals to Production (`courses/ai-for-devops-azure`)
+| | Staging | Production |
+|---|---|---|
+| Course id | `6324aab5-2d84-4d12-b32d-74ba1bd85d0f` | not created |
+| Studio | https://staging.ai-devopseasylearning.com/studio/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f | — |
+| Status | **draft** (not submitted) | — |
+| Price | $99.99 (same) | same |
+| Content now | 30 lessons from the source groups (see `COURSE_CATALOG.md`); planned lessons in `CONTENT_REQUESTS.md` | — |
+| Cover | `blueprint-azure` (template arrives with the covers release) | — |
+| Waiting | owner preview; the CRs listed in the catalog; production categories | owner sign-in, categories, approval |
+
+## Introduction to Artificial Intelligence for DevOps (`courses/intro-ai-for-devops`)
+| | Staging | Production |
+|---|---|---|
+| Course id | `5b3a97b2-344c-4bc8-bc50-9afad66f4383` | not created |
+| Studio | https://staging.ai-devopseasylearning.com/studio/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383 | — |
+| Status | **draft** (not submitted) | — |
+| Price | Free | same |
+| Content now | 23 lessons from the source groups (see `COURSE_CATALOG.md`); planned lessons in `CONTENT_REQUESTS.md` | — |
+| Cover | `blueprint-ai` (template arrives with the covers release) | — |
+| Waiting | owner preview; the CRs listed in the catalog; production categories | owner sign-in, categories, approval |
+
+## Visual Studio Code Masterclass for DevOps and AI (`courses/vscode-masterclass`)
+| | Staging | Production |
+|---|---|---|
+| Course id | `c773897e-e8e8-4c11-a4e3-c75ece5f69dd` | not created |
+| Studio | https://staging.ai-devopseasylearning.com/studio/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd | — |
+| Status | **draft** (not submitted) | — |
+| Price | Free | same |
+| Content now | 6 lessons from the source groups (see `COURSE_CATALOG.md`); planned lessons in `CONTENT_REQUESTS.md` | — |
+| Cover | `blueprint-vscode` (template arrives with the covers release) | — |
+| Waiting | owner preview; the CRs listed in the catalog; production categories | owner sign-in, categories, approval |

@@ -1,0 +1,1168 @@
+{
+  "files": {
+    "533bbf7bb37aaeb6469f38711fa7964a846c0a8b71519d4ef9bcfbbbe85a1467": {
+      "kind": "video",
+      "assetId": "5103a22d-a561-4d78-8aa2-af8ebd6e70e1",
+      "name": "why-vs-code-is-the-devops-engineers-editor.mp4",
+      "at": "2026-11-27T06:17:24.022Z",
+      "courses": [
+        "vscode-masterclass"
+      ],
+      "status": "ready"
+    },
+    "473cea0ed934b858e14ddc01eff0fe1140266f9ccf37b28445a9b593b51c1966": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/534716f5-f68b-4d80-86ff-8a722e4b5fb1/why-vs-code-is-the-devops-engineers-editor-slides.pdf",
+      "name": "why-vs-code-is-the-devops-engineers-editor-slides.pdf",
+      "at": "2026-11-27T06:17:25.125Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "e356e8d46f49e61f57ad753c47e95bc0f823d3dfbfaead2933662ab2babcc723": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/dc23a6a9-cdae-4c65-a911-9f7eb51c51b8/why-vs-code-is-the-devops-engineers-editor-lab.zip",
+      "name": "why-vs-code-is-the-devops-engineers-editor-lab.zip",
+      "at": "2026-11-27T06:17:25.428Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "c8e0e8fc59729799de4c5edb19b470f00621a4a0064c60a60e90c0034dc0b6b0": {
+      "kind": "video",
+      "assetId": "6d5879c5-0544-4724-814f-c52640e3929d",
+      "name": "vs-code-vocabulary-workspaces-extensions-and-dev-containers.mp4",
+      "at": "2026-11-27T06:17:44.730Z",
+      "courses": [
+        "vscode-masterclass"
+      ],
+      "status": "ready"
+    },
+    "85e6bf47e7663fc7ac6c9cba5c91810d8193aedc95a9cf190923624644c97315": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/7d4dd834-238b-4565-a419-7b8055de1816/vs-code-vocabulary-workspaces-extensions-and-dev-containers-slides.pdf",
+      "name": "vs-code-vocabulary-workspaces-extensions-and-dev-containers-slides.pdf",
+      "at": "2026-11-27T06:17:46.059Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "36c1e4562f72b3b421127abf660782245469a06b2cde69c3afa7f9b4390341ea": {
+      "kind": "video",
+      "assetId": "c059d597-e123-4626-9a41-bc26c26d51b3",
+      "name": "a-complete-tour-of-the-vs-code-interface.mp4",
+      "at": "2026-11-27T06:18:10.651Z",
+      "courses": [
+        "vscode-masterclass"
+      ],
+      "status": "ready"
+    },
+    "351314018cf0c718acde6b81b30256d57c0d9b2db39586fd535b00f712eaa35c": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/8ae3e015-a400-489d-8a7f-114cb2b3ae33/a-complete-tour-of-the-vs-code-interface-slides.pdf",
+      "name": "a-complete-tour-of-the-vs-code-interface-slides.pdf",
+      "at": "2026-11-27T06:18:11.886Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "a21a2457af1686ebee707a44712493b4196b3e6c22996d6db84ff8766afe0f81": {
+      "kind": "video",
+      "assetId": "6b9556be-b9f4-46e5-94bf-78c86317e1c5",
+      "name": "claudemd-in-depth-instructions-for-ai-coding-agents.mp4",
+      "at": "2026-11-27T06:18:31.992Z",
+      "courses": [
+        "vscode-masterclass"
+      ],
+      "status": "ready"
+    },
+    "f0780312ac823a619e1512fc2f14626a5fba9acda6631efbb12a97140dc8f3a1": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/628fa0b4-f835-4c56-acc3-5e99765a86dd/claudemd-in-depth-instructions-for-ai-coding-agents-slides.pdf",
+      "name": "claudemd-in-depth-instructions-for-ai-coding-agents-slides.pdf",
+      "at": "2026-11-27T06:18:33.300Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "bbe8ccf0d19672d25d780568daa34ef4f54c0a3ee7166665db475ef58a87caff": {
+      "kind": "video",
+      "assetId": "e3323e84-4f1d-4fd2-9e1f-a4fedd1e5bad",
+      "name": "write-claudemd-for-a-real-repository.mp4",
+      "at": "2026-11-27T06:18:58.507Z",
+      "courses": [
+        "vscode-masterclass"
+      ],
+      "status": "ready"
+    },
+    "d8b5bea27ca3e65f872e51f466d437c89729a30f25d57179ac1ef8551effdbc5": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/0e8a494b-6634-489a-8b8f-9b59bcb8fb0f/write-claudemd-for-a-real-repository-slides.pdf",
+      "name": "write-claudemd-for-a-real-repository-slides.pdf",
+      "at": "2026-11-27T06:19:00.135Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "c0198710f201711eb793dda1d2585246406a6f67cb1e646497709b52e06a8a2c": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/9317c539-3500-4ea4-a6cb-ce604fe76d2f/write-claudemd-for-a-real-repository-lab.zip",
+      "name": "write-claudemd-for-a-real-repository-lab.zip",
+      "at": "2026-11-27T06:19:00.416Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "0a0c0b5fa2a9be959502d59298fac4fe702020988426ade8365afe64c4017441": {
+      "kind": "video",
+      "assetId": "47b915c7-017a-4af2-b880-a0924ead030f",
+      "name": "the-claude-folders-settings-permissions-and-deny-rules.mp4",
+      "at": "2026-11-27T06:19:35.947Z",
+      "courses": [
+        "vscode-masterclass"
+      ],
+      "status": "ready"
+    },
+    "9a4e6435370ddd31548563bfa0dbdc769953ecf91e464f8ecd78f028e6f9308d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/1eb47fd0-aefc-4011-90c0-08e14504904b/the-claude-folders-settings-permissions-and-deny-rules-slides.pdf",
+      "name": "the-claude-folders-settings-permissions-and-deny-rules-slides.pdf",
+      "at": "2026-11-27T06:19:38.164Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "af3f61053582393e0ff75343bc66275d5732968e4de558582dd97ad0171104cc": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/c773897e-e8e8-4c11-a4e3-c75ece5f69dd/resources/4888977c-9fd4-48de-9edb-bdd45c20645f/the-claude-folders-settings-permissions-and-deny-rules-lab.zip",
+      "name": "the-claude-folders-settings-permissions-and-deny-rules-lab.zip",
+      "at": "2026-11-27T06:19:38.425Z",
+      "courses": [
+        "vscode-masterclass"
+      ]
+    },
+    "3ab7c2c9865971322f3d71ab0cda5c4634d21af29192057e0816026975e9ee5d": {
+      "kind": "video",
+      "assetId": "4405af99-9cea-4b90-b780-803f091cad47",
+      "name": "how-computers-solved-problems-before-ai.mp4",
+      "at": "2026-11-27T06:19:54.620Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "8cd84586d25b9beac7b59240b3d551306f61bf8f1137a8950d0eaf9956007b36": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/3bd6a673-57eb-41f7-b005-4b53508db837/how-computers-solved-problems-before-ai-slides.pdf",
+      "name": "how-computers-solved-problems-before-ai-slides.pdf",
+      "at": "2026-11-27T06:19:55.591Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "c97468c1536d4a6e78545dd6e489a3c9495047d5e93e881dc2e27e53db7e339f": {
+      "kind": "video",
+      "assetId": "3cb95845-4031-495b-b7ca-00dbad7164ba",
+      "name": "a-short-history-of-ai-from-rules-to-agents.mp4",
+      "at": "2026-11-27T06:20:06.311Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "f0398bf8d62e41a132da9d21e141f75a830c57f8dc811ddc31d8374b93a349b3": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/9b03e40e-7803-429a-897a-b5dfb9ee672a/a-short-history-of-ai-from-rules-to-agents-slides.pdf",
+      "name": "a-short-history-of-ai-from-rules-to-agents-slides.pdf",
+      "at": "2026-11-27T06:20:07.304Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "00c4fc64969ed02d51ff297bd79c6083edf7c228a9b0abc741dee01c37d88143": {
+      "kind": "video",
+      "assetId": "8cabed97-0bd9-45f1-9dc2-d9c8e850008d",
+      "name": "what-machine-learning-is-a-spam-filter-step-by-step.mp4",
+      "at": "2026-11-27T06:20:16.274Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "ad0f83d3b466eae5ed9a7ec7d9d6844471a08bb4b302fe948df458befc4a91bb": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/f3518edb-d041-4412-8b78-9f094239b917/what-machine-learning-is-a-spam-filter-step-by-step-slides.pdf",
+      "name": "what-machine-learning-is-a-spam-filter-step-by-step-slides.pdf",
+      "at": "2026-11-27T06:20:17.590Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "97e1d01fb12b68d3fdcfd9ae0ff3def04c44fed9fe1e4ea90597730c8b11a176": {
+      "kind": "video",
+      "assetId": "4ea214ad-199f-46e5-a274-6423d95d4df8",
+      "name": "ai-machine-learning-deep-learning-and-generative-ai.mp4",
+      "at": "2026-11-27T06:20:36.511Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "ff3a118bf985684dd9d7acae38b3ba9b7f294052e9dd710d1313d48957b4f32b": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/f2417409-7d7d-4585-96cc-6b9fad629777/ai-machine-learning-deep-learning-and-generative-ai-slides.pdf",
+      "name": "ai-machine-learning-deep-learning-and-generative-ai-slides.pdf",
+      "at": "2026-11-27T06:20:37.692Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "c91ce9dae9816d8544d027689fcdba540cdc6ea5697f596be92994233b1bf496": {
+      "kind": "video",
+      "assetId": "8610c8ea-4b65-4a98-95be-830da2bf6dfb",
+      "name": "fix-a-3-am-outage-the-classic-way.mp4",
+      "at": "2026-11-27T06:20:59.052Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "6ae51ba70ddffcc72dc7bdd5835af763619c6198c1d82f9bba47d3f661786078": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/a19b1902-5e09-4254-b0d0-dda9ba2b8ddb/fix-a-3-am-outage-the-classic-way-slides.pdf",
+      "name": "fix-a-3-am-outage-the-classic-way-slides.pdf",
+      "at": "2026-11-27T06:21:00.440Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "d21e23ce71a4aa5c54142f4c264a84d999c1801e9970b5421893e84d748c263e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/5768052d-045c-4885-9e84-28073aa0a204/fix-a-3-am-outage-the-classic-way-lab.zip",
+      "name": "fix-a-3-am-outage-the-classic-way-lab.zip",
+      "at": "2026-11-27T06:21:00.764Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "482da7db5a2ef75465c1107d9f8442dd062f040d04c1700ff8585155fe571e05": {
+      "kind": "video",
+      "assetId": "f97da921-6b52-4fc5-ba9f-b54db8ca30af",
+      "name": "the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock.mp4",
+      "at": "2026-11-27T06:21:29.319Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws"
+      ],
+      "status": "ready"
+    },
+    "85a096562d3f3acb97a0b3d79aea2c4d7901c58e56a9bea9254fedb6f0ca3d34": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/78e84a41-cb55-43a2-b4b3-eff64c2c7836/the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-slides.pdf",
+      "name": "the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-slides.pdf",
+      "at": "2026-11-27T06:21:30.779Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws"
+      ]
+    },
+    "48000586ebe3bf1ce32d9a56fe19a1f9023784db4375b0f18b32ba8626d81fc0": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/68b18395-e286-4935-9a3c-f85dcaa2b857/the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-lab.zip",
+      "name": "the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-lab.zip",
+      "at": "2026-11-27T06:21:31.089Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws"
+      ]
+    },
+    "39003c576d05c55d2ba840b75b2200d4e6398f178da66a6bc7a4ffd0463e9de1": {
+      "kind": "video",
+      "assetId": "3d2220f8-c455-4e31-a143-056f30957cc9",
+      "name": "devops-mlops-llmops-rag-and-agentic-ai-sorted.mp4",
+      "at": "2026-11-27T06:21:58.350Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "ba9bd9c164cf76ec6bb9a52ac85dcc98add54d28a5dafb9d15eaca95202e19fb": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/dce2ff7b-81f8-4aab-b1c0-a074f3e444a0/devops-mlops-llmops-rag-and-agentic-ai-sorted-slides.pdf",
+      "name": "devops-mlops-llmops-rag-and-agentic-ai-sorted-slides.pdf",
+      "at": "2026-11-27T06:21:59.927Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "ffdaf9cd2a0aefb59aa94e91865fa8a274ab1521cfc752201565921486d8fe86": {
+      "kind": "video",
+      "assetId": "b0dd09dd-762a-40ab-911d-fb492a31e8b7",
+      "name": "models-parameters-training-inference-and-model-cards.mp4",
+      "at": "2026-11-27T06:22:20.356Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "0b8759870863ffcd062d9faceafbab2affcf1382f3f1be639ba95a5ef3c27520": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/18d93759-9aa4-46f6-8200-1b2315ff3da3/models-parameters-training-inference-and-model-cards-slides.pdf",
+      "name": "models-parameters-training-inference-and-model-cards-slides.pdf",
+      "at": "2026-11-27T06:22:21.329Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "c00d39d1271d8c1fd4cd11343411ebb3a641c95f4380c13cf23204e3b1844604": {
+      "kind": "video",
+      "assetId": "9c5541f0-80bb-495d-be73-195132389954",
+      "name": "prompts-tokens-context-windows-and-temperature.mp4",
+      "at": "2026-11-27T06:22:39.472Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "d0f292fa1aa29c4b0ee9f5b0b4a847a739c3c25cb6bf2f7e0a075b5daf121853": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/f6d39542-4d70-4b57-9086-a621b6b964ed/prompts-tokens-context-windows-and-temperature-slides.pdf",
+      "name": "prompts-tokens-context-windows-and-temperature-slides.pdf",
+      "at": "2026-11-27T06:22:40.756Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "f02a2341cf282519535d498c57ef25db59a813d9190092e29bd59d251f982576": {
+      "kind": "video",
+      "assetId": "42e66de5-59b1-4aa1-b1b7-06b6b00afbe7",
+      "name": "hallucinations-grounding-and-judging-ai-answers.mp4",
+      "at": "2026-11-27T06:22:52.692Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "dc174e86fd53665693fdbd6af4ac9b297be3ca855aa50f001a57ceddae77624e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/aa1a554c-4057-42d0-824c-b9b6ce77af83/hallucinations-grounding-and-judging-ai-answers-slides.pdf",
+      "name": "hallucinations-grounding-and-judging-ai-answers-slides.pdf",
+      "at": "2026-11-27T06:22:53.623Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "c398f47c5db0028390b50992899d503b421b39d683bc63ac5dd1f12399f2bd0a": {
+      "kind": "video",
+      "assetId": "a0bd6082-765b-4cf9-8ffb-fa482ebc4746",
+      "name": "preparing-knowledge-for-rag-parsing-chunks-and-indexing.mp4",
+      "at": "2026-11-27T06:23:08.580Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "00cdcbd30ca68a9395fc3e22b1296fc901aff5e43c00d5639c4cb14b008f0fc4": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/518ddc56-ae20-4178-a6c6-28863377b9a8/preparing-knowledge-for-rag-parsing-chunks-and-indexing-slides.pdf",
+      "name": "preparing-knowledge-for-rag-parsing-chunks-and-indexing-slides.pdf",
+      "at": "2026-11-27T06:23:10.293Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "19a4494f73bbb7f3637f13d4e78739f349757db24247a86dd0f93313e8157cc7": {
+      "kind": "video",
+      "assetId": "0d3f5ec4-6497-4d94-b0f0-04936a971ff3",
+      "name": "embeddings-and-vectors-matching-meaning-not-words.mp4",
+      "at": "2026-11-27T06:23:24.984Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "03d5204823a145071b66cfc47a370bb73792b1d18234d42c804885ef204dc35e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/76a4b475-af99-4b1d-a8a6-54d6279d1af8/embeddings-and-vectors-matching-meaning-not-words-slides.pdf",
+      "name": "embeddings-and-vectors-matching-meaning-not-words-slides.pdf",
+      "at": "2026-11-27T06:23:26.100Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "5f971a924c8a90ec1e1cc964f3fe150f9c1f3ebfe51a534b27751e575ee460dc": {
+      "kind": "video",
+      "assetId": "96d46ca1-c44e-417c-a2d0-8baf554b013f",
+      "name": "rag-search-keyword-vector-hybrid-and-reranking.mp4",
+      "at": "2026-11-27T06:23:36.987Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "c0060c665d6ff40d1ed610d0edf87332006336001a3f22cd2c84e75a4e88623d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/86e74237-6d78-482b-8ed5-8dc238735f65/rag-search-keyword-vector-hybrid-and-reranking-slides.pdf",
+      "name": "rag-search-keyword-vector-hybrid-and-reranking-slides.pdf",
+      "at": "2026-11-27T06:23:37.836Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "85dc5915e8247c17ef5c9c58da0ba786e79fb40e5c995e2409689e0d53977741": {
+      "kind": "video",
+      "assetId": "1594b4f4-425c-4908-ab2e-3f972f416df2",
+      "name": "where-rag-data-lives-object-storage-and-vector-databases.mp4",
+      "at": "2026-11-27T06:23:45.275Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "c4e3d573143dee99b70a5e2767e01eb26a50d316412aabb23ae173e04ab8e2b3": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/391d6831-cfab-4ecc-9422-a016870dfb5d/where-rag-data-lives-object-storage-and-vector-databases-slides.pdf",
+      "name": "where-rag-data-lives-object-storage-and-vector-databases-slides.pdf",
+      "at": "2026-11-27T06:23:46.161Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "7c1f0a00a2be36f34d0d2ccc8bdfb6b1aea66f208ed1727a2a87eb2d575e17c4": {
+      "kind": "video",
+      "assetId": "7286f3d3-9f7f-4181-9a86-25b5404ffb92",
+      "name": "running-models-gpus-vram-quantisation-and-licences.mp4",
+      "at": "2026-11-27T06:23:54.449Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ],
+      "status": "ready"
+    },
+    "5f2e343c9dfa03ec4d7e3f613c2c152a9c293afdf5cd56d1a729b2b9a3486743": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/ddec1b53-063c-4894-990a-e2856ce10e07/running-models-gpus-vram-quantisation-and-licences-slides.pdf",
+      "name": "running-models-gpus-vram-quantisation-and-licences-slides.pdf",
+      "at": "2026-11-27T06:23:55.203Z",
+      "courses": [
+        "intro-ai-for-devops"
+      ]
+    },
+    "4d4f9dab231e27397375f9dd3540fb39262c5a1c7f1589e61fa2d766cc4542c8": {
+      "kind": "video",
+      "assetId": "ef3a19ed-9903-4d97-aa93-1ae32e6ac9df",
+      "name": "ai-agents-tools-the-agent-loop-memory-and-guardrails.mp4",
+      "at": "2026-11-27T06:24:03.370Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "8d59395c83d17bc058992db030e6d7fcfc62071ffb1f2aae4cd965970af7f2cc": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/9f95a196-34b2-45d3-9ae4-d325fa16baaa/ai-agents-tools-the-agent-loop-memory-and-guardrails-slides.pdf",
+      "name": "ai-agents-tools-the-agent-loop-memory-and-guardrails-slides.pdf",
+      "at": "2026-11-27T06:24:04.173Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "740fcd8ea8ed17cb5e95c18d6d7d3994aef9a78a61f2fb73e8179fbb1d5d4e95": {
+      "kind": "video",
+      "assetId": "063c6b61-8e6e-417e-b081-6115bb152456",
+      "name": "ai-chatbot-versus-ai-agent-side-by-side.mp4",
+      "at": "2026-11-27T06:25:33.424Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "72ab4e70f4d2b15290a1bbc53915a55ac8673f139dc6374a34487edb4aa16c27": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/32d078a2-eb9f-4a29-b8d7-b1ece3e64ecd/ai-chatbot-versus-ai-agent-side-by-side-slides.pdf",
+      "name": "ai-chatbot-versus-ai-agent-side-by-side-slides.pdf",
+      "at": "2026-11-27T06:25:36.017Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "def0dad5315f77c3188561ac59eced56d91af0a297c728b4bbb505dbe6324484": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/abc5d291-d6cb-4f09-9f2d-8e4270114717/ai-chatbot-versus-ai-agent-side-by-side-lab.zip",
+      "name": "ai-chatbot-versus-ai-agent-side-by-side-lab.zip",
+      "at": "2026-11-27T06:25:36.309Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "13c3dbda452f880091b7eceaca33d686bfef2a9f53c923836b60b8daa42b5607": {
+      "kind": "video",
+      "assetId": "cf09fa91-4c70-4575-857c-315287761ddc",
+      "name": "skill-based-agents-one-job-clear-limits.mp4",
+      "at": "2026-11-27T06:25:48.664Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "b4d99cf367a08b452e3b17c5d7e6997cceb5410eccf88c52b23d0c05e7c7602b": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/9c98b853-3fc5-4a02-90ff-f8fa4e7f0838/skill-based-agents-one-job-clear-limits-slides.pdf",
+      "name": "skill-based-agents-one-job-clear-limits-slides.pdf",
+      "at": "2026-11-27T06:25:49.712Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "4807fd9ca3d52e9a2ab861d6d855db3762ca986fb3591ad2282b64062b950250": {
+      "kind": "video",
+      "assetId": "1e15b726-b360-4bc5-a137-6a07a6192fe1",
+      "name": "what-mcp-is-and-why-every-platform-adopted-it.mp4",
+      "at": "2026-11-27T06:26:03.899Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "9aa8d3dec4d5fc9194f1be7de23d3aa0140c701b78625f23008662caebd73c6a": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/50f3e51c-d512-42c7-8b2c-4a03e943ad0b/what-mcp-is-and-why-every-platform-adopted-it-slides.pdf",
+      "name": "what-mcp-is-and-why-every-platform-adopted-it-slides.pdf",
+      "at": "2026-11-27T06:26:05.053Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "2cf31ba3c4218f969f6a46de3f8437c5433290edac14f2dbff0c6d8139932ea8": {
+      "kind": "video",
+      "assetId": "325ee1d8-2c94-47af-b1bb-0739947265de",
+      "name": "choosing-the-right-ai-service-on-aws-or-azure.mp4",
+      "at": "2026-11-27T06:26:17.471Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "0f9c47dc31969bf8eaec479bba5f994a86c088b21cfffbf124f8f31bf07d7f2b": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/44d57bfa-20ee-4276-ab52-ea44ce7d3fb3/choosing-the-right-ai-service-on-aws-or-azure-slides.pdf",
+      "name": "choosing-the-right-ai-service-on-aws-or-azure-slides.pdf",
+      "at": "2026-11-27T06:26:18.508Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "0bce3cd22cf820bbc83f34de60541b94a1e3d63a28b3cbe7e86d76393d00d91e": {
+      "kind": "video",
+      "assetId": "ca3b84ff-03cb-42b8-96cb-30a7ff636c7f",
+      "name": "managed-ai-or-self-hosted-bedrock-foundry-or-ollama.mp4",
+      "at": "2026-11-27T06:26:32.510Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "e38d41a6ea21418d2b7a914ac0013be6ce15c1ff65abcb3c3cde45511e670f31": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/cb215c11-bf0b-4f47-a261-9ed137f8be61/managed-ai-or-self-hosted-bedrock-foundry-or-ollama-slides.pdf",
+      "name": "managed-ai-or-self-hosted-bedrock-foundry-or-ollama-slides.pdf",
+      "at": "2026-11-27T06:26:33.568Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "2f7cf604765fbfd4b17d58001bf1fee20b6aaa2631f308f7dbebc6797dc7856d": {
+      "kind": "video",
+      "assetId": "f34c4ffe-72ae-4891-a4ee-459421f3b280",
+      "name": "where-ai-fits-in-a-cicd-pipeline.mp4",
+      "at": "2026-11-27T06:26:54.985Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "2f6bd3b54e9fbb8c95c6346cb78e7b0c2a6f5a9b0ceb4f7cf6ffc6359d4f1e4d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/c3c967f4-62b7-4c36-868d-6ed5d8e92819/where-ai-fits-in-a-cicd-pipeline-slides.pdf",
+      "name": "where-ai-fits-in-a-cicd-pipeline-slides.pdf",
+      "at": "2026-11-27T06:26:56.359Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "5803743814000ec999f6694f3cfda2f8646be3832a5d996c5a818974f07c8f17": {
+      "kind": "video",
+      "assetId": "902a7288-dabf-4c33-9b34-968e27be60a9",
+      "name": "operating-and-securing-ai-in-production.mp4",
+      "at": "2026-11-27T06:27:06.130Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "4f2de30a6b640a739ed1336f69d6fa0610d85e530adc49bbbae4f30d0f3e4993": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/5b3a97b2-344c-4bc8-bc50-9afad66f4383/resources/ff39e14f-2311-4cfd-bf84-71b945dbeb9b/operating-and-securing-ai-in-production-slides.pdf",
+      "name": "operating-and-securing-ai-in-production-slides.pdf",
+      "at": "2026-11-27T06:27:07.273Z",
+      "courses": [
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "93b5668cfc2fcb517143d14aad42b900527403f3b1b39ff8ef2181574fb0fb92": {
+      "kind": "video",
+      "assetId": "5bd5ad8f-c8ef-4df9-805b-80bc12614bee",
+      "name": "the-aws-ai-services-map.mp4",
+      "at": "2026-11-27T06:27:37.602Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ],
+      "status": "ready"
+    },
+    "32a484a0c63793bbb4742431e2f6c0905ddda96bb6db4be028947dd6459cece2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/80f610b5-09e6-4ac9-80aa-2344fc6a53b6/the-aws-ai-services-map-slides.pdf",
+      "name": "the-aws-ai-services-map-slides.pdf",
+      "at": "2026-11-27T06:27:38.964Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "fdc7804478e1ed6ab2fde66e33c34cbd8f5d85073e150f3c2ff27eb334f8dabe": {
+      "kind": "video",
+      "assetId": "7a51a0c6-d062-4e41-bd8c-5bad77200b94",
+      "name": "amazon-bedrock-explained.mp4",
+      "at": "2026-11-27T06:27:57.372Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ],
+      "status": "ready"
+    },
+    "6fba676ae5eab915078115193dae54130141dc91b4c1b25d2e003a5aeda6f96f": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/9fb40746-d847-4bd7-8aa8-473ef789726e/amazon-bedrock-explained-slides.pdf",
+      "name": "amazon-bedrock-explained-slides.pdf",
+      "at": "2026-11-27T06:27:58.590Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "da4ebfdd6b9f1905edfa2b7f968f1a36f3af10cec90ab65cb1ea806003bb0c51": {
+      "kind": "video",
+      "assetId": "0fc007c2-5b75-4c10-a24a-16fcb7e02b30",
+      "name": "publish-an-ai-assistants-help-site-on-amazon-s3.mp4",
+      "at": "2026-11-27T06:28:14.447Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ],
+      "status": "ready"
+    },
+    "8b67d241825706273b945d5b649b51c4699c5f952a6f853dd1d1116e2f669435": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/dffeb160-baa3-47c7-82a5-a3e47a00fa2d/publish-an-ai-assistants-help-site-on-amazon-s3-slides.pdf",
+      "name": "publish-an-ai-assistants-help-site-on-amazon-s3-slides.pdf",
+      "at": "2026-11-27T06:28:15.737Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "aa57d9c522c75f93593ad6988caae57244932df6feae49fdc81a2f8668e57d63": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/b1a12e63-01fb-40e5-b67b-bfda86912834/publish-an-ai-assistants-help-site-on-amazon-s3-lab.zip",
+      "name": "publish-an-ai-assistants-help-site-on-amazon-s3-lab.zip",
+      "at": "2026-11-27T06:28:15.999Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "d804b50113c2faea6797f72ec995077fc1d6dc19c8a168cd764b63f636376464": {
+      "kind": "video",
+      "assetId": "7c603ff0-48b5-4376-93a6-63da261ae8b3",
+      "name": "build-an-ai-chatbot-on-amazon-bedrock-the-devops-way.mp4",
+      "at": "2026-11-27T06:28:39.981Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ],
+      "status": "ready"
+    },
+    "18493ecd25a73915a5f4e9e9400679543b2167a5a647e92e183dd450175c1466": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/765de78a-9b95-4a8d-a9d8-483bf1dfb943/build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-slides.pdf",
+      "name": "build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-slides.pdf",
+      "at": "2026-11-27T06:28:41.268Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "871bac1694932b57dcd1a88918ada2d0d79429313926ce34d7af6f8c3c2e12e6": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/67fe66b6-a43e-4267-9042-93c5c927bfc9/build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-lab.zip",
+      "name": "build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-lab.zip",
+      "at": "2026-11-27T06:28:41.537Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "99cb778d22e858d5badcde698e3e671a4dc76359951fa891d4008d7d2ece3bd0": {
+      "kind": "video",
+      "assetId": "3040c473-cd61-4c4e-bd9b-bf351ae5661f",
+      "name": "one-rag-architecture-three-implementations.mp4",
+      "at": "2026-11-27T06:28:57.026Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "2ae8f4b4d8b19a88601d8595bf59a6a374616992b3ebf0db2e43756f258714e2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/e2186559-f5c8-4199-a41b-2bb43c959d5d/one-rag-architecture-three-implementations-slides.pdf",
+      "name": "one-rag-architecture-three-implementations-slides.pdf",
+      "at": "2026-11-27T06:28:57.815Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "fb88551eaaed70221dce326fadaaf9eac67038a8799a71f26badb7f83e93155e": {
+      "kind": "video",
+      "assetId": "886d9037-f6ec-47b7-a1d4-3f9d6e479cc8",
+      "name": "run-a-production-style-rag-chatbot-with-docker-compose.mp4",
+      "at": "2026-11-27T06:31:42.934Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "47e9a3567789e44f7bd52fa1cc425253ef53bc0f528ee576c58a84565dc1992d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/9f0ae049-f996-47e4-b4f8-a40eac88f543/run-a-production-style-rag-chatbot-with-docker-compose-slides.pdf",
+      "name": "run-a-production-style-rag-chatbot-with-docker-compose-slides.pdf",
+      "at": "2026-11-27T06:31:44.151Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "c232cfb36ee901418b9437b92d2d6a922b6875cc44994216b19bd2c2e0717833": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/d00be518-35a4-4cd1-973a-5bdcb0b70eb4/run-a-production-style-rag-chatbot-with-docker-compose-lab.zip",
+      "name": "run-a-production-style-rag-chatbot-with-docker-compose-lab.zip",
+      "at": "2026-11-27T06:31:44.616Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "b6a27007f8667fd32783d30183da5cfe3e74b36ed98ca135b2ca817e35e891e0": {
+      "kind": "video",
+      "assetId": "6e4c2e46-e41b-4778-8525-04ec411326f2",
+      "name": "build-a-rag-system-on-aws-with-bedrock-knowledge-bases.mp4",
+      "at": "2026-11-27T06:31:58.344Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ],
+      "status": "ready"
+    },
+    "98dd564750a33d83b824ad49e75993b394f22a85e936d1144464d957ffcfd0e2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/c30dff62-8d3d-4e6f-9cac-b89080a94772/build-a-rag-system-on-aws-with-bedrock-knowledge-bases-slides.pdf",
+      "name": "build-a-rag-system-on-aws-with-bedrock-knowledge-bases-slides.pdf",
+      "at": "2026-11-27T06:31:59.596Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "893f735ddd951a5a6a78395633b2ee3d9cb340019d6daefb16d8de87cd632733": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/38a22a12-aaeb-47d1-8b02-544336225899/build-a-rag-system-on-aws-with-bedrock-knowledge-bases-lab.zip",
+      "name": "build-a-rag-system-on-aws-with-bedrock-knowledge-bases-lab.zip",
+      "at": "2026-11-27T06:31:59.875Z",
+      "courses": [
+        "ai-for-devops-aws"
+      ]
+    },
+    "65eb51b6f3c114927c6f4c68e389bcf11e33f0ef4d28d7124d47eaf039d13349": {
+      "kind": "video",
+      "assetId": "2d6176c9-3e63-4331-859c-d5da1e921261",
+      "name": "three-skill-agents-fix-502s-crash-loops-and-full-disks.mp4",
+      "at": "2026-11-27T06:32:13.015Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "7d79925a9443fca6ce751ec58601752e9da4f9a1aeae1ad9053e4137fce81043": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/b9c5037a-2e37-4c84-bbc0-04263ba68c67/three-skill-agents-fix-502s-crash-loops-and-full-disks-slides.pdf",
+      "name": "three-skill-agents-fix-502s-crash-loops-and-full-disks-slides.pdf",
+      "at": "2026-11-27T06:32:14.205Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "7e41075ad120d9df0aad40f46bcaea31e25e658d9d38be9c02e64dd455bf1c8e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/6b152585-1831-408b-a086-b21610fc96ec/three-skill-agents-fix-502s-crash-loops-and-full-disks-lab.zip",
+      "name": "three-skill-agents-fix-502s-crash-loops-and-full-disks-lab.zip",
+      "at": "2026-11-27T06:32:14.491Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "8a4c7d7b05445c742d256981c602382f74a8ad6968bb3a2892c87a65b2ca3b22": {
+      "kind": "video",
+      "assetId": "69d0d2ea-b97a-404a-948f-b75caa6269a5",
+      "name": "an-ai-agent-that-fixes-kubernetes-workloads.mp4",
+      "at": "2026-11-27T06:32:31.817Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "4d89198e72f22c16b5fa599048181a6315fd62a5f64b96b309d7d53bfc01a2c6": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/d9d02b09-84ab-4904-a5a7-ba0ca9f2e4ee/an-ai-agent-that-fixes-kubernetes-workloads-slides.pdf",
+      "name": "an-ai-agent-that-fixes-kubernetes-workloads-slides.pdf",
+      "at": "2026-11-27T06:32:33.607Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "1feba0c631d2dca2fd573a0594a2f82acfe966ac7cee556ec8a285f2a17360da": {
+      "kind": "video",
+      "assetId": "47f85e6f-c2a5-4f36-b949-ca88a3e35655",
+      "name": "ai-agents-inside-kubernetes-with-kagent.mp4",
+      "at": "2026-11-27T06:32:44.444Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "9dea588fc69ca436689058719162eee1b9621e1f132e1fcc99d072694eae9437": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/b031c956-4398-41cc-af05-acb41ecfcae7/ai-agents-inside-kubernetes-with-kagent-slides.pdf",
+      "name": "ai-agents-inside-kubernetes-with-kagent-slides.pdf",
+      "at": "2026-11-27T06:32:45.458Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "c0fd399ce3fd3206e23409cccb70edac173b932b85b15bffb587c79e326f36ce": {
+      "kind": "video",
+      "assetId": "85c67a5b-8c67-40fe-9005-1be53e6bcfd3",
+      "name": "ai-summaries-in-automation-workflows-safely-n8n.mp4",
+      "at": "2026-11-27T06:33:22.185Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "f93087173c03973251bf2897e501dc27de9e428f5bcd1dd405d5536582a7c5cc": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/9906a501-c241-4e92-a1d0-edcfcdae43c2/ai-summaries-in-automation-workflows-safely-n8n-slides.pdf",
+      "name": "ai-summaries-in-automation-workflows-safely-n8n-slides.pdf",
+      "at": "2026-11-27T06:33:23.599Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "5a66b130b58263b67d993d2f3cd4498576725a8edfcb01057eb2ff53069da917": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/f40114a5-81ea-469d-9cd3-93b9803538a3/ai-summaries-in-automation-workflows-safely-n8n-lab.zip",
+      "name": "ai-summaries-in-automation-workflows-safely-n8n-lab.zip",
+      "at": "2026-11-27T06:33:23.874Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "827c4881429684ac43ca05f200a7d819520e6a0e5d019a14f91cce13794274bd": {
+      "kind": "video",
+      "assetId": "9f82ac2d-9ba2-417c-bec4-33032d165eac",
+      "name": "inside-mcp-tools-resources-prompts-and-transports.mp4",
+      "at": "2026-11-27T06:33:42.320Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "681ec2822354a05234b45569547b3941c8ab310e0008046fb5423c8e688e0bea": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/010a0379-923e-40f1-9245-40e9f9e5fd1b/inside-mcp-tools-resources-prompts-and-transports-slides.pdf",
+      "name": "inside-mcp-tools-resources-prompts-and-transports-slides.pdf",
+      "at": "2026-11-27T06:33:43.704Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "0ed995a31f4d0461dedce27dd992b90075f7fb49bf1dd7d3c446b4307ed4ef20": {
+      "kind": "video",
+      "assetId": "b9d88972-f06c-4fe8-9bb9-e83711850f91",
+      "name": "build-your-first-mcp-server-and-connect-real-agents.mp4",
+      "at": "2026-11-27T06:34:27.495Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "17589d2bba1a12439e16c6227ecac98896d5120fe589a3f18d3ebc8c45cb580b": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/97e231cc-4a44-4066-bf6f-a7d0f77754a6/build-your-first-mcp-server-and-connect-real-agents-slides.pdf",
+      "name": "build-your-first-mcp-server-and-connect-real-agents-slides.pdf",
+      "at": "2026-11-27T06:34:29.820Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "0214f9a6a215648919db05d6204af38f5e5b6afb51cd0e0640ddea541e542fd2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/c80aff1d-ad25-4d7d-af09-9390b72603ed/build-your-first-mcp-server-and-connect-real-agents-lab.zip",
+      "name": "build-your-first-mcp-server-and-connect-real-agents-lab.zip",
+      "at": "2026-11-27T06:34:30.229Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "2ee328294732e264620a736571c4c10433eb4d445e68a3f5416b326fb23a21a9": {
+      "kind": "video",
+      "assetId": "fadfe094-cac3-47f7-8f0d-f0b54e6bdb84",
+      "name": "llmops-day-to-day-what-you-manage-once-an-ai-app-is-live.mp4",
+      "at": "2026-11-27T06:34:39.365Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "ffedeb00f42f880a2bda737618023c1f489f47e67ac9ef133be313174fcebb66": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/495bc089-60c4-414c-8b67-f4e5597c4b39/llmops-day-to-day-what-you-manage-once-an-ai-app-is-live-slides.pdf",
+      "name": "llmops-day-to-day-what-you-manage-once-an-ai-app-is-live-slides.pdf",
+      "at": "2026-11-27T06:34:40.293Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "bbcfb3687adea99fcb52d59f206afa4c85d412483dc048c6a81a8e0811963c78": {
+      "kind": "video",
+      "assetId": "0004dbdd-0625-4c2a-a900-931d55d5cbad",
+      "name": "who-builds-a-rag-system-and-who-runs-it.mp4",
+      "at": "2026-11-27T06:34:49.597Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "0ee32539219e6814f8124ba2cae784b8ce43e2377377fde3cec9375c8c214c7e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/639b441c-f4b8-41b5-a7fb-8c3109b46006/who-builds-a-rag-system-and-who-runs-it-slides.pdf",
+      "name": "who-builds-a-rag-system-and-who-runs-it-slides.pdf",
+      "at": "2026-11-27T06:34:50.445Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "bcf79e95b624063084e39f151e51558bcdbd8affd5d4c72ab5fc69a1430a0adc": {
+      "kind": "video",
+      "assetId": "bd80bc9c-6380-47f5-ac36-aba23ab40fa8",
+      "name": "the-azure-ai-services-map.mp4",
+      "at": "2026-11-27T06:35:37.588Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "84d14c9e1b063a13c3a4abe7313ff91b8d14ccc3107d963a3d18f8373f897e3e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/f72141fc-073a-450f-bdd5-b9784b4b9cfa/the-azure-ai-services-map-slides.pdf",
+      "name": "the-azure-ai-services-map-slides.pdf",
+      "at": "2026-11-27T06:35:40.171Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "292ec10dc87f07ebcb6c8799864d5cdfd20c468e81019b1964eae5d14bb7986d": {
+      "kind": "video",
+      "assetId": "77378fd9-a849-497e-94a8-00f6beed3f1c",
+      "name": "microsoft-foundry-explained.mp4",
+      "at": "2026-11-27T06:35:59.719Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "732c6e79512625ff2abd2d150e997e3229e9dd7859e9e40db98cdd4a9f591f22": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/bfd5b3ed-8ba9-4292-8b7b-f99b756a9f11/microsoft-foundry-explained-slides.pdf",
+      "name": "microsoft-foundry-explained-slides.pdf",
+      "at": "2026-11-27T06:36:00.612Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "ec933e97731251ab86c0158fcd7382888faafba6c88fa4d78926a8df329791e5": {
+      "kind": "video",
+      "assetId": "d35ce7e8-24f7-4adf-9667-fee0bb987379",
+      "name": "deploy-your-first-model-in-microsoft-foundry.mp4",
+      "at": "2026-11-27T06:36:35.619Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "82595dbc226820a053fe73aff899e9cb8e509c3b998d69cff83488a3968e7334": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/e5fb8037-6bd0-4371-a75a-612358ab0c23/deploy-your-first-model-in-microsoft-foundry-slides.pdf",
+      "name": "deploy-your-first-model-in-microsoft-foundry-slides.pdf",
+      "at": "2026-11-27T06:36:37.251Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "4ad00e1b1382faef1e7051c1505ceec44fbd3cca09ae2fa4a86905f4e50677b6": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/6b539bab-0f41-4375-995a-1100607cc042/deploy-your-first-model-in-microsoft-foundry-lab.zip",
+      "name": "deploy-your-first-model-in-microsoft-foundry-lab.zip",
+      "at": "2026-11-27T06:36:37.552Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "101c069a466532ee3330ae6fddbd3b8d58b1429e40597df2cb571a696be281dd": {
+      "kind": "video",
+      "assetId": "9febc869-bace-4541-bf6a-310b66d75f6f",
+      "name": "deploy-a-full-stack-ai-chat-app-on-microsoft-foundry.mp4",
+      "at": "2026-11-27T06:36:58.994Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "cf927f1a0f50acb4ef430097b99707d0cbff03411c884c4316e830cfb2d06cfa": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/c203b9ad-c17a-40a2-aa3c-ef807158a764/deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-slides.pdf",
+      "name": "deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-slides.pdf",
+      "at": "2026-11-27T06:37:00.458Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "9628138f274fd2f2661e7e76639068d5f9768fa931e6d0d69cfa2d83af6263e3": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/06e0c186-38c5-4061-83a0-8f47e6855add/deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-lab.zip",
+      "name": "deploy-a-full-stack-ai-chat-app-on-microsoft-foundry-lab.zip",
+      "at": "2026-11-27T06:37:00.740Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "46b5f8f832fba8c26259684db53feca7cb7437597d91c15de2b524abcf73ea0e": {
+      "kind": "video",
+      "assetId": "0ae8e07d-ab48-4e6b-baf8-b7a01843d284",
+      "name": "build-a-rag-system-on-azure-with-terraform.mp4",
+      "at": "2026-11-27T06:37:27.536Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "fa8d073a5322ba06d24527ddb666d7c7b503a4ac793bba828b102fd3aeb4e233": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/1eedcc90-117f-433c-b91e-bd42b7e16b7c/build-a-rag-system-on-azure-with-terraform-slides.pdf",
+      "name": "build-a-rag-system-on-azure-with-terraform-slides.pdf",
+      "at": "2026-11-27T06:37:28.875Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "a699139ff1fe0f40e21cbb1e2d22afaccbdd5cdd05735f01d83932b756506373": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/6324aab5-2d84-4d12-b32d-74ba1bd85d0f/resources/63d862ba-cd41-45a3-955e-00fd4b325fea/build-a-rag-system-on-azure-with-terraform-lab.zip",
+      "name": "build-a-rag-system-on-azure-with-terraform-lab.zip",
+      "at": "2026-11-27T06:37:29.155Z",
+      "courses": [
+        "ai-for-devops-azure"
+      ]
+    }
+  }
+}

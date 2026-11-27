@@ -51,6 +51,11 @@ Read before every upload; add to it after every upload. Newest first.
 - **Check GEN's own course docs before requesting:** the owner had already approved a 32-lesson VS Code curriculum in GEN's
   repo; requests must map onto it, not duplicate it.
 - Staging uploads from Dropbox under WSL are slow (minutes per lesson): run them in the background, one course at a time.
+  Transcoding ~6 h of new video on staging pushed the shared server's load to ~15 (2 vCPUs) for a while: avoid large
+  staging uploads while production is busy, or upload in smaller batches.
+- A staging deploy in the middle of a run gives 502s; just re-run (the state and media map resume it).
+- Splitting or renaming several sections at once creates the new sections and leaves the old ones empty; on a draft,
+  delete the empty ones (studio DELETE section). Rename one section at a time to keep ids.
 
 ## 2026-11-27 (later): price change and sessions
 - A browser sign-in by the owner ends the CLI upload session ("replaced": one session per account). `/auth/me` still
