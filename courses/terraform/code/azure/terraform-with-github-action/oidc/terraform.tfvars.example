@@ -1,0 +1,4 @@
+subscription_id          = "00000000-0000-0000-0000-000000000000"
+location                 = "eastus"
+github_repository        = "your-github-user/terraform-ci-demo-azure"
+state_storage_account_id = "/subscriptions/<id>/resourceGroups/rg-del-training-tfstate/providers/Microsoft.Storage/storageAccounts/deltfstate<suffix>"

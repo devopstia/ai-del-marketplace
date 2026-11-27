@@ -1,0 +1,148 @@
+M 4 | References, data sources and naming | Connect resources together, read what already exists, and name things consistently.
+L 4.1 | Resource references: connect resources together | owner | cloud | 12 | slides 131–138 | aws: terraform-concepts/terraform-resources-reference (example-01…06); azure: azure-terraform/resources-example/virtual-machine
+O: Reference another resource's attribute; Explain how references create the dependency order; Build a small connected stack
+DA: The owner's six examples: EIP attached to an instance, VPC → subnet → instance, AMI lookup → instance, security group → instance, IAM user → group with a policy.
+DZ: Resource group → VNet → subnet → NIC → Linux VM (B1s), each referencing the previous one; the graph with `terraform graph`.
+RA: VPC, subnet, EC2, EIP, security group, IAM user/group
+RZ: Resource group, VNet, subnet, NIC, B1s VM
+CA: ~$0.02 per run (t3.micro + EIP for under an hour)
+CZ: ~$0.02 per run (B1s VM for under an hour)
+Q: How does Terraform know the creation order? / From references between resources / From file order / Alphabetically / =a
+Q: What is the syntax of a reference? / <type>.<name>.<attribute> / $(name) / {{name}} / =a
+Q: What does terraform graph show? / The dependency graph / The bill / The state history / =a
+QA: Which attribute of aws_subnet do you pass to an instance? / id (as subnet_id) / arn / cidr_block / =a
+QZ: What connects a VM to a subnet in Azure? / A network interface (NIC) / A security group / A route table / =a
+L 4.2 | Data sources: read what already exists | owner | cloud | 12 | slides 139–150, 472–482 | aws: terraform-concepts/terraform-data-source (example-01…03); azure: azure-terraform/terraform-concepts/data-parameters
+O: Write a data block with filters; Use data sources for images, networks and identities; Explain when to use a data source instead of a resource
+DA: The owner's examples: latest Ubuntu/Amazon Linux/RHEL/Windows AMIs, a security group found by tag, the default VPC's subnets, aws_caller_identity.
+DZ: The owner's data-parameters: an existing resource group and subnet, azurerm_client_config, a platform image lookup; launch a VM into the found subnet.
+RA: EC2 t3.micro (optional)
+RZ: B1s VM (optional)
+CA: $0–0.02
+CZ: $0–0.02
+N: Duplicate: slides 472–482 repeat 141–150 word for word (Terraform Blocks section); record once.
+Q: Does a data source create anything? / No, it only reads / Yes, it creates the resource / It deletes old resources / =a
+Q: When is a data source the right choice? / The thing is managed elsewhere and you only need its values / You want Terraform to own it / Never / =a
+Q: How do you reference a data source? / data.<type>.<name>.<attribute> / var.<name> / local.<name> / =a
+QA: Which data source returns your account id? / aws_caller_identity / aws_account / aws_iam_user / =a
+QZ: Which data source returns your tenant and object id? / azurerm_client_config / azurerm_subscription_id / azurerm_identity / =a
+L 4.3 | Interpolation and the format function | owner | shared | 10 | slides 105–121 | terraform-concepts/terraform-interpolation, terraform-format
+O: Build strings with ${} interpolation; Use format() with 1–4 arguments; Apply a naming convention
+D: The owner's naming convention (2560-dev-del-private-01-us-east-1a, slides 111–121) built with interpolation and format() in terraform console and on local_file names.
+Q: What does format("%s-%s", "dev", "web") return? / "dev-web" / "%s-%s" / "devweb" / =a
+Q: Which syntax inserts a value into a string? / "${var.env}-web" / "$var.env-web" / "{var.env}-web" / =a
+Q: Why use a naming convention? / Resources are easy to find and identify / Terraform requires it / It lowers cost / =a
+L 4.4 | Tags: merge, default tags and a tagging standard | owner+improved | cloud | 8 | slides 122–130 | aws: terraform-concepts/terraform-merge-tags; azure: azure-terraform/modules/resource-group
+O: Combine common and resource-specific tags with merge(); Set organisation-wide tags once; Find resources by tag
+DA: The owner's merge-tags examples (bastion host names, slides 124–129) plus provider `default_tags` (no merge needed for common tags) and a tag-based cost report.
+DZ: The owner's merge pattern with a `local.common_tags` map (azurerm has no default_tags), and Azure Policy "require a tag" as a preview of policy (module 12).
+CA: $0
+CZ: $0
+Q: What does merge(a, b) do with the same key in both maps? / b's value wins / a's value wins / It fails / =a
+Q: Why tag every resource? / Ownership, cost and cleanup / Terraform needs tags to run / Tags make resources faster / =a
+Q: Where do common tags live best? / In one place (provider default_tags or a local) / Repeated in every resource / In comments / =a
+QA: Which provider block applies tags to all AWS resources? / default_tags / common_tags / tags_all / =a
+QZ: How do you share common tags in azurerm? / A local map merged into each resource / default_tags / An environment variable / =a
+
+M 5 | Variables and outputs | Every variable type the owner teaches, with cloud-neutral demos, then applied on your cloud.
+L 5.1 | Input variables, types and .tfvars files | owner | shared | 10 | slides 171–176, 193–195, 500–502 | terraform-concepts/terraform-variables
+O: Declare variables with type, default and description; Pass values with -var, -var-file and TF_VAR_; Explain variable precedence
+D: Slides 173–176; the same variable set four ways (default, terraform.tfvars, -var-file=dev.tfvars, TF_VAR_); precedence order on screen.
+Q: Which value wins: terraform.tfvars or -var on the command line? / -var on the command line / terraform.tfvars / The default / =a
+Q: How do you set a variable from the environment? / TF_VAR_<name> / VAR_<name> / TERRAFORM_<name> / =a
+Q: What is a variable's description for? / Documentation shown to users / Validation / Encryption / =a
+L 5.2 | Locals: name an expression once | owner | shared | 6 | slides 177–179, 497–499 | terraform-concepts/terraform-variables/local-variables
+O: Define locals; Use them to avoid repetition; Choose between a variable and a local
+D: The owner's local-variables example rewritten with local_file; a naming local reused in three places.
+N: Duplicate: slides 497–499 repeat 177–179.
+Q: Can a user override a local from the command line? / No / Yes with -var / Yes with -local / =a
+Q: How do you reference a local? / local.<name> / locals.<name> / var.<name> / =a
+Q: When is a local better than a variable? / For values computed inside the configuration / For user input / For secrets / =a
+L 5.3 | String, number and bool variables | owner | shared | 8 | slides 180–192 | terraform-concepts/terraform-variables/{string,number,boolean}-variable
+O: Use string, number and bool types; Turn a resource on or off with a bool; Catch wrong types early
+D: The owner's examples (create_instance = true/false, instance counts) shown with random_pet and count so they run anywhere.
+Q: What does count = var.create ? 1 : 0 do when create is false? / Creates nothing / Creates one / Fails / =a
+Q: Which type holds true or false? / bool / string / number / =a
+Q: What happens if a string is passed to a number variable? / Terraform tries to convert, and errors if it cannot / It is ignored / It becomes 0 / =a
+L 5.4 | Collections: list, set and tuple | owner | shared | 10 | slides 196–209, 226–231 | terraform-concepts/terraform-variables/{list,set,tuple}-variable
+O: Use list, set and tuple variables; Explain order and duplicates; Pick the right collection
+D: The owner's comparison slides (204–206, 227–229) as a table; each type in terraform console; allowed IP set example.
+Q: Which collection removes duplicates? / set / list / tuple / =a
+Q: Which collection has fixed length and per-position types? / tuple / list / set / =a
+Q: How do you read the first element of a list? / var.list[0] / var.list.first / var.list(1) / =a
+L 5.5 | Structures: map, object, any and optional attributes | owner+improved | shared | 12 | slides 210–225 | terraform-concepts/terraform-variables/{map,object,map-of-object,any}-variable
+O: Use map, object and map(object) types; Make object attributes optional with defaults; Explain why any should be rare
+D: The owner's object and map-of-object examples (slides 217–223) with try(); then optional(type, default) which replaces most try() workarounds (Terraform >= 1.3).
+N: Improve: slides 218–220 use try() for optional attributes; optional() is the modern way.
+Q: What does optional(string, "t3.micro") do? / Makes the attribute optional with a default / Makes it required / Turns it into a list / =a
+Q: Which type maps keys to objects? / map(object({...})) / list(string) / any / =a
+Q: Why avoid type any? / Mistakes are caught later or not at all / It is slower / It is deprecated / =a
+L 5.6 | Outputs: share results | owner | shared | 6 | slides 493–495 | terraform-concepts/terraform-top-level-blocks/output
+O: Declare outputs; Read them with terraform output (-raw, -json); Mark an output sensitive
+D: Slides 494–495; terraform output -json piped to jq; a sensitive output hidden in the CLI but present in state (link to lesson 8.8).
+Q: Which command prints one output without quotes? / terraform output -raw <name> / terraform show <name> / terraform get <name> / =a
+Q: Does sensitive = true remove the value from state? / No, it only hides it in output / Yes / Only in CI / =a
+Q: What are outputs used for? / Showing results and passing values to other stacks / Storing passwords / Formatting code / =a
+L 5.7 | Variable validation and sensitive values | owner | shared | 8 | slides 366–371 | terraform-concepts/terraform-resource-validation
+O: Write validation blocks with clear error messages; Validate with regex, contains and length; Mark inputs sensitive
+D: The owner's validation examples (allowed environments, instance types) plus a regex naming rule; sensitive = true on a password variable.
+Q: When does a validation block run? / Before the plan uses the value / After apply / Never in CI / =a
+Q: What must a validation block contain? / condition and error_message / only a regex / a default / =a
+Q: What does sensitive = true do on a variable? / Hides the value in plan output / Encrypts the state / Deletes it after apply / =a
+L 5.8 | Variables in practice on the cloud | owner | cloud | 12 | slides 179–225 (applied) | aws: terraform-concepts/terraform-variables (EC2 examples); azure: azure-terraform/terraform-concepts/variables, map-off-objects
+O: Drive a real resource from variables and tfvars per environment; Use a map of objects to create differently sized machines; Keep secrets out of tfvars in Git
+DA: The owner's EC2 examples: string/list/object variables launch instances; dev.tfvars and prod.tfvars; a map of objects for three instance profiles.
+DZ: The owner's Azure variables and map-off-objects folders: VMs or storage accounts from a map of objects; dev.tfvars and prod.tfvars.
+RA: EC2 t3.micro x1–3
+RZ: Storage accounts (or B1s VM)
+CA: ~$0.03 per run
+CZ: ~$0.01 per run
+Q: Which file should hold environment values? / dev.tfvars / main.tf / the state / =a
+Q: How do you create one resource per map entry? / for_each = var.map / count = var.map / depends_on / =a
+Q: Where do secrets come from instead of tfvars in Git? / A secret store or environment variables / Comments / The README / =a
+QA: What decides an EC2 instance's size? / instance_type / ami / subnet_id / =a
+QZ: What decides an Azure VM's size? / size (e.g. Standard_B1s) / sku_name / tier / =a
+
+M 6 | The console and functions | The owner's terraform console method: try every function before using it.
+L 6.1 | terraform console: test expressions safely | owner | shared | 10 | slides 232–262 | terraform-concepts/terraform-console
+O: Open the console with variables loaded; Explore maps, lists and nested objects; Test an expression before putting it in code
+D: The owner's var.context examples (slides 235–262): EKS-style map of any, map of objects, try, lookup, element, length, format.
+Q: Does terraform console change infrastructure? / No / Yes / Only with -apply / =a
+Q: How do you list a map's values? / values(var.map) / var.map.values / list(var.map) / =a
+Q: Why test in the console first? / You see the result instantly without a plan / It is required / It saves state / =a
+L 6.2 | count, length and element | owner | shared | 10 | slides 298–317 | terraform-concepts/terraform-count-argument-and-lenght-function, terraform-element-function
+O: Create N copies with count and count.index; Use length() to size count; Use element() to wrap around a list
+D: The owner's examples (subnets across AZs with element) on local_file names; the risk of count when an item is removed from the middle (preview of for_each).
+Q: What is count.index for the first copy? / 0 / 1 / -1 / =a
+Q: What does element(["a","b"], 2) return? / "a" (it wraps around) / an error / "b" / =a
+Q: What happens when you remove the middle item of a count list? / Later items shift and may be replaced / Nothing / Only that item is removed / =a
+L 6.3 | split and join | owner | shared | 6 | slides 318–330 | terraform-concepts/terraform-slipt-function, terraform-join-function
+O: Turn a string into a list with split; Turn a list into a string with join; Combine them with other functions
+D: The owner's examples: CIDR lists from a comma string, a join for names and security group descriptions.
+Q: What does split(",", "a,b") return? / ["a","b"] / "a b" / "ab" / =a
+Q: What does join("-", ["dev","web"]) return? / "dev-web" / ["dev","web"] / "devweb" / =a
+Q: Which is the separator argument in join? / The first one / The second one / There is none / =a
+L 6.4 | lookup and try: safe access to maps and objects | owner | shared | 8 | slides 331–358 | terraform-concepts/terraform-lookup-function, terraform-try-function
+O: Read a map key with a default; Use try() to fall back when an attribute is missing; Choose between them and optional()
+D: The owner's console examples (slides 245–253) and folders; when to prefer optional() (lesson 5.5).
+Q: What does lookup(map, "k", "none") return when k is missing? / "none" / an error / null / =a
+Q: What does try(a, b) return? / a if it works, otherwise b / always b / both / =a
+Q: When is optional() better than try()? / When you control the variable's type / Never / Only for lists / =a
+L 6.5 | contains and conditional expressions | owner | shared | 10 | slides 359–365, 379–389 | terraform-concepts/terraform-contains-function, terraform-contitions
+O: Test membership with contains(); Write condition ? a : b; Use conditions to switch settings per environment
+D: The owner's examples (Route 53 only in prod, RDS backup retention, blue/green node sizes) shown with neutral values, then nested conditions and why to keep them readable.
+Q: What does contains(["dev","prod"], "qa") return? / false / true / an error / =a
+Q: What is the syntax of a conditional? / condition ? true_value : false_value / if condition then a else b / condition && a || b / =a
+Q: How do you create a resource only in prod? / count = var.env == "prod" ? 1 : 0 / depends_on = prod / lifecycle prod / =a
+L 6.6 | yamldecode: keep configuration in YAML | owner | shared | 7 | slides 372–378 | terraform-concepts/terraform-yamldecode-function
+O: Load YAML with yamldecode(file(...)); Use path.module; Validate what you load
+D: The owner's variable.yaml examples; a YAML list of users turned into resources with for_each.
+Q: What does yamldecode return? / A Terraform value (map or list) / A string / A file / =a
+Q: Why use path.module in file()? / The path works wherever the module is called from / It is faster / It encrypts the file / =a
+Q: What is a risk of YAML input? / Wrong types or keys are only caught when used / YAML is not allowed / It is slower / =a
+L 6.7 | Splat expressions | owner | shared | 6 | slides 271–276 | terraform-concepts/terraform-splat-expression
+O: Collect one attribute from many resources with [*]; Use it in outputs; Compare with a for expression
+D: The owner's splat examples on several random_pet resources; the same with [for x in ... : x.id].
+Q: What does aws_instance.web[*].id return? / A list of ids / The first id / A map / =a
+Q: Which works on for_each resources? / A for expression over values() / [*] directly on the map / Neither / =a
+Q: What is splat short for? / Collecting an attribute from every element / Splitting a string / A loop that creates resources / =a

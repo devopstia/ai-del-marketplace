@@ -1,0 +1,178 @@
+M 15 | Terraform for AI infrastructure | Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails and agents.
+L 15.1 | AI platform foundations as code: model access, identities and logging | ai | cloud | 12 | - | -
+O: Provision the AI platform's identities and least-privilege access; Turn on invocation logging; Tag and budget AI resources
+DA: An IAM role that may invoke only chosen Bedrock models, model invocation logging to CloudWatch Logs and S3, a budget alert on Bedrock usage.
+DZ: A Foundry resource (AIServices, project_management_enabled) and project, local auth off, Entra roles (Cognitive Services OpenAI User), diagnostic settings to Log Analytics.
+RA: IAM role, Bedrock invocation logging, CloudWatch log group
+RZ: Foundry resource and project, Log Analytics workspace
+CA: ~$0 (nothing runs by the hour)
+CZ: ~$0 (Log Analytics ingestion cents)
+Q: Why restrict which models a role may invoke? / Cost and data control / Speed / It is required / =a
+Q: Why log model invocations? / Auditing, cost and troubleshooting / To train the model / It is free storage / =a
+Q: What should replace API keys? / Identity-based access / Longer keys / Keys in tfvars / =a
+QA: Which AWS service is the managed model platform? / Amazon Bedrock / SageMaker Studio only / Lex / =a
+QZ: Which Azure resource hosts Foundry projects? / An AIServices account with project management enabled / A storage account / A VM / =a
+L 15.2 | A RAG stack as code | ai | cloud | 18 | - | marketplace: code/terraform-bedrock-knowledge-base, code/azure/terraform-foundry-ai-search
+O: Build documents storage, embeddings and a vector index as code; Connect a knowledge base to it; Ask a grounded question and see the cited source
+DA: Lesson code: S3 documents → Bedrock Knowledge Base (Titan Text Embeddings v2) → S3 Vectors index; ingestion job; retrieve-and-generate answer citing the runbook. Validated with provider 6.74.0.
+DZ: Lesson code: Foundry chat + embedding deployments, Azure AI Search Free tier, private Storage, Entra roles; import-and-vectorize; the playground answer citing the runbook.
+RA: S3, S3 Vectors bucket and index, Bedrock Knowledge Base and data source, IAM role
+RZ: Foundry resource, deployments, AI Search Free, storage account
+CA: < $0.50 per run (no OpenSearch Serverless)
+CZ: < $0.50 per run (Search Free tier)
+N: Links the AI masterclasses' RAG module: there students use RAG, here they build its platform.
+Q: What turns documents into vectors? / An embedding model / The chat model / The state file / =a
+Q: Why choose the cheapest vector store for labs? / Some charge by the hour even when idle / They are all free / Speed / =a
+Q: What shows an answer is grounded? / It cites the source document / It is long / It is fast / =a
+QA: Which AWS store is the low-cost vector option here? / Amazon S3 Vectors / OpenSearch Serverless / DynamoDB / =a
+QZ: Which Azure service holds the vector index? / Azure AI Search / Cosmos DB only / Key Vault / =a
+L 15.3 | Guardrails as code | ai | cloud | 10 | - | marketplace: code/terraform-bedrock-knowledge-base (guardrail)
+O: Define content and PII filters as code; Deny topics with examples; Test the guardrail before an app uses it
+DA: aws_bedrock_guardrail with PII (block access keys, anonymise emails) and a denied topic (destructive commands); versioned with aws_bedrock_guardrail_version; tested in the console.
+DZ: An azurerm_cognitive_account_rai_policy (content filters) attached to the deployment and a blocklist; tested in the Foundry playground.
+RA: Bedrock Guardrail and version
+RZ: RAI policy, blocklist
+CA: ~$0.05 (guardrail checks)
+CZ: ~$0.05
+Q: What does a denied topic do? / Blocks requests about that subject / Speeds up answers / Deletes logs / =a
+Q: Why version guardrails? / Apps pin a reviewed version / It is required / It is cheaper / =a
+Q: Where is a guardrail tested first? / In the console or playground before the app uses it / In production / Never / =a
+QA: Which PII type does the lesson block? / AWS access keys / Names / Dates / =a
+QZ: Which azurerm resource defines content filters? / azurerm_cognitive_account_rai_policy / azurerm_ai_guardrail / azurerm_policy / =a
+L 15.4 | Agents as code | ai | cloud | 15 | - | -
+O: Provision an agent runtime and its identity as code; Limit its tools and permissions; Estimate and cap its cost
+DA: aws_bedrockagentcore_agent_runtime (container in ECR) with an execution role allowed one tool, an endpoint, invocation from the CLI; cost estimated before recording.
+DZ: A Foundry project agent (azapi or azurerm where available) with the AI Search tool from 15.2, a managed identity, invocation from the CLI or SDK.
+RA: AgentCore runtime and endpoint, ECR repo, IAM role
+RZ: Foundry project agent, managed identity
+CA: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md
+CZ: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md
+N: Fast-moving services: check resource names and pricing on the recording day.
+Q: Why give an agent few tools? / Smaller blast radius / Faster answers / It is required / =a
+Q: What must you estimate before this lab? / The run's cost / The state size / Nothing / =a
+Q: Who can change an agent's permissions? / Only the IaC pipeline with review / The agent itself / Anyone / =a
+QA: Which AWS service runs agents here? / Bedrock AgentCore / Lambda only / EC2 only / =a
+QZ: Which Azure service runs agents here? / Foundry Agent Service / Logic Apps only / AKS only / =a
+
+M 16 | Kubernetes with Terraform | The owner's EKS projects and their AKS mirror. The costliest module: record each cluster session in one sitting and destroy it right after.
+L 16.1 | A managed Kubernetes control plane module | owner | cloud | 15 | slides 560–561 | aws: modules/eks-control-plane, base-code/eks-with-vpc; azure: modules/aks-controle-plane, aks-all-in-one
+O: Create a cluster in the module 11 network; Configure logging and endpoint access; Connect kubectl
+DA: The owner's eks-control-plane module (slide 561) on the 11.1 VPC, current EKS version, endpoint access, control plane logs; aws eks update-kubeconfig.
+DZ: The owner's aks-controle-plane module: AKS with Entra ID integration, a system node pool, az aks get-credentials.
+RA: EKS cluster
+RZ: AKS cluster (free tier control plane)
+CA: ~$0.10/hour control plane + nodes (~$1–2 per two-hour session); estimate, log, destroy right after
+CZ: $0 control plane (Free tier) + nodes (~$0.50–1 per two-hour session); estimate, log, destroy right after
+Q: What does the managed service run for you? / The control plane / Your pods' code / Your laptop / =a
+Q: Why restrict API endpoint access? / The cluster API is a high-value target / It is faster / It is free / =a
+Q: What does kubectl need to reach the cluster? / A kubeconfig with credentials / The Terraform state / An image id / =a
+QA: What does EKS charge for the control plane? / About $0.10 per hour / Nothing / $1 per hour / =a
+QZ: What does the AKS Free tier charge for the control plane? / Nothing / $0.10 per hour / $1 per hour / =a
+L 16.2 | Node groups: simple, blue-green and spot | owner | cloud | 15 | slides 562–563 | aws: modules/eks-node-group, eks-blue-green-node-group, base-code/eks-blue-green-node; azure: modules/aks-linux-node-group, aks-linux-spot-node-group, aks-windows-node-group
+O: Add node groups in private subnets; Do a blue-green node upgrade with the owner's green/blue variables; Use spot capacity safely
+DA: The owner's node group modules: simple group, blue-green switch with var.green / desired sizes (slides 384, 563), spot instances.
+DZ: The owner's node pool modules: Linux user pool, spot pool with eviction policy, Windows pool explained; blue-green pool swap.
+RA: EKS managed node groups (t3.medium)
+RZ: AKS node pools (B2s)
+CA: ~$0.10/hour per small node; destroy right after
+CZ: ~$0.05/hour per B2s node; destroy right after
+Q: What does a blue-green node upgrade avoid? / Downtime during the node upgrade / Cost / Logs / =a
+Q: What is the risk of spot nodes? / They can be taken back at short notice / They are slower / They are public / =a
+Q: Where should worker nodes run? / Private subnets / Public subnets / Anywhere / =a
+QA: Which variables switch the owner's blue/green node groups? / var.green and var.green_node_color / var.blue only / count only / =a
+QZ: What sets what happens when a spot node is reclaimed? / eviction_policy / priority only / os_disk / =a
+L 16.3 | Serverless and mixed capacity | owner | cloud | 12 | slides 564–565 | aws: modules/eks-fargate-only, eks-and-fargate, aws-fargate-profile, base-code/eks-mix; azure: new
+O: Run pods without managing nodes; Mix serverless and node capacity; Know the limits
+DA: The owner's Fargate-only and EKS-plus-Fargate modules: kube-system on Fargate, a namespace profile, CoreDNS patch.
+DZ: AKS virtual nodes (ACI) or node auto-provisioning explained and deployed on a test namespace.
+RA: EKS Fargate profiles
+RZ: AKS virtual nodes / ACI
+CA: counted in the cluster session (16.1)
+CZ: counted in the cluster session (16.1)
+Q: What is the benefit of serverless pods? / No nodes to patch or size / Free compute / More control / =a
+Q: Which workload often does not fit serverless pods? / DaemonSets / Web APIs / Batch jobs / =a
+Q: How do pods land on serverless capacity? / Profiles or selectors on namespace/labels / Random / Node names / =a
+QA: What selects pods for Fargate? / A Fargate profile's namespace and labels / An EC2 tag / The AMI / =a
+QZ: What backs AKS virtual nodes? / Azure Container Instances / Azure Functions / App Service / =a
+L 16.4 | Cluster access: identities and RBAC | owner+improved | cloud | 12 | slides 566, 572–573 | aws: modules/aws-auth-config, rbac; azure: modules/aks-auth-config
+O: Grant users and roles cluster access as code; Map them to Kubernetes RBAC; Remove access cleanly
+DA: EKS access entries and access policies (aws_eks_access_entry) replace the owner's aws-auth ConfigMap module; RBAC roles for IAM users and IAM roles (slides 572–573).
+DZ: The owner's aks-auth-config: Entra ID groups, Azure RBAC for Kubernetes, a namespace-scoped role.
+RA: EKS access entries
+RZ: AKS role assignments
+CA: counted in the cluster session (16.1)
+CZ: counted in the cluster session (16.1)
+N: Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
+Q: Why manage cluster access as code? / Reviewed, auditable and repeatable / It is faster / It is required / =a
+Q: What should a developer usually get? / Namespace-scoped rights / Cluster admin / Nothing / =a
+Q: What happens to access when the identity is removed from code? / The next apply removes it / Nothing / The cluster breaks / =a
+QA: What replaces the aws-auth ConfigMap? / EKS access entries / IAM users only / kubeconfig files / =a
+QZ: What identity source does AKS use for users? / Microsoft Entra ID / AWS IAM / LDAP only / =a
+L 16.5 | Cluster add-ons with Terraform and Helm | owner | cloud | 18 | slides 567–571 | aws: modules/eks-namespaces, cluster-auto-scaler, aws-load-balancer-controller, aws-ebs-csi-driver, external-dns, metrics-server, argo-cd-*; azure: modules/azure-aks-name-space, nginx-ingress, cert-manager, external-dns
+O: Install add-ons with the Helm provider and IRSA/Pod Identity or workload identity; Create namespaces with loops; Clean up load balancers before destroying the cluster
+DA: The owner's add-on modules: namespaces, cluster autoscaler, AWS Load Balancer Controller, EBS CSI driver, External DNS, Argo CD; Pod Identity as the current alternative to IRSA.
+DZ: The owner's AKS modules: namespaces, NGINX ingress, cert-manager, External DNS with workload identity.
+RA: Add-ons, a load balancer (delete before cluster)
+RZ: Add-ons, a load balancer and public IP
+CA: a full EKS lab is about $1–2 for two hours; destroy right after
+CZ: a full AKS lab is about $0.50–1 for two hours; destroy right after
+Q: Why delete Kubernetes load balancers before the cluster? / They are cloud resources Terraform may not track / They are free / It is faster / =a
+Q: How do add-ons get cloud permissions? / A workload identity bound to a role / Node keys / Hard-coded keys / =a
+Q: Which provider installs Helm charts from Terraform? / helm / kubernetes only / null / =a
+QA: Which is the current way for pods to get AWS permissions? / EKS Pod Identity (or IRSA) / Instance keys / Root role / =a
+QZ: Which is the current way for AKS pods to get Azure permissions? / Microsoft Entra Workload ID / Storage keys / Pod passwords / =a
+
+M 17 | Capstone: an enterprise platform | Everything together: two environments, remote state, modules, tests, policy, AI review and a gated pipeline.
+L 17.1 | Capstone design: environments, state, modules and pipeline | new | cloud | 10 | - | -
+O: Read the capstone requirements; Draw the folder, state and pipeline design; Estimate the cost before building
+DA: dev and prod (two accounts or two prefixes), S3 state with use_lockfile per environment, modules network/app/data, GitHub Actions with OIDC; cost table.
+DZ: dev and prod (two subscriptions or resource-group sets), Storage state per environment, the same modules on Azure, workload identity pipeline; cost table.
+CA: $0 (design)
+CZ: $0
+Q: What does each environment get in the capstone? / Its own state, variables and identity / A copy of the pipeline only / Nothing / =a
+Q: Why estimate the cost before building? / To stay in budget and know what to destroy / It is required / For fun / =a
+Q: What makes this design enterprise-grade? / Isolation, review gates and repeatability / Size / Number of files / =a
+L 17.2 | Build the modules and environments | new | cloud | 20 | - | aws: modules/vpc-03, sg, ec2, postgres-db; azure: modules/vnet, virtual-machine, azure-mysql
+O: Assemble the owner's modules into the capstone; Deploy dev; Prove it with tests and a reviewed plan
+DA: Network (no NAT, or one for the demo), an ALB in front of a small ASG or ECS Fargate service, RDS PostgreSQL with write-only password; dev applied.
+DZ: VNet, Container Apps (consumption) or App Service B1, PostgreSQL Flexible B1ms with write-only password; dev applied.
+RA: VPC, ALB, ASG t3.micro (or ECS Fargate), RDS db.t4g.micro
+RZ: VNet, Container Apps environment, PostgreSQL Flexible B1ms
+CA: ~$0.50 per two-hour session (ALB and RDS by the hour); destroy the same day
+CZ: ~$0.40 per two-hour session; destroy the same day
+Q: Which environment is applied first? / dev / prod / both together / =a
+Q: Where does the database password come from? / An ephemeral value through a write-only argument / tfvars / The README / =a
+Q: What has to pass before apply? / Tests, policy and a reviewed plan / Only fmt / Nothing / =a
+QA: Which AWS resource spreads traffic over the instances? / Application Load Balancer / NAT gateway / Route table / =a
+QZ: Which Azure service runs the app containers here? / Azure Container Apps / AKS / Batch / =a
+L 17.3 | The pipeline: OIDC, tests, policy, AI review and approval | new | cloud | 18 | - | marketplace: code/terraform-with-github-action, code/azure/terraform-with-github-action, code/ai-terraform-prompts
+O: Run fmt, TFLint, tests and Checkov in the pipeline; Add the AI review comment; Promote dev to prod through approvals
+DA: The 13.1 pipeline extended per environment: PR → checks → plan → AI review → merge → dev apply → prod approval → prod apply.
+DZ: The same on the Azure pipeline with workload identity per environment.
+CA: ~$0.20 (model calls; infra cost counted in 17.2)
+CZ: ~$0.20
+Q: What happens if Checkov fails in the pipeline? / The pull request cannot merge / It is ignored / Apply runs anyway / =a
+Q: Who approves prod? / A named reviewer / The AI / The pipeline itself / =a
+Q: What does the AI comment add? / A readable risk summary for the reviewer / The approval / Credentials / =a
+QA: How does each environment's job sign in to AWS? / Its own OIDC role / One shared key / The root account / =a
+QZ: How does each environment's job sign in to Azure? / Its own managed identity with a federated credential / A storage key / A password / =a
+L 17.4 | Operate it: drift, promotion and destroy | new | cloud | 12 | - | -
+O: Detect drift with plan -refresh-only and a scheduled pipeline; Promote a module version to prod; Destroy everything and prove it is gone
+DA: A console change detected by the nightly drift job; a module tag promoted to prod; destroy prod then dev, state buckets last; a tag search shows nothing left.
+DZ: The same with a portal change, a module tag promotion, destroy, and a Resource Graph query that shows nothing left.
+CA: counted in 17.2
+CZ: counted in 17.2
+Q: What does plan -refresh-only show? / Differences between state and the real cloud / New resources only / Nothing / =a
+Q: In which order are environments destroyed here? / prod, then dev, then the state storage / State first / Any order / =a
+Q: How do you prove nothing is left? / A tag search shows no lab resources / Close the laptop / Check the code / =a
+QA: Which AWS feature lists resources by tag? / Resource Groups Tag Editor / CloudFront / IAM / =a
+QZ: Which Azure feature queries resources by tag? / Azure Resource Graph / Key Vault / Bastion / =a
+L 17.5 | Course wrap-up, final assessment and what to learn next | new | cloud | 6 | - | -
+O: Review the skills gained; Take the final assessment; Choose the next course
+DA: Recap of the AWS path; final assessment (20 questions); next: the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
+DZ: Recap of the Azure path; final assessment; next: the AI for DevOps on Azure masterclass, n8n automation, and the AWS Terraform masterclass for multi-cloud.
+CA: $0
+CZ: $0
+Q: Which rule held through the whole course? / AI drafts, Terraform and a person verify / AI applies / Never destroy / =a
+Q: What does every lab end with? / Destroy and verify / Apply to prod / Nothing / =a
+Q: Where do the AI apps from the AI masterclass fit? / On infrastructure built with these modules / Nowhere / Only on laptops / =a

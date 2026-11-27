@@ -1,0 +1,125 @@
+M 0 | Welcome and safe set-up | Both courses: what you will build, how the labs work, and an account that cannot surprise you with a bill.
+L 0.1 | Course introduction: what you will build and how to learn here | new | cloud | 5 | slides 1–8 (table of contents) | -
+O: Describe the path from first resource to the enterprise capstone; Explain how lessons, labs, quizzes and the AI strand fit together; Plan a study rhythm that includes destroying every lab
+D: The finished capstone pipeline first (a pull request, the plan, the AI review comment, a person approving, apply), then the module map and how labs and cleanup work.
+DA: Shown on AWS (S3 state, GitHub OIDC, Bedrock).
+DZ: Shown on Azure (Storage state, workload identity, Foundry).
+Q: What does every lab end with? / An apply to production / terraform destroy and a check that nothing is left / Leaving resources for the next lesson / =b
+Q: In this course, what is AI allowed to do with infrastructure code? / Draft and review it; Terraform and a person verify / Apply changes automatically / Store state files / =a
+Q: Where are the lab files for each lesson? / Only in the video / In the lesson's lab ZIP with a README / In the owner's private repo / =b
+L 0.2 | Your training account, safely: budgets, MFA and the cleanup habit | new | cloud | 10 | - | -
+O: Turn on MFA and avoid long-lived admin keys; Create a budget alert below the training budget; Find and delete leftover resources
+DA: AWS: root MFA, IAM Identity Center user, AWS Budgets alert at $20 (student) and the Cost Explorer view; a Resource Groups tag search on Course=terraform-aws-masterclass.
+DZ: Azure: MFA on the account, a dedicated subscription or resource-group convention, a Cost Management budget alert at $20, and an Azure Resource Graph query on the Course tag.
+RA: AWS Budgets, IAM Identity Center
+RZ: Cost Management budget, Resource Graph
+Q: Why use a budget alert in a training account? / It stops resources automatically / It warns you before costs grow / It is required by Terraform / =b
+Q: Which tag helps you find every lab resource? / Name / Course (set on every resource by the lab code) / Owner / =b
+Q: What should you do with a lab after recording or practising? / Keep it running / Destroy it and verify nothing is left / Stop the VM only / =b
+QA: Which is the safest daily sign-in for the AWS CLI? / Root access keys / IAM Identity Center (aws sso login) / A shared admin user's keys / =b
+QZ: How do you sign the Azure CLI in for these labs? / az login with your own account / A storage account key / A subscription id alone / =a
+
+M 1 | Why Infrastructure as Code | The owner's opening: the problems of manual infrastructure and why teams moved to code.
+L 1.1 | From click-ops to code: how infrastructure used to be managed | owner | shared | 8 | slides 15–22 | -
+O: Describe the manual way of building servers and networks; Name three problems it causes (drift, slowness, no history); Explain what changes when infrastructure is code
+D: The owner's diagrams (slides 17–22): ticket, manual console clicks, configuration drift, then the same environment rebuilt from code in minutes.
+Q: What is configuration drift? / When real infrastructure no longer matches what was intended / A Terraform error / A cloud region change / =a
+Q: Which is a weakness of manual changes? / They are fast to repeat / There is no reliable history of who changed what / They cost nothing / =b
+Q: What replaces the manual steps in IaC? / Screenshots / Code that is reviewed, versioned and run by a tool / Email approvals / =b
+L 1.2 | What IaC is and why it pays off | owner | shared | 7 | slides 23–27 | -
+O: Define Infrastructure as Code; Explain disaster recovery, consistency and visibility benefits; Connect IaC to code review and version control
+D: Slides 24–27 with one example per benefit: rebuild after a deleted network, two identical environments, the code as documentation.
+Q: How does IaC help disaster recovery? / You can rebuild the environment from code / It makes backups automatically / It prevents outages / =a
+Q: Where do you see a resource's settings with IaC? / Only in the console / In the code and its history / In a spreadsheet / =b
+Q: What makes IaC changes safer? / Reviewing them like application code / Applying them at night / Using a bigger server / =a
+L 1.3 | IaC tools compared: Terraform, OpenTofu, CloudFormation, Bicep and Pulumi | owner+improved | shared | 10 | slides 28–32 | -
+O: Compare declarative multi-cloud tools with cloud-native ones; Explain Terraform's BSL licence and the OpenTofu fork in one minute; Choose a tool for a given team
+D: The owner's Terraform vs CloudFormation slide (32) extended with Bicep (Azure), Pulumi and OpenTofu; a decision table.
+N: Outdated: deck calls Terraform "open-source" (slide 29). Since Aug 2023 it is BSL 1.1 (source-available); OpenTofu (Linux Foundation, MPL) is the open-source fork (v1.13.10, 2026-11-23).
+Q: Which tool is specific to Azure? / CloudFormation / Bicep / OpenTofu / =b
+Q: What is OpenTofu? / An AWS service / An open-source fork of Terraform / A Terraform plugin / =b
+Q: Why do many teams choose Terraform? / It works across many clouds and services with one workflow / It only works on AWS / It needs no state / =a
+
+M 2 | Set up your workstation | Editor, Terraform at the right version, and signed-in cloud tools.
+L 2.1 | VS Code and the Terraform extensions | owner | shared | 7 | slides 33–36 | terraform-concepts/youtube/vs-code-plugins
+O: Install the HashiCorp Terraform extension; Turn on format-on-save; Use completion and hover docs
+D: Slide 36's plugin list reduced to the official HashiCorp Terraform extension (others are optional); format on save; hover docs. Links the free VS Code masterclass.
+N: Improve: slide 36 lists several overlapping plugins; recommend the official one plus format-on-save.
+Q: Which extension is the official one? / HashiCorp Terraform / Terraform Studio / Any YAML extension / =a
+Q: What does format-on-save do? / Runs terraform fmt style formatting when you save / Applies the plan / Deletes comments / =a
+Q: Where can you learn VS Code in depth? / The free VS Code masterclass / Only the Terraform docs / Nowhere / =a
+L 2.2 | Install Terraform the right way: versions, tfenv and Docker | owner+improved | shared | 12 | slides 43–57 | terraform-concepts/terraform-installation, Dockerfile in slide 49/54
+O: Install a pinned Terraform version on Windows, macOS or Linux; Switch versions with tfenv; Run Terraform in Docker
+D: The owner's three platforms (slides 45–53) and Docker (54–55) with today's version; tfenv to switch; the official HashiCorp package repositories as an option.
+N: Outdated: slides 46–51 download 0.12/0.13 and slide 49 pins 1.0.0; current is 1.17.2 (2026-11-27). Terragrunt install (56–57) moves to lesson 9.4.
+Q: Why pin a Terraform version for a project? / So everyone gets the same behaviour / To make it faster / It is required by the cloud / =a
+Q: What does tfenv do? / Installs and switches between Terraform versions / Formats code / Stores state / =a
+Q: Which command shows your Terraform version? / terraform version / terraform show / terraform init / =a
+L 2.3 | Your cloud CLI and credentials | owner+improved | cloud | 12 | slides 37–42 | terraform-concepts/aws-cli-installation; youtube/manage-credentials
+O: Install the cloud CLI; Sign in without long-lived admin keys; Check which identity Terraform will use
+DA: AWS CLI v2 install (slides 39–41), then `aws configure sso` and `aws sso login`, `aws sts get-caller-identity`; why slide 42's admin user with access keys is replaced.
+DZ: Azure CLI install, `az login`, `az account set`, `az account show`; how the azurerm provider picks up the CLI login; service principals saved for CI (module 13).
+N: Improve: slide 42 creates an IAM admin user and downloads access keys; use IAM Identity Center (or short-lived role credentials) instead.
+RA: IAM Identity Center
+RZ: Microsoft Entra ID sign-in
+Q: Why avoid long-lived admin keys on a laptop? / They can leak and never expire / They are slower / Terraform cannot use them / =a
+Q: Which command proves which identity you use? / A whoami-style check (aws sts get-caller-identity or az account show) / terraform plan / git status / =a
+Q: Where should credentials never go? / Into .tf files or Git / Into the CLI's sign-in cache / Into a password manager / =a
+QA: Which command signs you in with IAM Identity Center? / aws sso login / aws s3 ls / aws configure get / =a
+QZ: Which command picks the subscription Terraform uses through the CLI? / az account set --subscription <id> / az group list / az vm start / =a
+
+M 3 | The Terraform language and workflow | HCL, the core commands, files and providers, with cloud-neutral demos first.
+L 3.1 | HCL: blocks, arguments and resources | owner | shared | 10 | slides 58–69 | -
+O: Read a resource block (type, local name, arguments); Tell blocks, arguments and expressions apart; Explain what tags/labels are for
+D: Slides 61–69 annotated on screen with a cloud-neutral resource (local_file, random_pet), then the same anatomy on an aws_instance and an azurerm_resource_group.
+Q: In resource "aws_instance" "web", what is "web"? / The local name used in references / The AMI / The region / =a
+Q: Which file extension holds Terraform code? / .tf / .tfstate / .yaml / =a
+Q: What is an argument? / A key = value setting inside a block / A command-line flag only / A provider / =a
+L 3.2 | The core workflow: init, fmt, validate, plan, apply, destroy | owner | shared | 12 | slides 80–97 | terraform-concepts/learning-basic-commands, terraform-commands
+O: Run the six core commands in order; Read a plan's create/change/destroy summary; Destroy safely
+D: The owner's command slides (82–93) and workflow (95–97) with a local_file and random_pet project: init downloads providers, fmt, validate, plan, apply, change, destroy.
+Q: Which command downloads providers? / terraform init / terraform plan / terraform fmt / =a
+Q: What does terraform plan do? / Shows what would change without changing anything / Applies changes / Deletes state / =a
+Q: Which command removes everything the configuration manages? / terraform destroy / terraform fmt / terraform validate / =a
+L 3.3 | Comments and code style | owner | shared | 5 | slides 98–104 | terraform-concepts/terraform-comments
+O: Use #, // and /* */ comments; Comment out a block safely; Keep comments useful
+D: The owner's comments example; commenting out a resource and what plan does next (it plans a destroy).
+Q: What happens if you comment out a resource that exists? / The next plan destroys it / Nothing / Terraform crashes / =a
+Q: Which is a valid single-line comment? / # comment / -- comment / ' comment / =a
+Q: What makes a good comment? / Why the code is like this / Repeating the argument name / The password / =a
+L 3.4 | Terraform files and project layout | owner | shared | 8 | slides 163–170 | terraform-concepts/terrafrom-files
+O: Split a configuration into main, variables, outputs and versions files; Explain terraform.tfvars and the .terraform folder; Write a .gitignore for Terraform
+D: Slides 165–170 on a real folder; a .gitignore that excludes .terraform/, *.tfstate*, *.tfvars (keep *.tfvars.example).
+Q: Does Terraform care how you split .tf files in a folder? / No, it reads them all / Yes, only main.tf is read / Only alphabetical order matters / =a
+Q: Which file should never be committed? / terraform.tfstate / versions.tf / README.md / =a
+Q: What is the .terraform folder? / Downloaded providers and modules / Your state / Your secrets / =a
+L 3.5 | Providers and version constraints | owner+improved | cloud | 10 | slides 70–79, 460–466 | terraform-concepts/terraform-providers, youtube/terraform-providers-version-block
+O: Declare required_version and required_providers; Use ~>, >= and exact constraints; Explain the provider's role between Terraform and the API
+DA: hashicorp/aws ~> 6.0 (6.74.0 on 2026-11-27); region; default_tags; what the v6 major changed (per-resource `region` argument).
+DZ: hashicorp/azurerm ~> 5.0 (5.15.0) with `features {}` and `subscription_id` (required since 4.0); azure/azapi ~> 2.0 for brand-new Azure APIs.
+N: Outdated: repo pins aws ~> 4.0 (269 folders) and ~> 3.0 (49), required_version >= 1.0.0; Azure folder azurerm >= 3.0.
+Q: What does ~> 6.0 allow? / Any 6.x version / Only 6.0.0 / Any version / =a
+Q: What is required_version about? / The Terraform CLI version / The provider version / The cloud API version / =a
+Q: Why pin providers in production? / A new major version can change behaviour / Pinning makes plans faster / It is the only way to install them / =a
+QA: Which AWS provider block sets tags on every resource? / default_tags / merge_tags / tags_all only / =a
+QZ: Which block is required in every azurerm provider configuration? / features {} / region {} / tags {} / =a
+L 3.6 | The dependency lock file | owner | shared | 6 | slides 151–156 | terraform-concepts/terraform-lock-file
+O: Explain what .terraform.lock.hcl records; Commit it; Upgrade providers with init -upgrade
+D: Slides 153–156; delete .terraform, init again (same version from the lock); init -upgrade; terraform providers lock for several platforms.
+Q: Should .terraform.lock.hcl be committed? / Yes / No / Only in production / =a
+Q: Which command moves to newer allowed provider versions? / terraform init -upgrade / terraform plan -upgrade / terraform fmt / =a
+Q: What does the lock file store? / Exact provider versions and checksums / The state / Variables / =a
+L 3.7 | Your first resources on the cloud | owner | cloud | 12 | slides 80–97 (applied) | aws: terraform-concepts/learning-basic-commands; azure: azure-terraform/terraform-concepts/learning-basic-commands
+O: Create, change and destroy a first real resource; Find it in the console; Read the plan for a change versus a replacement
+DA: The owner's learning-basic-commands: an EC2 instance (t3.micro, AMI from SSM), tag change (update in place) vs AMI change (replace), destroy.
+DZ: The owner's Azure learning-basic-commands: resource group + virtual network + subnet; rename a tag (update) vs change the address space (replace or update), destroy.
+RA: EC2 t3.micro
+RZ: Resource group, VNet
+CA: ~$0.01 (t3.micro for under an hour; free tier eligible)
+CZ: $0 (resource groups and VNets are free)
+N: Repo fix: learning-basic-commands fails `terraform init` today (Unsupported Terraform Core version: required_version ~> 1.0.0).
+Q: What does "-/+" mean in a plan? / The resource will be replaced / Updated in place / Read only / =a
+Q: Where can you check what Terraform created? / The console and terraform state list / Only the .tf files / Nowhere / =a
+Q: What should you run when the lab is done? / terraform destroy / terraform init / terraform fmt / =a
+QA: Why read the AMI id from an SSM public parameter? / It always gives the current image for the region / It is cheaper / AMIs never change / =a
+QZ: What holds every Azure resource in this lab? / A resource group / An S3 bucket / A workspace / =a

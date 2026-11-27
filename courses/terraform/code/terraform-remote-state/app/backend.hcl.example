@@ -1,0 +1,6 @@
+# Copy to backend.hcl and put your bucket name from the bootstrap output.
+bucket       = "del-training-tfstate-<your-account-id>"
+key          = "lessons/remote-state/terraform.tfstate"
+region       = "us-east-1"
+encrypt      = true
+use_lockfile = true # S3 native locking (Terraform >= 1.10; GA in 1.11). Replaces dynamodb_table (deprecated).

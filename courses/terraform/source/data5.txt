@@ -1,0 +1,173 @@
+M 12 | Code quality, testing and policy | Prove the code before anyone applies it: linting, tests and policy as code.
+L 12.1 | fmt, validate and TFLint before every commit | new | shared | 10 | - | -
+O: Run fmt, validate and TFLint locally; Add them to a pre-commit hook; Read and fix lint findings
+D: A neutral project with mistakes (unused variable, deprecated syntax, wrong type); TFLint core rules, then where the AWS and Azure rulesets plug in; pre-commit-terraform hooks.
+Q: Which tool finds unused variables? / TFLint / terraform fmt / terraform output / =a
+Q: When should checks run? / Before every commit and again in CI / Only in production / Once a year / =a
+Q: Does validate need cloud credentials? / No / Yes / Only for Azure / =a
+L 12.2 | Test modules with terraform test | new | cloud | 14 | - | marketplace: code/terraform-test, code/azure/terraform-test
+O: Write .tftest.hcl run blocks with asserts; Mock the provider so tests are free; Test validation with expect_failures
+DA: Lesson code: an S3 module tested for naming, public access block and versioning, with mock_provider "aws".
+DZ: Lesson code: a storage-account module tested for naming, privacy and TLS, with mock_provider "azurerm".
+CA: $0 (mocked)
+CZ: $0 (mocked)
+Q: What does mock_provider do? / Fakes the provider so nothing is created / Speeds up the real provider / Skips tests / =a
+Q: How do you test that bad input is rejected? / expect_failures = [var.name] / assert false / skip = true / =a
+Q: When is a test worth keeping? / It fails when you break the rule on purpose / It always passes / It is long / =a
+QA: Which S3 setting does the test protect? / Public access block and versioning / Bucket name length only / Region / =a
+QZ: Which storage setting does the test protect? / No public blobs, no shared keys, TLS 1.2 / Replication only / Tags only / =a
+L 12.3 | Policy as code: Checkov, OPA and Sentinel | new | cloud | 12 | - | marketplace: code/terraform-policy-checkov
+O: Scan code with Checkov and read the findings; Skip a check only with a written reason; Check a plan with OPA and know where Sentinel fits
+DA: Lesson code: a weak S3 bucket (Checkov 2026-11-27: 5 passed, 11 failed), fixed step by step; conftest on terraform show -json; HCP Terraform policy sets as the team option.
+DZ: Mirror: a weak storage account and Key Vault scanned (CKV_AZURE checks), fixed; Azure Policy as the cloud-side guardrail.
+CA: $0
+CZ: $0
+Q: When should a failed check be skipped? / Only with a written reason in the code / Whenever it is annoying / Never document it / =a
+Q: What does OPA check in this lesson? / The JSON plan / The provider binary / The state lock / =a
+Q: Why is policy the guardrail for AI-written code? / It checks every change the same way, whoever wrote it / AI cannot write Terraform / It is faster than AI / =a
+QA: How many Checkov checks failed on the weak bucket? / 11 / 0 / 2 / =a
+QZ: What is Azure's own policy service called? / Azure Policy / Sentinel / Guardrails / =a
+
+M 13 | CI/CD and team workflows | Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer and upgrades.
+L 13.1 | GitHub Actions with OIDC: plan on pull request, apply on approval | owner+improved | cloud | 18 | slides 614–616 | aws: terraform-with-github-action; marketplace: code/terraform-with-github-action, code/azure/terraform-with-github-action
+O: Trust GitHub's OIDC token in the cloud; Plan on pull requests and comment the plan; Apply only after merge and a reviewer's approval
+DA: Lesson code: OIDC provider, a read-only plan role and an apply role limited to the production environment; plan comment; approval gate.
+DZ: Lesson code: two user-assigned managed identities with federated credentials (pull_request and environment:production), ARM_USE_OIDC, the approval gate.
+RA: IAM OIDC provider, 2 roles, SSM parameter
+RZ: 2 managed identities, federated credentials, role assignments
+CA: $0
+CZ: $0
+N: Outdated: the owner's workflows use AWS access keys as GitHub secrets, setup-terraform@v2.0.2 and Terraform 1.0.0.
+Q: Why OIDC instead of stored keys? / Short-lived credentials, nothing to leak / It is faster / GitHub requires it / =a
+Q: Who approves the apply? / A person, through the protected environment / The AI reviewer / Nobody / =a
+Q: Why separate plan and apply identities? / Pull requests get read-only rights / It is cheaper / Terraform needs two / =a
+QA: Which GitHub action exchanges the token for AWS credentials? / aws-actions/configure-aws-credentials / actions/checkout / hashicorp/setup-terraform / =a
+QZ: Which environment variable tells azurerm to use OIDC? / ARM_USE_OIDC=true / AZURE_OIDC=1 / TF_OIDC / =a
+L 13.2 | HCP Terraform: remote runs, variable sets and dynamic credentials | owner+improved | cloud | 15 | slides 584–599 | aws: terraform-concepts/terraform-cloud (example-01…); azure: new
+O: Create an organisation, project and workspace; Run plans from VCS; Use dynamic provider credentials instead of stored keys
+DA: The owner's Terraform Cloud examples renamed to HCP Terraform; AWS credentials replaced by dynamic provider credentials (OIDC role); variable sets; the VPC module run.
+DZ: The same with Azure dynamic credentials (federated identity), variable sets and a VNet module run.
+N: Outdated: "Terraform Cloud" is now HCP Terraform; slides 593 and 597 store AWS keys as variables (use dynamic credentials). Check the free plan's current limits before recording.
+CA: $0 (free tier; resources from the run are destroyed)
+CZ: $0
+Q: What is Terraform Cloud called today? / HCP Terraform / Terraform Hub / Terraform Online / =a
+Q: What groups workspaces in HCP Terraform? / Projects / Folders / Branches / =a
+Q: What replaces stored cloud keys in workspaces? / Dynamic provider credentials (OIDC) / A bigger plan / Sentinel / =a
+QA: What does an AWS dynamic credential assume? / An IAM role trusting HCP Terraform's OIDC / An access key / A root user / =a
+QZ: What does an Azure dynamic credential use? / A federated identity credential / A storage key / A certificate on disk / =a
+L 13.3 | Terraform with Jenkins and Terragrunt pipelines | owner | cloud | 14 | slides 617–622 | aws: terraform-concepts/terraform-with-jenkins, terraform-with-jenkins-and-terragrunt (READMEs; no pipeline code in the repo); azure: new
+O: Write a Jenkinsfile with plan, approval and apply stages; Use the agent's role instead of keys; Run Terragrunt from Jenkins
+DA: A Jenkinsfile on the lesson 11.7 Jenkins: instance profile credentials, plan, input step, apply; a Terragrunt variant.
+DZ: The same on the Azure Jenkins VM with its managed identity (ARM_USE_MSI) and the azurerm backend.
+RA: Jenkins EC2 (from 11.7)
+RZ: Jenkins VM (from 11.7)
+CA: ~$0.10
+CZ: ~$0.15
+N: Gap: the repo's Jenkins folders have no Jenkinsfile; written new.
+Q: Which Jenkins step waits for a person? / input / sh / stash / =a
+Q: Where do Jenkins credentials for the cloud come from in this lesson? / The agent's role or managed identity / Hard-coded keys / The Jenkinsfile / =a
+Q: Why save the plan file and apply it? / The apply does exactly what was reviewed / It is faster / It is required / =a
+QA: How does an EC2-based Jenkins agent get AWS credentials? / Its instance profile / A key in the Jenkinsfile / The root account / =a
+QZ: Which setting makes azurerm use a VM's managed identity? / ARM_USE_MSI=true / ARM_KEY / use_cli / =a
+L 13.4 | Machine images with Packer | owner | cloud | 14 | slides 600–609 | aws: packer/001…007; azure: new
+O: Write a Packer HCL template with variables; Build an image with provisioners; Use the image from Terraform
+DA: The owner's Packer folders: inline and script provisioners, Jenkins and bastion images, variables; the AMI found by a data source in Terraform; deregister afterwards.
+DZ: azure-arm builder to a managed image (or Azure Compute Gallery), the same provisioners; the image used by an azurerm VM; delete afterwards.
+RA: Temporary EC2 build instance, AMI, EBS snapshot
+RZ: Temporary build VM, managed image
+CA: ~$0.05 per build; delete the AMI and snapshot
+CZ: ~$0.05 per build; delete the image
+Q: What does Packer produce? / A machine image / A state file / A container only / =a
+Q: Why bake images? / Faster, repeatable servers / Cheaper storage / No security updates needed / =a
+Q: What must you clean up after an AMI lab? / The AMI and its snapshot / Nothing / Only the instance / =a
+QA: Which Packer builder makes AMIs? / amazon-ebs / azure-arm / docker / =a
+QZ: Which Packer builder makes Azure images? / azure-arm / amazon-ebs / qemu / =a
+L 13.5 | Upgrade Terraform and providers safely | owner+improved | cloud | 12 | slides 610–613 | aws: terraform-concepts/terraform-upgrade; azure: new
+O: Read upgrade guides and changelogs; Upgrade one version step in a branch with a clean plan; Handle provider major versions
+DA: The owner's upgrade method (state pull | grep terraform_version) from 1.0-era code to 1.17, then AWS provider 4 → 5 → 6 with the upgrade guides and a no-change plan as the goal.
+DZ: The same with azurerm 3 → 4 → 5 (features, subscription_id, renamed arguments) on the owner's Azure modules.
+CA: $0 (plan only)
+CZ: $0
+N: Outdated: README targets Terraform 1.0 and the 0.14 changelog.
+Q: What is the goal plan after an upgrade? / No changes / Everything replaced / Any plan / =a
+Q: Where do you start a provider major upgrade? / The provider's upgrade guide / The state file / Production / =a
+Q: Why upgrade in small steps? / Each step's changes are easy to see and undo / It is required / It is faster / =a
+QA: Which AWS provider major is current in 2026? / 6 / 3 / 4 / =a
+QZ: Which azurerm major is current in late 2026? / 5 / 2 / 3 / =a
+L 13.6 | OpenTofu: what changes and how to try it | new | shared | 8 | slides 28–32 (extends) | -
+O: Explain the licence history; Run a project with tofu; List the features that differ
+D: A neutral project with tofu init/plan; state encryption (an OpenTofu feature); where the two differ and how to stay compatible.
+Q: Who maintains OpenTofu? / The Linux Foundation community / HashiCorp / AWS / =a
+Q: Which command runs OpenTofu? / tofu / terraform / otf / =a
+Q: Which feature is OpenTofu known for? / Built-in state encryption / Sentinel / HCP projects / =a
+
+M 14 | AI-Powered Terraform | AI drafts, Terraform and a person verify: writing, explaining, testing and reviewing infrastructure code with AI.
+L 14.1 | AI drafts, Terraform verifies: the rules of AI-assisted IaC | ai | shared | 8 | - | marketplace: code/ai-terraform-prompts
+O: State the rules (AI drafts; fmt, validate, tests, policy, plan and a person verify; never auto-apply); Name what never goes into a prompt; Explain why AI gets provider details wrong
+D: The verification ladder on one slide; a real AI answer with an outdated argument caught by validate; what not to paste (state, tfvars with secrets, keys).
+Q: Who approves an AI-written change? / A person, after the checks pass / The AI / Nobody / =a
+Q: What must never go into a prompt? / State files, secrets and keys / Error messages / Module names / =a
+Q: Why do assistants get provider arguments wrong? / They learned older versions / They are random / Providers change every hour / =a
+L 14.2 | Prompt AI to write HCL: poor vs professional prompts | ai | cloud | 14 | - | marketplace: code/ai-terraform-prompts/01-write-hcl-professional.md; links CR-077–CR-082
+O: Write a professional prompt (role, context, task, constraints, output, checks); Compare results of a poor and a professional prompt live; Prove the result with fmt, validate, Checkov and plan
+DA: Both prompts run live in an AI coding agent for a private S3 log bucket; the poor one misses the public access block and pins nothing; the professional one passes after one fix.
+DZ: The same for a private storage account with Key Vault; the poor answer uses storage keys and azurerm 3.x syntax.
+CA: $0 (plan only; model use under $0.50)
+CZ: $0
+Q: Which part of a prompt states the versions and standards? / Context / Role / Output / =a
+Q: What proves AI output is usable? / fmt, validate, policy and a reviewed plan / The AI saying so / Its length / =a
+Q: What is a typical flaw of a short prompt's output? / Missing security settings and version pins / Too many comments / It fails to format / =a
+QA: What did the poor prompt's bucket miss? / The public access block / A name / A region / =a
+QZ: What outdated syntax did the poor Azure answer use? / azurerm 3.x arguments / Bicep / CloudFormation / =a
+L 14.3 | AI explains plans and errors (and when it is wrong) | ai | cloud | 12 | - | marketplace: code/ai-terraform-prompts/02-explain-plan.md
+O: Ask AI to summarise a plan with risks; Troubleshoot an error with AI and confirm against the docs; Recognise a confident wrong answer
+DA: A plan that replaces an RDS instance because of a changed engine version explained by AI; an IAM error diagnosed; one case where the AI invents an argument and validate proves it wrong.
+DZ: A plan that replaces a storage account because of a changed replication type; a 403 from missing data-plane roles; one wrong AI answer caught by the docs.
+CA: $0 (plan only)
+CZ: $0
+Q: What should you do with an AI explanation? / Check it against the plan and the provider docs / Apply it / Ignore the plan / =a
+Q: What is the riskiest line in a plan? / A replace or destroy of a stateful resource / An added tag / A new output / =a
+Q: How did we catch the invented argument? / terraform validate / The AI apologised / A comment / =a
+QA: Why might AWS replace an RDS instance? / A changed argument forces a new resource / A new tag / Time of day / =a
+QZ: Why did the Azure 403 happen? / The identity lacked a data-plane role / Wrong region / Old Terraform / =a
+L 14.4 | AI writes tests and refactors modules with moved blocks | ai | cloud | 14 | - | marketplace: code/ai-terraform-prompts/04-write-tests.md, code/terraform-test, code/terraform-moved-removed
+O: Have AI write terraform test cases and keep only those that catch a broken rule; Have AI refactor a module into for_each with moved blocks; Prove the refactor plans with no destroy
+DA: AI adds tests to the S3 module (one useless test removed after the break-it check); AI refactors the owner's count-based IAM users into for_each with moved blocks; plan shows only moves.
+DZ: The same on the storage module and a count-based resource-group set.
+CA: $0 (mocked tests, plan)
+CZ: $0
+Q: How do you know an AI-written test is useful? / It fails when the rule is broken on purpose / It passes / It is long / =a
+Q: What must a refactor plan show? / Moves, no destroys / Destroys and creates / Nothing at all / =a
+Q: What do moved blocks need from you? / The old and new addresses / The state file / A new backend / =a
+QA: Which owner exercise is refactored? / Count-based IAM users (terraform-loops) / The VPC module / Packer / =a
+QZ: Which Azure resource set is refactored? / Count-based resource groups / AKS / Key Vault / =a
+L 14.5 | The Terraform MCP server: an agent that reads current docs | ai | shared | 12 | - | marketplace: code/terraform-mcp-server
+O: Connect an AI agent to the Terraform MCP server; Let it look up current provider and module docs; Keep its permissions read-only
+D: The registry toolset in Claude Code or VS Code (Docker image hashicorp/terraform-mcp-server:1.4.1), the same question asked with and without MCP; HCP Terraform tools with a read-only token; destructive tools left off.
+Q: What does the registry toolset give the agent? / Current provider and module documentation / Cloud credentials / The state file / =a
+Q: Which token is right for the lesson's HCP Terraform tools? / A read-only team token in an environment variable / An owner token in the file / None / =a
+Q: Does the agent apply changes in this lesson? / No / Yes / Only at night / =a
+L 14.6 | AI review of a pull request's plan in GitHub Actions | ai | cloud | 15 | - | marketplace: code/ai-terraform-prompts/03-review-pr-plan.md, code/terraform-with-github-action
+O: Add an AI review job that comments risks, cost and blast radius; Keep secrets out of what the AI sees; Keep the human approval as the gate
+DA: The lesson 13.1 pipeline plus a review job: terraform show -json summarised, sent to a model with the review prompt, posted as a PR comment; a destroy of a bucket flagged HIGH RISK; a person still approves.
+DZ: The same on the Azure pipeline; a storage account replacement flagged HIGH RISK.
+CA: ~$0.10 (model calls)
+CZ: ~$0.10
+Q: Can the AI reviewer approve the apply? / No, it only comments / Yes / Only for small changes / =a
+Q: What should the AI see? / A redacted plan summary and the code diff / The state and secrets / Cloud credentials / =a
+Q: What does HIGH RISK mean in the comment? / A stateful resource is replaced or destroyed / The plan is big / The AI is unsure / =a
+QA: Where does the model API key live? / A GitHub secret, never in the repo / In main.tf / In the plan / =a
+QZ: Where does the model key live for the Azure pipeline? / A GitHub secret (or Key Vault via OIDC) / In tfvars / In the state / =a
+L 14.7 | An AI-generated module through the full gate | ai | cloud | 12 | - | marketplace: code/terraform-policy-checkov, code/terraform-test
+O: Run AI output through fmt, TFLint, tests, Checkov and a reviewed plan; Fix what fails; Decide when to reject AI output
+DA: AI writes a CloudFront + S3 site module; the gate catches a public bucket and a missing test; fixed, then applied and destroyed.
+DZ: AI writes a Static Web App + storage module; the gate catches shared keys enabled; fixed, applied, destroyed.
+RA: S3, CloudFront (optional apply)
+RZ: Static Web App Free, storage account
+CA: ~$0 (free tiers)
+CZ: ~$0
+Q: Which check catches insecure settings? / Policy (Checkov) / fmt / output / =a
+Q: When should you reject AI output? / When fixing it costs more than writing it / Never / Always / =a
+Q: What comes last before apply? / A person reviews the plan / Another AI / Nothing / =a
+QA: What did the gate catch in the AWS module? / A public bucket / A typo in a tag / A slow plan / =a
+QZ: What did the gate catch in the Azure module? / Shared keys enabled / Wrong region / A missing tag / =a

@@ -1,0 +1,176 @@
+M 7 | Meta-arguments and lifecycle | Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
+L 7.1 | Loops: count, for_each and dynamic blocks | owner+improved | cloud | 14 | slides 402–414 | aws: terraform-concepts/terraform-loops (for-each, for-loop-with-count, others-examples); azure: azure-terraform/terraform-concepts/loops, count
+O: Create many resources with count and with for_each; Explain why for_each is safer for named items; Generate nested blocks with dynamic
+DA: The owner's examples: IAM users with count and with for_each, Secrets Manager secrets from a list, a set and a map, instances from a map of objects (slides 407–414); then a dynamic ingress block in a security group.
+DZ: The owner's Azure loops: resource groups and subnets with count and for_each; a dynamic security_rule block in an NSG.
+RA: IAM users, Secrets Manager secrets, security group
+RZ: Resource groups, subnets, NSG
+CA: ~$0.01 (Secrets Manager $0.40/secret/month, prorated; destroy the same day)
+CZ: $0
+N: Gap: dynamic blocks are not in the deck. Secrets Manager names are reserved 7–30 days after delete: use recovery_window_in_days = 0 in labs.
+Q: Why is for_each safer than count for named items? / Removing one item does not shift the others / It is faster / It needs no state / =a
+Q: What is each.key in for_each over a map? / The map key / The index number / The value / =a
+Q: What does a dynamic block generate? / Repeated nested blocks inside one resource / Several resources / A module / =a
+QA: Why set recovery_window_in_days = 0 on lab secrets? / So the name can be reused right after destroy / To encrypt it / To save state / =a
+QZ: Which nested block does a dynamic block often generate in an NSG? / security_rule / ingress / subnet / =a
+L 7.2 | depends_on: hidden dependencies | owner | shared | 6 | slides 277–281 | terraform-concepts/terraform-depend-on
+O: Explain implicit vs explicit dependencies; Use depends_on only when there is no reference; Spot overuse
+D: The owner's depends_on examples; a case with no reference (a policy that must exist before use) shown with terraform_data.
+Q: When do you need depends_on? / When a dependency is not visible through a reference / Always / Never / =a
+Q: What is an implicit dependency? / One created by a reference / One written in depends_on / A provider / =a
+Q: What is a cost of depends_on? / Plans become less precise and slower / It costs money / It deletes resources / =a
+L 7.3 | Lifecycle rules: create_before_destroy, prevent_destroy, ignore_changes | owner | cloud | 10 | slides 282–292 | aws: terraform-concepts/terraform-lifcycle; azure: new
+O: Replace without downtime using create_before_destroy; Protect critical resources with prevent_destroy; Ignore changes made outside Terraform
+DA: The owner's lifecycle examples: instance replaced create-before-destroy, prevent_destroy on an S3 bucket, ignore_changes on tags/password; replace_triggered_by.
+DZ: The same three rules on a storage account (prevent_destroy), a VM (ignore_changes on tags set by Azure Policy), and a public IP (create_before_destroy).
+RA: EC2 t3.micro, S3 bucket
+RZ: Storage account, public IP
+CA: ~$0.01
+CZ: ~$0.01 (public IP prorated)
+Q: What does prevent_destroy do? / Fails any plan that would destroy the resource / Backs it up / Hides it / =a
+Q: When is ignore_changes useful? / When something outside Terraform changes an attribute on purpose / To skip validation / To speed up plans / =a
+Q: What does create_before_destroy change? / The new object is created before the old one is removed / Nothing / The order of files / =a
+QA: Which lifecycle argument replaces an instance when another resource changes? / replace_triggered_by / depends_on / recreate_on / =a
+QZ: Why might Azure Policy make you use ignore_changes? / Policy can add tags Terraform did not set / Policy blocks Terraform / It is required by azurerm / =a
+L 7.4 | Preconditions, postconditions and check blocks | new | cloud | 10 | extends slides 366–371 | marketplace: courses/terraform/code/terraform-checks-and-conditions
+O: Add a precondition that stops a bad plan; Add a postcondition that guarantees a result; Use a check block for health warnings
+DA: The lesson code: free-tier precondition on the instance type, IMDSv2 postcondition, a check block on a website URL.
+DZ: Mirror: a precondition that the VM size is in an allowed list, a postcondition that the storage account is private, a check block on an App Service URL.
+RA: EC2 t3.micro (optional)
+RZ: Storage account
+CA: $0 (plan only by default)
+CZ: $0
+Q: Which one only warns and never blocks? / check block / precondition / postcondition / =a
+Q: When does a postcondition run? / After the resource is created or read / Before the plan / Only in tests / =a
+Q: What is a precondition for? / A rule that must be true before Terraform acts / Formatting / Imports / =a
+QA: Which setting forces IMDSv2 on EC2? / metadata_options http_tokens = "required" / imds = 2 / ebs_optimized / =a
+QZ: Which argument keeps a storage account's blobs from being public? / allow_nested_items_to_be_public = false / public = false / https_only / =a
+L 7.5 | Provider aliases: several regions and subscriptions | owner | cloud | 8 | slides 390–394 | aws: terraform-concepts/terraform-alias; azure: azure-terraform/terraform-concepts/multiple-providers
+O: Configure a second provider with alias; Pass a provider to a resource and a module; Explain the AWS v6 per-resource region option
+DA: The owner's alias example (us-east-1 and us-west-2 buckets); then provider v6's `region` argument on a resource as a simpler alternative for single-account multi-region.
+DZ: The owner's multiple-providers example: two azurerm providers for two subscriptions (or one subscription and two features blocks), a resource in each.
+RA: S3 buckets in two regions
+RZ: Resource groups in two subscriptions or regions
+CA: $0
+CZ: $0
+Q: How do you choose an aliased provider in a resource? / provider = aws.west (or azurerm.second) / alias = west / region = west / =a
+Q: How does a module receive an aliased provider? / providers = { aws = aws.west } / depends_on / A variable / =a
+Q: Why use aliases? / To manage several regions or accounts from one configuration / To speed up apply / To hide resources / =a
+QA: What does AWS provider v6 add for multi-region? / A region argument on most resources / Automatic replication / Global buckets / =a
+QZ: What usually differs between two azurerm provider blocks? / subscription_id / features / location only / =a
+L 7.6 | Bootstrap servers: user data and cloud-init | owner | cloud | 8 | slides 293–297 | aws: terraform-concepts/terraform-user-data; azure: new
+O: Pass a script at first boot; Use templatefile() for variables; Check the boot log
+DA: The owner's user-data example installing nginx on Amazon Linux 2023; templatefile; /var/log/cloud-init-output.log; user_data_replace_on_change.
+DZ: custom_data with cloud-init on a B1s Ubuntu VM installing nginx; templatefile; base64encode; checking with the serial console.
+RA: EC2 t3.micro, security group
+RZ: B1s VM, NSG, public IP
+CA: ~$0.02
+CZ: ~$0.02
+Q: When does user data (cloud-init) run? / At first boot / On every plan / After destroy / =a
+Q: Which function fills variables into a script file? / templatefile() / format() / file() only / =a
+Q: Where should real configuration management live for large fleets? / An image (Packer) or a config tool, not long boot scripts / In comments / In state / =a
+QA: Which argument recreates the instance when user data changes? / user_data_replace_on_change / force_new / recreate / =a
+QZ: Which azurerm argument carries cloud-init on a Linux VM? / custom_data / user_data_script / init_script / =a
+L 7.7 | Provisioners and terraform_data: the last resort | owner+improved | cloud | 10 | slides 395–401, 504–508 | aws: terraform-concepts/terraform-provisioner; azure: new
+O: Run local-exec and remote-exec; Use terraform_data instead of null_resource; Explain why provisioners are a last resort
+DA: The owner's remote-exec and null_resource examples, rewritten: the SSH key generated with tls_private_key (never committed), terraform_data, and the SSM Session Manager alternative.
+DZ: The same on a B1s VM: local-exec calling az CLI, remote-exec over SSH with a generated key, and the Run Command alternative.
+RA: EC2 t3.micro, key pair (generated)
+RZ: B1s VM, public IP
+CA: ~$0.02
+CZ: ~$0.02
+N: Security: the repo commits private keys (provisioner/example-01,02 *.pem, testing/ssh-key, base-code/eks-mix, azure ssh-keys). Not reused; labs generate keys at run time.
+Duplicate: slides 504–508 repeat 397–401.
+Q: Which resource replaces null_resource in modern Terraform? / terraform_data / local_file / random_id / =a
+Q: Why are provisioners a last resort? / Terraform cannot plan or track what they do / They are slow / They cost extra / =a
+Q: Where must SSH private keys never be? / In Git / In memory during the run / In an agent / =a
+QA: Which AWS service runs commands without SSH? / Systems Manager (Session Manager, Run Command) / CloudTrail / IAM / =a
+QZ: Which Azure feature runs a script on a VM without SSH? / Run Command / Bastion only / Key Vault / =a
+
+M 8 | State | The state file, remote state with locking, imports, refactoring and secrets.
+L 8.1 | The state file: current vs desired state | owner | shared | 8 | slides 157–162, 430–431 | terraform-concepts/terraform-local-state
+O: Explain what state records and why; Compare desired, current and recorded state; Name the risks of local state
+D: Slides 159–162 and 431; open terraform.tfstate of a neutral project; why it must not be edited by hand or committed.
+N: Fix: the repo's terraform-local-state/main.tf has a database password in plain text; the lesson shows it as the problem, not as code to copy.
+Q: What is in the state? / What Terraform manages and the last known attributes / Only the code / Only outputs / =a
+Q: Why is local state a problem for teams? / Only one person has it and there is no locking / It is slow / It is encrypted / =a
+Q: Can state contain secrets? / Yes, so it must be protected / No, never / Only in Azure / =a
+L 8.2 | Remote state with locking | owner+improved | cloud | 14 | slides 429–440, 467–471 | aws: terraform-concepts/terraform-remote-state, modules/s3-backend; azure: azure-terraform/modules/storage-backend; marketplace: code/terraform-remote-state, code/azure/terraform-remote-state
+O: Create a secure state bucket or storage account; Configure the backend with partial configuration; Show locking and versioning
+DA: Lesson code: bucket with versioning, encryption and public access block; backend "s3" with use_lockfile = true; two applies at once to show the lock.
+DZ: Lesson code: storage account (Entra ID only, versioning, soft delete) and container; backend "azurerm" with use_azuread_auth; the blob lease lock.
+RA: S3 bucket, SSM parameter
+RZ: Resource group, storage account, container
+CA: ~$0
+CZ: ~$0
+N: Outdated: the repo's 78 backend configs use a DynamoDB lock table; dynamodb_table is deprecated since Terraform 1.11 (S3 native locking, use_lockfile).
+Q: Why lock state? / Two people applying at once would corrupt it / To encrypt it / To make it smaller / =a
+Q: What is a partial backend configuration? / Backend values given at init time (-backend-config) / A broken backend / A backend for tests only / =a
+Q: Why turn on versioning for state? / To recover an earlier state / It is required / To speed up plans / =a
+QA: Which S3 backend argument turns on native locking? / use_lockfile = true / dynamodb_table / lock = s3 / =a
+QZ: How does the azurerm backend lock state? / A lease on the state blob / A DynamoDB table / A lock file in Git / =a
+L 8.3 | Change and delete resources safely | owner+improved | shared | 10 | slides 415–422 | terraform-concepts/deleting-resources-in-terraform
+O: Remove a resource by deleting its code; Replace one with -replace; Explain why editing or deleting the state file is dangerous
+D: The owner's options (slides 417–422) on a neutral project, ranked from safest to riskiest: remove the code, destroy -target (exceptional), apply -replace, removed block (8.5), state rm, editing state (never).
+N: Improve: slides 421–422 show editing and deleting the state file; kept only as "what not to do".
+Q: What is the normal way to delete a resource? / Remove its code and apply / Edit the state file / Delete it in the console / =a
+Q: What does terraform apply -replace=ADDR do? / Recreates that one resource / Deletes state / Imports it / =a
+Q: Why is -target an exception, not a habit? / It skips the rest of the configuration and hides drift / It is slow / It is deprecated / =a
+L 8.4 | Import existing resources | owner+improved | cloud | 12 | slides 423–428 | aws: terraform-concepts/terraform-import; marketplace: code/terraform-import, code/azure/terraform-import
+O: Import with an import block and review the plan; Generate configuration with -generate-config-out; Compare with the terraform import command
+DA: Lesson code: an IAM user created by hand, then import block, plan (1 to import), apply, generated config.
+DZ: Lesson code: a resource group created with az CLI, imported by its full resource id; aztfexport shown for whole groups.
+RA: IAM user
+RZ: Resource group
+CA: $0
+CZ: $0
+Q: What does an import block add over terraform import? / The import is planned and reviewed / Nothing / It deletes the old resource / =a
+Q: Which flag writes configuration for imported resources? / -generate-config-out / -write-config / -import-config / =a
+Q: After a successful import, what does plan show if the code matches? / No changes / A replacement / An error / =a
+QA: What is the import id of an IAM user? / Its user name / Its ARN only / Its access key / =a
+QZ: What is the import id of an Azure resource? / Its full resource id path / Its name only / Its tag / =a
+L 8.5 | Refactor without destroying: moved and removed blocks | new | cloud | 10 | extends slides 415–422 | marketplace: code/terraform-moved-removed
+O: Rename or restructure resources with moved blocks; Stop managing a resource with removed; Read "has moved to" in a plan
+DA: Lesson code: two SSM parameters refactored into one for_each resource; a third forgotten with removed { lifecycle { destroy = false } }.
+DZ: Mirror: two resource groups refactored into one for_each resource; a storage account forgotten with removed.
+RA: SSM parameters
+RZ: Resource groups, storage account
+CA: $0
+CZ: ~$0
+Q: What does a moved block prevent? / A destroy-and-create when you rename or move code / Imports / Drift / =a
+Q: What does removed with destroy = false do? / Forgets the resource but leaves it in the cloud / Deletes it / Moves it / =a
+Q: Where do moved blocks help most? / When refactoring into modules or for_each / When installing Terraform / In variables / =a
+QA: Is the forgotten parameter still in AWS after removed? / Yes / No / Only for a day / =a
+QZ: Is the forgotten storage account still in Azure after removed? / Yes / No / Only in the portal / =a
+L 8.6 | State commands: list, show, mv, rm and pull | owner | shared | 8 | slides 535–542 | terraform-concepts/terraform-commands
+O: Inspect state with list and show; Move and remove items safely; Back up state before surgery
+D: The owner's commands section on a neutral project; why moved blocks (8.5) are preferred over state mv in a team.
+Q: Which command lists everything in the state? / terraform state list / terraform show -list / terraform list / =a
+Q: Why prefer moved blocks over state mv? / They are reviewed in a plan and repeatable / They are faster / state mv is removed / =a
+Q: What should you do before state surgery? / terraform state pull > backup.tfstate / Nothing / Delete .terraform / =a
+L 8.7 | Read another stack's outputs: terraform_remote_state | owner | cloud | 10 | slides 526–534 | aws: terraform-concepts/terraform-remote-state-data-source; azure: new
+O: Expose outputs from a network stack; Read them from an app stack; Choose between remote state and data sources
+DA: The owner's examples: a VPC stack's outputs read by an EC2 stack through the S3 backend.
+DZ: The same with a VNet stack and a VM stack through the azurerm backend.
+RA: VPC, subnets, EC2 t3.micro
+RZ: VNet, subnets, B1s VM
+CA: ~$0.02
+CZ: ~$0.02
+Q: What can terraform_remote_state read? / Root-level outputs of another state / Every resource attribute / Variables / =a
+Q: What is a downside of remote state data sources? / The reader needs access to the whole state / They are slow / They cost money / =a
+Q: What is an alternative? / Data sources that query the cloud, or a parameter store / Copying state files / Hard-coding ids / =a
+QA: Which backend type does the AWS example read? / s3 / local / azurerm / =a
+QZ: Which backend type does the Azure example read? / azurerm / s3 / gcs / =a
+L 8.8 | Keep secrets out of state: ephemeral values and write-only arguments | new | cloud | 10 | extends slides 157–162 | marketplace: code/terraform-ephemeral-write-only, code/azure/terraform-ephemeral-write-only
+O: Generate a secret with an ephemeral resource; Send it with a write-only argument; Rotate it with a version number
+DA: Lesson code: ephemeral random_password → aws_ssm_parameter value_wo; the same pattern for RDS password_wo and Secrets Manager secret_string_wo; compare the state file.
+DZ: Lesson code: ephemeral random_password → azurerm_key_vault_secret value_wo with RBAC Key Vault.
+RA: SSM SecureString parameter
+RZ: Key Vault, secret
+CA: $0
+CZ: ~$0.01
+Q: Are write-only values stored in state? / No / Yes / Only encrypted / =a
+Q: How do you rotate a write-only secret? / Increase its _wo_version / Delete the state / Run init / =a
+Q: Which Terraform version introduced write-only arguments? / 1.11 / 0.12 / 1.0 / =a
+QA: Which argument sets an RDS password without storing it? / password_wo / password / secret / =a
+QZ: Which argument writes a Key Vault secret without storing it? / value_wo / value / secret_value / =a

@@ -1,0 +1,189 @@
+M 9 | Environments and accounts | Dev, staging and prod: workspaces, folders, accounts and Terragrunt.
+L 9.1 | Workspaces | owner | shared | 8 | slides 441–446 | terraform-concepts/terraform-workspace
+O: Create and switch workspaces; Use terraform.workspace in names; Explain when workspaces are not enough
+D: The owner's dev.tfvars/prod.tfvars workspace example on a neutral project; why separate state per environment folder or account is safer for production (lesson 9.3).
+Q: What does each workspace have? / Its own state / Its own code / Its own provider / =a
+Q: How do you read the current workspace in code? / terraform.workspace / var.workspace / local.workspace / =a
+Q: Why are workspaces weak isolation for prod? / Same code, same backend and same credentials / They are slow / They cost more / =a
+L 9.2 | Several environments and accounts | owner+improved | cloud | 12 | slides 447–458 | aws: terraform-concepts/deploy-in-multiple-env; azure: new
+O: Point Terraform at different accounts or subscriptions; Assume a role per environment; Prevent applying to the wrong one
+DA: The owner's AWS_PROFILE method (slides 448–458) with SSO profiles; then provider assume_role into a dev and a prod account, and allowed_account_ids as a safety net.
+DZ: Subscriptions per environment: subscription_id per tfvars, az account set, and a check that fails the plan on the wrong subscription.
+N: Improve: slides 449–450 store access keys per profile; use SSO profiles or roles.
+CA: $0
+CZ: $0
+Q: Why separate accounts or subscriptions per environment? / A mistake in dev cannot touch prod / It is cheaper / Terraform requires it / =a
+Q: What stops an apply in the wrong environment? / A guard in code (allowed ids or a check) / Hope / A comment / =a
+Q: Where does the environment choice live? / In tfvars or backend config per environment / In the state / In the provider binary / =a
+QA: Which provider argument stops applies to an unexpected account? / allowed_account_ids / account_lock / region / =a
+QZ: Which provider argument selects the Azure subscription? / subscription_id / tenant_only / location / =a
+L 9.3 | One folder per environment | new | shared | 10 | - | -
+O: Lay out modules/ and envs/dev, envs/prod; Give each environment its own backend key; Promote a change from dev to prod
+D: A neutral layout used by the capstone: modules/, envs/dev, envs/prod with their own backend.hcl and tfvars; the same module version promoted.
+Q: What does each environment folder have? / Its own state and variables / Its own copy of every module's code / Nothing / =a
+Q: How is a change promoted? / Apply in dev, then the same version in prod / Copy the state / Edit prod first / =a
+Q: Why pin module versions per environment? / Prod changes only when you choose / It is faster / It is required / =a
+L 9.4 | Terragrunt: keep environments DRY | owner+improved | cloud | 14 | slides 574–583, 56–57 | aws: terragrunt/live (development, staging, production); azure: new
+O: Generate backends and providers with Terragrunt; Share inputs across environments; Order stacks with dependencies
+DA: The owner's terragrunt/live layout (VPC, EC2, bastion, EKS control plane) with root.hcl, remote_state with use_lockfile, dependency blocks; terragrunt run --all plan.
+DZ: The same layout for Azure: resource group, VNet, VM; remote_state backend azurerm generated per folder.
+RA: VPC, EC2 t3.micro (EKS folder skipped)
+RZ: Resource group, VNet, B1s VM
+CA: ~$0.03
+CZ: ~$0.03
+N: Outdated: Terragrunt is now 1.x (v1.2.3, 2026-11-25): `run --all` replaces `run-all`, root.hcl replaces a root terragrunt.hcl, find_in_parent_folders("root.hcl"). Check commands at recording.
+Q: What problem does Terragrunt solve? / Repeated backend and provider code across environments / Provider installation / State encryption / =a
+Q: What does a dependency block do? / Reads another unit's outputs and orders the runs / Installs Terraform / Locks state / =a
+Q: Which command plans every unit? / terragrunt run --all plan / terraform plan --all / terragrunt init / =a
+QA: Which remote_state option generates backend.tf? / generate { path = "backend.tf" } / output / copy / =a
+QZ: Which backend does the Azure root config generate? / azurerm / s3 / local / =a
+
+M 10 | Modules | Use, write, version and publish modules.
+L 10.1 | What modules are and how to call them | owner | shared | 10 | slides 509–521, 483–492 | terraform-concepts/terraform-module
+O: Explain root and child modules; Call a module with source and inputs; Read its outputs
+D: Slides 511–514 with a local neutral module (a naming module); source types (local, Git with ?ref=, registry).
+N: Duplicate: slides 483–492 repeat 509–521.
+Q: What is the root module? / The folder where you run Terraform / The registry / The provider / =a
+Q: How do you read a module output? / module.<name>.<output> / output.<module> / var.<module> / =a
+Q: Which source pins a Git module to a tag? / git::https://...?ref=v1.2.0 / git@latest / module@v1 / =a
+L 10.2 | Use registry modules | owner+improved | cloud | 12 | slides 518–521 | aws: terraform-concepts/terraform-module (aws-vpc-01, aws-vpc-02, ec2); azure: new
+O: Find a trustworthy module in the registry; Pin its version; Read its inputs and outputs before use
+DA: The owner's examples with terraform-aws-modules/vpc and ec2-instance, updated to current versions; reading the module's examples and changelog.
+DZ: Azure Verified Modules (AVM): avm-res-network-virtualnetwork and a VM module; pinning, telemetry setting, reading inputs.
+RA: VPC (no NAT), EC2 t3.micro
+RZ: VNet, B1s VM
+CA: ~$0.02 (NAT gateway disabled)
+CZ: ~$0.02
+Q: Why pin a registry module version? / Upgrades only when you choose / It is required / To lower cost / =a
+Q: What should you read before using a module? / Its inputs, outputs, examples and changelog / Only the name / Nothing / =a
+Q: What is a sign of a trustworthy module? / Maintained, versioned, documented and widely used / Many stars only / No README / =a
+QA: Which namespace publishes the popular community AWS modules? / terraform-aws-modules / hashicorp-aws / aws-official / =a
+QZ: What are Microsoft's official Terraform modules called? / Azure Verified Modules / Azure Blueprints / ARM modules / =a
+L 10.3 | Write your own network module | owner | cloud | 15 | slides 509–521, 544 | aws: modules/vpc-01, vpc-02, vpc-03; azure: azure-terraform/modules/vnet, aks-vnet
+O: Design a module's inputs and outputs; Create subnets across zones with for_each; Document the module
+DA: The owner's VPC modules (vpc-01 → vpc-03): public and private subnets across AZs, route tables, optional NAT; README with inputs/outputs.
+DZ: The owner's vnet module: VNet, subnets from a map, NSG association, optional NAT gateway.
+RA: VPC, subnets, IGW, route tables (NAT optional)
+RZ: VNet, subnets, NSGs (NAT optional)
+CA: $0 without NAT; NAT gateway ~$0.05/hour if turned on
+CZ: $0 without NAT; NAT gateway ~$0.05/hour if turned on
+Q: What makes a good module input? / Typed, described, validated, with sensible defaults / As many as possible / Untyped any / =a
+Q: Why make NAT optional? / It costs by the hour / It is deprecated / It is required / =a
+Q: What should a network module output? / Network and subnet ids / Passwords / The state / =a
+QA: How many AZs does the owner's VPC spread subnets over? / Three / One / Six / =a
+QZ: What do you attach to Azure subnets to filter traffic? / A network security group / A security group rule in AWS / A firewall in the VM only / =a
+L 10.4 | Version, source and publish modules | owner | shared | 10 | slides 522–525 | terraform-concepts/terraform-module-publish; devopstia/terraform-aws-vpc-module
+O: Version a module with Git tags; Publish to the public registry from GitHub; Use a private registry
+D: The owner's publish steps (slides 524–525): repo name terraform-<provider>-<name>, semantic version tags, registry sign-in; HCP Terraform private registry as the team option.
+Q: What repo name does the registry require? / terraform-<provider>-<name> / module-<name> / any name / =a
+Q: How does the registry find versions? / Git tags like v1.2.0 / Branch names / Commit messages / =a
+Q: What does a major version bump tell users? / Breaking changes / A typo fix / Nothing / =a
+L 10.5 | Compose modules: network, compute and data | new | cloud | 12 | - | aws: modules/vpc-02, ec2, sg, postgres-db; azure: modules/vnet, virtual-machine, azure-mysql
+O: Wire modules together through outputs; Keep each module small; Avoid passing whole objects around
+DA: The owner's VPC, security group and EC2 modules composed in one root module; outputs flow from network to compute.
+DZ: The owner's vnet and virtual-machine modules composed; outputs flow from network to compute.
+RA: VPC, SG, EC2 t3.micro
+RZ: VNet, NSG, B1s VM
+CA: ~$0.02
+CZ: ~$0.02
+Q: How do modules share values? / Outputs of one become inputs of another / Shared state files / Global variables / =a
+Q: Why keep modules small? / Easier to test, reuse and review / Fewer files / Faster init / =a
+Q: Should a child module configure its own provider? / No, the root passes providers / Yes always / Only in prod / =a
+QA: Which owner module creates security groups with loops? / modules/sg / modules/acm / modules/ecr / =a
+QZ: Which owner module creates the VM? / modules/virtual-machine / modules/acr / modules/key-vault / =a
+
+M 11 | Projects from the owner's deck | The owner's module projects, each a real requirement list turned into a tested module.
+L 11.1 | Project: a production-style network | owner | cloud | 15 | slide 544 | aws: modules/vpc-03, resources/vpc-03; azure: modules/vnet, aks-vnet
+O: Build the network module to the owner's requirement list; Tag and name it with the convention; Test it with terraform test
+DA: Slide 544's requirements: 3 public and 3 private subnets in 3 AZs, IGW, optional NAT per AZ, outputs for the next projects.
+DZ: Same requirements in Azure: VNet with public/private subnets, NSGs, optional NAT gateway, outputs.
+RA: VPC, 6 subnets, IGW, (NAT optional)
+RZ: VNet, subnets, NSGs, (NAT optional)
+CA: $0 without NAT; ~$0.15 per hour with 3 NAT gateways (turn on only for the demo minute)
+CZ: $0 without NAT; ~$0.05 per hour with one NAT gateway
+Q: Why create subnets in three zones? / A zone failure does not take everything down / It is cheaper / It is required / =a
+Q: Which part of the network costs by the hour? / NAT gateway / Subnets / Route tables / =a
+Q: What proves the module meets the requirements? / Tests and a plan reviewed against the list / Its file size / Its name / =a
+QA: What gives public subnets internet access? / An internet gateway and a route / A NAT gateway only / A VPN / =a
+QZ: What does a private Azure subnet need for outbound internet? / An explicit outbound method such as a NAT gateway / Nothing at all / A storage account / =a
+L 11.2 | Project: virtual machines and a secure jump host | owner+improved | cloud | 15 | slides 545–546 | aws: modules/ec2, bastion-host, ec2-simple; azure: modules/virtual-machine
+O: Build a VM module with optional public IP and user data; Build a jump host that only your IP can reach; Prefer keyless access where the cloud offers it
+DA: The owner's EC2 and bastion modules (slides 545–546): instance profile, IMDSv2, SG from your IP only; then Session Manager as the keyless alternative.
+DZ: The VM module with SSH key generated at run time, NSG from your IP only; Azure Bastion Developer (free tier where available) or just-in-time access as alternatives.
+RA: EC2 t3.micro x2, SG, IAM instance profile
+RZ: B1s VM x2, NSG, public IP
+CA: ~$0.03
+CZ: ~$0.03
+N: Security: replace committed .pem keys with tls_private_key or ssh-keygen at run time.
+Q: Who should reach a jump host? / Only known IPs or identities / Everyone / Only the internet gateway / =a
+Q: Why generate keys at run time? / Keys in Git leak / It is faster / Terraform requires it / =a
+Q: What should the VM module expose as inputs? / Size, image, subnet, user data, access options / Every attribute / Nothing / =a
+QA: Which IAM item lets an instance use Session Manager? / An instance profile with AmazonSSMManagedInstanceCore / An access key / A security group / =a
+QZ: Which Azure feature gives browser SSH without a public IP? / Azure Bastion / Key Vault / Front Door / =a
+L 11.3 | Project: firewall rules and a container registry with loops | owner | cloud | 12 | slides 551–552 | aws: modules/sg, aws-ecr; azure: modules/acr
+O: Generate firewall rules from a map; Create several registries with for_each; Add lifecycle and scan settings
+DA: The owner's security group module (loops, slide 551) and ECR module (one repo per app, scan on push, lifecycle policy, slide 552).
+DZ: An NSG module from a rules map and the owner's ACR module (Basic SKU), admin user off, RBAC pull.
+RA: Security groups, ECR repositories
+RZ: NSG, ACR Basic
+CA: ~$0 (ECR storage cents)
+CZ: ~$0.17 per day (ACR Basic); destroy the same day
+Q: Why build firewall rules from a map? / One place to review every rule / It is required / Fewer resources / =a
+Q: Why add a lifecycle policy to a registry? / Old images are deleted and storage stays cheap / Faster pulls / Security only / =a
+Q: Which access is safer for a registry? / Identity-based pull (IAM/RBAC) / A shared admin password / Public access / =a
+QA: Which ECR setting finds vulnerabilities on upload? / scan_on_push / encryption only / immutable tags / =a
+QZ: Which ACR setting should be off? / admin_enabled / public_network_access only / sku / =a
+L 11.4 | Project: a database with secrets done right | owner+improved | cloud | 15 | slides 553–558 | aws: modules/aws-secret-manager, mysql-db, postgres-db (aurora modules: slides only); azure: modules/azure-mysql, key-vault
+O: Create a managed database in private subnets; Generate its password with write-only arguments; Store connection details in a secret store
+DA: The owner's Secrets Manager and Postgres modules (slides 553–556) on db.t4g.micro, password_wo from an ephemeral password, Secrets Manager secret_string_wo; Aurora variants (557–558) explained, not deployed.
+DZ: Azure Database for PostgreSQL Flexible Server (B1ms) with administrator_password_wo, Key Vault secret value_wo, private access.
+RA: RDS PostgreSQL db.t4g.micro, Secrets Manager secret, subnet group
+RZ: PostgreSQL Flexible Server B1ms, Key Vault
+CA: ~$0.05 per run (db.t4g.micro free tier eligible; under an hour)
+CZ: ~$0.05 per run (B1ms under an hour)
+N: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments.
+Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
+Q: Where should a database live? / Private subnets, reachable only from the app / A public subnet / Anywhere / =a
+Q: How is the password kept out of state? / Ephemeral generation plus a write-only argument / sensitive = true / Encrypting the laptop / =a
+Q: Why skip final snapshots in labs only? / So destroy finishes and costs stop; production keeps them / It is faster in production / Snapshots are free / =a
+QA: Which RDS argument skips the final snapshot in a lab? / skip_final_snapshot = true / backup = false / delete_protection / =a
+QZ: Which argument sets the PostgreSQL Flexible Server password without storing it? / administrator_password_wo / administrator_password / password_secret / =a
+L 11.5 | Project: a state backend module with replication | owner | cloud | 12 | slides 549–550 | aws: modules/s3-backend, s3-backend-with-replication, base-code/s3-backend-with-backup; azure: modules/storage-backend
+O: Package the state backend as a module; Add cross-region replication; Lock down who can read state
+DA: The owner's s3-backend-with-replication module updated: use_lockfile, replication role, bucket policy that denies non-TLS and unknown principals.
+DZ: The owner's storage-backend module updated: GRS or object replication to a second region, Entra ID only, resource lock (CanNotDelete).
+RA: 2 S3 buckets, IAM replication role
+RZ: 2 storage accounts (or GRS), management lock
+CA: ~$0
+CZ: ~$0
+Q: Why replicate state? / To survive a regional outage or deletion / To speed up plans / It is required / =a
+Q: Who should read state? / Only the pipeline roles and admins / Everyone / The public / =a
+Q: Why deny non-TLS requests? / State must never travel unencrypted / It is faster / It is free / =a
+QA: What must be on for S3 replication? / Versioning on both buckets / Static website hosting / Object Lock / =a
+QZ: Which Azure feature stops a storage account from being deleted? / A management lock (CanNotDelete) / A tag / A NSG / =a
+L 11.6 | Project: TLS certificates and DNS | owner | cloud | 10 | slide 559 | aws: modules/acm; azure: modules/azure-dns-zone, cert-manager
+O: Request a wildcard certificate; Validate it with DNS records created by Terraform; Wait for validation in the plan
+DA: The owner's ACM module: wildcard certificate, Route 53 validation records with for_each over domain_validation_options, aws_acm_certificate_validation.
+DZ: Azure DNS zone (owner's module) and an App Service managed certificate (or Key Vault certificate) validated by a TXT record.
+RA: ACM certificate, Route 53 records (hosted zone $0.50/month)
+RZ: DNS zone, App Service managed certificate
+CA: ~$0.50 (hosted zone month) — needs the training domain (blocked, same owner decision as CR-111)
+CZ: ~$0.50 (DNS zone month) — needs the training domain
+Q: Why validate certificates with DNS? / It can be automated and renews itself / It is faster to type / Email is required / =a
+Q: What does a wildcard certificate cover? / Every first-level subdomain / Every domain / Only the root / =a
+Q: What does this project need from the owner? / A training domain / A credit card change / Nothing / =a
+QA: Which resource waits until ACM validation finishes? / aws_acm_certificate_validation / aws_route53_record / aws_acm_wait / =a
+QZ: Which record type usually proves domain ownership for Azure certificates? / TXT / MX / SRV / =a
+L 11.7 | Project: Jenkins on the cloud with an agent | owner | cloud | 15 | slides 547–548 | aws: modules/jenkins-master, packer/005-jenkins-master; azure: new
+O: Launch a Jenkins controller and an agent from modules; Reach it safely; Tear it down completely
+DA: The owner's jenkins-master module and agent requirements (slides 547–548), the Packer-built AMI from lesson 13.4, access from your IP only.
+DZ: A Jenkins controller VM and agent VM with cloud-init, NSG from your IP only, managed identity for agents.
+RA: EC2 t3.small x2, SG, EBS
+RZ: B2s VM x2 (or B1ms), NSG, public IP
+CA: ~$0.10 per run (two small instances under two hours)
+CZ: ~$0.15 per run
+Q: Why build Jenkins from code? / The same server can be rebuilt any time / It is required by Jenkins / It is free / =a
+Q: Who should reach the Jenkins UI in a lab? / Only your IP / Everyone / No one / =a
+Q: What is the agent for? / Running builds away from the controller / Storing state / Serving the UI / =a
+QA: Which owner Packer folder builds the Jenkins image? / packer/005-jenkins-master / packer/001 / packer/006-variables / =a
+QZ: What installs Jenkins on the Azure VM in this lab? / cloud-init in custom_data / Azure Policy / Key Vault / =a
