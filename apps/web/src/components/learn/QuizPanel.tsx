@@ -193,7 +193,7 @@ export function QuizPanel({ lectureId, onPassed, onWatch }: { lectureId: string;
       )}
 
       {marks.size ? (
-        <label className="mb-4 inline-flex cursor-pointer items-center gap-2 text-sm text-ink-2">
+        <label className="mb-6 flex cursor-pointer items-center gap-3 rounded-lg border-[1.5px] border-line px-4 py-3 text-sm text-ink-2 hover:border-line-strong">
           <input type="checkbox" className="accent-[var(--violet)]" checked={onlyMarked} onChange={(e) => setOnlyMarked(e.target.checked)} data-testid="quiz-only-marked" />
           Show bookmarked questions only ({asked.filter((id) => marks.has(id)).length})
         </label>

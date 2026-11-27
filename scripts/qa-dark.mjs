@@ -3,7 +3,7 @@
 // default is light since 2026-11-25, pass --light to scan it) and reports:
 //  - text whose contrast against its actual background is under WCAG AA (4.5:1; 3:1 for large text),
 //  - pages that scroll sideways.
-// Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--act-as del] [--widths 390,768,1440] [--light] path [path…]
+// Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--act-as del] [--widths 390,768,1440] [--light] [--submit-quiz] path [path…]
 // Signs in with the seed accounts (SEED_PASSWORD from .env). Exit code 1 when anything fails.
 import { freshCode, seedSecret } from "./totp.mjs";
 import { chromium } from "playwright";
@@ -16,6 +16,8 @@ const flag = (name) => { const i = args.indexOf(name); if (i < 0) return false; 
 const role = opt("--as", null);
 // --act-as del: after signing in as the super admin, switch to DEL Studio (the DEL platform account) like the studio switcher.
 const actAs = opt("--act-as", null);
+// --submit-quiz: on a quiz page, answer every question and submit, so the results state (explanations, topics) is scanned.
+const submitQuiz = flag("--submit-quiz");
 const apiBase = process.env.QA_API ?? base.replace(/:(\d+)$/, (_, p) => `:${Number(p) + 1000}`);
 const widths = opt("--widths", "390,1440").split(",").map(Number);
 const light = flag("--light");
@@ -117,8 +119,14 @@ for (const w of widths) {
   for (const p of paths) {
     await page.goto(base + p, { waitUntil: "networkidle" });
     await page.waitForTimeout(300);
+    if (submitQuiz && (await page.getByTestId("quiz").count())) {
+      for (const q of await page.getByTestId("quiz-question").all()) await q.locator('input[type="radio"]').first().check();
+      await page.getByTestId("quiz-submit").click();
+      await page.getByTestId("quiz-result").waitFor();
+      await page.waitForTimeout(300);
+    }
     const r = await page.evaluate(scan);
-    const tag = `${p} @${w}${role ? ` as ${role}` : ""}${light ? " (light)" : ""}`;
+    const tag = `${p} @${w}${role ? ` as ${role}` : ""}${light ? " (light)" : ""}${submitQuiz ? " (quiz submitted)" : ""}`;
     if (!r.failures.length && r.overflow <= 0) { console.log(`ok    ${tag}`); continue; }
     bad++;
     console.log(`FAIL  ${tag}${r.overflow > 0 ? `  (scrolls sideways by ${r.overflow}px)` : ""}`);
