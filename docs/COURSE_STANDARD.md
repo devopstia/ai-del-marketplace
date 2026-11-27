@@ -201,6 +201,15 @@ honestly, and validates generated code or infrastructure with real tools. Teach 
 model-specific features. A good prompt raises the odds; it never replaces checking the answer. Templates go into the
 Prompt Engineering Toolkit (CR-103) with guidance on adapting them.
 
+## 8g. AI website development is a core strand (owner 2026-11-28)
+Both masterclasses teach students to turn an idea into a live, secure website with AI (module "Build and ship
+websites with AI"). **Simplest first:** a beautiful static site, hosted, with a domain and HTTPS, before any backend;
+containers, sign-in and CI/CD next; AI features and payments after; Kubernetes last and only where it's worth it.
+**Show the real process:** the prompt, the AI's answer, wrong attempts, the fix, the browser; never only a finished
+site. Students review AI-generated code for security before it ships. Templates have distinct identities and only
+original or licensed assets. Payments only in Stripe test mode. **Entrepreneurship is taught honestly:** skills,
+costs and responsibilities (security, privacy, accessibility, maintenance), never promised income.
+
 ## 9. Before students see it: three reviews
 - **Instructor:** sound, logically ordered, accurate, practical; every promise ("download the lab") kept.
 - **Student:** easy to navigate, every video plays, Next/Previous, downloads open, captions only on CC, quizzes work,

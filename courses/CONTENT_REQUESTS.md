@@ -55,7 +55,12 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
   and asks the owner if that needs permissions it doesn't have.
 - Terraform for everything; destroy right after recording and verify nothing is left.
 
-## Register
+**Proposed global order (2026-11-28, waiting for the owner's OK; not yet sent to GEN):** 1. finish the n8n batch
+(CR-005, CR-008–CR-010; CR-006 after the token) → 2. course intros CR-014–CR-017 and CR-051 → 3. prompt engineering
+basics + DevOps prompting (CR-077–CR-082, CR-096, CR-085–CR-088) → 4. LLMOps core (CR-056, CR-059/060, CR-061–CR-063) →
+5. beginner website path (CR-105–CR-110, CR-113; CR-111/112 once the domain is decided) → 6. cloud-specific projects
+(CR-023–CR-029, CR-034–CR-039, CR-071/072, CR-097/098, CR-116/117) → 7. the rest by priority (P1 before P2 before P3).
+
 
 | Id | Course | Module / lesson | Request | Owner | Opened | Priority | Status | Delivered at | Upload |
 |---|---|---|---|---|---|---|---|---|---|
@@ -163,6 +168,30 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
 | CR-102 | PE: Free intro teaser (2) | — | Give AI the right context: fix a broken Dockerfile in one prompt | GEN | 2026-11-28 | P2 | requested | see details | — |
 | CR-103 | PE: Toolkit | — | The Prompt Engineering Toolkit (downloadable ZIP) | GEN | 2026-11-28 | P1 | requested | see details | — |
 | CR-104 | PE: Assessment | — | Prompt engineering review and assessment | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-105 | WEB: M1 | — | From idea to website: requirements, audience, features and stack with AI | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-106 | WEB: M2 | — | Website master prompts: "build me a website" versus a professional master prompt | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-107 | WEB: M3/M4 · Project 1 · Template T1 | — | Project 1: build a professional business website with AI (technology consulting company) | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-108 | WEB: M6 (AWS) | — | Host your AI-built website on Amazon S3 + CloudFront | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-109 | WEB: M7 (Azure) | — | Host your AI-built website on Azure Static Web Apps | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-110 | WEB: M8 | — | Domains, DNS and HTTPS explained: what happens when someone types your address | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-111 | WEB: M6/M8 (AWS) | — | Connect a custom domain with HTTPS on AWS: Route 53 + ACM + CloudFront | GEN | 2026-11-28 | P1 | blocked: owner's domain choice | see details | — |
+| CR-112 | WEB: M7/M8 (Azure) | — | Connect a custom domain with HTTPS on Azure: Azure DNS + Static Web Apps managed certificate | GEN | 2026-11-28 | P1 | blocked: owner's domain choice | see details | — |
+| CR-113 | WEB: Project 2 · Template T2 | — | Project 2: your DevOps portfolio website, built and kept up to date with AI | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-114 | WEB: M5 | — | Containerise an AI-built website: Dockerfile, Compose, env vars and a database | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-115 | WEB: Project 3 · Template T3 | — | Project 3: a service booking website with a backend, database and sign-in | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-116 | WEB: M6 (AWS) | — | Run a dynamic website on AWS: a small VM with nginx and Let's Encrypt, then ECS Express Mode | GEN | 2026-11-28 | P2 | requested (domain parts blocked: owner's domain choice) | see details | — |
+| CR-117 | WEB: M7 (Azure) | — | Run a dynamic website on Azure: App Service and Container Apps | GEN | 2026-11-28 | P2 | requested (domain parts blocked: owner's domain choice) | see details | — |
+| CR-118 | WEB: M9 | — | Ship website changes with AI and CI/CD: request, review, merge, deploy, roll back | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-119 | WEB: M8 | — | Website security essentials: secrets, firewall, sign-in, database and backups | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-120 | WEB: M9 · n8n | — | Automate your website with n8n: contact forms, inquiries and AI triage | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-121 | WEB: Project 6 · Template T10 | — | Project 6: an AI-powered business website with a document-aware support chatbot | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-122 | WEB: Project 4 · Template T7 | — | Project 4: an online store with cart, accounts, orders and Stripe test mode | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-123 | WEB: Project 5 · Template T9 | — | Project 5: a subscription SaaS app with plans, feature access and Stripe test mode | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-124 | WEB: Project 7 (capstone) · Template T8 | — | Project 7 capstone: a business directory and marketplace | GEN | 2026-11-28 | P3 | requested | see details | — |
+| CR-125 | WEB: Enterprise | — | Websites at scale: Kubernetes, Helm and GitOps for an AI-built app | GEN | 2026-11-28 | P3 | requested | see details | — |
+| CR-126 | WEB: Entrepreneurship | — | From idea to MVP: building digital products responsibly | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-127 | WEB: Templates | — | Template pack A: real estate (T4), restaurant (T5), professional services (T6) | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-128 | WEB: Assessment | — | Module assessment: build and ship websites with AI | GEN | 2026-11-28 | P3 | requested | see details | — |
 
 ## Details
 
@@ -834,3 +863,160 @@ What each one teaches and demonstrates:
 - **CR-102 Give AI the right context: fix a broken Dockerfile in one prompt:** 4–6 min: the AI guesses without the error message and versions; with the right context it fixes the build; docker build proves it.
 - **CR-103 The Prompt Engineering Toolkit (downloadable ZIP):** Markdown templates: master prompt, DevOps, AWS, Azure, Kubernetes troubleshooting, Terraform, CI/CD, code review, documentation, AI agent instructions (AGENTS.md/CLAUDE.md/skill skeletons), RAG, LLM evaluation, n8n automation; prompt-improvement and security/validation checklists; poor-vs-improved examples; a README on adapting each template (never copy blindly). Delivered as `prompt-engineering-toolkit.zip` next to CR-077's video.
 - **CR-104 Prompt engineering review and assessment:** Short recap video and `assessments/prompt-engineering.json` (12–15 questions with explanations).
+
+
+### CR-105 … CR-128 AI website development and digital entrepreneurship (owner 2026-11-28)
+Strand rules (docs/COURSE_STANDARD.md §8g): simplest first (beginner static site → intermediate dynamic → advanced AI
+and payments → enterprise Kubernetes); the real process on screen (the prompt, the AI's answer, mistakes, fixes, the
+browser); every site reviewed for security; honest entrepreneurship (skills and responsibilities, no income promises);
+Stripe in **test mode only**; original or licensed assets only. Each lesson: video, captions, PDF, lab ZIP (source,
+master prompt, Dockerfile/Compose where used, .env.example, README with costs, troubleshooting and cleanup), 3–5 quiz
+questions. Budget: $100/month total; ask the owner before any lab over ~$5 per run or any EKS/AKS cluster.
+**Domains:** CR-111, CR-112 and the custom-domain parts of CR-116/117 are **blocked on the owner's choice**; recommended:
+one training domain (~$12–15/yr) with one subdomain per project (`shop.<domain>`, `portfolio.<domain>` …).
+
+#### CR-105 From idea to website: requirements, audience, features and stack with AI
+- Courses: AWS+Azure (shared) · Level: Beginner · Priority: P1 · Status: requested
+- Position: Module "Build and ship websites with AI", lesson 1 · Depends on: CR-078 (anatomy of a prompt)
+- Cost per run: $0 (local) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Turn a business idea into a one-page requirements brief with AI (purpose, audience, pages, features, stack, acceptance criteria); a simple diagram of front end, back end, database and hosting. Template: the requirements brief.
+
+#### CR-106 Website master prompts: "build me a website" versus a professional master prompt
+- Courses: AWS+Azure (shared) · Level: Beginner · Priority: P1 · Status: requested
+- Position: after CR-105 · Depends on: CR-078, CR-090
+- Cost per run: $0 (local; model usage < $1) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Run both prompts live in an AI coding agent, compare the results in the browser, then improve the prompt step by step (brand, palette, sections, responsive, a11y, stack, acceptance criteria). Links CR-090 (the master-prompt app) rather than repeating it.
+
+#### CR-107 Project 1: build a professional business website with AI (technology consulting company)
+- Courses: AWS+Azure (shared) · Level: Beginner · Priority: P1 · Status: requested
+- Position: after CR-106 · Depends on: CR-106
+- Cost per run: $0 (local) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Static site (home, about, services, testimonials, contact form, footer, light/dark, mobile) built with Claude Code/Codex in VS Code; show the prompts, wrong first attempts, reference screenshots and refinements; run it locally and verify in the browser. Ships **Template T1 (technology consulting)** with its master prompt, customise-with-AI guide, Dockerfile (nginx), README, screenshots.
+
+#### CR-108 Host your AI-built website on Amazon S3 + CloudFront
+- Courses: AWS only · Level: Beginner · Priority: P1 · Status: requested
+- Position: after CR-107; the existing S3 help-site lab is the warm-up before it · Depends on: CR-107
+- Cost per run: ~$0 (S3 cents; CloudFront free plan or 1 TB free tier); delete at the end · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Private S3 bucket + CloudFront with Origin Access Control (no public bucket), Terraform and console views, cache invalidation on update, verify the CloudFront URL in the browser, `terraform destroy`.
+
+#### CR-109 Host your AI-built website on Azure Static Web Apps
+- Courses: Azure only · Level: Beginner · Priority: P1 · Status: requested
+- Position: after CR-107 · Depends on: CR-107
+- Cost per run: $0 (Free plan); delete at the end · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Static Web Apps Free plan from GitHub (built-in GitHub Actions), Terraform alternative, preview environments for pull requests, verify the azurestaticapps.net URL, delete.
+
+#### CR-110 Domains, DNS and HTTPS explained: what happens when someone types your address
+- Courses: AWS+Azure (shared) · Level: Beginner · Priority: P1 · Status: requested
+- Position: before the custom-domain demos · Depends on: —
+- Cost per run: $0 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Domain registration, registrars vs DNS hosting, A/AAAA/CNAME/ALIAS records, TTL and propagation, TLS certificates, HTTP→HTTPS redirect, Let's Encrypt vs managed certificates, with everyday analogies and animations. Concept lesson, no domain needed.
+
+#### CR-111 Connect a custom domain with HTTPS on AWS: Route 53 + ACM + CloudFront
+- Courses: AWS only · Level: Beginner · Priority: P1 · Status: blocked: owner's domain choice
+- Position: after CR-108 and CR-110 · Depends on: CR-108, CR-110, owner's domain
+- Cost per run: ~$0.50/month hosted zone + the training domain (~$12–15/yr, owner) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Hosted zone, ACM certificate in us-east-1 with DNS validation, CloudFront alternate domain, ALIAS records, open `https://<project>.<training-domain>` in the browser, show the padlock and the HTTP redirect, clean up records and certificate.
+
+#### CR-112 Connect a custom domain with HTTPS on Azure: Azure DNS + Static Web Apps managed certificate
+- Courses: Azure only · Level: Beginner · Priority: P1 · Status: blocked: owner's domain choice
+- Position: after CR-109 and CR-110 · Depends on: CR-109, CR-110, owner's domain
+- Cost per run: ~$0.50/month DNS zone + the training domain (owner) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: CNAME/TXT validation, the free managed certificate, apex vs subdomain, verify HTTPS in the browser, clean up.
+
+#### CR-113 Project 2: your DevOps portfolio website, built and kept up to date with AI
+- Courses: AWS+Azure (shared) · Level: Beginner · Priority: P1 · Status: requested
+- Position: after the custom-domain lessons · Depends on: CR-107, CR-108/CR-109
+- Cost per run: $0 (local) + hosting as CR-108/109 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Introduction, skills, certifications, projects (pulled from GitHub at build time), experience, downloadable CV, contact; deploy with the student's chosen static host; GitHub Actions deploy on push. Ships **Template T2 (portfolio)**.
+
+#### CR-114 Containerise an AI-built website: Dockerfile, Compose, env vars and a database
+- Courses: AWS+Azure (shared) · Level: Intermediate · Priority: P1 · Status: requested
+- Position: start of the intermediate level · Depends on: CR-107
+- Cost per run: $0 (local) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Ask AI for a Dockerfile and Compose file, review them (non-root, small image, health check), front end + API + Postgres, .env.example, common failures (ports, env, DB not ready) and fixes, verify in the browser.
+
+#### CR-115 Project 3: a service booking website with a backend, database and sign-in
+- Courses: AWS+Azure (shared) · Level: Intermediate · Priority: P2 · Status: requested
+- Position: after CR-114 · Depends on: CR-114
+- Cost per run: $0 (local) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Services, pricing, inquiries, appointment booking, admin view, email-free local notifications; customise the same template for a cleaning, landscaping or IT-support business with prompts. Ships **Template T3 (small business / booking)**.
+
+#### CR-116 Run a dynamic website on AWS: a small VM with nginx and Let's Encrypt, then ECS Express Mode
+- Courses: AWS only · Level: Intermediate · Priority: P2 · Status: requested (domain parts blocked: owner's domain choice)
+- Position: after CR-115 · Depends on: CR-115, CR-111 for the domain part
+- Cost per run: EC2 t4g.small/Lightsail ~$0.02/h for ~1 h; ECS Express Mode ~$0.10 per run; delete · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Terraform VM, security group (80/443 only, SSH from your IP), Docker Compose, nginx reverse proxy, certbot, then the same container on ECS Express Mode (App Runner closed to new customers on 2026-04-30). Compare effort and cost; destroy.
+
+#### CR-117 Run a dynamic website on Azure: App Service and Container Apps
+- Courses: Azure only · Level: Intermediate · Priority: P2 · Status: requested (domain parts blocked: owner's domain choice)
+- Position: after CR-115 · Depends on: CR-115, CR-112 for the domain part
+- Cost per run: App Service B1 ~ $0.02/h or Container Apps consumption (free grant); delete · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Deploy the booking site's container to App Service (custom container) and to Container Apps, app settings and secrets, managed certificate on a custom domain, Azure Database for PostgreSQL flexible (smallest tier, stopped after), compare; delete.
+
+#### CR-118 Ship website changes with AI and CI/CD: request, review, merge, deploy, roll back
+- Courses: AWS+Azure (shared; cloud-specific deploy step) · Level: Intermediate · Priority: P2 · Status: requested
+- Position: after CR-116/CR-117 · Depends on: CR-114, CR-116/117
+- Cost per run: $0 (GitHub Actions free minutes) + hosting already running · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Ask an AI agent for a change on a feature branch, review the diff, tests in GitHub Actions, image build, deploy to the student's host, automatic notification, roll back a bad change, back up and restore the database.
+
+#### CR-119 Website security essentials: secrets, firewall, sign-in, database and backups
+- Courses: AWS+Azure (shared) · Level: Intermediate · Priority: P2 · Status: requested
+- Position: after CR-118 · Depends on: CR-114
+- Cost per run: $0 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Keys out of the repo, least-privilege DB user, firewall/security groups, HTTPS everywhere, password hashing and sessions basics, OWASP top issues in AI-generated code (with a review prompt), backups, dependency updates.
+
+#### CR-120 Automate your website with n8n: contact forms, inquiries and AI triage
+- Courses: AWS+Azure (shared); also the n8n course · Level: Intermediate · Priority: P2 · Status: requested
+- Position: after CR-118 · Depends on: n8n course lessons 02–06
+- Cost per run: $0 (local n8n) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Contact form → n8n webhook (signed) → Mattermost/Slack message + email draft, AI classifies the inquiry and drafts a reply a human sends. Ends with the link to the complete n8n course.
+
+#### CR-121 Project 6: an AI-powered business website with a document-aware support chatbot
+- Courses: AWS+Azure (Bedrock and Foundry variants) · Level: Advanced · Priority: P2 · Status: requested
+- Position: after CR-119 · Depends on: RAG module, LLMOps CR-062/065
+- Cost per run: ~$1–3 per run (model + vector store); delete · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Business site + FAQ + RAG chatbot over the company's documents, answers with sources and refuses outside them, monitoring (tokens, latency, cost) and a human handover to the contact workflow. Ships **Template T10 (AI-powered business)**.
+
+#### CR-122 Project 4: an online store with cart, accounts, orders and Stripe test mode
+- Courses: AWS+Azure (shared) · Level: Advanced · Priority: P2 · Status: requested
+- Position: after CR-121 · Depends on: CR-114, CR-119
+- Cost per run: $0 (local; Stripe test mode only) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Catalog, product pages, cart, checkout in **Stripe test mode only** (test cards, webhooks), customer accounts, order admin; the extra responsibilities of a store (payments, privacy, tax, refunds, security). Ships **Template T7 (e-commerce)**.
+
+#### CR-123 Project 5: a subscription SaaS app with plans, feature access and Stripe test mode
+- Courses: AWS+Azure (shared; cloud deploy variant) · Level: Advanced · Priority: P2 · Status: requested
+- Position: after CR-122 · Depends on: CR-122
+- Cost per run: $0 local; hosting as CR-116/117 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Sign-up, sign-in, dashboard, plans and feature flags, admin dashboard, Stripe Billing in **test mode**, automated deployment. Ships **Template T9 (SaaS landing + app)**.
+
+#### CR-124 Project 7 capstone: a business directory and marketplace
+- Courses: AWS+Azure (shared; cloud deploy variant) · Level: Advanced · Priority: P3 · Status: requested
+- Position: after CR-123 · Depends on: CR-121–CR-123
+- Cost per run: ~$0–2 per run; delete · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Business sign-up, listings, categories, search and filters, profiles with image uploads (object storage), admin approval, user dashboards, responsive. Also ships **Template T8 (online learning)** as the second capstone variant.
+
+#### CR-125 Websites at scale: Kubernetes, Helm and GitOps for an AI-built app
+- Courses: AWS+Azure (Minikube first; EKS/AKS only with the owner's OK) · Level: Enterprise · Priority: P3 · Status: requested
+- Position: last lesson of the module · Depends on: CR-118, LLMOps CR-073
+- Cost per run: $0 on Minikube; EKS/AKS ~$5–10 per run (owner's OK first) · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Helm chart, Ingress with TLS, autoscaling, health checks, Argo CD sync and rollback; when Kubernetes is worth it and when it isn't.
+
+#### CR-126 From idea to MVP: building digital products responsibly
+- Courses: AWS+Azure (shared) · Level: All levels · Priority: P2 · Status: requested
+- Position: after Project 2 · Depends on: CR-105
+- Cost per run: $0 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Find a problem worth solving, define an MVP, estimate hosting costs, maintenance and support, accessibility, privacy and basic legal duties, when to charge, building sites for small businesses. Skills and responsibilities only: **no income promises**.
+
+#### CR-127 Template pack A: real estate (T4), restaurant (T5), professional services (T6)
+- Courses: AWS+Azure (downloads) · Level: Beginner–Intermediate · Priority: P2 · Status: requested
+- Position: attached to CR-107/CR-115 · Depends on: CR-107
+- Cost per run: $0 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: Three distinct visual identities (not recolours), original or licensed assets only; each with source, master prompt, customise-with-AI guide, Dockerfile/Compose, deploy steps, .env.example, README, screenshots, troubleshooting. One short lesson tours the pack.
+
+#### CR-128 Module assessment: build and ship websites with AI
+- Courses: AWS+Azure · Level: — · Priority: P3 · Status: requested
+- Position: end of the module · Depends on: the module's lessons
+- Cost per run: $0 · Cleanup: destroy everything created (Terraform destroy or listed manual steps) and verify nothing is left
+- What: 10 questions with explanations (q/options/correct/why), drawn from the module's videos.
+
+**Production order:** CR-105 → CR-106 → CR-107 → CR-108/CR-109 → CR-110 → (CR-111/CR-112 when the domain is decided) → CR-113 → CR-114 → CR-115 + CR-127 → CR-116/CR-117 → CR-118 → CR-119 → CR-120 → CR-126 → CR-121 → CR-122 → CR-123 → CR-124 → CR-125 → CR-128.

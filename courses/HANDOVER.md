@@ -16,7 +16,18 @@ in a chat or a context window.
 5. **Before you stop:** update `COURSE_STATUS.md`, the request statuses, `LESSONS_LEARNED.md`; commit; say in your final
    message what is waiting and on whom.
 
-## Now (2026-11-28): prompt engineering
+## Now (2026-11-28): AI website development
+- Both masterclass plans have a new module "Build and ship websites with AI" (after the cloud's AI applications
+  module; the S3 help-site lab (AWS) and the Foundry full-stack chat app (Azure) moved into it with their ids) and a
+  "Build websites and digital products with AI" description section. Sync AWS and Azure to production and publish
+  together with the prompt-engineering and LLMOps changes (owner asked to publish updates). New sections are created;
+  moved lessons keep their ids.
+- Requests CR-105–CR-128 sent to the video agent. **Blocked on the owner:** the training domain (CR-111, CR-112 and the
+  custom-domain parts of CR-116/117); recommended one training domain (~$12–15/yr) with a subdomain per project.
+- A **global priority order** across all open CRs is proposed to the owner (see `CONTENT_REQUESTS.md` › Status) and
+  not yet sent to the video agent.
+
+## Earlier (2026-11-28): prompt engineering
 - Both masterclass plans have a new module "Prompt engineering for DevOps" and a description section (commit on
   `feat/course-catalog`); sync AWS and Azure to production and publish (owner asked to publish updates). The section
   rename/insert is safe: new section, tm4 moves with its id.

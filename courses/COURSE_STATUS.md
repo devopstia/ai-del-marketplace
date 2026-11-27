@@ -88,3 +88,9 @@ Module "Prompt engineering for DevOps" added to both masterclass plans (after th
 services): available now tm4 plus the three instruction-file lessons from 21-claude-code (shared with VS Code); a
 "Prompt engineering" section with available-now and coming-next added to both descriptions. Not yet synced to
 production. Planned lessons CR-077–CR-104 (28), with the free-intro teasers CR-101/102 and the n8n lesson CR-100.
+
+## AI website development (owner 2026-11-28)
+Module "Build and ship websites with AI" added to both masterclass plans (available: the S3 help-site lab on AWS, the
+Foundry full-stack chat app on Azure) and a description section (available now / coming next). 24 videos requested
+(CR-105–CR-128) including a 10-template library; CR-111/112 blocked on the owner's training-domain choice. Plan
+changes need a production sync (session) to go live.

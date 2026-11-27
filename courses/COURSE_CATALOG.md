@@ -397,3 +397,49 @@ AWS only) · 4 Azure Terraform with AI (CR-098, Azure only) · 5 Kubernetes trou
 attached to CR-077 in each masterclass and to CR-100. **Free intro:** CR-101 (and CR-102) short "same AI, better
 prompt" teasers before "Your next step". **n8n course:** CR-100 planned in module 4. Earlier CR-018 is merged into
 CR-077–CR-083; CR-019 into CR-084 and CR-089.
+
+
+## AI website development and digital entrepreneurship (owner 2026-11-28)
+A major strand of both masterclasses: module **"Build and ship websites with AI"** (after the cloud's AI applications
+module, before RAG). Cloud-agnostic lessons are shared; hosting is cloud-specific (Module 6 AWS, Module 7 Azure).
+Requests CR-105 … CR-128 (`CONTENT_REQUESTS.md`). Standard: `docs/COURSE_STANDARD.md` §8g.
+
+**Levels (simplest first):**
+| Level | Lessons / projects |
+|---|---|
+| Beginner | CR-105 idea → requirements · CR-106 website master prompts (poor vs professional; links PE CR-078/CR-090) · **P1** CR-107 business site (T1) · hosting CR-108 S3+CloudFront (AWS) / CR-109 Static Web Apps (Azure) · CR-110 domains, DNS, HTTPS explained · CR-111/112 custom domain + HTTPS (**blocked: domain**) · **P2** CR-113 portfolio (T2) |
+| Intermediate | CR-114 containerise · **P3** CR-115 booking site (T3) + CR-127 template pack A (T4–T6) · CR-116 VM + nginx + Let's Encrypt → ECS Express Mode (AWS) / CR-117 App Service + Container Apps (Azure) · CR-118 CI/CD for website changes · CR-119 security · CR-120 n8n contact-form automation (→ n8n course) |
+| Advanced | **P6** CR-121 AI-powered business site with RAG chatbot (T10; links RAG + LLMOps) · **P4** CR-122 store in Stripe test mode (T7) · **P5** CR-123 SaaS in Stripe test mode (T9) · **P7** CR-124 directory capstone (T8) |
+| Enterprise | CR-125 Kubernetes, Helm, GitOps (Minikube first) |
+| All | CR-126 from idea to MVP, responsibly (no income promises) · CR-128 module assessment |
+
+**Available now:** AWS: "Publish an AI assistant's help site on Amazon S3" (moved into the module). Azure: "Deploy a
+full-stack AI chat app on Microsoft Foundry" (React + Express + nginx in Compose; moved into the module). Reused, not
+regenerated: Claude Code lessons (21-claude-code) and VS Code (22-vscode) for the tooling; PE CR-089/090 for coding
+agents and the master-prompt app; n8n course lessons for automation. Recommends the n8n course (CR-120) and the free VS
+Code masterclass (tooling).
+
+**Template library (10, distinct identities, original/licensed assets):** T1 technology consulting (CR-107), T2
+portfolio (CR-113), T3 small business/booking (CR-115), T4 real estate, T5 restaurant, T6 professional services
+(CR-127), T7 e-commerce (CR-122), T8 online learning (CR-124), T9 SaaS landing (CR-123), T10 AI-powered business
+(CR-121). Each ZIP: source, the master prompt, customise-with-AI guide, Dockerfile/Compose, deploy steps,
+`.env.example`, README, screenshots, troubleshooting.
+
+**Hosting choices (researched 2026-11-28):**
+- **Beginner, AWS:** private S3 + CloudFront with Origin Access Control: pennies, CloudFront's $0 flat-rate plan or the
+  1 TB free tier; ACM certificates are free; Route 53 hosted zone ~$0.50/month.
+- **Beginner, Azure:** Static Web Apps Free plan: free managed TLS certificate, 2 custom domains per app, built-in
+  GitHub Actions.
+- **Intermediate, AWS:** a small VM (EC2 t4g.small or Lightsail) with Docker Compose, nginx and Let's Encrypt, the
+  easiest way to understand everything; then **ECS Express Mode** for containers. **App Runner is closed to new
+  customers since 2026-04-30**; don't teach it.
+- **Intermediate, Azure:** App Service (custom container) and Container Apps (consumption, free grant).
+- **Enterprise:** Kubernetes on Minikube; EKS/AKS only with the owner's OK (budget).
+- Payments: **Stripe test mode only**. Domains: one training domain recommended (owner to decide).
+
+Sources: [App Runner availability change](https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html),
+[ECS Express Mode](https://encore.dev/articles/ecs-express-mode),
+[CloudFront flat-rate plans](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/flat-rate-pricing-plan.html),
+[CloudFront pricing](https://aws.amazon.com/cloudfront/pricing/),
+[Static Web Apps plans](https://learn.microsoft.com/en-us/azure/static-web-apps/plans),
+[Static Web Apps FAQ](https://learn.microsoft.com/en-us/azure/static-web-apps/faq).
