@@ -343,7 +343,7 @@ interface Resource { id: string; title: string; sizeBytes?: number }
 interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; articleMd?: string | null; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
 interface Section { id: string; title: string; lectures: Lecture[] }
 interface CourseDetail { id: string; slug?: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
-interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Caption file checksum per video asset, so corrected captions replace the old ones. */ captions?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
 
 export type AuthMode = 'agent' | 'session';
 
@@ -568,9 +568,21 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
         if (v.duplicate) counts.reused++; else counts.uploaded++;
         if (lec.videoAssetId !== v.assetId) patch.videoAssetId = v.assetId;
         counts.videos++;
-        if (files.captions && !(lec.video?.id === v.assetId && lec.video?.hasCaptions)) {
-          try { await del.uploadCaptions(v.assetId!, files.captions); counts.captions++; } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
-        } else if (files.captions) counts.captions++;
+        // Captions: uploaded when missing, and again whenever the caption file changes (owner 2026-11-28: corrected
+        // captions re-delivered without a new video). A video with captions but no recorded checksum is refreshed once.
+        if (files.captions) {
+          const csha = await del.sha256(files.captions);
+          state.captions ??= {};
+          const has = lec.video?.id === v.assetId && lec.video?.hasCaptions;
+          if (has && state.captions[v.assetId!] === csha) counts.captions++;
+          else {
+            try {
+              await del.uploadCaptions(v.assetId!, files.captions); counts.captions++;
+              if (has) log(`  ~ captions refreshed: ${lp.title}`);
+              state.captions[v.assetId!] = csha; await saveState();
+            } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
+          }
+        }
       } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
         counts.failed++;
         issues.push(`${lp.folder}: video upload failed: ${(e as Error).message}`);
