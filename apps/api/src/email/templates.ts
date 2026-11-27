@@ -30,7 +30,10 @@ const refundTerms = (r: unknown) => {
   const o = (r && typeof r === 'object' ? r : {}) as D;
   return o.windowDays != null ? `Refunds within ${Number(o.windowDays)} days if you watched ${Number(o.maxWatchedPercent)}% of a course or less (Access and refunds policy).` : 'Refunds follow the Access and refunds policy.';
 };
-const STAFF_WHY = 'You receive this because you are a super admin of DevOps Easy Learning. Turn these emails off in Super Admin › Settings.';
+const LEARNING_WHY = 'You receive this because you enrolled in a free course on DevOps Easy Learning. These learning tips are optional.';
+/** The one-click opt-out for learning tips and course suggestions (signed link from learning/nudges.ts). */
+const learningFooter = (d: D): Block[] => (s(d.optOutUrl) ? [{ muted: `Don’t want learning tips and course suggestions? Turn them off: ${s(d.optOutUrl)}` }] : []);
+const STAFF_WHY ='You receive this because you are a super admin of DevOps Easy Learning. Turn these emails off in Super Admin › Settings.';
 
 export const TEMPLATES: Record<string, (d: D) => Rendered> = {
   // ---------- account ----------
@@ -134,6 +137,41 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     // The receipt number and a link to the receipt (sign-in required; receipts are never public): docs/RECEIPTS.md.
     { muted: `Receipt ${s(d.receiptNumber, s(d.orderId).slice(0, 8))}: view or download it at ${web()}/student/purchases/${s(d.orderId)} (sign in to open it).${d.refund ? ` ${refundTerms(d.refund)}` : ''}` },
   ], 'Your courses are ready'),
+  // ---------- free-course learning emails (owner 2026-11-28; learning/nudges.ts) ----------
+  'learn-welcome': (d) => mk(`Welcome to ${s(d.course)}`, [
+    { h1: `Welcome, ${first(d)}` },
+    { p: `You’re enrolled in **${s(d.course)}**, free and for as long as you like.${Number(d.lessons) ? ` It has ${Number(d.lessons)} video lessons.` : ''}` },
+    ...(s(d.firstLesson) ? [{ p: `Start with **${s(d.firstLesson)}**. Short sessions work best: one lesson a day adds up quickly.` } as Block] : []),
+    { list: ['Captions are off by default; turn them on with CC in the player.', 'Lesson files (slides and labs) are under each video.', 'Finish every lesson to get a certificate you can share.'] },
+    { cta: { href: `${web()}/learn/${s(d.slug)}`, label: 'Start the first lesson' } },
+    ...learningFooter(d),
+  ], 'Your free course is ready', LEARNING_WHY),
+  'learn-keep-going': (d) => mk(`Pick up where you left off in ${s(d.course)}`, [
+    { h1: 'Keep going' },
+    { p: Number(d.total) > 0 ? `Hi ${first(d)}, you’ve completed ${Number(d.done) || 0} of ${Number(d.total)} lessons in **${s(d.course)}**. One more lesson today keeps the momentum.` : `Hi ${first(d)}, your next lesson in **${s(d.course)}** is waiting. One lesson today keeps the momentum.` },
+    { cta: { href: `${web()}/learn/${s(d.slug)}`, label: 'Continue learning' } },
+    ...learningFooter(d),
+  ], 'Your next lesson is waiting', LEARNING_WHY),
+  'learn-next-courses': (d) => mk(`Where to go after ${s(d.course)}`, [
+    { h1: 'Ready for the next step?' },
+    { p: `Hi ${first(d)}, if **${s(d.course)}** got you interested, these courses go further with hands-on projects:` },
+    // One short block per course: its title and line, then its own button (no raw URLs in the HTML; the text part shows them).
+    ...(Array.isArray(d.courses) ? (d.courses as D[]) : []).slice(0, 3).flatMap((c): Block[] => [
+      { p: `**${s(c.title)}**${s(c.subtitle) ? `: ${s(c.subtitle)}` : ''}` },
+      { cta: { href: `${web()}/courses/${s(c.slug)}`, label: 'See the course' } },
+    ]),
+    { muted: 'No pressure: your free course stays yours either way.' },
+    ...learningFooter(d),
+  ], 'Courses that build on what you learned', LEARNING_WHY),
+  'course-completed': (d) => mk(`You finished ${s(d.course)}: your certificate is ready`, [
+    { h1: `Congratulations, ${first(d)}` },
+    { p: `You completed every lesson of **${s(d.course)}**. Your certificate of completion is ready to download, print or share.` },
+    { cta: { href: s(d.certUrl, `${web()}/certificates/${s(d.code)}`), label: 'View your certificate' } },
+    { rows: [['Certificate ID', s(d.code)]] },
+    ...(s(d.linkedInUrl) ? [{ p: 'Show it on your LinkedIn profile in one click:' } as Block, { cta: { href: s(d.linkedInUrl), label: 'Add to LinkedIn' } } as Block] : []),
+    ...(d.reviewed ? [] : [{ p: 'How was the course? A short rating helps other learners choose.' } as Block, { cta: { href: `${web()}/learn/${s(d.slug)}?tab=review`, label: 'Rate the course' } } as Block]),
+    { muted: `Anyone can check your certificate at ${s(d.certUrl, `${web()}/certificates/${s(d.code)}`)}` },
+  ], 'Your certificate is ready'),
   'access-expiring': (d) => mk(`Your access to ${s(d.course)} ends in ${Number(d.daysLeft)} day${Number(d.daysLeft) === 1 ? '' : 's'}`, [
     { h1: 'Your access ends soon' },
     { p: `Hi ${first(d)}, your 12 months of access to **${s(d.course)}** end on **${when(d.expiresAt)}**.` },

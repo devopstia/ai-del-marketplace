@@ -12,9 +12,10 @@ import { useAuth } from "@/components/AuthProvider";
 function Success() {
   const sp = useSearchParams();
   const id = sp.get("order") ?? sp.get("orderId");
+  const sessionId = sp.get("session_id");
   const { refreshCart } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
-  const [tries, setTries] = useState(0);
+  const [slow, setSlow] = useState(false);
 
   useEffect(() => {
     void refreshCart();
@@ -22,18 +23,27 @@ function Success() {
   useEffect(() => {
     if (!id) return;
     let stop = false;
-    // Stripe webhooks can land a few seconds after the redirect: poll briefly until the order is paid.
-    const tick = async (n: number) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const started = Date.now();
+    // The webhook usually confirms within seconds. Each round also asks the API to check the order's own Stripe
+    // session (owner 2026-11-28 safety net), so a late or misrouted webhook never leaves the buyer waiting. After a
+    // minute the page says so plainly and keeps checking in the background, less often.
+    const tick = async () => {
       try {
+        await api(`/orders/${id}/confirm`, { method: "POST", body: sessionId ? { sessionId } : {} }).catch(() => undefined);
         const o = toOrder(await api(`/orders/${id}`));
         if (stop) return;
         setOrder(o);
-        if (o.status !== "paid" && n < 10) setTimeout(() => { setTries(n + 1); void tick(n + 1); }, 1500);
-      } catch { /* show generic success */ }
+        if (o.status === "paid") return void refreshCart();
+      } catch { /* keep the generic state */ }
+      if (stop) return;
+      const elapsed = Date.now() - started;
+      if (elapsed > 60_000) setSlow(true);
+      if (elapsed < 15 * 60_000) timer = setTimeout(() => void tick(), elapsed > 60_000 ? 10_000 : 2_000);
     };
-    void tick(0);
-    return () => { stop = true; };
-  }, [id]);
+    void tick();
+    return () => { stop = true; if (timer) clearTimeout(timer); };
+  }, [id, sessionId, refreshCart]);
 
   const paid = !id || order?.status === "paid";
   return (
@@ -41,8 +51,14 @@ function Success() {
       {paid ? <CheckCircle2 className="mx-auto size-14 text-mint" /> : <Loader2 className="mx-auto size-12 animate-spin text-violet" />}
       <h1 className="mt-5 font-display text-[2.4rem] font-extrabold leading-tight" data-testid="checkout-success">{paid ? "You’re enrolled" : "Confirming your payment"}</h1>
       <p className="mt-3 text-lg text-ink-2">
-        {paid ? "Your courses are ready in My courses, with 12 months of access from today. The receipt is in Student Studio › Purchase history." : `Waiting for Stripe to confirm the payment${tries > 6 ? ". This is taking longer than usual; you can safely leave this page." : "…"}`}
+        {paid ? "Your courses are ready in My courses, with 12 months of access from today. The receipt is in Student Studio › Purchase history." : slow ? null : "Waiting for Stripe to confirm the payment…"}
       </p>
+      {!paid && slow ? (
+        <p className="mx-auto mt-3 max-w-lg rounded-tile border border-line bg-surface px-4 py-3 text-ink-2" role="status" data-testid="checkout-slow">
+          Your payment reached Stripe and is still being confirmed. You’ll get an email when your courses are ready, and you can check{" "}
+          <Link href="/student/purchases" className="link">Purchase history</Link> at any time. This page keeps checking in the background; you can safely leave it.
+        </p>
+      ) : null}
       {order ? (
         <ul className="mx-auto mt-8 max-w-md divide-y divide-line rounded-tile border border-line bg-surface text-left">
           {order.lines.map((l) => (

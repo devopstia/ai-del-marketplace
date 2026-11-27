@@ -20,6 +20,7 @@ import { AskPanel } from "./AskPanel";
 import { StudyNotesPanel } from "./StudyNotesPanel";
 import { NextCourses } from "./NextCourses";
 import { ReviewPanel, toReviewInfo, type ReviewInfo } from "./ReviewPanel";
+import { CompletionMoment } from "./CompletionMoment";
 import { RatingInline } from "@/components/Stars";
 import { useToast } from "../Toast";
 import { aboutSize, readDataMode, saveDataMode, sizeFor, type DataMode } from "@/lib/data-saver";
@@ -399,6 +400,8 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
             <div role="tabpanel" className="py-8">
               {activeTab === "overview" && course ? (
                 <div className="max-w-3xl">
+                  {/* The completion moment comes first once every lesson is done (owner 2026-11-28). */}
+                  {pct >= 100 ? <div className="-mt-8 mb-8"><CompletionMoment slug={course.slug} courseTitle={course.title} reviewed={!!reviews?.mine} canReview={!!reviews?.canReview} onRate={() => setTab("review")} /></div> : null}
                   <h1 className="font-display text-2xl font-extrabold">{lecture?.title}</h1>
                   {access && access.state !== "expiring" ? (
                     <p className="mt-1 text-sm text-muted" data-testid="access-until">Your access to this course runs until {date(access.expiresAt)} ({access.daysLeft} days left).</p>
@@ -430,7 +433,6 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   ) : null}
                   {lecture?.hasResources ? <p className="mt-4 text-sm text-ink-2">This lesson has lab files: open <button type="button" className="link" onClick={() => setTab("resources")}>Lab files</button> to download them.</p> : null}
                   <p className="mt-6 hidden text-sm text-muted sm:block">Keyboard: Space or K to play and pause, J and L to skip 10 seconds, F for full screen, C for captions.</p>
-                  {pct >= 100 ? <Link href="/student/progress" className="btn btn-primary mt-6">Get your certificate</Link> : null}
                   {/* The course's final lesson: related courses, if the course has any (owner 2026-11-28). */}
                   {!next && lecture ? <NextCourses slug={slug} /> : null}
                 </div>
