@@ -8,7 +8,10 @@
 export const LAYOUTS = ['statement', 'split', 'band', 'frame', 'spotlight', 'column',
   // The DEL course-catalog family (owner 2026-11-27, "Mix A + C · Night blueprint"): deep ink, course-colour glow,
   // blueprint grid fading in toward an original technology symbol, title left. See docs/COURSE_PLATFORM_REFERENCE.md.
-  'night-blueprint'] as const;
+  'night-blueprint',
+  // Its approved alternative (owner 2026-11-27, Family B "Light editorial"): paper ground, the course colour as a block on
+  // the right third holding the symbol in an ink circle, ink title left.
+  'light-editorial'] as const;
 export type Layout = (typeof LAYOUTS)[number];
 
 export const MOTIFS = [
@@ -91,6 +94,12 @@ export const BUILT_IN_TEMPLATES: TemplateDef[] = [
   { key: 'blueprint-ai', name: 'Night blueprint · AI', layout: 'night-blueprint', palette: 'ai-violet', motif: 'neural-net', topics: [...BLUEPRINT_TOPICS.ai], sort: 3 },
   { key: 'blueprint-vscode', name: 'Night blueprint · VS Code', layout: 'night-blueprint', palette: 'code-blue', motif: 'editor', topics: [...BLUEPRINT_TOPICS.vscode], sort: 4 },
   { key: 'blueprint-n8n', name: 'Night blueprint · n8n', layout: 'night-blueprint', palette: 'n8n-coral', motif: 'flow-ai', topics: [...BLUEPRINT_TOPICS.n8n], sort: 5 },
+  // ---- The approved alternative family (light editorial): offered right after the blueprint ones in the cover picker ----
+  { key: 'editorial-aws', name: 'Light editorial · AWS', layout: 'light-editorial', palette: 'aws-orange', motif: 'cloud-chip', topics: [...BLUEPRINT_TOPICS.aws], sort: 6 },
+  { key: 'editorial-azure', name: 'Light editorial · Azure', layout: 'light-editorial', palette: 'azure-blue', motif: 'cloud-nodes', topics: [...BLUEPRINT_TOPICS.azure], sort: 7 },
+  { key: 'editorial-ai', name: 'Light editorial · AI', layout: 'light-editorial', palette: 'ai-violet', motif: 'neural-net', topics: [...BLUEPRINT_TOPICS.ai], sort: 8 },
+  { key: 'editorial-vscode', name: 'Light editorial · VS Code', layout: 'light-editorial', palette: 'code-blue', motif: 'editor', topics: [...BLUEPRINT_TOPICS.vscode], sort: 9 },
+  { key: 'editorial-n8n', name: 'Light editorial · n8n', layout: 'light-editorial', palette: 'n8n-coral', motif: 'flow-ai', topics: [...BLUEPRINT_TOPICS.n8n], sort: 10 },
   { key: 'loop-midnight', name: 'Loop', layout: 'statement', palette: 'midnight', motif: 'loop', topics: ['devops', 'ai-for-devops', 'general'] },
   { key: 'pipeline-ocean', name: 'Pipeline', layout: 'band', palette: 'ocean', motif: 'pipeline', topics: ['cicd-gitops', 'devops'] },
   { key: 'neural-aurora', name: 'Neural', layout: 'split', palette: 'aurora', motif: 'neural', topics: ['ai-foundations', 'ai-for-devops', 'mcp-agents'] },

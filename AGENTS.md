@@ -88,13 +88,15 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
       light pages (`npx jest src/covers` in apps/api renders all of them);
     - keep covers regenerating when the title, topic or template changes; bump `RENDER_VERSION` in `covers.service.ts`
       after changing the drawing code so existing covers are redrawn.
-    - **The catalog family is "Night blueprint"** (owner 2026-11-27, "Mix A + C"): layout `night-blueprint` (deep ink,
+    - **Two approved catalog families** (owner 2026-11-27). **"Night blueprint" is the default** ("Mix A + C"); **"Light
+      editorial"** (Family B: paper ground, accent block with the symbol in an ink circle, templates `editorial-*`,
+      text at least 4.5:1) is the alternative offered next in the cover picker. Night blueprint: layout `night-blueprint` (deep ink,
       course-colour glow, blueprint grid fading toward the symbol, circuit lines, title left, "X: Y" titles split into
       title + subtitle). One accent palette and one ORIGINAL symbol per technology (`aws-orange`/`cloud-chip`,
       `azure-blue`/`cloud-nodes`, `ai-violet`/`neural-net`, `code-blue`/`editor`, `n8n-coral`/`flow-ai`), templates
       `blueprint-*`, suggested first for their categories (`BLUEPRINT_TOPICS`). **No third-party logos** (AWS, Microsoft,
       VS Code, n8n…) unless the owner confirms permission. New technology: add a palette, a motif drawn in ±100 units
-      and a `blueprint-<tech>` template with its category slugs (docs/COURSE_PLATFORM_REFERENCE.md › Covers).
+      and a `blueprint-<tech>` plus an `editorial-<tech>` template with its category slugs (docs/COURSE_PLATFORM_REFERENCE.md › Covers).
 
 18. **Installable app (PWA)** (owner, 2026-11-25): the site must stay installable on phones and computers (docs/PWA.md).
     The service worker only shows the offline page and must never cache pages, API responses or videos. New pages work in
