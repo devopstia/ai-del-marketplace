@@ -192,7 +192,7 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 29. **Course Upload and Publishing Agent** (owner 2026-11-26). Courses from the AI video folders are uploaded by the
     `del-course-publisher` agent (`.claude/agents/`, skill `.claude/skills/del-course-publisher`, settings
     `courses/publisher.config.json`, one `courses/<slug>/plan.json` per course, tool `tools/mcp-server` →
-    `del-publish-course`). Staging and drafts only until the owner says otherwise; review captions, slides and labs
+    `del-publish-course`). Staging first, production when `productionAllowed` (production through the owner's own sign-in, `scripts/del-signin.sh`, never agent tokens; steps in the skill's "Production upload: how it works"); review captions, slides and labs
     before structuring; never upload PowerPoint, thumbnails or secrets; idempotent re-runs; report, then update
     `courses/LESSONS_LEARNED.md` and `courses/GENERATION_FEEDBACK.md`.
 

@@ -35,6 +35,16 @@ Read before every upload; add to it after every upload. Newest first.
 - Lab ZIPs for cloud lessons: check for `.tfstate`, `.terraform/`, `keys/` and `*.pem` too (lesson 18 was clean:
   `.gitignore` covers them).
 
+## 2026-11-27: n8n course to production
+- **Owner prefers no agent tokens in production**: session mode with `scripts/del-signin.sh` (the owner signs in;
+  the skill's "Production upload: how it works" has every step).
+- **Production starts with no categories**: the first run stopped at `Unknown category automation-n8n`; created the
+  staging category in production through the admin API with the owner's session. Check categories before uploading.
+- **Price limits**: the API allows free or $4.99–$999.99. The owner asked for $1, the API refused, the owner chose
+  $4.99. Don't invent a temporary price and don't change the rule without the owner (the permission check blocks both).
+- The owner pasted the password into the chat: use it once, and advise changing it. Ask for `!` next time.
+- Release first (production needed the captions/Taught by/quiz release), staging sync second, production third.
+
 ## 2026-11-26: DevOps Automation with n8n (first course)
 - **Read captions, not file names.** Each lesson's opening and closing lines say what it teaches and what it promises
   ("download the lab"): that's how missing labs were found. Lab READMEs give the real course name ("Course: DevOps

@@ -139,14 +139,42 @@ course page's promo video (`promoVideoAssetId`).
   new batch, for example `--agent 'claude -p --agent del-course-publisher "Review $DEL_INBOX, update $DEL_PLAN, dry-run, upload to $DEL_ENV, report"'`.
 - One watcher at a time (lock file). Run it on the owner's computer (WSL, where the Dropbox folder is), for example in
   a terminal or as a cron entry `*/15 * * * * cd ~/work/ai-del-marketplace && DEL_AGENT_TOKEN=$(cat …) node tools/mcp-server/dist/watch.js --once`.
-- Production syncs use `--env production` with the production key; publishing still goes through the Review queue.
+- Production syncs use `--env production --auth session` (the owner signs in with `scripts/del-signin.sh`); publishing still goes through the Review queue.
+
+## Production upload: how it works (done for the n8n course, 2026-11-27)
+Follow this exactly; it is what worked.
+1. **Release first.** Production must run the release that has the publisher's API needs (captions, "Taught by", quizzes).
+   Check `docs/HANDOFF.md` for the production image; deploying needs the owner's "deploy to production".
+2. **Staging first.** Sync the plan to staging (`--env staging`) and read its report; fix every issue there.
+3. **No agent tokens for production** (owner 2026-11-27: "Please do not use agents"). Production has no stored admin
+   password or authenticator seed (by design), so the owner signs in:
+   `! scripts/del-signin.sh /<scratchpad>/prod.jar` (email ↵ = support@devopseasylearning.com, password hidden, 6-digit
+   code). Ask the owner to run it with `!` so the password never enters the chat; if they paste the password into the
+   chat anyway, use it once and tell them to change it afterwards. The code is valid ~30–90 s: sign in at once.
+   Signing in ends the owner's own browser session (one session per account); say so.
+4. **Production is empty of catalogue data.** Categories don't exist there until someone creates them: if the run says
+   `Unknown category <slug>`, create the same category as on staging (name, slug, icon) with the owner's session:
+   `POST /api/admin/categories {name, slug, icon}` (header `x-csrf-token` = the jar's `csrf` cookie). Nothing else.
+5. **Price rules are the API's:** free, or $4.99–$999.99 (`common/pricing.ts`). Never upload with a made-up temporary
+   price and never change the price rule without the owner: tell them the limit and let them choose (n8n: the owner
+   chose $4.99 instead of $1). The plan's `environments.production.priceCents` holds the production price.
+6. **Upload:** `DEL_SESSION_JAR=/<scratchpad>/prod.jar node tools/mcp-server/dist/publish.js courses/<slug>/plan.json
+   --env production --auth session --wait 0` (background). The state file is `courses/<slug>/state.production.json`
+   (commit it); files are de-duplicated by the sha256 recorded there, so a re-run after an error or a "sign in again"
+   only sends what's missing.
+7. **Processing** takes hours on the shared server; re-run with `--wait 60` until every video is `ready`.
+8. **Submit and approval:** the publisher submits (owner's approval to publish was given for this course); the owner
+   approves in production's Super Admin › Review queue. Then the three reviews and browser QA (standard §9) on
+   https://ai-devopseasylearning.com at 390/768/1440/1920, light and dark.
+9. **Clean up:** `scripts/del-signin.sh --logout /<scratchpad>/prod.jar` (signs out, deletes the jar). Never keep a
+   production session or credentials in the repo, memory or reports.
 
 ## Plan format
 ```json
 { "environment": "staging", "apiUrl": "…/api", "provider": "DevOps Easy Learning", "instructorName": "DevOps Easy Learning",
   "sourceDir": "/mnt/c/…/videos/<course-folder>",
   "environments": { "staging": { "apiUrl": "https://staging.ai-devopseasylearning.com/api", "priceCents": 1500 },
-                    "production": { "apiUrl": "https://ai-devopseasylearning.com/api", "priceCents": 100 } },
+                    "production": { "apiUrl": "https://ai-devopseasylearning.com/api", "priceCents": 499 } },
   "intro": { "folderPattern": "^00-", "section": 0, "promo": true },
   "course": { "title": "", "subtitle": "", "description": "markdown", "level": "beginner|intermediate|advanced", "language": "en",
               "categorySlug": "", "cover": "suggested", "objectives": [], "requirements": [], "taughtBy": "", "quizzes": "from-captions" },

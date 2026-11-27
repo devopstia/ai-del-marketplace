@@ -87,7 +87,9 @@ They talk through files:
 Record what was actually checked. A course that fails any of the three is not submitted.
 
 ## 10. Safety rules (unchanged)
-Staging first, then production only when the owner allows it (`courses/publisher.config.json`). Agent keys only
-(scoped, expiring, owner-issued; kept in the session scratchpad, never in chat, repo or files that are kept). Never
+Staging first, then production only when the owner allows it (`courses/publisher.config.json`). Production uploads use
+the owner's own sign-in (`scripts/del-signin.sh`, session mode; no agent keys, owner 2026-11-27), staging may use a
+scoped, expiring agent key; sessions and keys live only in the session scratchpad and are removed at the end. The exact
+production steps: `.claude/skills/del-course-publisher/SKILL.md` › "Production upload: how it works". Never
 upload PowerPoint, thumbnails, raw files or secrets. Never live payments, never another account's courses, never delete
 content without the owner. Prices are the owner's decision.
