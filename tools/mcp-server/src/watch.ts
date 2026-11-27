@@ -67,6 +67,9 @@ export async function folderReady(folder: string, opts: { settleMinutes: number;
   const top = files.filter((f) => !f.includes('/'));
   const settleMs = opts.settleMinutes * 60_000;
   if (now - newest < settleMs) reasons.push(`files changed ${Math.round((now - newest) / 60_000)} min ago (waiting ${opts.settleMinutes} min to settle)`);
+  // The generation agent copies files as <name>.part and renames them when complete (ai-videos, 2026-11-27).
+  const partial = files.filter((f) => /\.(part|tmp|crdownload)$/i.test(f));
+  if (partial.length) reasons.push(`still being copied: ${partial.join(', ')}`);
   if (videos.length !== 1) reasons.push(videos.length ? `several videos: ${videos.join(', ')}` : 'no video yet');
   if (!en) reasons.push('no English caption file (captions/*.en.srt)');
   if (top.some((f) => /\.pptx?$/i.test(f)) && !top.some((f) => /\.pdf$/i.test(f))) reasons.push('PowerPoint without its PDF');
@@ -84,6 +87,7 @@ export async function changedFiles(folder: string, key: string, seen: Seen): Pro
   const recs: Record<string, FileRec> = {};
   const changed: string[] = [];
   for (const f of await walk(folder)) {
+    if (/\.(part|tmp|crdownload)$/i.test(f)) continue; // half-copied files never count as changes
     const id = `${key}/${f}`;
     const st = await stat(join(folder, f));
     const old = seen.files[id];

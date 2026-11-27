@@ -28,6 +28,10 @@ test('ready only when settled, one readable video, English captions, and a PDF n
   assert.match((await folderReady(await lesson(root, '03-c', { pptxOnly: true }), { settleMinutes: 10, probe })).reasons.join(), /PowerPoint without its PDF/);
   assert.match((await folderReady(await lesson(root, '04-d', { noCaps: true }), { settleMinutes: 10, probe })).reasons.join(), /English caption/);
   assert.match((await folderReady(await lesson(root, '05-e'), { settleMinutes: 10, probe: () => null })).reasons.join(), /ffprobe/);
+  const copying = await lesson(root, '06-f');
+  await writeFile(join(copying, '06-f-v2.mp4.part'), 'x');
+  await old(join(copying, '06-f-v2.mp4.part'));
+  assert.match((await folderReady(copying, { settleMinutes: 10, probe })).reasons.join(), /still being copied/);
 });
 
 test('changed files: new, modified (by checksum) and removed; untouched files are not re-hashed as changes', async () => {
