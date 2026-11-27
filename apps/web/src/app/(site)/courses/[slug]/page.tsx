@@ -12,7 +12,8 @@ import { PreviewProvider } from "@/components/PreviewContext";
 import { CourseFaq, courseFaqItems } from "@/components/CourseFaq";
 import { getRefundPolicy } from "@/lib/refund-policy-server";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbLd, courseLd, faqLd, pageMeta, plainText, topicPath } from "@/lib/seo";
+import { abs, breadcrumbLd, courseLd, faqLd, pageMeta, plainText, topicPath } from "@/lib/seo";
+import { ShareButtons } from "@/components/ShareButtons";
 import { ProgramNote } from "@/components/promo/FullProgram";
 import { PurchaseCard } from "@/components/PurchaseCard";
 import { ReviewForm } from "@/components/ReviewForm";
@@ -28,7 +29,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const c = await getCourse(slug);
   if (!c) return { title: "Course not found", robots: { index: false } };
   const description = plainText(c.subtitle || c.description) || `${c.title}: an online course by ${courseBy(c.instructor)}${c.instructor.taughtBy ? `, designed by ${c.instructor.taughtBy},` : taughtBy(c.instructor) ? `, taught by ${c.instructor.name},` : ""} on DevOps Easy Learning.`;
-  return pageMeta({ title: c.title, description, path: `/courses/${c.slug}`, image: c.thumbnailUrl, imageAlt: `${c.title} course cover`, type: "article" });
+  // Only a published course shares its own banner; a draft seen by its instructor or an admin is never indexed and
+  // gets the site banner, so nothing about it reaches a link preview (docs/SOCIAL_SHARING.md).
+  const published = c.status === "published";
+  return pageMeta({ title: c.title, description, path: `/courses/${c.slug}`, image: published ? c.share : null, type: "article", noindex: !published });
 }
 
 export default async function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -77,6 +81,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               <span className="inline-flex items-center gap-1.5"><BarChart3 className="size-4" />{levelLabel[c.level]}</span>
               <span className="inline-flex items-center gap-1.5"><Clock className="size-4" />{hours(c.totalDurationSec)}</span>
             </div>
+            {c.status === "published" ? <div className="mt-5"><ShareButtons title={c.title} url={abs(`/courses/${c.slug}`)} tone="stage" /></div> : null}
           </div>
         </div>
       </section>

@@ -16,6 +16,7 @@ import { AdminDecision } from "@/components/AdminDecision";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
+import { ShareBannerEditor } from "@/components/social/ShareBannerEditor";
 
 const toDetail = (x: unknown) => ({
   ...toStudioCourse(x),
@@ -157,6 +158,7 @@ export default function AdminCourse() {
                 <div className="mt-4 flex justify-end"><button type="button" className="btn btn-primary" disabled={!!busy || form.title.trim().length < 3} onClick={() => void save()} data-testid="save-course">{spin("save") ?? <Save className="size-4" />}Save changes</button></div>
               </section>
             ) : null}
+            {superAdmin && !purged && c ? <ShareBannerEditor base={`/admin/courses/${c.id}`} title={c.title} /> : null}
           </div>
 
           <aside className="space-y-4">

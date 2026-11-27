@@ -365,6 +365,20 @@ Covers regenerate when the title, topic or template changes. No custom uploads; 
 | POST | `/admin/cover-templates` | **super_admin**: `{ name, layout, motif, palette: { bg: [hex, hex], ink, a, b, tone }, topics, active?, sort? }` |
 | PATCH | `/admin/cover-templates/:id` | **super_admin**: any of the above; courses using it are regenerated; `active: false` moves them to their best other template (`coursesMoved`); the last active template can't be deactivated |
 
+### Sharing banners (docs/SOCIAL_SHARING.md)
+| Method | Path | Notes |
+| --- | --- | --- |
+| GET | `/social/site` | public: `{ title, description, image: { path, width, height, type, alt } }` |
+| GET | `/social/site-image` | public: the current site banner's bytes (JPEG), `max-age=600` |
+| GET | `/courses/:slug` | public course payload carries `share` (same shape as `image`; null unless published) |
+| GET, PUT | `/admin/social` | **super_admin**: settings `{ title, description, family, courseFamily, site: { pro, marketplace, enterprise }: { headline, subline, cta }, panels[2], chips[≤5], disabledTemplates }` (partial, strict); saving redraws banners; audited |
+| POST | `/admin/social/restore-defaults` | **super_admin**: defaults, removes a site upload; audited |
+| GET | `/admin/social/preview?family&draft=<json>` | **super_admin**: JPEG of the site banner with unsaved settings (never stored) |
+| POST, DELETE | `/admin/social/site-upload` | **super_admin**: multipart `image` (PNG/JPG/WebP, 1200×630 or larger at 1.91:1, ≤ 5 MB; 400 `share_banner_invalid`), re-encoded without metadata |
+| GET, PUT | `/instructor/courses/:id/share` (owner), `/admin/courses/:id/share` (**super_admin**), `/agent/courses/:id/share` | view / `{ family?, template?, headline? }` (null = default; disabled or unknown template 400 `share_template`); audited |
+| GET | `…/courses/:id/share-preview?family&template&headline` | owner / super_admin: image, `no-store` |
+| POST, DELETE | `…/courses/:id/share-upload` | owner / super_admin: custom banner for the course, as the site upload |
+
 ## Money: split, payout hold, refunds, disputes (owner-approved, docs/PAYMENTS_PROPOSAL.md)
 
 Rules (`apps/api/src/commerce/money.ts`): per line `net = price − allocated Stripe fee` (fee split by price, largest

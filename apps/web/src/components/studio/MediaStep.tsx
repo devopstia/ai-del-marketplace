@@ -1,5 +1,6 @@
 "use client";
 import { CoverPicker } from "../covers/CoverPicker";
+import { ShareBannerEditor } from "../social/ShareBannerEditor";
 import type { EditorCtx } from "./CourseEditor";
 import { StepFooter } from "./CourseEditor";
 import { UploadBox } from "./UploadBox";
@@ -10,6 +11,7 @@ export function MediaStep({ course, patch, reload, goto, locked }: EditorCtx) {
   return (
     <div className="grid max-w-6xl gap-8 lg:grid-cols-2">
       <div className="lg:col-span-2"><CoverPicker courseId={course.id} title={course.title} onSaved={reload} /></div>
+      <div className="lg:col-span-2"><ShareBannerEditor base={`/instructor/courses/${course.id}`} title={course.title} /></div>
       <section className="grid gap-6 lg:col-span-2 lg:grid-cols-2">
         <div className="min-w-0">
         <h2 className="font-display text-xl font-bold">Promo video</h2>

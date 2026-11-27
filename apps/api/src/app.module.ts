@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { CoversModule } from './covers/covers.module';
+import { SocialModule } from './social/social.module';
 import { SupportModule } from './support/support.module';
 import { ProtectionModule } from './protection/protection.module';
 import { HelpModule } from './help/help.module';
@@ -37,6 +38,7 @@ import { CertificatesModule } from './certificates/certificates.module';
     CatalogueModule,
     PromotionsModule,
     CoversModule,
+    SocialModule,
     SupportModule,
     ProtectionModule,
     HelpModule,

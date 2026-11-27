@@ -54,6 +54,10 @@ export interface CoursePlan {
     cover?: string;
     /** "from-captions": import the in-video multiple-choice questions as a quiz lesson after each video. */
     quizzes?: 'from-captions';
+    /** Sharing banner (docs/SOCIAL_SHARING.md): topic design (ai, aws, azure, terraform, kubernetes, devops, automation,
+     *  software-dev, cybersecurity, general), optional style (pro | marketplace | enterprise) and a shorter headline.
+     *  Omitted values keep the platform defaults (topic design from the category, style from Super Admin). */
+    share?: SharePlan;
   };
   sections: SectionPlan[];
   /** "Continue your learning journey" (owner 2026-11-28): recommended next courses, in order. `course` is another plan's
@@ -61,6 +65,18 @@ export interface CoursePlan {
   related?: RelatedPlan[];
 }
 export interface RelatedPlan { course: string; reason?: string }
+/** The sharing-banner topic designs (apps/api/src/social/share-templates.ts). */
+export const SHARE_TEMPLATES = ['ai', 'aws', 'azure', 'terraform', 'kubernetes', 'devops', 'automation', 'software-dev', 'cybersecurity', 'general'];
+export interface SharePlan { template?: string; family?: 'pro' | 'marketplace' | 'enterprise'; headline?: string }
+
+/** What to send to PUT /courses/:id/share so the course matches the plan; null when it already does. */
+export function shareChange(want: SharePlan, have: { family: string | null; template: string | null; headline: string | null }): Record<string, string | null> | null {
+  const next: Record<string, string | null> = {};
+  if (want.template !== undefined && want.template !== have.template) next.template = want.template;
+  if (want.family !== undefined && want.family !== have.family) next.family = want.family;
+  if (want.headline !== undefined && (want.headline.trim() || null) !== have.headline) next.headline = want.headline.trim() || null;
+  return Object.keys(next).length ? next : null;
+}
 
 /** Related plan slugs → course ids (from the other plans' state files). Unknown ones are reported, never guessed. */
 export function resolveRelated(related: RelatedPlan[], ids: Record<string, string | undefined>): { items: { courseId: string; reason?: string }[]; missing: string[] } {
@@ -227,6 +243,11 @@ export function validatePlan(plan: CoursePlan): { errors: string[]; warnings: st
   if ((c.requirements?.length ?? 0) > 20) errors.push('more than 20 requirements');
   c.objectives?.forEach((o, i) => len(o, 200, `objective ${i + 1}`));
   c.requirements?.forEach((o, i) => len(o, 200, `requirement ${i + 1}`));
+  if (c.share) {
+    if (c.share.template && !SHARE_TEMPLATES.includes(c.share.template)) errors.push(`share.template "${c.share.template}" is not one of ${SHARE_TEMPLATES.join(', ')}`);
+    if (c.share.family && !['pro', 'marketplace', 'enterprise'].includes(c.share.family)) errors.push(`share.family "${c.share.family}" is not pro, marketplace or enterprise`);
+    len(c.share.headline, 90, 'share.headline');
+  }
   const folders = new Set<string>();
   const intros: string[] = [];
   const keys = new Set<string>();
@@ -509,7 +530,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   } else log(`Using existing course ${courseId}`);
   state.courseId = courseId;
   await saveState();
-  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, ...fields } = plan.course;
+  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, share: _share, ...fields } = plan.course;
   issues.push(...warnings);
   await del.call('PATCH', `/courses/${courseId}`, { ...fields, ...(categoryId ? { categoryId } : {}) });
 
@@ -702,6 +723,17 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
     const pick = plan.course.cover === 'suggested' ? (items.find((x) => x.suggested) ?? items[0]) : items.find((x) => x.id === plan.course.cover || x.key === plan.course.cover);
     if (!pick) issues.push(`no cover template found: ${plan.course.cover}`);
     else if (pick.id !== c.coverTemplateId) { await del.call('PUT', `/courses/${courseId}/cover`, { templateId: pick.id }); log(`Cover template ${pick.name ?? pick.id}`); }
+  }
+
+  // 6a. Sharing banner (the link-preview image): drawn by the platform from the title; the plan picks the topic design,
+  // style or headline. Uploads are for people in the studio, never the agent.
+  if (plan.course.share) {
+    const cur = await del.call<{ choice: { family: string | null; template: string | null; headline: string | null } }>('GET', `/courses/${courseId}/share`);
+    const change = shareChange(plan.course.share, cur.choice);
+    if (change) {
+      try { await del.call('PUT', `/courses/${courseId}/share`, change); log(`Sharing banner ${JSON.stringify(change)}`); }
+      catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`sharing banner not set: ${(e as Error).message}`); }
+    }
   }
 
   // 6b. Related courses ("Continue your learning journey"): only when the plan lists them; a course not uploaded yet in

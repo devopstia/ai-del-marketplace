@@ -14,15 +14,20 @@ import { hours, levelLabel, plural } from "@/lib/format";
 import type { CourseCard } from "@/lib/types";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
-import { organizationLd, pageMeta, SITE_DESCRIPTION, topicPath, websiteLd } from "@/lib/seo";
+import { organizationLd, pageMeta, topicPath, websiteLd } from "@/lib/seo";
+import { siteShare } from "@/lib/share-server";
 import { courseBy } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  ...pageMeta({ title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION, path: "/" }),
-  title: { absolute: "DevOps Easy Learning: AI and DevOps courses" },
-};
+/** Title, description and sharing banner from Super Admin › Social Media & Sharing (docs/SOCIAL_SHARING.md). */
+export async function generateMetadata(): Promise<Metadata> {
+  const share = await siteShare();
+  return {
+    ...pageMeta({ title: share.title, description: share.description, path: "/", image: share.image }),
+    title: { absolute: share.title },
+  };
+}
 
 
 function SectionHead({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {

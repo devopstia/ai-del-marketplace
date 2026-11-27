@@ -162,6 +162,8 @@ async function main() {
     for (const folder of folders) {
       const dir = join(outDir, folder);
       for (const f of readdirSync(dir)) {
+        // Skip files still being written by the video tools ("*.tmp.mp4", "*.part").
+        if (/\.(tmp|part)(\.|$)/.test(f)) continue;
         const m = /^(\d+)-(.+)\.mp4$/.exec(f);
         if (m) videos.push({ nn: m[1], id: m[2], mp4: join(dir, m[0]), plan: planById.get(m[2]), dir });
       }

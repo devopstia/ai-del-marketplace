@@ -13,6 +13,8 @@ import { AgentCoursesService } from './agent-courses.service';
 import { AgentUploadsService } from './agent-uploads.service';
 import { relatedSchema } from '../catalogue/related-courses.controller';
 import { RelatedCoursesService } from '../catalogue/related-courses.service';
+import { SocialService } from '../social/social.service';
+import { FAMILIES, SHARE_TEMPLATE_KEYS } from '../social/share-templates';
 
 /**
  * Agent context with a scope check: only requests authenticated by an agent token (AssistResolver) reach these routes,
@@ -36,6 +38,8 @@ const uploadSchema = z.object({
 }).strict();
 const partsQuery = z.object({ from: z.coerce.number().int().min(1).default(1), count: z.coerce.number().int().min(1).max(100).default(20) });
 const coverSchema = z.object({ templateId: z.string().uuid() }).strict();
+/** Sharing banner (docs/SOCIAL_SHARING.md): style, topic design and headline; uploads stay with people in the studio. */
+const shareSchema = z.object({ family: z.enum(FAMILIES).nullable(), template: z.enum(SHARE_TEMPLATE_KEYS as [string, ...string[]]).nullable(), headline: z.string().trim().max(90).nullable() }).partial().strict();
 
 /**
  * The AI agent API (docs/SUPPORT_SESSIONS_AND_AGENTS.md; the MCP server in tools/mcp-server wraps it). Everything runs
@@ -52,6 +56,7 @@ export class AgentApiController {
     private readonly covers: CoversService,
     private readonly prisma: PrismaService,
     private readonly related: RelatedCoursesService,
+    private readonly social: SocialService,
   ) {}
 
   @Get('whoami')
@@ -82,6 +87,8 @@ export class AgentApiController {
   @Put('courses/:id/related') relatedSet(@Param('id') id: string, @ZBody(relatedSchema) b: z.infer<typeof relatedSchema>, @Agent('courses:write') a: AgentActor) { return this.related.set(a, id, b.items); }
 
   @Get('courses/:id/covers') coverPicker(@Param('id') id: string, @Agent('courses:read') a: AgentActor) { return this.covers.pickerFor(a.user.id, id); }
+  @Get('courses/:id/share') share(@Param('id') id: string, @Agent('courses:read') a: AgentActor) { return this.social.courseView(a, id); }
+  @Put('courses/:id/share') setShare(@Param('id') id: string, @ZBody(shareSchema) b: z.infer<typeof shareSchema>, @Agent('courses:write') a: AgentActor) { return this.social.setCourseChoice(a, id, b); }
   @Put('courses/:id/cover') setCover(@Param('id') id: string, @ZBody(coverSchema) b: z.infer<typeof coverSchema>, @Agent('courses:write') a: AgentActor) { return this.covers.setTemplate(a, id, b.templateId); }
 
   /** Attach an uploaded file (storageKey from a completed upload) to a lesson. */

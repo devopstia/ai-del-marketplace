@@ -1,3 +1,4 @@
+import { SocialService } from '../social/social.service';
 import { accessState, daysLeft, hasAccess } from '../access/access';
 import { reviewerWatch, watchOf } from '../access/consumption';
 import { certificateUrl, linkedInAddUrl } from './certificate-share';
@@ -45,6 +46,7 @@ export class CatalogueService {
     private readonly settings: SettingsService,
     private readonly pricing: SalePricingService,
     private readonly related: RelatedCoursesService,
+    private readonly social: SocialService,
   ) {}
 
   /** Public marketplace terms (pricing rules + revenue share) so the web never hard-codes them. */
@@ -248,6 +250,8 @@ export class CatalogueService {
       viewer: viewerState,
       // "Continue your learning journey" (owner 2026-11-28): published related courses only; `owned` only for a signed-in viewer.
       related: await this.related.forCourse(c.id, viewer),
+      // Sharing banner for the page's link preview (docs/SOCIAL_SHARING.md): published courses only, never drafts.
+      share: await this.social.courseImage(c),
     };
   }
 

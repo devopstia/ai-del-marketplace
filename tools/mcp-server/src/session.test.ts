@@ -36,6 +36,8 @@ test('session mode: every agent path the publisher uses maps to a DEL Studio rou
     ['POST', `/courses/${c}/lectures/${l}/resources`, `/instructor/courses/${c}/lectures/${l}/resources`],
     ['GET', `/courses/${c}/covers`, `/instructor/courses/${c}/cover`],
     ['PUT', `/courses/${c}/cover`, `/instructor/courses/${c}/cover`],
+    ['GET', `/courses/${c}/share`, `/instructor/courses/${c}/share`],
+    ['PUT', `/courses/${c}/share`, `/instructor/courses/${c}/share`],
     ['POST', `/courses/${c}/submit`, `/instructor/courses/${c}/submit`],
     ['GET', `/courses/${c}/validation`, null],
     ['GET', `/courses/${c}/preview`, null],

@@ -131,6 +131,10 @@ export interface SectionOutline {
 
 export interface CourseDetail extends CourseCard {
   description: string;
+  /** Publication status (the API shows drafts only to their instructor and admins). */
+  status: string;
+  /** The sharing banner for link previews: published courses only (docs/SOCIAL_SHARING.md). */
+  share: import("./seo").ShareImage | null;
   language: string;
   objectives: string[];
   requirements: string[];

@@ -32,6 +32,36 @@ test.describe("search engines", () => {
     expect(titles).toBeGreaterThan(0);
   });
 
+  test("course page: its own sharing banner, full preview tags and share buttons (docs/SOCIAL_SHARING.md)", async ({ page, request }) => {
+    await page.goto(`/courses/${COURSE}`);
+    const img = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(img).toMatch(/\/media\/images\/social\/[0-9a-f-]{36}-[0-9a-f]{12}\.(jpg|png)$/);
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute("content", "1200");
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute("content", "630");
+    await expect(page.locator('meta[property="og:image:type"]')).toHaveAttribute("content", /^image\/(jpeg|png)$/);
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute("content", /DevOps Easy Learning/);
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", new RegExp(`/courses/${COURSE}$`));
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute("content", img!);
+    const desc = await page.locator('meta[property="og:description"]').getAttribute("content");
+    expect(desc!.length).toBeLessThanOrEqual(160);
+    const res = await request.get(new URL(img!).pathname);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["cache-control"]).toContain("immutable");
+    expect((await res.body()).length).toBeLessThanOrEqual(300 * 1024);
+    const share = page.getByTestId("share-buttons");
+    await expect(share.getByRole("link", { name: "Share on WhatsApp" })).toHaveAttribute("href", new RegExp(`^https://wa\\.me/\\?text=.*${COURSE}`));
+    for (const n of ["Facebook", "LinkedIn", "Telegram", "X", "Email"]) await expect(share.getByRole("link", { name: `Share on ${n}` })).toBeVisible();
+    await expect(share.getByRole("button", { name: "Copy link" })).toBeVisible();
+  });
+
+  test("site banner: homepage and fixed address", async ({ page, request }) => {
+    await page.goto("/");
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/media\/images\/social\/site-[0-9a-f]{12}\.jpg$/);
+    const r = await request.get("/og/site.jpg");
+    expect(r.status()).toBe(200);
+    expect(r.headers()["content-type"]).toBe("image/jpeg");
+  });
+
   test("topic pages: own address, heading and breadcrumbs; filtered catalogue points to them", async ({ page }) => {
     await page.goto("/courses");
     const topic = page.getByRole("navigation", { name: "Breadcrumb" });

@@ -318,6 +318,16 @@ model Course {
   /// Storage key of the generated cover (images/covers/<courseId>-<hash>.png); the hash changes with title, topic or template.
   coverKey          String?
   coverHash         String?
+  /// Sharing banner (owner 2026-11-28, docs/SOCIAL_SHARING.md): the 1200×630 link-preview image. Family and template
+  /// null = the platform defaults (Super Admin › Social Media & Sharing; template by category). shareUploadKey = a
+  /// validated custom banner (re-encoded, metadata stripped), used instead of the drawn one. shareKey is the stored
+  /// image (images/social/<courseId>-<hash>.jpg); the hash changes with every input, so URLs never need invalidating.
+  shareFamily       String?
+  shareTemplate     String?
+  shareHeadline     String?
+  shareUploadKey    String?
+  shareKey          String?
+  shareHash         String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 

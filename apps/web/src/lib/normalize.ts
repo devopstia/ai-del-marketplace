@@ -7,6 +7,7 @@ import type { CourseRefund, SaleInfo, SaleRow, StudioRevision,
   SalesReport, SectionOutline, StudioCourse, StudioLecture, StudioSection, StudentRow,
 } from "./types";
 import { toSizes } from "./data-saver";
+import { shareImageOf } from "./seo";
 
 type R = Record<string, unknown>;
 export const obj = (x: unknown): R => (x && typeof x === "object" ? (x as R) : {});
@@ -204,6 +205,8 @@ export function toCourseDetail(x: unknown): CourseDetail {
     })(),
     hasCaptions: Boolean(raw.hasCaptions ?? o.hasCaptions),
     related: arr(raw.related ?? o.related).map(toRelatedCourse).filter((r) => r.slug),
+    status: str(o.status, "published"),
+    share: shareImageOf(raw.share ?? o.share),
   };
 }
 

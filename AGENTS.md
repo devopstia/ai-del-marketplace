@@ -40,7 +40,7 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     design, make sure the current working version is committed, mark it with an annotated tag (`design-approved-<date>`) and a
     `backup/…` branch, record the hash, and do the work on a dedicated `feat/…` branch. Never merge or deploy a redesign without the
     owner's approval. Rollback on request: `git checkout <tag> -- apps/web` (or the affected paths) on the working branch, then
-    rebuild the web container; unrelated work stays. Current baseline: `main` = production release `release-2026-11-27-course-publisher` (images `6307ad1c77f2`; light default theme); earlier approved design tags `design-approved-2026-11-24` = `9b0170e`, `release-local-2026-11-24`.
+    rebuild the web container; unrelated work stays. Current baseline: `main` = production release `release-2026-11-28-social-sharing` (commit `f2a4a3f308dc`; light default theme); earlier approved design tags `design-approved-2026-11-24` = `9b0170e`, `release-local-2026-11-24`.
 14. **Natural, not AI-generated design** (owner, 2026-11-24): clean typography, consistent spacing, proper alignment, professional
     colour; avoid excessive gradients, glows, repetitive cards, oversized headings, needless animation and decoration. Improve the
     existing identity, don't replace it. Preserve the course listing and course detail pages (owner likes them).
@@ -247,6 +247,17 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     courses, and never offer a course the learner already owns (they see "Continue learning"). A paid course never
     holds back lessons it advertises to push another purchase.
 
+35. **Sharing banners and link previews** (owner 2026-11-28; docs/SOCIAL_SHARING.md). Every page's title, description,
+    canonical and Open Graph / X tags are rendered on the server through `pageMeta` (`lib/seo.ts`); never add a page with
+    client-only metadata. **Every new course has a sharing banner and correct metadata before publication**: check its
+    topic design (plan field `course.share` or Studio › Media › Sharing banner), the preview, and that the title and
+    subtitle read well in a preview card. Banners are drawn on the server in the owner's families (`pro` = design 3, the
+    default; `marketplace` = design 4; `enterprise` = design 1) with original artwork only (no third-party logos), stay under
+    300 KB with text inside the safe area, and name only published courses. Nothing about an unpublished course may reach a
+    preview. Change drawing code → bump `SHARE_RENDER_VERSION`. A custom banner upload is allowed for sharing banners only
+    (validated 1200×630, re-encoded without metadata); course covers stay generated (rule 17) and a video frame is never
+    used. Share buttons are plain links, no platform scripts or trackers.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
@@ -263,4 +274,4 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 `docs/ROADMAP.md` (2026-11-24 roadmap, historical) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
 `docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md` · **`docs/HANDOFF.md`** ·
 `docs/FINAL_REVIEW_2026-11-26.md` (latest audit + release) · `docs/AWS_COSTS.md` · `docs/STORAGE.md` · `docs/PAYMENTS.md` ·
-`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md` · `docs/COURSE_PLATFORM_REFERENCE.md` · `docs/CERTIFICATES.md` · `docs/RECEIPTS.md` · `docs/IMPROVEMENTS.md` · `courses/` (HANDOVER, COURSE_STATUS, CONTENT_REQUESTS, QA_CHECKLIST, LESSONS_LEARNED). Local email inbox: http://127.0.0.1:8025.
+`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md` · `docs/COURSE_PLATFORM_REFERENCE.md` · `docs/CERTIFICATES.md` · `docs/RECEIPTS.md` · `docs/SOCIAL_SHARING.md` · `docs/IMPROVEMENTS.md` · `courses/` (HANDOVER, COURSE_STATUS, CONTENT_REQUESTS, QA_CHECKLIST, LESSONS_LEARNED). Local email inbox: http://127.0.0.1:8025.

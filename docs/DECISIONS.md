@@ -273,3 +273,17 @@ time, IP and the refund policy version. Removed the policy box and the paragraph
 Yellow: the `--amber` tokens now hold the brand cyan family (cyan-ink / cyan-soft) in light and dark, so every notice, warning
 and pending badge uses the palette; rating stars keep their gold through a new `--star` token. Access length is still the
 fixed 12 months (rule 20); making it a Super Admin setting is a separate decision.
+
+## 2026-11-28: Social sharing banners, link previews and share buttons (owner brief; designs 3, 4 and 1)
+Checkpoint `checkpoint-2026-11-28-social-sharing` (dd25897), branch `backup/pre-social-sharing-2026-11-28`, work on
+`feat/social-sharing`. The owner chose design 3 "Cloud and DevOps professional" as the default, then added design 4
+"Premium learning marketplace" and design 1 "Modern enterprise technology" as further families. Model: a banner = family
+(`pro`, `marketplace`, `enterprise`) × topic design (10: ai, aws, azure, terraform, kubernetes, devops, automation,
+software-dev, cybersecurity, general), chosen as a family switch plus one template list rather than 30 templates, so a
+course keeps its topic look when the style changes. Drawn on the server (resvg + the DEL font), JPEG ≤ 300 KB, stored
+under hashed names (`images/social/…`) served `immutable`: no CDN invalidation. Only published courses get a stored
+banner or appear on another banner's cards. Super Admin › Social Media & Sharing (no redeploy), Studio › Media › Sharing
+banner, custom 1200×630 uploads re-encoded without metadata (sharing banners only; covers stay generated, rule 17).
+Server-rendered OG/X tags with secure_url, size, type and alt on every public page; share buttons are plain links. The
+old `opengraph-image.tsx` placeholder is replaced by `/og/site.jpg` (the current site banner). docs/SOCIAL_SHARING.md,
+AGENTS rule 35.

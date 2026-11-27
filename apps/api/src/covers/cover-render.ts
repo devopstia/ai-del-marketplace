@@ -23,7 +23,7 @@ function fontDir() {
   throw new Error('Cover fonts not found (apps/api/assets/fonts)');
 }
 let cache: { files: string[]; title: opentype.Font; label: opentype.Font } | null = null;
-function fonts() {
+export function fonts() {
   if (cache) return cache;
   const dir = fontDir();
   const files = ['600', '700', '800'].map((w) => join(dir, `SchibstedGrotesk-${w}.ttf`));
@@ -37,7 +37,7 @@ function fonts() {
 
 // ---------- text fitting ----------
 const TRACK = -0.02; // letter-spacing in em, same as the site's display type
-function width(font: opentype.Font, text: string, size: number) {
+export function textWidth(font: opentype.Font, text: string, size: number) {
   return font.getAdvanceWidth(text, size, { kerning: true }) + TRACK * size * Math.max(0, text.length - 1);
 }
 
@@ -45,9 +45,9 @@ function wrap(font: opentype.Font, words: string[], size: number, maxW: number):
   const lines: string[] = [];
   let line = '';
   for (const w of words) {
-    if (width(font, w, size) > maxW) return null; // a single word too wide: needs a smaller size
+    if (textWidth(font, w, size) > maxW) return null; // a single word too wide: needs a smaller size
     const next = line ? `${line} ${w}` : w;
-    if (width(font, next, size) <= maxW) line = next;
+    if (textWidth(font, next, size) <= maxW) line = next;
     else { lines.push(line); line = w; }
   }
   if (line) lines.push(line);
@@ -66,17 +66,17 @@ export function fitTitle(title: string, maxW: number, maxLines: number, max: num
   }
   // Very long titles: smallest size, words broken only if a single word is wider than the box, last line ellipsed.
   let size = min;
-  while (size > 28 && words.some((w) => width(font, w, size) > maxW)) size -= 2;
+  while (size > 28 && words.some((w) => textWidth(font, w, size) > maxW)) size -= 2;
   const safe = words.map((w) => {
     let x = w;
-    while (width(font, x, size) > maxW && x.length > 1) x = x.slice(0, -1);
+    while (textWidth(font, x, size) > maxW && x.length > 1) x = x.slice(0, -1);
     return x === w ? w : `${x.slice(0, -1)}…`;
   });
   const lines = wrap(font, safe, size, maxW) ?? safe;
   if (lines.length > maxLines) {
     const kept = lines.slice(0, maxLines);
     let last = kept[maxLines - 1]!;
-    while (last && width(font, `${last}…`, size) > maxW) last = last.replace(/\s*\S+$/, '');
+    while (last && textWidth(font, `${last}…`, size) > maxW) last = last.replace(/\s*\S+$/, '');
     kept[maxLines - 1] = `${last || kept[maxLines - 1]!.slice(0, 8)}…`;
     return { size, lineHeight: Math.round(size * 1.06), lines: kept };
   }
@@ -84,9 +84,9 @@ export function fitTitle(title: string, maxW: number, maxLines: number, max: num
 }
 
 // ---------- drawing helpers ----------
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const LOOP = 'M60,30 C48,14 34,8 22,10 C10,12 4,22 4,30 C4,38 10,48 22,50 C34,52 48,46 60,30 C72,46 86,52 98,50 C110,48 116,38 116,30 C116,22 110,12 98,10 C86,8 72,14 60,30';
-interface Box { x: number; y: number; w: number; h: number }
+export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export const LOOP = 'M60,30 C48,14 34,8 22,10 C10,12 4,22 4,30 C4,38 10,48 22,50 C34,52 48,46 60,30 C72,46 86,52 98,50 C110,48 116,38 116,30 C116,22 110,12 98,10 C86,8 72,14 60,30';
+export interface Box { x: number; y: number; w: number; h: number }
 
 /** Seeded pseudo-random numbers so a motif looks the same every time it is drawn. */
 function rng(seed: number) {
@@ -94,7 +94,7 @@ function rng(seed: number) {
   return () => (s = (s * 16807) % 2147483647) / 2147483647;
 }
 
-function motifSvg(m: Motif, b: Box, p: Palette): string {
+export function motifSvg(m: Motif, b: Box, p: Palette): string {
   const { a, b: c } = p;
   let cx = b.x + b.w / 2;
   const cy = b.y + b.h / 2;
