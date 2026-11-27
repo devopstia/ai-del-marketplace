@@ -412,7 +412,7 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   ) : null}
                   <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3 text-sm">
                     <div><dt className="text-muted">Course</dt><dd className="font-bold">{course.title}</dd></div>
-                    <div><dt className="text-muted">Instructor</dt><dd className="font-bold">{course.instructor.taughtBy || course.instructor.name}</dd></div>
+                    <div><dt className="text-muted">{course.instructor.taughtBy ? "Designed by" : "Instructor"}</dt><dd className="font-bold">{course.instructor.taughtBy || course.instructor.name}</dd></div>
                     <div><dt className="text-muted">Your progress</dt><dd className="mt-0.5"><LoopMeter value={pct} size="sm" /></dd></div>
                     {reviews ? (
                       <div><dt className="text-muted">Course rating</dt><dd className="mt-0.5 flex flex-wrap items-center gap-2">

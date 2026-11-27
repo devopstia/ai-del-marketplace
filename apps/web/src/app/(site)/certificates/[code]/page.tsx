@@ -66,7 +66,7 @@ export default async function CertificatePage({ params, searchParams }: { params
             <dl className="mt-12 grid gap-6 border-t border-line pt-6 text-sm sm:grid-cols-3">
               <div><dt className="text-muted">Issued</dt><dd className="font-bold">{date(cert.issuedAt)}</dd></div>
               {cert.course.brand && cert.course.brand !== cert.course.instructorName ? <div><dt className="text-muted">Course by</dt><dd className="font-bold">{cert.course.brand}</dd></div> : null}
-              {cert.course.instructorName ? <div><dt className="text-muted">Instructor</dt><dd className="font-bold">{cert.course.instructorName}</dd></div> : null}
+              {cert.course.instructorName ? <div><dt className="text-muted">{cert.course.designedBy ? "Designed by" : "Instructor"}</dt><dd className="font-bold">{cert.course.instructorName}</dd></div> : null}
               <div><dt className="text-muted">Certificate code</dt><dd className="font-bold tracking-wide">{cert.code}</dd></div>
               {cert.course.totalDurationSec ? <div><dt className="text-muted">Course length</dt><dd className="font-bold">{hours(cert.course.totalDurationSec)}{cert.course.lessons ? `, ${cert.course.lessons} lessons` : ""}</dd></div> : null}
               {quiz ? <div><dt className="text-muted">Quizzes</dt><dd className="font-bold">{quiz.passed} of {quiz.total} passed, best scores average {quiz.averageBest} %</dd></div> : null}

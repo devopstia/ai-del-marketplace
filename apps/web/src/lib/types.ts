@@ -281,7 +281,7 @@ export interface Certificate {
   code: string;
   issuedAt: string;
   user: { name: string };
-  course: { title: string; slug: string; published?: boolean; instructorName?: string; brand?: string | null; totalDurationSec?: number; lessons?: number };
+  course: { title: string; slug: string; published?: boolean; instructorName?: string; designedBy?: boolean; brand?: string | null; totalDurationSec?: number; lessons?: number };
   skills: string[];
   quizzes: { total: number; passed: number; averageBest: number | null } | null;
   url?: string;

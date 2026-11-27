@@ -21,18 +21,37 @@ function inline(text: string, key: string): React.ReactNode[] {
   return out;
 }
 
+type Block = { kind: "h2" | "h3" | "ul" | "ol" | "p"; lines: string[] };
+
+/** Line-based: a heading, list item or paragraph line starts or continues a block; blank lines end it. */
+function parse(source: string): Block[] {
+  const out: Block[] = [];
+  let cur: Block | null = null;
+  for (const raw of source.replace(/\r\n/g, "\n").split("\n")) {
+    const l = raw.trimEnd();
+    if (!l.trim()) { cur = null; continue; }
+    const h = l.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { out.push({ kind: h[1]!.length <= 2 ? "h2" : "h3", lines: [h[2]!] }); cur = null; continue; }
+    const ul = l.match(/^\s*[-*]\s+(.*)$/);
+    const ol = l.match(/^\s*\d+[.)]\s+(.*)$/);
+    const kind = ul ? "ul" : ol ? "ol" : "p";
+    const text = ul ? ul[1]! : ol ? ol[1]! : l;
+    if (cur && cur.kind === kind) cur.lines.push(text);
+    else if (cur && kind === "p" && cur.kind !== "p") cur.lines[cur.lines.length - 1] += ` ${text.trim()}`; // a wrapped list item
+    else { cur = { kind, lines: [text] }; out.push(cur); }
+  }
+  return out;
+}
+
 export function Markdown({ source, className = "prose-del" }: { source: string; className?: string }) {
-  const blocks = source.replace(/\r\n/g, "\n").split(/\n{2,}/);
   return (
     <div className={className}>
-      {blocks.map((b, bi) => {
-        const lines = b.split("\n").filter((l) => l.trim());
-        if (!lines.length) return null;
-        const h = lines[0]!.match(/^(#{1,4})\s+(.*)$/);
-        if (h && lines.length === 1) return h[1]!.length <= 2 ? <h2 key={bi}>{inline(h[2]!, `h${bi}`)}</h2> : <h3 key={bi}>{inline(h[2]!, `h${bi}`)}</h3>;
-        if (lines.every((l) => /^\s*[-*]\s+/.test(l))) return <ul key={bi}>{lines.map((l, li) => <li key={li}>{inline(l.replace(/^\s*[-*]\s+/, ""), `u${bi}${li}`)}</li>)}</ul>;
-        if (lines.every((l) => /^\s*\d+[.)]\s+/.test(l))) return <ol key={bi} className="list-decimal pl-5">{lines.map((l, li) => <li key={li}>{inline(l.replace(/^\s*\d+[.)]\s+/, ""), `o${bi}${li}`)}</li>)}</ol>;
-        return <p key={bi}>{lines.map((l, li) => <Fragment key={li}>{li ? <br /> : null}{inline(l, `p${bi}${li}`)}</Fragment>)}</p>;
+      {parse(source).map((b, bi) => {
+        if (b.kind === "h2") return <h2 key={bi}>{inline(b.lines[0]!, `h${bi}`)}</h2>;
+        if (b.kind === "h3") return <h3 key={bi}>{inline(b.lines[0]!, `h${bi}`)}</h3>;
+        if (b.kind === "ul") return <ul key={bi}>{b.lines.map((l, li) => <li key={li}>{inline(l, `u${bi}${li}`)}</li>)}</ul>;
+        if (b.kind === "ol") return <ol key={bi} className="list-decimal pl-5">{b.lines.map((l, li) => <li key={li}>{inline(l, `o${bi}${li}`)}</li>)}</ol>;
+        return <p key={bi}>{b.lines.map((l, li) => <Fragment key={li}>{li ? <br /> : null}{inline(l, `p${bi}${li}`)}</Fragment>)}</p>;
       })}
     </div>
   );
