@@ -211,6 +211,12 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     request register and its lifecycle), `LESSONS_LEARNED.md`, `course.manifest.json`; instructor, student and customer review before anything goes to students; the course page is written and checked
     to the presentation standard (§3a: premium, persuasive, honest, no AI-generic wording, reviewed in the browser).
 
+31. **Dashboard design system** (owner 2026-11-27: Option A · Enterprise Analytics): every dashboard reuses the components
+    in `apps/web/src/components/dashboard/` (KpiStrip, RangePicker, TimeChart, BarList, DataTable, ActivityFeed, Panel,
+    EmptyNote/ErrorNote/PanelSkeleton) and the rules in `docs/DASHBOARD_DESIGN.md`: real records only, money from the
+    order-line snapshots, DEL-owned courses report DEL net revenue (never "$0 earnings"), loading/zero/no data/error
+    look different, no big empty boxes. Don't build one-off dashboard figures or charts.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a

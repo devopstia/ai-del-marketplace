@@ -72,7 +72,7 @@ describe('e2e: super admin portal', () => {
     }
     Object.assign(process.env, {
       NODE_ENV: 'test', DATABASE_URL: url, REDIS_URL: process.env.E2E_REDIS_URL ?? 'redis://127.0.0.1:6380', DEV_TEST_PAYMENTS: 'true', MFA_REQUIRED: 'true',
-      STRIPE_SECRET_KEY: '', S3_ENDPOINT: 'http://127.0.0.1:9000', S3_PUBLIC_ENDPOINT: 'http://127.0.0.1:9000', WEB_URL: 'http://127.0.0.1:3000', ANTHROPIC_API_KEY: '',
+      STRIPE_SECRET_KEY: '', S3_ENDPOINT: process.env.E2E_S3_ENDPOINT ?? 'http://127.0.0.1:9000', S3_PUBLIC_ENDPOINT: process.env.E2E_S3_ENDPOINT ?? 'http://127.0.0.1:9000', WEB_URL: 'http://127.0.0.1:3000', ANTHROPIC_API_KEY: '',
     });
     resetEnvCache();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
