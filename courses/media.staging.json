@@ -147,7 +147,9 @@
       "name": "how-computers-solved-problems-before-ai.mp4",
       "at": "2026-11-27T06:19:54.620Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -157,7 +159,9 @@
       "name": "how-computers-solved-problems-before-ai-slides.pdf",
       "at": "2026-11-27T06:19:55.591Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "c97468c1536d4a6e78545dd6e489a3c9495047d5e93e881dc2e27e53db7e339f": {
@@ -166,7 +170,9 @@
       "name": "a-short-history-of-ai-from-rules-to-agents.mp4",
       "at": "2026-11-27T06:20:06.311Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -176,7 +182,9 @@
       "name": "a-short-history-of-ai-from-rules-to-agents-slides.pdf",
       "at": "2026-11-27T06:20:07.304Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "00c4fc64969ed02d51ff297bd79c6083edf7c228a9b0abc741dee01c37d88143": {
@@ -185,7 +193,9 @@
       "name": "what-machine-learning-is-a-spam-filter-step-by-step.mp4",
       "at": "2026-11-27T06:20:16.274Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -195,7 +205,9 @@
       "name": "what-machine-learning-is-a-spam-filter-step-by-step-slides.pdf",
       "at": "2026-11-27T06:20:17.590Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "97e1d01fb12b68d3fdcfd9ae0ff3def04c44fed9fe1e4ea90597730c8b11a176": {
@@ -227,7 +239,9 @@
       "name": "fix-a-3-am-outage-the-classic-way.mp4",
       "at": "2026-11-27T06:20:59.052Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -237,7 +251,9 @@
       "name": "fix-a-3-am-outage-the-classic-way-slides.pdf",
       "at": "2026-11-27T06:21:00.440Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "d21e23ce71a4aa5c54142f4c264a84d999c1801e9970b5421893e84d748c263e": {
@@ -246,7 +262,9 @@
       "name": "fix-a-3-am-outage-the-classic-way-lab.zip",
       "at": "2026-11-27T06:21:00.764Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "482da7db5a2ef75465c1107d9f8442dd062f040d04c1700ff8585155fe571e05": {
@@ -256,7 +274,8 @@
       "at": "2026-11-27T06:21:29.319Z",
       "courses": [
         "intro-ai-for-devops",
-        "ai-for-devops-aws"
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -267,7 +286,8 @@
       "at": "2026-11-27T06:21:30.779Z",
       "courses": [
         "intro-ai-for-devops",
-        "ai-for-devops-aws"
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "48000586ebe3bf1ce32d9a56fe19a1f9023784db4375b0f18b32ba8626d81fc0": {
@@ -277,7 +297,8 @@
       "at": "2026-11-27T06:21:31.089Z",
       "courses": [
         "intro-ai-for-devops",
-        "ai-for-devops-aws"
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "39003c576d05c55d2ba840b75b2200d4e6398f178da66a6bc7a4ffd0463e9de1": {
@@ -286,7 +307,9 @@
       "name": "devops-mlops-llmops-rag-and-agentic-ai-sorted.mp4",
       "at": "2026-11-27T06:21:58.350Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -296,7 +319,9 @@
       "name": "devops-mlops-llmops-rag-and-agentic-ai-sorted-slides.pdf",
       "at": "2026-11-27T06:21:59.927Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "ffdaf9cd2a0aefb59aa94e91865fa8a274ab1521cfc752201565921486d8fe86": {
@@ -305,7 +330,9 @@
       "name": "models-parameters-training-inference-and-model-cards.mp4",
       "at": "2026-11-27T06:22:20.356Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -315,7 +342,9 @@
       "name": "models-parameters-training-inference-and-model-cards-slides.pdf",
       "at": "2026-11-27T06:22:21.329Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "c00d39d1271d8c1fd4cd11343411ebb3a641c95f4380c13cf23204e3b1844604": {
@@ -462,7 +491,9 @@
       "name": "running-models-gpus-vram-quantisation-and-licences.mp4",
       "at": "2026-11-27T06:23:54.449Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ],
       "status": "ready"
     },
@@ -472,7 +503,9 @@
       "name": "running-models-gpus-vram-quantisation-and-licences-slides.pdf",
       "at": "2026-11-27T06:23:55.203Z",
       "courses": [
-        "intro-ai-for-devops"
+        "intro-ai-for-devops",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
       ]
     },
     "4d4f9dab231e27397375f9dd3540fb39262c5a1c7f1589e61fa2d766cc4542c8": {
@@ -924,7 +957,8 @@
       "at": "2026-11-27T06:33:22.185Z",
       "courses": [
         "ai-for-devops-aws",
-        "ai-for-devops-azure"
+        "ai-for-devops-azure",
+        "n8n-automation"
       ],
       "status": "ready"
     },
@@ -1161,6 +1195,252 @@
       "name": "build-a-rag-system-on-azure-with-terraform-lab.zip",
       "at": "2026-11-27T06:37:29.155Z",
       "courses": [
+        "ai-for-devops-azure"
+      ]
+    },
+    "85327b1463f6bd7ccf712939b22a54f3e519b6b7dd61006588a57ed5ff771afc": {
+      "kind": "video",
+      "assetId": "ca2dd8aa-4fcb-4030-a9b2-ec2fa0879fc9",
+      "name": "welcome-what-youll-build-in-this-course.mp4",
+      "at": "2026-11-27T11:51:39.700Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "502fe230700201926966a0ef7d67ea94b163602fdd090e8a668817910ceb0065": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/cc53b627-6390-44e1-97c6-577eaa88fd9d/resources/88f6cb21-a7fe-4efd-bd40-bba733400356/welcome-what-youll-build-in-this-course-slides.pdf",
+      "name": "welcome-what-youll-build-in-this-course-slides.pdf",
+      "at": "2026-11-27T11:51:41.987Z",
+      "courses": [
+        "n8n-automation"
+      ]
+    },
+    "c114ff3f7b157da6407fcbacda9107015a94f2002807e1d0460d101e6528c71b": {
+      "kind": "video",
+      "assetId": "d2e01d46-d0d9-42b7-ae0e-7e6ac2a98f5c",
+      "name": "how-n8n-and-mattermost-work-together-for-devops.mp4",
+      "at": "2026-11-27T11:51:42.875Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "b648c562fe50ee561c812d0bc74fd1028d5ce0f6080f4b8cd3285341455efbc1": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/cc53b627-6390-44e1-97c6-577eaa88fd9d/resources/256d088d-02d8-43db-98ef-7ac16a4791de/how-n8n-and-mattermost-work-together-for-devops-lab.zip",
+      "name": "how-n8n-and-mattermost-work-together-for-devops-lab.zip",
+      "at": "2026-11-27T11:51:43.210Z",
+      "courses": [
+        "n8n-automation"
+      ]
+    },
+    "4305f4ee1c2e6c2d829c77e1ccca21e87f139eb047f7ae90827ca06e31dbdfe7": {
+      "kind": "video",
+      "assetId": "b5be98f1-fe47-4f32-ac47-d0a3e2788d93",
+      "name": "deploy-n8n-and-mattermost-with-docker-compose.mp4",
+      "at": "2026-11-27T11:51:45.412Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "c5b6ffaa8f5b49eb04b63d2d6d4f08ecf2b26f2c19d4199eb13003ea11aadf5b": {
+      "kind": "video",
+      "assetId": "338c465d-2af6-4dac-a49c-742e25f6b4ab",
+      "name": "set-up-mattermost-channels-and-incoming-webhooks.mp4",
+      "at": "2026-11-27T11:51:47.754Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "2ce4efeeb5a0f92f94b5c24f220f15d6c9fc318dfb81df63076b62a4cbdecd35": {
+      "kind": "video",
+      "assetId": "971584aa-a3ba-4086-993a-05748d881392",
+      "name": "tour-n8n-and-build-your-first-workflows.mp4",
+      "at": "2026-11-27T11:51:50.117Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "8ab27bce4ba5a58af498d977f4c2cf61b4a6ea74b819b3d4359dcc5b03207045": {
+      "kind": "video",
+      "assetId": "cf61a4a8-a143-40df-978d-23c814dd6614",
+      "name": "run-the-lab-on-an-aws-vm-with-terraform.mp4",
+      "at": "2026-11-27T11:51:51.717Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "c694d668833043d9653d647612ac6a19f3aa70419f1e9e887150257dfc7f5b2b": {
+      "kind": "video",
+      "assetId": "73baf39c-e7df-4afd-b8b2-13c472efd3a0",
+      "name": "n8n-vocabulary-workflows-triggers-nodes-and-executions.mp4",
+      "at": "2026-11-27T11:51:52.921Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "dac37cd4e911e7bbdfe2685c45684c7860469b4cf2894dc3886c870ad7ca582e": {
+      "kind": "video",
+      "assetId": "9a98a36e-ac27-42d5-934f-89e663f825b6",
+      "name": "send-deployment-notifications-from-your-ci-pipeline.mp4",
+      "at": "2026-11-27T11:51:54.581Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "1f039ba260ae64545e02b0bb4e4f8b391fad92edca877be9b895f60cb72187cf": {
+      "kind": "video",
+      "assetId": "54e01307-e08d-4a5c-93ce-7888023d95e2",
+      "name": "send-github-pull-request-updates-to-your-team-chat.mp4",
+      "at": "2026-11-27T11:52:22.649Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "efd563bdf1ed74744b5bc1c229db8b32c4edd9e4f107acea7334f516b347bb3a": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/cc53b627-6390-44e1-97c6-577eaa88fd9d/resources/5e1a371f-ae80-48cf-a1e4-71f0c5425912/send-github-pull-request-updates-to-your-team-chat-slides.pdf",
+      "name": "send-github-pull-request-updates-to-your-team-chat-slides.pdf",
+      "at": "2026-11-27T11:52:24.118Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "0db850a849733a859e5e9ffe7a6beeb25c5b1ddbf18c56f1118587e608079f09": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/cc53b627-6390-44e1-97c6-577eaa88fd9d/resources/e82be373-e7a4-4115-8166-dcd0f7c35dbb/send-github-pull-request-updates-to-your-team-chat-lab.zip",
+      "name": "send-github-pull-request-updates-to-your-team-chat-lab.zip",
+      "at": "2026-11-27T11:52:24.387Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "1abc2f0832a2f5343d838c77a89edeaf94e534fcef41429e8d6efc289f0a1bf4": {
+      "kind": "video",
+      "assetId": "127c11d5-4918-4d49-8c3b-b2486a1ff269",
+      "name": "handle-failures-with-retries-fallbacks-and-debugging.mp4",
+      "at": "2026-11-27T11:52:28.000Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "53bdfac073da8a26232b52aba504b06105712af3ad7a16ebe39d944f8fe2f14e": {
+      "kind": "video",
+      "assetId": "2f20af7d-c443-4997-900b-d78b4f8ee844",
+      "name": "automation-and-chatops-vocabulary.mp4",
+      "at": "2026-11-27T11:52:29.635Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "94ec68f588ad09f9688c6a169ed9787c1faf93c3bff4816c8a82b7becb0a7f9e": {
+      "kind": "video",
+      "assetId": "101ce3de-dff7-4f83-9954-d9a4b10dff13",
+      "name": "alert-on-kubernetes-problems-without-the-noise.mp4",
+      "at": "2026-11-27T11:52:32.651Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "65eb2604044663f1d6d3c91ae5ce5d969b9a345a87e05ecdfa9910e7a15fb6fb": {
+      "kind": "video",
+      "assetId": "e66f3aea-5fcb-4608-aef0-b056bbd6913b",
+      "name": "manage-incidents-severity-escalation-and-resolution.mp4",
+      "at": "2026-11-27T11:52:35.618Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "8ffefb8a2a81829f64ac7ef2b8e78e69042c48c59657712b590b146fe9085e65": {
+      "kind": "video",
+      "assetId": "fd4c6eb4-bbad-4b01-9d4d-c9ba1d810f9c",
+      "name": "schedule-a-morning-report-for-your-team.mp4",
+      "at": "2026-11-27T11:52:38.197Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "5ceaccdd500cb160f0b1ec7953144d98a5b6ba802fad0de34b0ec6c33cad60d7": {
+      "kind": "video",
+      "assetId": "7074a505-df58-4ac6-ba5c-a6411725dfeb",
+      "name": "advanced-patterns-signed-webhooks-idempotency-and-more.mp4",
+      "at": "2026-11-27T11:52:40.987Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "874822d67639beff7de0829ce0b00459616df82d367b4ead4603c6aa93bcf3ad": {
+      "kind": "video",
+      "assetId": "6887817a-e558-446f-9cda-9e8476c5ee10",
+      "name": "run-n8n-in-production-postgres-workers-backups-upgrades.mp4",
+      "at": "2026-11-27T11:52:43.613Z",
+      "courses": [
+        "n8n-automation"
+      ],
+      "status": "ready"
+    },
+    "0141c8c90c7cca27a5d5b49b369531c5f68ffe75478c1648c00bc2662c5bd0b5": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/c35f066b-545d-4cec-9eff-34fcfb61cb52/deployment-notifications-from-ci-with-n8n-slides.pdf",
+      "name": "deployment-notifications-from-ci-with-n8n-slides.pdf",
+      "at": "2026-11-27T11:53:11.886Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "a9c3c7a1fcaf2f7b55a45fe1b0e6b1bda1cb1cbb0ebe4c79d36f21776c74cc1d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/cb806b45-1295-4778-b4ed-cb82170a6861/deployment-notifications-from-ci-with-n8n-lab.zip",
+      "name": "deployment-notifications-from-ci-with-n8n-lab.zip",
+      "at": "2026-11-27T11:53:12.203Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "2569f238798f0f3ff705ddd714b051afb19be43e678fd71bec30f5267ce48f44": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/f8de9eba-502c-4b2d-a56d-4e3ef6099b29/incident-management-with-n8n-severity-escalation-resolution-slides.pdf",
+      "name": "incident-management-with-n8n-severity-escalation-resolution-slides.pdf",
+      "at": "2026-11-27T11:53:17.529Z",
+      "courses": [
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "dfcb00ca81de79264f924d7570f00f10d706c9167f1ed2577c6b66fbbecd45e7": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/fc07adcf-940d-404b-918a-c2da5c6fff10/incident-management-with-n8n-severity-escalation-resolution-lab.zip",
+      "name": "incident-management-with-n8n-severity-escalation-resolution-lab.zip",
+      "at": "2026-11-27T11:53:17.932Z",
+      "courses": [
+        "ai-for-devops-aws",
         "ai-for-devops-azure"
       ]
     }

@@ -8,7 +8,11 @@
     "AI agents for DevOps": "19ba74e1-f995-48f1-a686-da89f9f4b21c",
     "AI-powered DevOps automation": "3a8e34dc-e127-4dd9-8d88-2c6b7dd532f1",
     "Model Context Protocol (MCP)": "fe8bf5c6-031b-4229-915f-b73be4ba1759",
-    "Security, reliability and cost": "5c879de1-9056-45b2-a743-3f5f8c2fad55"
+    "Security, reliability and cost": "5c879de1-9056-45b2-a743-3f5f8c2fad55",
+    "The vocabulary of AI models": "94d0440f-11c5-4915-83f5-7c45bf088981",
+    "Retrieval-Augmented Generation (RAG)": "5b599d2a-719f-43e3-ac67-68577b5eb523",
+    "AI in CI/CD and operations": "62f7f420-f047-4d8f-9cb0-5abf3396f8c5",
+    "Automate it with n8n": "046e9940-014f-4370-9bb0-236713c8d675"
   },
   "lessons": {
     "02-ai-foundations/01-tm1-big-words": "093dcc44-7c73-42d1-b035-5a6a916ed445",
@@ -40,7 +44,18 @@
     "02-ai-foundations/12-tm12-operating-securing": "fde10f63-dc29-4947-b591-c8a076c870d3",
     "08-ai-production/19-r1-llmops-day-to-day": "81d67dae-591d-49c1-9779-741a4fa4ddd3",
     "08-ai-production/20-r6-who-builds-who-runs": "9c82f17f-daea-4b8b-bdac-399499c7de5c",
-    "08-ai-production/21-r8-managed-or-self-hosted": "94cfd932-4fff-456f-87ae-67e7dc293e77"
+    "08-ai-production/21-r8-managed-or-self-hosted": "94cfd932-4fff-456f-87ae-67e7dc293e77",
+    "01-before-ai/01-computers-before-ai": "5dc5c4bb-7133-47e8-a15c-0ce516b51088",
+    "01-before-ai/03-short-history-of-ai": "468b4fc0-1228-434f-a616-e9318735ea6f",
+    "01-before-ai/04-what-is-machine-learning": "2bf56366-d8ec-4f9f-8f38-47e2a18ee826",
+    "02-ai-foundations/02-tm2-practice-architecture-application": "085dd123-c960-45a3-a9bc-5c8c40176497",
+    "02-ai-foundations/03-tm3-model-words": "d199046b-a6ea-4fb0-90a1-b20b9b2e87ec",
+    "02-ai-foundations/11-tm11-running-models": "8ea2cf38-9aab-4650-a48f-b45e3806c035",
+    "01-before-ai/02-devops-before-ai": "79dac04c-215b-49fd-9dcd-f5da041b4875",
+    "04-by-hand-vs-ai/01-devops-with-ai": "bc8c0fca-60ae-43b8-ab56-149d21ab2728",
+    "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "81a8026c-b7c4-4e8e-ae40-e09d0e67c11c",
+    "18-automation-n8n/09-n7-n8n-github-pr-live": "be6c8a66-3210-4679-82eb-9d4ee977508e",
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "6a51b3df-8856-4568-ab6d-08103e4bbbfd"
   },
   "quizzes": {
     "17-cloud-ai/02-azure-ai-services-map": "44ae1791-f08b-4727-a144-502da8b284ec",
@@ -53,7 +68,10 @@
     "18-automation-n8n/17-n17-n8n-ai-assisted-live": "c568d284-cc29-4b5d-bd51-3679de73180e",
     "20-mcp/01-m1-what-is-mcp": "22a6175f-530e-46aa-ade5-71ba7044fe32",
     "20-mcp/02-m2-inside-mcp": "04374321-0325-47f0-acca-c27da8b89e6d",
-    "20-mcp/03-m3-first-mcp-server-live": "9f1b25c2-916a-4295-a58d-db8f935b900a"
+    "20-mcp/03-m3-first-mcp-server-live": "9f1b25c2-916a-4295-a58d-db8f935b900a",
+    "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "299e45e1-1ea5-45cf-8623-904361482fa2",
+    "18-automation-n8n/09-n7-n8n-github-pr-live": "24c06c8b-76fc-473b-b6ef-90459962420c",
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "4cd97dec-c3c8-41ab-9c0c-742027d5902a"
   },
   "files": {
     "bcf79e95b624063084e39f151e51558bcdbd8affd5d4c72ab5fc69a1430a0adc": {
@@ -135,5 +153,6 @@
       "at": "2026-11-27T06:37:29.154Z"
     }
   },
-  "courseId": "6324aab5-2d84-4d12-b32d-74ba1bd85d0f"
+  "courseId": "6324aab5-2d84-4d12-b32d-74ba1bd85d0f",
+  "articles": {}
 }

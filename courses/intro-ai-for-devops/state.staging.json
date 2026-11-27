@@ -3,38 +3,25 @@
     "What AI is, and what it changes for DevOps": "ac5fb0e3-e323-4dc5-94d1-bfc2798760d0",
     "The essential vocabulary": "51228f69-5669-4102-bff5-7853dc2a3d4e",
     "AI agents and MCP": "7842b8db-0d12-42da-b540-b0e540b0b3a0",
-    "AI in cloud computing and DevOps": "892fb227-2887-4472-999b-c0c1bdf82c89"
+    "Your next step": "98d7c30c-fe18-495b-97a5-1053ea6d27b3"
   },
   "lessons": {
     "01-before-ai/01-computers-before-ai": "2b03f39b-c601-4152-b004-490ff433a270",
-    "01-before-ai/03-short-history-of-ai": "d6b230a5-3dff-4380-b576-551f2b77fe58",
     "01-before-ai/04-what-is-machine-learning": "fdae5c7b-47e1-45bd-a030-6f2e097ec9e5",
     "02-ai-foundations/01-tm1-big-words": "94e30800-b982-4261-9f70-a065a96fee1b",
     "01-before-ai/02-devops-before-ai": "96fc7610-8b63-4592-9a48-fdc00e34ec3a",
     "04-by-hand-vs-ai/01-devops-with-ai": "4cb010e0-e63e-44c9-afd9-93b65f31bff7",
-    "02-ai-foundations/02-tm2-practice-architecture-application": "399c0395-879f-4ffe-890c-8218578e5062",
     "02-ai-foundations/03-tm3-model-words": "ae78b6f0-e099-4137-bd2b-759a63df8c6f",
     "02-ai-foundations/04-tm4-talking-to-a-model": "be73f57a-8fb5-4119-b900-fe85ef42e44b",
     "02-ai-foundations/05-tm5-answer-quality": "fb7695ee-c43a-4432-bd5b-94e45935fe5a",
-    "02-ai-foundations/06-tm6-rag-words-preparing": "8963bded-0497-4e35-af85-6c67471b756e",
     "02-ai-foundations/07-tm7-embeddings-vectors": "f83a966c-effc-4110-8b2a-0d0adbacf7d3",
-    "02-ai-foundations/08-tm8-rag-search-answer": "2d44da29-c447-472f-b12a-c997ef8e3acd",
-    "02-ai-foundations/09-tm9-where-data-lives": "2f269364-5de4-45a8-9953-8f0c3aea07ca",
-    "02-ai-foundations/11-tm11-running-models": "3558ee99-b235-4a13-bf57-b9ab4b9b93ce",
     "02-ai-foundations/10-tm10-agent-words": "e5fc0d53-919e-41e6-83d9-6ce8e139c012",
     "05-agents-rag-ideas/19-agent-vs-chatbot": "8500715c-2ff3-4e14-ae69-4efdedcf33d5",
-    "05-agents-rag-ideas/20-s1-skill-based-agents": "aaba52c1-67f4-4c8c-ba36-752fb5d0a6b8",
-    "20-mcp/01-m1-what-is-mcp": "96cea1a5-33a0-4aa5-8de5-18ad7ddf5944",
-    "17-cloud-ai/03-choosing-ai-service": "272c7623-ab07-4754-9f2e-293e49e55502",
-    "08-ai-production/21-r8-managed-or-self-hosted": "313800c7-2688-4772-ab56-1f44a76594e2",
-    "19-ai-cicd/01-ci1-ai-in-cicd": "546ae22a-4dcc-4bbd-adea-27c2d94913c3",
-    "02-ai-foundations/12-tm12-operating-securing": "bbadb1fc-01a8-4353-8fdc-db5dd3937269"
+    "20-mcp/01-m1-what-is-mcp": "96cea1a5-33a0-4aa5-8de5-18ad7ddf5944"
   },
   "quizzes": {
     "05-agents-rag-ideas/19-agent-vs-chatbot": "b59fe110-15e7-443b-a2e7-36663c6f90ea",
-    "20-mcp/01-m1-what-is-mcp": "1c3aefdd-916b-4633-95b6-619789935d21",
-    "17-cloud-ai/03-choosing-ai-service": "c724d01a-0c4c-498b-9859-8089025c8ef9",
-    "19-ai-cicd/01-ci1-ai-in-cicd": "ed72700d-ff74-4fca-bf29-e1e43a7c040e"
+    "20-mcp/01-m1-what-is-mcp": "1c3aefdd-916b-4633-95b6-619789935d21"
   },
   "files": {
     "3ab7c2c9865971322f3d71ab0cda5c4634d21af29192057e0816026975e9ee5d": {
@@ -332,5 +319,8 @@
       "at": "2026-11-27T06:27:07.270Z"
     }
   },
-  "courseId": "5b3a97b2-344c-4bc8-bc50-9afad66f4383"
+  "courseId": "5b3a97b2-344c-4bc8-bc50-9afad66f4383",
+  "articles": {
+    "next-steps": "ae1a8379-96d3-47a4-b0bc-ef44fa837283"
+  }
 }
