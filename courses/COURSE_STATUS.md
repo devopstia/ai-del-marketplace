@@ -21,6 +21,6 @@ Gaps and new content: CR-001 … CR-013 in `CONTENT_REQUESTS.md`. New folders in
 `00-n0-n8n-course-intro`, `09-n7-n8n-github-pr-live` and `11-n11-n8n-aws-automation-live` (the last two still without
 labs): to be reviewed, added to the plan in their place, synced to staging, then production.
 
-Production update waiting (2026-11-27): price **$29.99**, the rewritten course page, "Quiz: …" names and lesson 01's lab.
-The first try stopped because the owner's browser sign-in replaced the upload session; it needs a new sign-in, then
-goes to the Review queue as a draft revision.
+Production update **submitted 2026-11-27 05:59 UTC** (draft revision f2088294, in the Review queue): price $4.99 → **$29.99**,
+rewritten course page, module renames, lesson renames and summaries, re-recorded 01–03 videos with 12 new quiz
+questions (15 quizzes, 60 questions), lesson 01's lab, previews 01 + 17. Goes live when the owner approves.

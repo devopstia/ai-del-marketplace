@@ -34,7 +34,10 @@
     "13-n13-n8n-scheduled-reports-live": "f1d14b8e-6a8f-47e4-ab66-6e195cef23a2",
     "15-n15-n8n-advanced-design-live": "499e2660-d8b0-4b46-b41d-4dd8919990df",
     "16-n16-n8n-production-live": "a8f875cc-646d-49ae-9247-5f1a5fb6cce4",
-    "17-n17-n8n-ai-assisted-live": "58bda9e1-51af-4fba-b4c4-f956a2a55807"
+    "17-n17-n8n-ai-assisted-live": "58bda9e1-51af-4fba-b4c4-f956a2a55807",
+    "01-n1-n8n-mattermost-explained": "10815ad2-c57d-40ef-a8f6-0c289a7fc4a8",
+    "02-n2-deploy-n8n-mattermost-live": "ae605ee2-b02f-47dc-939e-3fcbfa3421f0",
+    "03-n3-mattermost-webhook-live": "66946da7-c5d0-4080-9767-783d73ec183c"
   },
   "files": {
     "02bb67db5e467a0546b68cb9d7a0445074c5a0b0b62fb8ecae27b729476474ce": {
@@ -288,6 +291,24 @@
       "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/791c5fec-b8fb-4851-8c71-80acfffa6f98/ai-assisted-workflows-safely-lab.zip",
       "name": "ai-assisted-workflows-safely-lab.zip",
       "at": "2026-11-27T02:53:15.518Z"
+    },
+    "c114ff3f7b157da6407fcbacda9107015a94f2002807e1d0460d101e6528c71b": {
+      "kind": "video",
+      "assetId": "45a5b21a-9955-4435-b160-a7fc3c00d6b5",
+      "name": "how-n8n-and-mattermost-work-together-for-devops.mp4",
+      "at": "2026-11-27T05:56:44.391Z"
+    },
+    "4305f4ee1c2e6c2d829c77e1ccca21e87f139eb047f7ae90827ca06e31dbdfe7": {
+      "kind": "video",
+      "assetId": "6910a03d-92ef-4c5c-ad6b-e7a86e97576c",
+      "name": "deploy-n8n-and-mattermost-with-docker-compose.mp4",
+      "at": "2026-11-27T05:57:29.920Z"
+    },
+    "8b3d2f82262a358a785081f8d53d7de06a89bd0a1be2bd6bd8d510a26fca88e6": {
+      "kind": "video",
+      "assetId": "baac121f-a09d-47bf-b0a1-d0bde97b776c",
+      "name": "set-up-mattermost-channels-and-incoming-webhooks.mp4",
+      "at": "2026-11-27T05:58:28.541Z"
     }
   },
   "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c"
