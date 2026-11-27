@@ -6,7 +6,7 @@ import { ToastProvider } from "@/components/Toast";
 import { themeScript } from "@/components/ThemeToggle";
 import { PwaRegister } from "@/components/pwa/PwaRegister";
 import { SessionGuard } from "@/components/SessionGuard";
-import { SITE_DESCRIPTION, SITE_URL, siteIndexable } from "@/lib/seo";
+import { abs, DEFAULT_IMAGE, SITE_DESCRIPTION, SITE_URL, siteIndexable } from "@/lib/seo";
 import { QuickSearchProvider } from "@/components/search/QuickSearch";
 import { SupportBanner } from "@/components/assist/SupportBanner";
 
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   // Search engines and link previews (docs/SEO.md). Only production is indexed; pages set their own canonical address.
   robots: indexable ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } } : { index: false, follow: false },
-  openGraph: { type: "website", siteName: "DevOps Easy Learning", locale: "en_US", title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION },
-  twitter: { card: "summary_large_image", site: "@devopseasylearn", title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION },
+  openGraph: { type: "website", siteName: "DevOps Easy Learning", locale: "en_US", title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION, images: [{ ...DEFAULT_IMAGE, url: abs(DEFAULT_IMAGE.url) }] },
+  twitter: { card: "summary_large_image", site: "@devopseasylearn", title: "DevOps Easy Learning: AI and DevOps courses", description: SITE_DESCRIPTION, images: [{ url: abs(DEFAULT_IMAGE.url), alt: DEFAULT_IMAGE.alt }] },
   icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
   manifest: "/manifest.webmanifest",
   // Installed on an iPhone or iPad: the home-screen name; the status bar follows the page (light by default).

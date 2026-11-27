@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { toVtt } from './client.js';
-import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, fillCourseLinks, forEnv, lessonFolders, manifestNotes, normalizePlan, parseQuiz, pruneTargets, readManifest, resolveRelated, slug, validatePlan, type CoursePlan } from './publish.js';
+import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, fillCourseLinks, forEnv, lessonFolders, manifestNotes, normalizePlan, parseQuiz, pruneTargets, readManifest, resolveRelated, shareChange, slug, validatePlan, type CoursePlan } from './publish.js';
 
 test('upload rules: one video, PDF not PowerPoint, lab ZIP, captions; secrets and thumbnails skipped', async () => {
   const d = await mkdtemp(join(tmpdir(), 'lesson-'));
@@ -274,4 +274,14 @@ test('related courses: plan slugs resolve through state ids, in order; unknown o
   const r = resolveRelated([{ course: 'ai-for-devops-aws', reason: 'Go deeper on AWS' }, { course: 'not-uploaded' }, { course: 'n8n-automation' }], { 'ai-for-devops-aws': 'id-aws', 'n8n-automation': 'id-n8n' });
   assert.deepEqual(r.items, [{ courseId: 'id-aws', reason: 'Go deeper on AWS' }, { courseId: 'id-n8n' }]);
   assert.deepEqual(r.missing, ['not-uploaded']);
+});
+
+test('sharing banner: only what the plan sets and the course lacks is sent; bad values are plan errors', () => {
+  assert.equal(shareChange({ template: 'aws' }, { family: null, template: 'aws', headline: null }), null);
+  assert.deepEqual(shareChange({ template: 'aws', headline: 'AI on AWS' }, { family: null, template: null, headline: null }), { template: 'aws', headline: 'AI on AWS' });
+  assert.deepEqual(shareChange({ headline: '  ' }, { family: null, template: null, headline: 'Old' }), { headline: null });
+  const base = { environment: 'staging', provider: 'x', instructorName: 'DEL', sourceDir: '/x', course: { title: 'T' }, sections: [] } as unknown as CoursePlan;
+  assert.deepEqual(validatePlan({ ...base, course: { title: 'T', share: { template: 'aws', family: 'pro' } } } as CoursePlan).errors, []);
+  const bad = validatePlan({ ...base, course: { title: 'T', share: { template: 'k8s', family: 'loud' as 'pro', headline: 'x'.repeat(91) } } } as CoursePlan).errors;
+  assert.equal(bad.length, 3);
 });

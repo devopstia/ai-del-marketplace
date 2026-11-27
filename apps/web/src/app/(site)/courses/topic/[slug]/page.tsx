@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCategories } from "@/lib/catalog";
 import { pageMeta, topicPath } from "@/lib/seo";
+import { siteShare } from "@/lib/share-server";
 import { Catalogue, topicIntro, type SP } from "../../_catalogue";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const { topic } = await topicOf(slug);
   if (!topic) return { title: "Topic not found", robots: { index: false } };
+  const { image } = await siteShare();
   return pageMeta({
+    image,
     title: `${topic.name} courses`,
     description: topicIntro(topic, topic.courseCount ?? 0),
     path: topicPath(topic.slug),

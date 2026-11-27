@@ -91,7 +91,10 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
 4. **Write the plan** to the presentation standard (`docs/COURSE_STANDARD.md` §3a: what each part of the course page is
    for, the style rules and banned phrases; the n8n course plan is the reference example) `courses/<course-slug>/plan.json` (format below): course title (prefer the name the labs and slides
    use), subtitle, description, objectives (≤ 200 characters each), requirements (from the lab READMEs: tools, keys,
-   hardware), level, category slug (`GET /api/categories`), cover `"suggested"`, sections in a learning order, and per
+   hardware), level, category slug (`GET /api/categories`), cover `"suggested"`, the sharing banner `share` (topic design
+   `template` that matches the course: ai, aws, azure, terraform, kubernetes, devops, automation, software-dev,
+   cybersecurity or general; an optional shorter `headline` when the title is long; the style stays the platform default
+   unless the owner asks; docs/SOCIAL_SHARING.md, AGENTS rule 35), sections in a learning order, and per
    lesson a professional title and a ≤ 300-character summary of what the video really does. The description is markdown
    with the sections **What you'll build** (the real projects), **Who this course is for**, **Tools and technologies**,
    **How the course is organised** and **Prerequisites**; every claim must be in a video or lab. **Free previews:
@@ -111,7 +114,8 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
 8. **QA in the browser** (staging, `scripts/qa-shots.mjs`, sign in as the account; staging has no codes):
    instructor studio curriculum; the course page; as a student (enrol through Super Admin › Manual enrollments or the
    test card) play the first seconds of every video, Next/Previous, full screen, progress, open one PDF and one ZIP
-   per section, CC shows captions only when pressed; 390/1440/1920, light and dark; the cover; no PowerPoint visible;
+   per section, CC shows captions only when pressed; 390/1440/1920, light and dark; the cover; the sharing banner preview
+   (Studio › Media › Sharing banner: right topic design, title readable, "Free course" only when free); no PowerPoint visible;
    no duplicate lessons or files. Record what you actually checked.
 9. **Final review from three perspectives** (required before any submit; write the result in the report):
    - **Instructor:** is every lesson in the right order, does each one build on the previous, are titles, summaries,
@@ -217,7 +221,8 @@ Follow this exactly; it is what worked.
                     "production": { "apiUrl": "https://ai-devopseasylearning.com/api", "priceCents": 499 } },
   "intro": { "folderPattern": "^00-", "section": 0, "promo": true },
   "course": { "title": "", "subtitle": "", "description": "markdown", "level": "beginner|intermediate|advanced", "language": "en",
-              "categorySlug": "", "cover": "suggested", "objectives": [], "requirements": [], "taughtBy": "", "quizzes": "from-captions" },
+              "categorySlug": "", "cover": "suggested", "share": { "template": "aws", "headline": "" },
+              "objectives": [], "requirements": [], "taughtBy": "", "quizzes": "from-captions" },
   "sections": [ { "title": "", "lessons": [ { "folder": "01-…", "title": "", "summary": "", "preview": false, "role": "lesson" } ] } ] }
 ```
 Manifest (from the generation agent, hints only): `courses/manifest.schema.json`; example in `courses/CONTENT_REQUESTS.md` (the request register; `GENERATION_FEEDBACK.md` is history).

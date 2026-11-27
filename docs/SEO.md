@@ -2,7 +2,7 @@
 
 Goal: students find the marketplace and its courses on Google (and Bing, DuckDuckGo, Yahoo), and shared links show a
 proper preview. Code: `apps/web/src/lib/seo.ts` (site address, indexing switch, schema.org builders), `app/robots.ts`,
-`app/sitemap.ts`, `app/opengraph-image.tsx`, `components/JsonLd.tsx`. Test: `apps/web/e2e/seo.spec.ts`.
+`app/sitemap.ts`, `app/og/site.jpg/route.ts` (the site sharing banner; docs/SOCIAL_SHARING.md), `components/JsonLd.tsx`. Test: `apps/web/e2e/seo.spec.ts`.
 
 ## Only production is indexed
 - `SITE_URL` = `WEB_URL` (runtime) or the origin of `NEXT_PUBLIC_API_URL` (build time), so pages rendered during the build
@@ -18,7 +18,7 @@ proper preview. Code: `apps/web/src/lib/seo.ts` (site address, indexing switch, 
 | `robots.txt`: public pages allowed; studios, learning player, cart, checkout, sign-in pages, support tickets and `/api/` (except course images) disallowed | `app/robots.ts` |
 | `sitemap.xml`: home, catalogue, topic pages (topics with courses), every published course (with its cover), instructors with courses, help videos, deals, teach, contact, install, policies. Built per request from the API (fetches cached 1 h); static pages only when the API is down | `app/sitemap.ts` |
 | Canonical address on every public page; `/courses?category=x` (one topic, no other filter) points to `/courses/topic/x`, other filters and pages to `/courses`; search results (`?q=`) are `noindex, follow` | `pageMeta()` in `lib/seo.ts`, `courses/page.tsx` |
-| Link previews (Open Graph + X card): course pages use their generated cover (1280×720), instructor pages their first course's cover, other pages the default image `/opengraph-image` (1200×630) | `pageMeta()`, `app/opengraph-image.tsx` |
+| Link previews (Open Graph + X card), server-rendered: course pages use their sharing banner (1200×630, published courses only), the homepage, catalogue and topic pages the site banner from Super Admin › Social Media & Sharing, instructor and help pages their first cover, other pages `/og/site.jpg`; og:image with secure_url, width, height, type and alt (docs/SOCIAL_SHARING.md) | `pageMeta()`, `lib/share-server.ts`, `app/og/site.jpg/route.ts` |
 | Topic pages `/courses/topic/<slug>`: the catalogue for one topic, own title, description (from name and course count; categories have no description), breadcrumbs. Linked from course breadcrumbs, the homepage topic strip and the footer. Topics without courses are `noindex` | `courses/topic/[slug]/page.tsx`, `courses/_catalogue.tsx` |
 | Course: schema.org `Course` (offers with price and currency, `CourseInstance` online with workload, instructor, image, language, level, teaches, prerequisites, `aggregateRating` only when real ratings exist), `BreadcrumbList`, `FAQPage` (the same answers as "Questions before you buy" on the page) | `courseLd()`, `courses/[slug]/page.tsx`, `components/CourseFaq.tsx` |
 | Homepage: `Organization` (logo, support email, `sameAs` = the social accounts in `components/SocialLinks.tsx` + www.devopseasylearning.com) and `WebSite` with a `SearchAction` to `/courses?q=` | `organizationLd()`, `websiteLd()` |

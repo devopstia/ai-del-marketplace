@@ -61,6 +61,16 @@ export function registerTools(server: McpServer, del: DelClient) {
   }, ({ courseId, lessonId, questions }) => run(() => del.call('PUT', `/courses/${courseId}/lectures/${lessonId}/quiz`, { questions })));
   t('list_cover_templates', { description: 'The platform’s course cover templates (custom images are not allowed); `suggested` fits the category.', inputSchema: { courseId: uuid } }, ({ courseId }) => run(() => del.call('GET', `/courses/${courseId}/covers`)));
   t('set_cover', { description: 'Pick the course cover template.', inputSchema: { courseId: uuid, templateId: uuid } }, ({ courseId, templateId }) => run(() => del.call('PUT', `/courses/${courseId}/cover`, { templateId })));
+  t('get_share_banner', { description: 'The course’s sharing banner (the link-preview image): current style, topic design, headline, the options and the image in use (published courses only).', inputSchema: { courseId: uuid } }, ({ courseId }) => run(() => del.call('GET', `/courses/${courseId}/share`)));
+  t('set_share_banner', {
+    description: 'Choose the sharing banner: topic design (template), style (family) and an optional shorter headline. null = the platform default. The banner is drawn by the platform from the course title; images cannot be uploaded here.',
+    inputSchema: {
+      courseId: uuid,
+      template: z.enum(['ai', 'aws', 'azure', 'terraform', 'kubernetes', 'devops', 'automation', 'software-dev', 'cybersecurity', 'general']).nullable().optional(),
+      family: z.enum(['pro', 'marketplace', 'enterprise']).nullable().optional(),
+      headline: z.string().max(90).nullable().optional(),
+    },
+  }, ({ courseId, ...b }) => run(() => del.call('PUT', `/courses/${courseId}/share`, b)));
 
   t('list_local_files', { description: 'Files in the folders the instructor shared for this task (name, size, type). Only these can be uploaded.', inputSchema: { dir: z.string().optional() } }, ({ dir }) => run(() => del.listFiles(dir)));
   t('upload_file', {

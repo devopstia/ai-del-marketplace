@@ -56,6 +56,7 @@ at once: what the course is, why it is worth it, what they will be able to do, w
 | About this course (description) | hook (2–3 lines: the problem, the promise) → **What you'll build** (5–7 bullets, bold outcome first) → **Why this course** (3–4 true differentiators) → **Who it's for**. No prerequisites or objectives again, no full curriculum again |
 | Free previews | the intro + the most convincing hands-on demo (chosen from the captions: clear result, good pace) |
 | Cover | a platform template whose motif matches the topic (rule 17) |
+| Sharing banner | the topic design that matches the course (plan `course.share.template`, or the category default), checked in the preview before publication; a `share.headline` only when the title is too long to read in a link preview (AGENTS rule 35, docs/SOCIAL_SHARING.md) |
 
 **Style:** short paragraphs (≤ 3 lines), plain words, active voice, the learner as "you", numbers and concrete
 examples over adjectives. Never: "unlock", "supercharge", "dive into", "seamless", "leverage", "game-changer",

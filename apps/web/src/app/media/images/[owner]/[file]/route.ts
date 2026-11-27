@@ -14,7 +14,8 @@ type Sharp = (input: Uint8Array) => { resize: (o: { width: number; withoutEnlarg
 let sharpLoad: Promise<Sharp | null> | null = null;
 const loadSharp = () => (sharpLoad ??= import("sharp").then((m) => (m.default ?? m) as unknown as Sharp).catch(() => null));
 
-const headers = (type: string) => ({ "Content-Type": type, "Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff" });
+// Sharing banners (owner "social") have the hash of their content in the name, so a change is a new URL: cache for good.
+const headers = (type: string, owner = "") => ({ "Content-Type": type, "Cache-Control": owner === "social" ? "public, max-age=31536000, immutable" : "public, max-age=86400", "X-Content-Type-Options": "nosniff" });
 
 export async function GET(req: Request, { params }: { params: Promise<{ owner: string; file: string }> }) {
   const { owner, file } = await params;
@@ -23,22 +24,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ owner: s
   const width = WIDTHS.has(w) ? w : 0;
   const key = `${owner}/${file}@${width}`;
   const hit = width ? cache.get(key) : undefined;
-  if (hit) return new Response(hit.body as BodyInit, { headers: headers(hit.type) });
+  if (hit) return new Response(hit.body as BodyInit, { headers: headers(hit.type, owner) });
 
   const r = await fetch(`${SERVER_API_URL}/media/images/${owner}/${file}`, { cache: "no-store" }).catch(() => null);
   if (!r || !r.ok || !r.body) return new Response("Not found", { status: 404 });
   const type = r.headers.get("content-type") ?? "application/octet-stream";
-  if (!width) return new Response(r.body, { headers: headers(type) });
+  if (!width) return new Response(r.body, { headers: headers(type, owner) });
 
   const original = new Uint8Array(await r.arrayBuffer());
   const sharp = await loadSharp();
-  if (!sharp) return new Response(original as BodyInit, { headers: headers(type) });
+  if (!sharp) return new Response(original as BodyInit, { headers: headers(type, owner) });
   try {
     const body = new Uint8Array(await sharp(original).resize({ width, withoutEnlargement: true }).webp({ quality: 78 }).toBuffer());
     if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value!);
     cache.set(key, { body, type: "image/webp" });
-    return new Response(body as BodyInit, { headers: headers("image/webp") });
+    return new Response(body as BodyInit, { headers: headers("image/webp", owner) });
   } catch {
-    return new Response(original as BodyInit, { headers: headers(type) });
+    return new Response(original as BodyInit, { headers: headers(type, owner) });
   }
 }

@@ -75,6 +75,8 @@ export class MediaController {
     if (!obj) throw notFound('Image');
     res.setHeader('Content-Type', obj.contentType);
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    // Sharing banners carry the hash of their content in the name: a change is a new URL, so they can be cached for good.
+    if (owner === 'social') res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     if (obj.size) res.setHeader('Content-Length', String(obj.size));
     obj.body.pipe(res);
   }

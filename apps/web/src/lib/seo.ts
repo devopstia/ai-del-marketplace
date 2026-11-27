@@ -34,22 +34,42 @@ export function siteIndexable(): boolean {
 
 export const abs = (path: string) => (/^https?:\/\//.test(path) ? path : `${SITE_URL}${path.startsWith("/") ? "" : "/"}${path}`);
 
-const DEFAULT_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: "DevOps Easy Learning: AI and DevOps courses" };
+/** A link-preview image (Open Graph + X card). `url` may be a site path; it is made absolute. */
+export interface ShareImage { url: string; width: number; height: number; type: string; alt: string }
 
 /**
- * A public page's title, description, canonical address and link preview (Open Graph + X card). `image` is an
- * absolute URL (a course cover, 1280×720); without one the site's default preview image is used.
+ * The site's sharing banner (docs/SOCIAL_SHARING.md) at a fixed address, for pages without their own image. Its bytes
+ * come from the API (Super Admin › Social Media & Sharing), so a new banner needs no redeploy. Pages that can afford one
+ * API call use `siteShare()` (lib/share-server.ts) instead: the versioned file name suits caches that keep a URL forever.
  */
-export function pageMeta(o: { title: string; description: string; path: string; image?: string | null; imageAlt?: string; type?: "website" | "article"; noindex?: boolean }): Metadata {
-  const images = o.image ? [{ url: abs(o.image), width: 1280, height: 720, alt: o.imageAlt ?? o.title }] : [DEFAULT_IMAGE];
+export const DEFAULT_IMAGE: ShareImage = { url: "/og/site.jpg", width: 1200, height: 630, type: "image/jpeg", alt: "DevOps Easy Learning: AI and DevOps courses" };
+
+/**
+ * A public page's title, description, canonical address and link preview (Open Graph + X card), all rendered on the
+ * server so WhatsApp, Facebook, LinkedIn, X and Telegram read them without running JavaScript. `image` is a sharing
+ * banner (1200×630) or, as a string, an older 1280×720 cover; without one the site's banner is used. Image URLs are
+ * absolute (HTTPS on production) and og:description stays within 160 characters.
+ */
+export function pageMeta(o: { title: string; description: string; path: string; image?: ShareImage | string | null; imageAlt?: string; type?: "website" | "article"; noindex?: boolean }): Metadata {
+  const img: ShareImage = typeof o.image === "string" ? { url: o.image, width: 1280, height: 720, type: "image/png", alt: o.imageAlt ?? o.title } : (o.image ?? DEFAULT_IMAGE);
+  const url = abs(img.url);
+  const description = plainText(o.description, 160);
+  const images = [{ url, ...(url.startsWith("https://") ? { secureUrl: url } : {}), width: img.width, height: img.height, type: img.type, alt: img.alt }];
   return {
     title: o.title,
-    description: o.description,
+    description,
     alternates: { canonical: o.path },
-    openGraph: { type: o.type ?? "website", siteName: SITE_NAME, locale: "en_US", title: o.title, description: o.description, url: o.path, images },
-    twitter: { card: "summary_large_image", site: "@devopseasylearn", title: o.title, description: o.description, images: images.map((i) => i.url) },
+    openGraph: { type: o.type ?? "website", siteName: SITE_NAME, locale: "en_US", title: o.title, description, url: abs(o.path), images },
+    twitter: { card: "summary_large_image", site: "@devopseasylearn", title: o.title, description, images: [{ url, alt: img.alt }] },
     ...(o.noindex ? { robots: { index: false, follow: true } } : {}),
   };
+}
+
+/** A share image from an API payload ({ path, width, height, type, alt }); null when missing or not a banner path. */
+export function shareImageOf(v: unknown): ShareImage | null {
+  const o = v && typeof v === "object" ? (v as Record<string, unknown>) : null;
+  if (!o || typeof o.path !== "string" || !o.path.startsWith("/media/images/social/")) return null;
+  return { url: o.path, width: Number(o.width) || 1200, height: Number(o.height) || 630, type: typeof o.type === "string" ? o.type : "image/jpeg", alt: typeof o.alt === "string" ? o.alt : SITE_NAME };
 }
 
 export const topicPath =(slug: string) => `/courses/topic/${encodeURIComponent(slug)}`;
