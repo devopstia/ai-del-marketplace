@@ -10,7 +10,7 @@ One row per course, kept current by the Course Upload Agent after every sync (ow
 | Course id | `cc53b627-6390-44e1-97c6-577eaa88fd9d` | `bd30f93e-293d-42b4-89b8-121f1826531c` |
 | URL | https://staging.ai-devopseasylearning.com/courses/ (draft revision pending) | https://ai-devopseasylearning.com/courses/ai-powered-devops-automation-with-n8n |
 | Status | published; update (new title, lesson 18, quizzes) waiting as a draft revision | **published** 2026-11-27 (owner approved) |
-| Price | $15 | **$4.99** (owner wanted $1 for the live Stripe test; the API minimum is $4.99 and the owner accepted it) — keep until the owner says testing is done |
+| Price | $15 | **$29.99** (owner 2026-11-27, after the live test at $4.99); plan: **$49.99** once the new AI lessons (CR-001, CR-004–CR-010) are in and there are ~10 good reviews |
 | Content | 4 modules, 15 video lessons (3 h 53 min), 12 quizzes (48 questions), 15 slide PDFs, 12 labs, captions on all | same |
 | Previews | 01 and 06 | same |
 | Last sync | 2026-11-27 02:06 UTC | 2026-11-27 02:53 UTC |
