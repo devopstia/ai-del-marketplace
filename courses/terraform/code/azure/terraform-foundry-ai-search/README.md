@@ -20,7 +20,7 @@ Model names and versions change: check the Foundry model catalogue in your regio
 
 ## Cost (estimate 2026-11-27; check before recording)
 Under $0.50 per run: Search **Free** tier $0 (one per subscription), pay-per-token deployments (cents), Storage (cents).
-`search_sku = "basic"` costs about $75/month: never without the owner's OK, destroy the same day.
+`search_sku = "basic"` costs about $75/month (prorated by the hour): only if a lesson needs it; log it in CLOUD_BUDGET.md and destroy the same day.
 
 ## Clean up (always)
 `terraform destroy`; the AIServices account is soft-deleted: purge it with

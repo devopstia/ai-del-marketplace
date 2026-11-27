@@ -64,7 +64,7 @@ Lessons: `TERRAFORM_AWS_CURRICULUM.md` / `TERRAFORM_AZURE_CURRICULUM.md` (same i
 | 526–534 | Remote state data source | `terraform-remote-state-data-source` (6) | ready | | 8.7 |
 | 535–542 | Commands | `terraform-commands` (6) | ready | | 8.6 |
 | 543–559 | Projects and modules (VPC, EC2, bastion, Jenkins, S3 backend, SG, ECR, Secrets Manager, MySQL, Aurora, Postgres, ACM) | `modules/*` (40 modules, 26 with README), `resources/*`, `base-code/*` | improve | Requirement lists are excellent project briefs; update pins, remove hard-coded passwords; Aurora explained, not deployed (cost) | 11.1–11.7 |
-| 560–573 | EKS project modules | `modules/eks-*`, `aws-auth-config`, `rbac`, add-ons; `base-code/eks-*` | improve | `aws-auth` ConfigMap → EKS access entries; IRSA → Pod Identity option; **EKS needs the owner's OK** | 16.1–16.5 |
+| 560–573 | EKS project modules | `modules/eks-*`, `aws-auth-config`, `rbac`, add-ons; `base-code/eks-*` | improve | `aws-auth` ConfigMap → EKS access entries; IRSA → Pod Identity option; the costliest module (cluster per session, destroyed right after) | 16.1–16.5 |
 | 574–583 | Terragrunt | `terragrunt/live` (dev/staging/prod) | improve | Terragrunt 1.x (`run --all`, `root.hcl`) | 9.4 |
 | 584–599 | Terraform Cloud | `terraform-cloud` (11) | improve | Now **HCP Terraform**; AWS keys stored as variables → dynamic provider credentials | 13.2 |
 | 600–609 | HashiCorp Packer | `packer/001…007` (13) | ready | | 13.4 |

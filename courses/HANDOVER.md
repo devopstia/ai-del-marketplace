@@ -24,8 +24,8 @@ in a chat or a context window.
 - Requests **CR-129 … CR-281** are in the register as `requested (planning)`. **Not sent to GEN**: the production order
   (fundamentals block first, then weekly alternation with the AI masterclasses) waits for the owner's OK; the draft
   message is in the plan §11.
-- **Waiting on the owner:** titles, price (suggested $49.99 launch, $69.99 later), order, EKS/AKS module 16 (cluster
-  cost), the training domain (lesson 11.6). Security note for the owner: the public Terraform repo contains private keys
+- **Waiting on the owner:** titles, price (suggested $49.99 launch, $69.99 later), order, the training domain (lesson
+  11.6). Budget: estimate, log, destroy; no owner pause (owner 2026-11-28); the $100/month alarms remain. Security note for the owner: the public Terraform repo contains private keys
   and hard-coded passwords (`CONTENT_INVENTORY.md` › Repo findings).
 
 ## Earlier (2026-11-28): AI website development

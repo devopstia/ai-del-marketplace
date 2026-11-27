@@ -5,7 +5,7 @@ The owner's deck (`/home/tia/work/terraform-course/Terraform.pptx`, 624 slides) 
 
 **Labels:** [owner original] = a deck section taught as the owner teaches it · [owner original, updated] = the owner's lesson with outdated parts fixed (each fix listed) · [new, proposed] = a gap filled · [new, proposed: AI] = the AI strand · **[shared]** = one cloud-neutral video used by both the AWS and the Azure course (demos use the local, random and terraform_data providers, so a student of either cloud follows without an account).
 **Self-contained:** a student of this course never needs the AWS course. Every lesson that touches a cloud has its own Azure video and lab.
-**Budget (rule in `CONTENT_REQUESTS.md`):** $100/month for AWS and Azure together; ask the owner before any lab over ~$5 per run or any EKS/AKS cluster; every lab ends with `terraform destroy` and a check that nothing is left.
+**Budget (rule in `CONTENT_REQUESTS.md`):** $100/month for AWS and Azure together; the video agent estimates each run, logs it in its CLOUD_BUDGET.md and destroys and verifies right after recording (no owner pause, owner 2026-11-28); the $80/$100 budget alarms in both clouds stay as the safety net.
 **The AI rule, in every lesson that uses AI:** AI drafts; fmt, validate, tests, policy, the plan and a person verify; never auto-apply.
 
 **Size:** 18 modules, 95 videos, about 17 h 27 min. 37 videos are shared with the AWS course.
@@ -913,7 +913,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 - **Code:** GEN builds `courses/terraform/code/azure/project-a-database-with-secrets-done-right/`
 - **Cloud resources:** PostgreSQL Flexible Server B1ms, Key Vault · **Cost per run:** ~$0.05 per run (B1ms under an hour) · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides from the owner's deck (slides 553–558), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
-- **Notes (owner's deck and AWS repo; the Azure lab applies the same fix):** Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters can exceed $5 per run: not deployed without the owner's OK.
+- **Notes (owner's deck and AWS repo; the Azure lab applies the same fix):** Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
 - **Quiz:**
   1. Where should a database live? (A: Private subnets, reachable only from the app; B: A public subnet; C: Anywhere) → **A**
   2. How is the password kept out of state? (A: Ephemeral generation plus a write-only argument; B: sensitive = true; C: Encrypting the laptop) → **A**
@@ -1241,13 +1241,13 @@ Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails 
   3. Where is a guardrail tested first? (A: In the console or playground before the app uses it; B: In production; C: Never) → **A**
   4. Which azurerm resource defines content filters? (A: azurerm_cognitive_account_rai_policy; B: azurerm_ai_guardrail; C: azurerm_policy) → **A**
 
-### 15.4 Agents as code (cost check first)  [new, proposed: AI]
-- **Request:** CR-261 · **Duration:** ~15 min · **Depends on:** 15.3; owner's cost check
+### 15.4 Agents as code  [new, proposed: AI]
+- **Request:** CR-261 · **Duration:** ~15 min · **Depends on:** 15.3
 - **Objectives:** Provision an agent runtime and its identity as code; Limit its tools and permissions; Estimate and cap its cost
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** A Foundry project agent (azapi or azurerm where available) with the AI Search tool from 15.2, a managed identity, invocation from the CLI or SDK.
-- **Code:** GEN builds `courses/terraform/code/azure/agents-as-code-cost-check-first/`
-- **Cloud resources:** Foundry project agent, managed identity · **Cost per run:** Estimate before recording (pay per use); ask the owner if over ~$5 · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- **Code:** GEN builds `courses/terraform/code/azure/agents-as-code/`
+- **Cloud resources:** Foundry project agent, managed identity · **Cost per run:** Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides (new, course standard); lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
 - **Notes (owner's deck and AWS repo; the Azure lab applies the same fix):** Fast-moving services: check resource names and pricing on the recording day.
 - **Quiz:**
@@ -1257,15 +1257,15 @@ Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails 
   4. Which Azure service runs agents here? (A: Foundry Agent Service; B: Logic Apps only; C: AKS only) → **A**
 
 ## Module 16: Kubernetes with Terraform
-The owner's EKS projects and their AKS mirror. Owner's OK needed before recording (cluster cost).
+The owner's EKS projects and their AKS mirror. The costliest module: record each cluster session in one sitting and destroy it right after.
 
 ### 16.1 A managed Kubernetes control plane module  [owner original]
-- **Request:** CR-263 · **Duration:** ~15 min · **Depends on:** 11.1; owner's OK (cluster cost)
+- **Request:** CR-263 · **Duration:** ~15 min · **Depends on:** 11.1
 - **Objectives:** Create a cluster in the module 11 network; Configure logging and endpoint access; Connect kubectl
 - **Slides:** slides 560–561 · **Owner's repo:** `azure-terraform/modules/aks-controle-plane`, `azure-terraform/aks-all-in-one`
 - **Demo:** The owner's aks-controle-plane module: AKS with Entra ID integration, a system node pool, az aks get-credentials.
 - **Code:** GEN builds `courses/terraform/code/azure/a-managed-kubernetes-control-plane-module/`
-- **Cloud resources:** AKS cluster (free tier control plane) · **Cost per run:** $0 control plane (Free tier) + nodes: owner's OK before recording · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- **Cloud resources:** AKS cluster (free tier control plane) · **Cost per run:** $0 control plane (Free tier) + nodes (~$0.50–1 per two-hour session); estimate, log, destroy right after · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides from the owner's deck (slides 560–561), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
 - **Quiz:**
   1. What does the managed service run for you? (A: The control plane; B: Your pods' code; C: Your laptop) → **A**
@@ -1279,7 +1279,7 @@ The owner's EKS projects and their AKS mirror. Owner's OK needed before recordin
 - **Slides:** slides 562–563 · **Owner's repo:** `azure-terraform/modules/aks-linux-node-group`, `azure-terraform/aks-linux-spot-node-group`, `azure-terraform/aks-windows-node-group`
 - **Demo:** The owner's node pool modules: Linux user pool, spot pool with eviction policy, Windows pool explained; blue-green pool swap.
 - **Code:** GEN builds `courses/terraform/code/azure/node-groups-simple-blue-green-and-spot/`
-- **Cloud resources:** AKS node pools (B2s) · **Cost per run:** ~$0.05/hour per B2s node: owner's OK · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- **Cloud resources:** AKS node pools (B2s) · **Cost per run:** ~$0.05/hour per B2s node; destroy right after · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides from the owner's deck (slides 562–563), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
 - **Quiz:**
   1. What does a blue-green node upgrade avoid? (A: Downtime during the node upgrade; B: Cost; C: Logs) → **A**
@@ -1293,7 +1293,7 @@ The owner's EKS projects and their AKS mirror. Owner's OK needed before recordin
 - **Slides:** slides 564–565 · **Owner's repo:** `azure-terraform/new`
 - **Demo:** AKS virtual nodes (ACI) or node auto-provisioning explained and deployed on a test namespace.
 - **Code:** GEN builds `courses/terraform/code/azure/serverless-and-mixed-capacity/`
-- **Cloud resources:** AKS virtual nodes / ACI · **Cost per run:** owner's OK (cluster running) · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- **Cloud resources:** AKS virtual nodes / ACI · **Cost per run:** counted in the cluster session (16.1) · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides from the owner's deck (slides 564–565), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
 - **Quiz:**
   1. What is the benefit of serverless pods? (A: No nodes to patch or size; B: Free compute; C: More control) → **A**
@@ -1307,7 +1307,7 @@ The owner's EKS projects and their AKS mirror. Owner's OK needed before recordin
 - **Slides:** slides 566, 572–573 · **Owner's repo:** `azure-terraform/modules/aks-auth-config`
 - **Demo:** The owner's aks-auth-config: Entra ID groups, Azure RBAC for Kubernetes, a namespace-scoped role.
 - **Code:** GEN builds `courses/terraform/code/azure/cluster-access-identities-and-rbac/`
-- **Cloud resources:** AKS role assignments · **Cost per run:** owner's OK (cluster running) · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- **Cloud resources:** AKS role assignments · **Cost per run:** counted in the cluster session (16.1) · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides from the owner's deck (slides 566, 572–573), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
 - **Notes (owner's deck and AWS repo; the Azure lab applies the same fix):** Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
 - **Quiz:**
@@ -1322,7 +1322,7 @@ The owner's EKS projects and their AKS mirror. Owner's OK needed before recordin
 - **Slides:** slides 567–571 · **Owner's repo:** `azure-terraform/modules/azure-aks-name-space`, `azure-terraform/nginx-ingress`, `azure-terraform/cert-manager`, `azure-terraform/external-dns`
 - **Demo:** The owner's AKS modules: namespaces, NGINX ingress, cert-manager, External DNS with workload identity.
 - **Code:** GEN builds `courses/terraform/code/azure/cluster-add-ons-with-terraform-and-helm/`
-- **Cloud resources:** Add-ons, a load balancer and public IP · **Cost per run:** owner's OK; a full AKS lab is about $0.50–1 for two hours · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- **Cloud resources:** Add-ons, a load balancer and public IP · **Cost per run:** a full AKS lab is about $0.50–1 for two hours; destroy right after · **Cleanup:** `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - **Materials:** PDF slides from the owner's deck (slides 567–571), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
 - **Quiz:**
   1. Why delete Kubernetes load balancers before the cluster? (A: They are cloud resources Terraform may not track; B: They are free; C: It is faster) → **A**

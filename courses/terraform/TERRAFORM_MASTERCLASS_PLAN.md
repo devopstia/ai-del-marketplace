@@ -1,7 +1,6 @@
 # Terraform masterclasses: plan (AWS and Azure)
 
-Phase 1 planning, 2026-11-27/28. **Waiting for the owner:** titles, price, production order, EKS/AKS module, training
-domain (lesson 11.6). Nothing is sent to the video agent until the owner says OK.
+Phase 1 planning, 2026-11-27/28. **Waiting for the owner:** titles, price, production order, training domain (lesson 11.6). Nothing is sent to the video agent until the owner says OK.
 
 Files: `CONTENT_INVENTORY.md` (deck and repo, slide by slide) · `TERRAFORM_AWS_CURRICULUM.md` ·
 `TERRAFORM_AZURE_CURRICULUM.md` (same ids, same detail) · `code/` (ready lab code) · requests **CR-129 … CR-281** in
@@ -87,7 +86,7 @@ videos come first, then its AWS and Azure lessons **back to back**, so both cour
    - T9: module 15 (AI infrastructure).
    - T10: module 17 (capstone), then 0.1 (the intros are recorded last because they show the finished capstone;
      their position stays first).
-   - T11: module 16 (EKS/AKS) **only after the owner's OK**.
+   - T11: module 16 (EKS/AKS), the costliest: one cluster session per sitting, destroyed right after.
 3. Each week ends with QA of what was delivered; each course can open for sale after T7 (modules 0–13, ~11 h) as
    "early access" with the remaining modules marked "coming", or wait for the full course (owner's choice).
 
@@ -95,14 +94,18 @@ Rough length: ~11 Terraform weeks + 10 AI weeks ≈ 5 months at one Terraform mo
 records more per week.
 
 ## 6. Budget (rule: `CONTENT_REQUESTS.md` › Training cloud budget, $100/month AWS + Azure)
+**Estimate, log, destroy; no owner pause** (owner to the video agent, 2026-11-28): labs over ~$5 per run, EKS/AKS
+clusters and new accounts don't wait for the owner's OK. The video agent estimates each run, logs it in its
+`CLOUD_BUDGET.md`, and destroys and verifies right after recording; the $80/$100 monthly alarms in both clouds remain
+the safety net.
 - 37 shared videos: $0. Most cloud lessons: $0–$0.05 per run (free resources, minutes of t3.micro/B1s).
-- Higher, still under $5: RDS/PostgreSQL projects (~$0.05), Jenkins (~$0.15), capstone sessions (~$0.50 each),
-  RAG stacks (< $0.50), NAT gateways only for the demo minute.
-- **Needs the owner's OK:** module 16 (EKS ~$1–2 and AKS ~$0.50–1 per two-hour session), 15.4 agents (estimate on the
-  day), anything over ~$5 per run, Aurora (explained, not deployed), Azure AI Search Basic (~$75/month: the labs use
-  the Free tier).
-- Estimate for recording both courses: about **$15–25 on AWS and $10–20 on Azure** spread over the months, plus
-  module 16 if approved. Every lab: `terraform destroy` and a tag search proving nothing is left.
+- Higher, still small: RDS/PostgreSQL projects (~$0.05), Jenkins (~$0.15), capstone sessions (~$0.50 each),
+  RAG stacks (< $0.50), NAT gateways only for the demo minute, agents (15.4, estimated on the day).
+- Costliest: module 16 (EKS ~$1–2 and AKS ~$0.50–1 per two-hour session): record each cluster session in one sitting,
+  destroy right after. Kept as a design choice, not a budget gate: Aurora explained, not deployed; Azure AI Search
+  Free tier (Basic is ~$75/month).
+- Estimate for recording both courses: about **$15–25 on AWS and $10–20 on Azure** plus ~$5–10 for module 16, spread
+  over the months. Every lab: `terraform destroy` and a tag search proving nothing is left.
 
 ## 7. Quality and completion criteria
 A lesson is done when: video (1080p, captions, everyday example first, then live), PDF slides, lab ZIP (code passes
@@ -132,8 +135,7 @@ Catalogue today: AI masterclasses $99.99, n8n $29.99 (→ $49.99), free intro an
 Last lesson 17.5 is the "continue your learning journey" lesson; module 2.1 points to the free VS Code course.
 
 ## 10. Dependencies and blockers
-- Owner: titles, price, production order, module 16 (cluster cost), the training domain (11.6; same decision as
-  CR-111/112).
+- Owner: titles, price, production order, the training domain (11.6; same decision as CR-111/112).
 - Lab accounts: an AWS training account and an Azure training subscription with budget alerts (rule above).
 - GEN: draft message below, sent only after the owner's OK.
 
@@ -145,5 +147,6 @@ Last lesson 17.5 is the "continue your learning journey" lesson; module 2.1 poin
 > (`/home/tia/work/terraform-course/Terraform.pptx`) and repo (`devopstia/terraform-course-del`) are the
 > **foundation of the owner's teaching: use them, do not replace them**; fix only what the curriculum marks outdated,
 > and never reuse the repo's committed keys or passwords. Budget rule (`CONTENT_REQUESTS.md`): $100/month AWS +
-> Azure, ask before > ~$5 per run or any EKS/AKS, destroy and verify after every lab. Order: <the owner's approved
+> Azure: estimate each run, log it in CLOUD_BUDGET.md, destroy and verify right after recording (no owner pause; the
+> $80/$100 alarms remain). Order: <the owner's approved
 > order>. Shared videos once for both courses; AWS and Azure lessons of a module back to back.

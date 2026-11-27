@@ -4,8 +4,8 @@ FIRST_CR = 129
 ORIGIN = {"owner": "[owner original]", "owner+improved": "[owner original, updated]", "new": "[new, proposed]", "ai": "[new, proposed: AI]"}
 DEPS = {"2.3": "0.2", "3.7": "2.3, 3.5", "8.2": "8.1, 3.7", "8.4": "8.2", "11.1": "10.3", "11.4": "8.8, 11.1", "11.7": "11.2 (13.4 optional)",
         "12.2": "10.3", "13.1": "8.2", "13.2": "13.1", "13.3": "11.7", "14.2": "14.1, CR-077–CR-082 (prompt engineering)", "14.4": "12.2, 8.5",
-        "14.5": "14.1", "14.6": "13.1, 14.3", "14.7": "12.2, 12.3, 14.2", "15.2": "15.1", "15.3": "15.2", "15.4": "15.3; owner's cost check",
-        "16.1": "11.1; owner's OK (cluster cost)", "17.1": "all core modules", "17.2": "10.5, 11.4, 8.2", "17.3": "13.1, 14.6, 12.2, 12.3", "17.4": "17.3"}
+        "14.5": "14.1", "14.6": "13.1, 14.3", "14.7": "12.2, 12.3, 14.2", "15.2": "15.1", "15.3": "15.2", "15.4": "15.3",
+        "16.1": "11.1", "17.1": "all core modules", "17.2": "10.5, 11.4, 8.2", "17.3": "13.1, 14.6, 12.2, 12.3", "17.4": "17.3"}
 NOLAB = {"0.1": "no lab (introduction video)", "0.2": "checklist PDF and the CLI commands for budgets and tag searches (no Terraform)", "17.1": "the capstone requirements and design PDF (no Terraform yet)", "17.5": "no lab (wrap-up; final assessment JSON)"}
 FUNDAMENTALS = ["1.1", "1.2", "1.3", "2.1", "2.2", "3.1", "3.2", "3.3", "3.4", "3.6", "5.1", "5.2", "5.3"]
 
@@ -151,7 +151,7 @@ def curriculum(mods, cloud, stats):
            "",
            "**Labels:** [owner original] = a deck section taught as the owner teaches it · [owner original, updated] = the owner's lesson with outdated parts fixed (each fix listed) · [new, proposed] = a gap filled · [new, proposed: AI] = the AI strand · **[shared]** = one cloud-neutral video used by both the AWS and the Azure course (demos use the local, random and terraform_data providers, so a student of either cloud follows without an account).",
            f"**Self-contained:** a student of this course never needs the {other} course. Every lesson that touches a cloud has its own {cname} video and lab.",
-           "**Budget (rule in `CONTENT_REQUESTS.md`):** $100/month for AWS and Azure together; ask the owner before any lab over ~$5 per run or any EKS/AKS cluster; every lab ends with `terraform destroy` and a check that nothing is left.",
+           "**Budget (rule in `CONTENT_REQUESTS.md`):** $100/month for AWS and Azure together; the video agent estimates each run, logs it in its CLOUD_BUDGET.md and destroys and verifies right after recording (no owner pause, owner 2026-11-28); the $80/$100 budget alarms in both clouds stay as the safety net.",
            "**The AI rule, in every lesson that uses AI:** AI drafts; fmt, validate, tests, policy, the plan and a person verify; never auto-apply.", ""]
     tot = stats["mins_course"]
     out.append(f"**Size:** {len(mods)} modules, {stats['lessons']} videos, about {tot//60} h {tot%60:02d} min. {stats['shared']} videos are shared with the {other} course.")

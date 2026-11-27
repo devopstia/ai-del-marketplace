@@ -142,7 +142,7 @@ RZ: PostgreSQL Flexible Server B1ms, Key Vault
 CA: ~$0.05 per run (db.t4g.micro free tier eligible; under an hour)
 CZ: ~$0.05 per run (B1ms under an hour)
 N: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments.
-Aurora clusters can exceed $5 per run: not deployed without the owner's OK.
+Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
 Q: Where should a database live? / Private subnets, reachable only from the app / A public subnet / Anywhere / =a
 Q: How is the password kept out of state? / Ephemeral generation plus a write-only argument / sensitive = true / Encrypting the laptop / =a
 Q: Why skip final snapshots in labs only? / So destroy finishes and costs stop; production keeps them / It is faster in production / Snapshots are free / =a

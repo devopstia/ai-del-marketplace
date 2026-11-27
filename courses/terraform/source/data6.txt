@@ -39,14 +39,14 @@ Q: Why version guardrails? / Apps pin a reviewed version / It is required / It i
 Q: Where is a guardrail tested first? / In the console or playground before the app uses it / In production / Never / =a
 QA: Which PII type does the lesson block? / AWS access keys / Names / Dates / =a
 QZ: Which azurerm resource defines content filters? / azurerm_cognitive_account_rai_policy / azurerm_ai_guardrail / azurerm_policy / =a
-L 15.4 | Agents as code (cost check first) | ai | cloud | 15 | - | -
+L 15.4 | Agents as code | ai | cloud | 15 | - | -
 O: Provision an agent runtime and its identity as code; Limit its tools and permissions; Estimate and cap its cost
 DA: aws_bedrockagentcore_agent_runtime (container in ECR) with an execution role allowed one tool, an endpoint, invocation from the CLI; cost estimated before recording.
 DZ: A Foundry project agent (azapi or azurerm where available) with the AI Search tool from 15.2, a managed identity, invocation from the CLI or SDK.
 RA: AgentCore runtime and endpoint, ECR repo, IAM role
 RZ: Foundry project agent, managed identity
-CA: Estimate before recording (pay per use); ask the owner if over ~$5
-CZ: Estimate before recording (pay per use); ask the owner if over ~$5
+CA: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md
+CZ: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md
 N: Fast-moving services: check resource names and pricing on the recording day.
 Q: Why give an agent few tools? / Smaller blast radius / Faster answers / It is required / =a
 Q: What must you estimate before this lab? / The run's cost / The state size / Nothing / =a
@@ -54,15 +54,15 @@ Q: Who can change an agent's permissions? / Only the IaC pipeline with review / 
 QA: Which AWS service runs agents here? / Bedrock AgentCore / Lambda only / EC2 only / =a
 QZ: Which Azure service runs agents here? / Foundry Agent Service / Logic Apps only / AKS only / =a
 
-M 16 | Kubernetes with Terraform | The owner's EKS projects and their AKS mirror. Owner's OK needed before recording (cluster cost).
+M 16 | Kubernetes with Terraform | The owner's EKS projects and their AKS mirror. The costliest module: record each cluster session in one sitting and destroy it right after.
 L 16.1 | A managed Kubernetes control plane module | owner | cloud | 15 | slides 560–561 | aws: modules/eks-control-plane, base-code/eks-with-vpc; azure: modules/aks-controle-plane, aks-all-in-one
 O: Create a cluster in the module 11 network; Configure logging and endpoint access; Connect kubectl
 DA: The owner's eks-control-plane module (slide 561) on the 11.1 VPC, current EKS version, endpoint access, control plane logs; aws eks update-kubeconfig.
 DZ: The owner's aks-controle-plane module: AKS with Entra ID integration, a system node pool, az aks get-credentials.
 RA: EKS cluster
 RZ: AKS cluster (free tier control plane)
-CA: ~$0.10/hour control plane + nodes: owner's OK before recording
-CZ: $0 control plane (Free tier) + nodes: owner's OK before recording
+CA: ~$0.10/hour control plane + nodes (~$1–2 per two-hour session); estimate, log, destroy right after
+CZ: $0 control plane (Free tier) + nodes (~$0.50–1 per two-hour session); estimate, log, destroy right after
 Q: What does the managed service run for you? / The control plane / Your pods' code / Your laptop / =a
 Q: Why restrict API endpoint access? / The cluster API is a high-value target / It is faster / It is free / =a
 Q: What does kubectl need to reach the cluster? / A kubeconfig with credentials / The Terraform state / An image id / =a
@@ -74,8 +74,8 @@ DA: The owner's node group modules: simple group, blue-green switch with var.gre
 DZ: The owner's node pool modules: Linux user pool, spot pool with eviction policy, Windows pool explained; blue-green pool swap.
 RA: EKS managed node groups (t3.medium)
 RZ: AKS node pools (B2s)
-CA: ~$0.10/hour per small node: owner's OK
-CZ: ~$0.05/hour per B2s node: owner's OK
+CA: ~$0.10/hour per small node; destroy right after
+CZ: ~$0.05/hour per B2s node; destroy right after
 Q: What does a blue-green node upgrade avoid? / Downtime during the node upgrade / Cost / Logs / =a
 Q: What is the risk of spot nodes? / They can be taken back at short notice / They are slower / They are public / =a
 Q: Where should worker nodes run? / Private subnets / Public subnets / Anywhere / =a
@@ -87,8 +87,8 @@ DA: The owner's Fargate-only and EKS-plus-Fargate modules: kube-system on Fargat
 DZ: AKS virtual nodes (ACI) or node auto-provisioning explained and deployed on a test namespace.
 RA: EKS Fargate profiles
 RZ: AKS virtual nodes / ACI
-CA: owner's OK (cluster running)
-CZ: owner's OK (cluster running)
+CA: counted in the cluster session (16.1)
+CZ: counted in the cluster session (16.1)
 Q: What is the benefit of serverless pods? / No nodes to patch or size / Free compute / More control / =a
 Q: Which workload often does not fit serverless pods? / DaemonSets / Web APIs / Batch jobs / =a
 Q: How do pods land on serverless capacity? / Profiles or selectors on namespace/labels / Random / Node names / =a
@@ -100,8 +100,8 @@ DA: EKS access entries and access policies (aws_eks_access_entry) replace the ow
 DZ: The owner's aks-auth-config: Entra ID groups, Azure RBAC for Kubernetes, a namespace-scoped role.
 RA: EKS access entries
 RZ: AKS role assignments
-CA: owner's OK (cluster running)
-CZ: owner's OK (cluster running)
+CA: counted in the cluster session (16.1)
+CZ: counted in the cluster session (16.1)
 N: Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
 Q: Why manage cluster access as code? / Reviewed, auditable and repeatable / It is faster / It is required / =a
 Q: What should a developer usually get? / Namespace-scoped rights / Cluster admin / Nothing / =a
@@ -114,8 +114,8 @@ DA: The owner's add-on modules: namespaces, cluster autoscaler, AWS Load Balance
 DZ: The owner's AKS modules: namespaces, NGINX ingress, cert-manager, External DNS with workload identity.
 RA: Add-ons, a load balancer (delete before cluster)
 RZ: Add-ons, a load balancer and public IP
-CA: owner's OK; a full EKS lab is about $1–2 for two hours
-CZ: owner's OK; a full AKS lab is about $0.50–1 for two hours
+CA: a full EKS lab is about $1–2 for two hours; destroy right after
+CZ: a full AKS lab is about $0.50–1 for two hours; destroy right after
 Q: Why delete Kubernetes load balancers before the cluster? / They are cloud resources Terraform may not track / They are free / It is faster / =a
 Q: How do add-ons get cloud permissions? / A workload identity bound to a role / Node keys / Hard-coded keys / =a
 Q: Which provider installs Helm charts from Terraform? / helm / kubernetes only / null / =a

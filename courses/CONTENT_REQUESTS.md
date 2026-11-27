@@ -49,7 +49,9 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
 **Training cloud budget (owner 2026-11-28): $100 per month, total across AWS and Azure.** Rules for every lab:
 - Prefer local runs (Docker Compose, Minikube) with a cloud variant.
 - Estimate the cost before each lab (written in its request and README).
-- Ask the owner before any single lab over ~$5 per run, any EKS/AKS cluster, or going past $100 in a month.
+- **Estimate, log, destroy; no owner pause** (owner to GEN, 2026-11-28): no waiting for the owner's OK for labs over ~$5 per run,
+  EKS/AKS clusters or new accounts. GEN estimates each run, logs it in its `CLOUD_BUDGET.md`, and destroys and verifies
+  right after recording; the $80/$100 monthly alarms in both clouds remain the safety net.
 - GEN keeps a running monthly total in its notes and reports it with each delivery.
 - Billing budget alarms in both accounts (AWS Budgets and an Azure cost alert at $80 and $100); GEN sets them if missing
   and asks the owner if that needs permissions it doesn't have.
@@ -323,8 +325,8 @@ basics + DevOps prompting (CR-077–CR-082, CR-096, CR-085–CR-088) → 4. LLMO
 | CR-257 | AI-Powered Terraform on Azure | M15 · 15.2 | A RAG stack as code [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-258 | AI-Powered Terraform on AWS | M15 · 15.3 | Guardrails as code [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-259 | AI-Powered Terraform on Azure | M15 · 15.3 | Guardrails as code [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
-| CR-260 | AI-Powered Terraform on AWS | M15 · 15.4 | Agents as code (cost check first) [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
-| CR-261 | AI-Powered Terraform on Azure | M15 · 15.4 | Agents as code (cost check first) [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-260 | AI-Powered Terraform on AWS | M15 · 15.4 | Agents as code [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
+| CR-261 | AI-Powered Terraform on Azure | M15 · 15.4 | Agents as code [new, proposed: AI] | GEN | 2026-11-28 | P2 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-262 | AI-Powered Terraform on AWS | M16 · 16.1 | A managed Kubernetes control plane module [owner original] | GEN | 2026-11-28 | P3 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-263 | AI-Powered Terraform on Azure | M16 · 16.1 | A managed Kubernetes control plane module [owner original] | GEN | 2026-11-28 | P3 | requested (planning; order waits for the owner's OK) | — | — |
 | CR-264 | AI-Powered Terraform on AWS | M16 · 16.2 | Node groups: simple, blue-green and spot [owner original] | GEN | 2026-11-28 | P3 | requested (planning; order waits for the owner's OK) | — | — |
@@ -1024,7 +1026,7 @@ and payments → enterprise Kubernetes); the real process on screen (the prompt,
 browser); every site reviewed for security; honest entrepreneurship (skills and responsibilities, no income promises);
 Stripe in **test mode only**; original or licensed assets only. Each lesson: video, captions, PDF, lab ZIP (source,
 master prompt, Dockerfile/Compose where used, .env.example, README with costs, troubleshooting and cleanup), 3–5 quiz
-questions. Budget: $100/month total; ask the owner before any lab over ~$5 per run or any EKS/AKS cluster.
+questions. Budget: $100/month total; estimate, log, destroy (no owner pause; the $80/$100 alarms remain).
 **Domains:** CR-111, CR-112 and the custom-domain parts of CR-116/117 are **blocked on the owner's choice**; recommended:
 one training domain (~$12–15/yr) with one subdomain per project (`shop.<domain>`, `portfolio.<domain>` …).
 
@@ -1183,10 +1185,9 @@ inventory: `courses/terraform/CONTENT_INVENTORY.md` · ready lab code: `courses/
 use them, do not replace them; fix only what is marked outdated; never reuse the repo's committed keys or passwords.
 **Shared videos** (cloud-neutral, local/random/terraform_data providers) are one request used by both courses; every
 cloud lesson has an AWS request and an Azure request, recorded back to back. Budget: the training cloud budget rule above
-($100/month AWS + Azure; ask before > ~$5 per run or any EKS/AKS; destroy and verify). **Status: planning. The production
+($100/month AWS + Azure: estimate, log, destroy; no owner pause; the $80/$100 alarms remain). **Status: planning. The production
 order (fundamentals block CR-133–CR-137, CR-140–CR-143, CR-146, CR-156–CR-158 first, then weekly alternation with the AI masterclasses)
-waits for the owner's OK; nothing sent to GEN yet.** Module 16 (CR-262–CR-271) needs the owner's OK for cluster cost;
-CR-222/CR-223 (11.6) need the training domain.
+waits for the owner's OK; nothing sent to GEN yet.** CR-222/CR-223 (11.6) need the training domain.
 
 #### CR-129 Course introduction: what you will build and how to learn here (AWS)
 - Course / module / position: AI-Powered Terraform on AWS · Module 0 Welcome and safe set-up · lesson 0.1, first in the module · [new, proposed]
@@ -2114,7 +2115,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Lab ZIP / code: GEN builds `courses/terraform/code/project-a-database-with-secrets-done-right/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: RDS PostgreSQL db.t4g.micro, Secrets Manager secret, subnet group · Cost per run: ~$0.05 per run (db.t4g.micro free tier eligible; under an hour) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
 - Depends on: 8.8, 11.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
-- Notes: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters can exceed $5 per run: not deployed without the owner's OK.
+- Notes: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 11.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
 #### CR-219 Project: a database with secrets done right (Azure)
@@ -2125,7 +2126,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/project-a-database-with-secrets-done-right/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
 - Cloud resources: PostgreSQL Flexible Server B1ms, Key Vault · Cost per run: ~$0.05 per run (B1ms under an hour) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - Depends on: 8.8, 11.1 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
-- Notes: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters can exceed $5 per run: not deployed without the owner's OK.
+- Notes: Fix: base-code/aurora-mysql-cluster and others hard-code master passwords; replaced by write-only arguments. Aurora clusters cost more per hour than the lab needs: explained on the owner's slides, not deployed.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 11.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
 #### CR-220 Project: a state backend module with replication (AWS)
@@ -2538,25 +2539,25 @@ CR-222/CR-223 (11.6) need the training domain.
 - Depends on: 15.2 · Length guide: ~10 min · Priority: P2 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 15.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
-#### CR-260 Agents as code (cost check first) (AWS)
+#### CR-260 Agents as code (AWS)
 - Course / module / position: AI-Powered Terraform on AWS · Module 15 Terraform for AI infrastructure · lesson 15.4, after 15.3 · [new, proposed: AI]
 - Learning objectives: Provision an agent runtime and its identity as code; Limit its tools and permissions; Estimate and cap its cost
 - Slides: owner's deck: none in the deck (new lesson) (PDF next to the PPTX, course standard) · Owner's repo: — (none in the owner's repo)
 - Live demonstration: aws_bedrockagentcore_agent_runtime (container in ECR) with an execution role allowed one tool, an endpoint, invocation from the CLI; cost estimated before recording.
-- Lab ZIP / code: GEN builds `courses/terraform/code/agents-as-code-cost-check-first/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: AgentCore runtime and endpoint, ECR repo, IAM role · Cost per run: Estimate before recording (pay per use); ask the owner if over ~$5 · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
-- Depends on: 15.3; owner's cost check · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
+- Lab ZIP / code: GEN builds `courses/terraform/code/agents-as-code/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
+- Cloud resources: AgentCore runtime and endpoint, ECR repo, IAM role · Cost per run: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Depends on: 15.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fast-moving services: check resource names and pricing on the recording day.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 15.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
-#### CR-261 Agents as code (cost check first) (Azure)
+#### CR-261 Agents as code (Azure)
 - Course / module / position: AI-Powered Terraform on Azure · Module 15 Terraform for AI infrastructure · lesson 15.4, after 15.3 · [new, proposed: AI]
 - Learning objectives: Provision an agent runtime and its identity as code; Limit its tools and permissions; Estimate and cap its cost
 - Slides: owner's deck: none in the deck (new lesson) (PDF next to the PPTX, course standard) · Owner's repo: — (none in the owner's repo)
 - Live demonstration: A Foundry project agent (azapi or azurerm where available) with the AI Search tool from 15.2, a managed identity, invocation from the CLI or SDK.
-- Lab ZIP / code: GEN builds `courses/terraform/code/azure/agents-as-code-cost-check-first/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: Foundry project agent, managed identity · Cost per run: Estimate before recording (pay per use); ask the owner if over ~$5 · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
-- Depends on: 15.3; owner's cost check · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
+- Lab ZIP / code: GEN builds `courses/terraform/code/azure/agents-as-code/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
+- Cloud resources: Foundry project agent, managed identity · Cost per run: Estimate before recording (pay per use) and log it in CLOUD_BUDGET.md · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Depends on: 15.3 · Length guide: ~15 min · Priority: P2 · Owner: GEN · Status: requested
 - Notes: Fast-moving services: check resource names and pricing on the recording day.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 15.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2566,8 +2567,8 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 560–561 (PDF next to the PPTX, course standard) · Owner's repo: `aws-terraform/modules/eks-control-plane`, `aws-terraform/base-code/eks-with-vpc`
 - Live demonstration: The owner's eks-control-plane module (slide 561) on the 11.1 VPC, current EKS version, endpoint access, control plane logs; aws eks update-kubeconfig.
 - Lab ZIP / code: GEN builds `courses/terraform/code/a-managed-kubernetes-control-plane-module/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: EKS cluster · Cost per run: ~$0.10/hour control plane + nodes: owner's OK before recording · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
-- Depends on: 11.1; owner's OK (cluster cost) · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
+- Cloud resources: EKS cluster · Cost per run: ~$0.10/hour control plane + nodes (~$1–2 per two-hour session); estimate, log, destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Depends on: 11.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
 #### CR-263 A managed Kubernetes control plane module (Azure)
@@ -2576,8 +2577,8 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 560–561 (PDF next to the PPTX, course standard) · Owner's repo: `azure-terraform/modules/aks-controle-plane`, `azure-terraform/aks-all-in-one`
 - Live demonstration: The owner's aks-controle-plane module: AKS with Entra ID integration, a system node pool, az aks get-credentials.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/a-managed-kubernetes-control-plane-module/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: AKS cluster (free tier control plane) · Cost per run: $0 control plane (Free tier) + nodes: owner's OK before recording · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
-- Depends on: 11.1; owner's OK (cluster cost) · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
+- Cloud resources: AKS cluster (free tier control plane) · Cost per run: $0 control plane (Free tier) + nodes (~$0.50–1 per two-hour session); estimate, log, destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Depends on: 11.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.1 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
 #### CR-264 Node groups: simple, blue-green and spot (AWS)
@@ -2586,7 +2587,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 562–563 (PDF next to the PPTX, course standard) · Owner's repo: `aws-terraform/modules/eks-node-group`, `aws-terraform/eks-blue-green-node-group`, `aws-terraform/base-code/eks-blue-green-node`
 - Live demonstration: The owner's node group modules: simple group, blue-green switch with var.green / desired sizes (slides 384, 563), spot instances.
 - Lab ZIP / code: GEN builds `courses/terraform/code/node-groups-simple-blue-green-and-spot/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: EKS managed node groups (t3.medium) · Cost per run: ~$0.10/hour per small node: owner's OK · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Cloud resources: EKS managed node groups (t3.medium) · Cost per run: ~$0.10/hour per small node; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
 - Depends on: 16.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2596,7 +2597,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 562–563 (PDF next to the PPTX, course standard) · Owner's repo: `azure-terraform/modules/aks-linux-node-group`, `azure-terraform/aks-linux-spot-node-group`, `azure-terraform/aks-windows-node-group`
 - Live demonstration: The owner's node pool modules: Linux user pool, spot pool with eviction policy, Windows pool explained; blue-green pool swap.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/node-groups-simple-blue-green-and-spot/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: AKS node pools (B2s) · Cost per run: ~$0.05/hour per B2s node: owner's OK · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Cloud resources: AKS node pools (B2s) · Cost per run: ~$0.05/hour per B2s node; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - Depends on: 16.1 · Length guide: ~15 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.2 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2606,7 +2607,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 564–565 (PDF next to the PPTX, course standard) · Owner's repo: `aws-terraform/modules/eks-fargate-only`, `aws-terraform/eks-and-fargate`, `aws-terraform/aws-fargate-profile`, `aws-terraform/base-code/eks-mix`
 - Live demonstration: The owner's Fargate-only and EKS-plus-Fargate modules: kube-system on Fargate, a namespace profile, CoreDNS patch.
 - Lab ZIP / code: GEN builds `courses/terraform/code/serverless-and-mixed-capacity/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: EKS Fargate profiles · Cost per run: owner's OK (cluster running) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Cloud resources: EKS Fargate profiles · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
 - Depends on: 16.2 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2616,7 +2617,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 564–565 (PDF next to the PPTX, course standard) · Owner's repo: `azure-terraform/new`
 - Live demonstration: AKS virtual nodes (ACI) or node auto-provisioning explained and deployed on a test namespace.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/serverless-and-mixed-capacity/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: AKS virtual nodes / ACI · Cost per run: owner's OK (cluster running) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Cloud resources: AKS virtual nodes / ACI · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - Depends on: 16.2 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.3 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2626,7 +2627,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 566, 572–573 (PDF next to the PPTX, course standard) · Owner's repo: `aws-terraform/modules/aws-auth-config`, `aws-terraform/rbac`
 - Live demonstration: EKS access entries and access policies (aws_eks_access_entry) replace the owner's aws-auth ConfigMap module; RBAC roles for IAM users and IAM roles (slides 572–573).
 - Lab ZIP / code: GEN builds `courses/terraform/code/cluster-access-identities-and-rbac/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: EKS access entries · Cost per run: owner's OK (cluster running) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Cloud resources: EKS access entries · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
 - Depends on: 16.3 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Notes: Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2637,7 +2638,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 566, 572–573 (PDF next to the PPTX, course standard) · Owner's repo: `azure-terraform/modules/aks-auth-config`
 - Live demonstration: The owner's aks-auth-config: Entra ID groups, Azure RBAC for Kubernetes, a namespace-scoped role.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/cluster-access-identities-and-rbac/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: AKS role assignments · Cost per run: owner's OK (cluster running) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Cloud resources: AKS role assignments · Cost per run: counted in the cluster session (16.1) · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - Depends on: 16.3 · Length guide: ~12 min · Priority: P3 · Owner: GEN · Status: requested
 - Notes: Outdated: the aws-auth ConfigMap is deprecated in favour of EKS access entries.
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.4 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
@@ -2648,7 +2649,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 567–571 (PDF next to the PPTX, course standard) · Owner's repo: `aws-terraform/modules/eks-namespaces`, `aws-terraform/cluster-auto-scaler`, `aws-terraform/aws-load-balancer-controller`, `aws-terraform/aws-ebs-csi-driver`, `aws-terraform/external-dns`, `aws-terraform/metrics-server`, `aws-terraform/argo-cd-*`
 - Live demonstration: The owner's add-on modules: namespaces, cluster autoscaler, AWS Load Balancer Controller, EBS CSI driver, External DNS, Argo CD; Pod Identity as the current alternative to IRSA.
 - Lab ZIP / code: GEN builds `courses/terraform/code/cluster-add-ons-with-terraform-and-helm/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: Add-ons, a load balancer (delete before cluster) · Cost per run: owner's OK; a full EKS lab is about $1–2 for two hours · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
+- Cloud resources: Add-ons, a load balancer (delete before cluster) · Cost per run: a full EKS lab is about $1–2 for two hours; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Resource Groups Tag Editor, tag `Course=terraform-aws-masterclass`; the README lists the exact check)
 - Depends on: 16.4 · Length guide: ~18 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` › 16.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 
@@ -2658,7 +2659,7 @@ CR-222/CR-223 (11.6) need the training domain.
 - Slides: owner's deck: slides 567–571 (PDF next to the PPTX, course standard) · Owner's repo: `azure-terraform/modules/azure-aks-name-space`, `azure-terraform/nginx-ingress`, `azure-terraform/cert-manager`, `azure-terraform/external-dns`
 - Live demonstration: The owner's AKS modules: namespaces, NGINX ingress, cert-manager, External DNS with workload identity.
 - Lab ZIP / code: GEN builds `courses/terraform/code/azure/cluster-add-ons-with-terraform-and-helm/`; README with requirements, cost, steps, cleanup; `.tfvars.example` only
-- Cloud resources: Add-ons, a load balancer and public IP · Cost per run: owner's OK; a full AKS lab is about $0.50–1 for two hours · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
+- Cloud resources: Add-ons, a load balancer and public IP · Cost per run: a full AKS lab is about $0.50–1 for two hours; destroy right after · Cleanup: `terraform destroy`, then check nothing is left (Azure Resource Graph on tag `Course=terraform-azure-masterclass`, `az group list`; purge soft-deleted Key Vaults/AI accounts)
 - Depends on: 16.4 · Length guide: ~18 min · Priority: P3 · Owner: GEN · Status: requested
 - Quiz: 4 spoken questions with answers in `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` › 16.5 ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
 

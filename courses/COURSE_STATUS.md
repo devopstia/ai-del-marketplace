@@ -103,5 +103,5 @@ changes need a production sync (session) to go live.
 | Size | 18 modules, 95 videos, ~17 h 27 min | same; 37 videos shared with AWS |
 | Requests | CR-129 … CR-281 (153 videos for both), not yet sent to GEN | same |
 | Code | 11 lesson folders ready in `courses/terraform/code/` | 6 in `code/azure/` |
-| Waiting | owner: titles, price, production order, EKS module, training domain | owner: same, AKS module |
+| Waiting | owner: titles, price, production order, training domain | owner: same |
 

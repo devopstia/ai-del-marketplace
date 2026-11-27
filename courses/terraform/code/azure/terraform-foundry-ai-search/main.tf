@@ -19,12 +19,12 @@ variable "embedding_model" {
 }
 
 variable "search_sku" {
-  description = "free (one per subscription, $0) or basic (about $75/month: ask the owner first)."
+  description = "free (one per subscription, $0) or basic (about $75/month, prorated: log it and destroy the same day)."
   type        = string
   default     = "free"
   validation {
     condition     = contains(["free", "basic"], var.search_sku)
-    error_message = "Use free for training; basic only with the owner's OK."
+    error_message = "Use free or basic."
   }
 }
 
