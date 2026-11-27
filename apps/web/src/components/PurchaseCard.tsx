@@ -73,9 +73,12 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
       <div className="relative" data-qa-on-media>
         <CourseCover slug={course.slug} title={course.title} category={course.category?.name} thumbnailUrl={course.thumbnailUrl} className="!rounded-none" priority />
         {firstPreviewId ? (
-          <PreviewButton lectureId={firstPreviewId} className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/45 font-bold text-white transition-colors hover:bg-black/55">
-            <span className="grid size-16 place-items-center rounded-full bg-white text-[#141833] shadow-float"><PlayCircle className="size-8" /></span>
-            <span className="rounded-full bg-black/75 px-3 py-1 text-sm">Preview this course</span>
+          // The whole cover opens the preview; the button sits at the bottom so the cover's title stays readable.
+          <PreviewButton lectureId={firstPreviewId} className="group absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-black/10 to-transparent pb-4 font-bold text-white transition-colors hover:from-black/80">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-sm text-[#141833] shadow-float transition-transform group-hover:scale-[1.03]">
+              <span className="grid size-7 place-items-center rounded-full bg-[#141833] text-white"><PlayCircle className="size-4" /></span>
+              Preview this course
+            </span>
           </PreviewButton>
         ) : null}
       </div>
