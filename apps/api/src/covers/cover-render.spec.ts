@@ -1,5 +1,7 @@
-import { coverPng, coverSvg, fitTitle } from './cover-render';
-import { BUILT_IN_TEMPLATES, LAYOUTS, MOTIFS, PALETTES } from './cover-templates';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { coverPng, coverSvg, fitTitle, splitTitle } from './cover-render';
+import { BLUEPRINT_TOPICS, BUILT_IN_TEMPLATES, LAYOUTS, MOTIFS, PALETTES } from './cover-templates';
 
 describe('cover renderer', () => {
   it('fits titles within the line limit, shrinking before it ever cuts', () => {
@@ -36,5 +38,46 @@ describe('cover renderer', () => {
       expect(png.readUInt32BE(16)).toBe(1280);
       expect(png.readUInt32BE(20)).toBe(720);
     }
+  });
+});
+
+describe('night-blueprint family (owner 2026-11-27)', () => {
+  const CASES: [string, string, string][] = [
+    ['blueprint-aws', 'AI for DevOps on AWS: From Fundamentals to Production', 'AWS · Amazon Bedrock'],
+    ['blueprint-azure', 'AI for DevOps on Azure: From Fundamentals to Production', 'Microsoft Azure · Foundry'],
+    ['blueprint-ai', 'Introduction to AI for DevOps', 'Artificial Intelligence'],
+    ['blueprint-vscode', 'VS Code Masterclass for DevOps and AI', 'Visual Studio Code'],
+    ['blueprint-n8n', 'AI-Powered DevOps Automation with n8n', 'n8n · Automation'],
+  ];
+  const out = process.env.COVER_SAMPLES_DIR;
+
+  it('splits "Title: Subtitle" and keeps other titles whole', () => {
+    expect(splitTitle('AI for DevOps on AWS: From Fundamentals to Production')).toEqual({ main: 'AI for DevOps on AWS', sub: 'From Fundamentals to Production' });
+    expect(splitTitle('Terraform Basics')).toEqual({ main: 'Terraform Basics', sub: null });
+    expect(splitTitle('A: b')).toEqual({ main: 'A: b', sub: null });
+  });
+
+  it.each(CASES)('%s renders long and short titles at 1280x720 with no third-party logo', (key, title, topic) => {
+    const t = BUILT_IN_TEMPLATES.find((x) => x.key === key)!;
+    expect(t.layout).toBe('night-blueprint');
+    const variants: [string, string][] = [['', title], ['-short', 'Bash'], ['-long', `${title} with Kubernetes, Terraform, GitHub Actions and Argo CD in production`]];
+    for (const [suffix, tt] of variants) {
+      const spec = { layout: t.layout, palette: PALETTES[t.palette], motif: t.motif };
+      const svg = coverSvg(spec, { title: tt, topic });
+      expect(svg).not.toMatch(/<image|href=/); // drawn shapes only: no embedded logo files
+      const png = coverPng(spec, { title: tt, topic });
+      expect(png.readUInt32BE(16)).toBe(1280);
+      expect(png.readUInt32BE(20)).toBe(720);
+      if (out) {
+        writeFileSync(join(out, `${key}${suffix}.png`), png);
+        if (!suffix) writeFileSync(join(out, `${key}-320.png`), coverPng(spec, { title: tt, topic }, 320));
+      }
+    }
+  });
+
+  it('a course in a mapped category is suggested its night-blueprint template first', () => {
+    const sorted = BUILT_IN_TEMPLATES.map((t, i) => ({ t, sort: t.sort ?? (i + 1) * 10 })).sort((a, b) => a.sort - b.sort);
+    const expected: [string, string][] = [['automation-n8n', 'blueprint-n8n'], [BLUEPRINT_TOPICS.aws[0], 'blueprint-aws'], [BLUEPRINT_TOPICS.azure[0], 'blueprint-azure'], [BLUEPRINT_TOPICS.ai[0], 'blueprint-ai'], [BLUEPRINT_TOPICS.vscode[0], 'blueprint-vscode']];
+    for (const [slug, key] of expected) expect(sorted.find(({ t }) => t.topics.includes(slug))?.t.key).toBe(key);
   });
 });

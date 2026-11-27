@@ -56,7 +56,7 @@ export class CoversService implements OnModuleInit, OnModuleDestroy {
     const missing = BUILT_IN_TEMPLATES.map((t, i) => ({ t, i })).filter(({ t }) => !have.has(t.key));
     if (!missing.length) return 0;
     await this.prisma.coverTemplate.createMany({
-      data: missing.map(({ t, i }) => ({ key: t.key, name: t.name, layout: t.layout, motif: t.motif, palette: { ...PALETTES[t.palette] }, topics: t.topics, group: groupOf(t.motif), sort: (i + 1) * 10, builtIn: true })),
+      data: missing.map(({ t, i }) => ({ key: t.key, name: t.name, layout: t.layout, motif: t.motif, palette: { ...PALETTES[t.palette] }, topics: t.topics, group: groupOf(t.motif), sort: t.sort ?? (i + 1) * 10, builtIn: true })),
       skipDuplicates: true,
     });
     return missing.length;
