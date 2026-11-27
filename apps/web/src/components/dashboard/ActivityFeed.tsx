@@ -1,7 +1,7 @@
 import { dateTime } from "@/lib/format";
 
 export interface Activity { kind: string; at: string; text: string; detail: string }
-const DOT: Record<string, string> = { purchase: "bg-mint", enrolment: "bg-cyan", review: "bg-star", certificate: "bg-violet", refund: "bg-amber", course: "bg-line-strong" };
+const DOT: Record<string, string> = { purchase: "bg-mint", enrolment: "bg-cyan", review: "bg-star", certificate: "bg-violet", refund: "bg-amber", course: "bg-line-strong", admin: "bg-violet", alert: "bg-rose" };
 
 /** Compact event list, newest first: a coloured dot per kind, the event and one detail line. */
 export function ActivityFeed({ items }: { items: Activity[] }) {

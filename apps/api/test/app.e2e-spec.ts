@@ -688,6 +688,65 @@ describe('e2e: buy and learn', () => {
     await buyer.agent.get('/api/instructor/dashboard').expect(403);
   });
 
+  it('admin dashboard: marketplace money, platform, attention and health by permission; limited admins get only their blocks', async () => {
+    if (!available) return;
+    const delAcct = await prisma.instructorProfile.findFirst({ where: { isPlatform: true } });
+    const del = delAcct ? { user: { id: delAcct.userId } } : await userAgent('ad-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const teacher = await userAgent('ad-teacher@e2e.example', ['student', 'instructor'], {});
+    const buyer = await userAgent('ad-buyer@e2e.example', ['student']);
+    const boss = await userAgent('ad-super@e2e.example', ['student', 'admin', 'super_admin']);
+    const support = await userAgent('ad-support@e2e.example', ['student', 'admin'], undefined, ['support.manage', 'courses.review']);
+    const delCourse = await publishedCourse(del.user.id, 'ad-del-course', 499);
+    const tCourse = await publishedCourse(teacher.user.id, 'ad-teacher-course', 1999);
+    const before = (await boss.agent.get('/api/admin/dashboard?range=7d').expect(200)).body;
+    for (const courseId of [delCourse.course.id, tCourse.course.id]) await buyer.send('post', '/api/cart', { courseId }).expect(201);
+    const co = await buyer.send('post', '/api/checkout', { immediateAccessConsent: true, ...TERMS }).expect(200);
+    await buyer.send('post', `/api/dev/test-payments/${co.body.orderId}/complete`).expect(200);
+    const lines = await prisma.orderLine.findMany({ where: { orderId: co.body.orderId } });
+    const tLine = lines.find((l) => l.courseId === tCourse.course.id)!;
+    const dLine = lines.find((l) => l.courseId === delCourse.course.id)!;
+
+    // Super admin: every block; the new sales add exactly their snapshot amounts.
+    const d = (await boss.agent.get('/api/admin/dashboard?range=7d').expect(200)).body;
+    expect(d.blocks).toEqual({ finance: true, platform: true, catalogue: true, health: true, audit: true });
+    const f = d.finance.current, b = before.finance.current;
+    expect(f.grossCents - b.grossCents).toBe(499 + 1999);
+    expect(f.instructorEarningsCents - b.instructorEarningsCents).toBe(tLine.instructorShareCents);
+    expect(f.delCoursesNetCents - b.delCoursesNetCents).toBe(499 - dLine.feeCents);
+    expect(f.commissionCents - b.commissionCents).toBe(1999 - tLine.feeCents - tLine.instructorShareCents);
+    expect(f.platformNetCents).toBe(f.grossCents - f.feesCents - f.refundsCents - f.instructorEarningsCents);
+    expect(d.finance.series).toHaveLength(7);
+    expect(d.finance.byCourse.some((c: any) => c.id === tCourse.course.id && c.grossCents >= 1999)).toBe(true);
+    expect(d.finance.byInstructor.find((i: any) => i.id === del.user.id)?.kind).toBe('del');
+    expect(d.platform.users).toBeGreaterThan(0);
+    expect(d.platform.enrolments.current - before.platform.enrolments.current).toBe(2);
+    expect(d.catalogue.published).toBeGreaterThanOrEqual(2);
+    expect(d.attention.map((a: any) => a.key)).toEqual(expect.arrayContaining(['reviews', 'applications', 'refunds', 'support', 'reports']));
+    expect(d.health.checks.find((c: any) => c.name === 'Database')).toMatchObject({ ok: true });
+    expect(Array.isArray(d.audit)).toBe(true);
+    expect(d.audit.every((a: any) => !a.action.startsWith('auth.'))).toBe(true); // sign-ins stay on the audit log page
+    expect(d.finance.webhooks).toMatchObject({ received: expect.any(Number), stripeOrders: expect.any(Number) });
+    expect(JSON.stringify(d)).not.toContain('ad-buyer@e2e.example'); // no emails on the dashboard
+
+    // A limited admin (support + course review): no money, people, health or audit; only their own queues.
+    const s = (await support.agent.get('/api/admin/dashboard').expect(200)).body;
+    expect(s.blocks).toEqual({ finance: false, platform: false, catalogue: true, health: false, audit: false });
+    expect(s.finance).toBeNull();
+    expect(s.platform).toBeNull();
+    expect(s.health).toBeNull();
+    expect(s.audit).toBeNull();
+    expect(s.attention.map((a: any) => a.key).sort()).toEqual(['reviews', 'support']);
+    expect(JSON.stringify(s)).not.toMatch(/grossCents|instructorEarningsCents/);
+
+    // Ranges and access.
+    const past = (await boss.agent.get('/api/admin/dashboard?range=custom&from=2020-01-01&to=2020-01-10').expect(200)).body;
+    expect(past.range.days).toBe(10);
+    expect(past.finance.current.grossCents).toBe(0);
+    await boss.agent.get('/api/admin/dashboard?range=forever').expect(400);
+    await buyer.agent.get('/api/admin/dashboard').expect(403);
+    await teacher.agent.get('/api/admin/dashboard').expect(403);
+  });
+
   it('DEL Studio: a super admin works in the studio as DEL; the audit log names the real person', async () => {
     if (!available) return;
     const delAcct = await prisma.instructorProfile.findFirst({ where: { isPlatform: true } });
