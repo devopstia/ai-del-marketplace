@@ -133,6 +133,13 @@
           "short": "Kubernetes alerts"
         },
         {
+          "folder": "11-n11-n8n-aws-automation-live",
+          "title": "Bring AWS alarms and S3 events into your team chat",
+          "summary": "Build it for real with Terraform: a CloudWatch alarm, an S3 bucket, an SQS queue and a read-only IAM user. n8n polls the queue, posts each alarm and upload to Mattermost, sends a daily AWS summary, and never sees the same message twice.",
+          "preview": false,
+          "short": "AWS automation"
+        },
+        {
           "folder": "12-n12-n8n-incident-management-live",
           "title": "Manage incidents: severity, escalation and resolution",
           "summary": "Turn a flood of repeated alerts into one incident with a severity. Escalate when nobody acknowledges, show who is on it, and close the loop with a resolved message, on a real outage.",
@@ -195,6 +202,13 @@
           "title": "AI in CI/CD: explain a failed pipeline and suggest the fix",
           "short": "Explain failed pipelines with AI",
           "summary": "When a GitHub Actions job fails, n8n reads the failed log, an AI model explains it in plain words and suggests a fix, and the team sees the draft in Mattermost. The AI explains and suggests; it never merges or deploys."
+        },
+        {
+          "folder": "23-n23-n8n-ai-pr-review-live",
+          "title": "Review pull requests with AI, a human still decides",
+          "summary": "On a real GitHub repository, n8n fetches each new pull request’s diff, an AI model drafts a review with risks on exact lines, a checklist and questions, and posts it to the PR. It catches a prompt injection hidden in the code, and never approves or merges: the reviewer does.",
+          "preview": false,
+          "short": "AI pull request review"
         },
         {
           "type": "article",

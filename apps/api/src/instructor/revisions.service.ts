@@ -1,6 +1,6 @@
 import { ownsResourceKey } from '../common/storage-keys';
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '../generated/prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import type { RevisionStatus } from '../generated/prisma/enums';
 import { AuditService } from '../common/audit.service';
 import { Actor } from '../common/auth-context';
@@ -19,7 +19,7 @@ export const treeInclude = {
         orderBy: { position: 'asc' },
         include: {
           resources: { orderBy: { createdAt: 'asc' }, select: { id: true, title: true, storageKey: true, sizeBytes: true, mime: true } },
-          quiz: { select: { questions: true } },
+          quiz: { select: { questions: true, settings: true } },
         },
       },
     },
@@ -97,8 +97,8 @@ export async function applyTree(tx: Tx, courseId: string, tree: CourseTree, opts
         await tx.resource.upsert({ where: { id: r.id }, create: { id: r.id, ...rd }, update: rd });
       }
       if (l.quiz?.length) {
-        const questions = l.quiz as unknown as Prisma.InputJsonValue;
-        await tx.quiz.upsert({ where: { lectureId: l.id }, create: { lectureId: l.id, questions }, update: { questions } });
+        const data = { questions: l.quiz as unknown as Prisma.InputJsonValue, settings: (l.quizSettings ?? Prisma.DbNull) as Prisma.InputJsonValue };
+        await tx.quiz.upsert({ where: { lectureId: l.id }, create: { lectureId: l.id, ...data }, update: data });
       } else {
         await tx.quiz.deleteMany({ where: { lectureId: l.id } });
       }

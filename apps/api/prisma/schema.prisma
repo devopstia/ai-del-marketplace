@@ -159,6 +159,7 @@ model User {
   pathFollows        CareerPathFollow[]
   notifications      Notification[]
   quizAttempts       QuizAttempt[]
+  quizBookmarks      QuizBookmark[]
   auditLogs          AuditLog[]
 
   @@map("users")
@@ -560,10 +561,26 @@ model Quiz {
   id        String        @id @default(uuid())
   lectureId String        @unique
   lecture   Lecture       @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  questions Json // [{ q, options[3..5], correct, why }]
+  questions Json // [{ id?, q, options[2..6], correct, why, explanations?, takeaway?, difficulty?, type?, topic?, timestamp?, code?, fixedOrder? }] (learning/quiz-model.ts)
+  /// { kind: lesson|module|final|scenario, scenario?, sampleSize?, pool? } (owner 2026-11-28)
+  settings  Json?
   attempts  QuizAttempt[]
+  bookmarks QuizBookmark[]
 
   @@map("quizzes")
+}
+
+/// A question a student marked to review again (owner 2026-11-28).
+model QuizBookmark {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId     String
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionId String
+  at         DateTime @default(now())
+
+  @@id([userId, quizId, questionId])
+  @@map("quiz_bookmarks")
 }
 
 model QuizAttempt {

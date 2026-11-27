@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { QuizQuestion, QuizSettings } from '../learning/quiz-model';
 import type { CourseLevel, LectureType } from '../generated/prisma/enums';
 import { badRequest, notFound } from '../common/errors';
 import { usd } from '../common/pricing';
@@ -33,12 +34,7 @@ export interface TreeResource {
   sizeBytes: number;
   mime: string;
 }
-export interface TreeQuestion {
-  q: string;
-  options: string[];
-  correct: number;
-  why: string;
-}
+export type TreeQuestion = QuizQuestion;
 export interface TreeLecture {
   id: string;
   title: string;
@@ -51,6 +47,8 @@ export interface TreeLecture {
   durationSec: number;
   resources: TreeResource[];
   quiz: TreeQuestion[] | null;
+  /** Assessment settings (owner 2026-11-28); optional for snapshots written before the field existed. */
+  quizSettings?: QuizSettings | null;
 }
 export interface TreeSection {
   id: string;
@@ -93,7 +91,7 @@ export interface CourseRowWithTree extends TreeCourse {
       videoAssetId: string | null;
       durationSec: number;
       resources: TreeResource[];
-      quiz: { questions: unknown } | null;
+      quiz: { questions: unknown; settings?: unknown } | null;
     }[];
   }[];
 }
@@ -117,6 +115,7 @@ export function treeFromRow(c: CourseRowWithTree): CourseTree {
         durationSec: l.durationSec,
         resources: l.resources.map((r) => ({ id: r.id, title: r.title, storageKey: r.storageKey, sizeBytes: r.sizeBytes, mime: r.mime })),
         quiz: l.quiz ? (l.quiz.questions as TreeQuestion[]) : null,
+        quizSettings: l.quiz ? ((l.quiz.settings as QuizSettings | null | undefined) ?? null) : null,
       })),
     })),
   };
@@ -254,8 +253,11 @@ export function arrange(t: CourseTree, layout: { id: string; lectureIds: string[
   t.sections = layout.map((x) => ({ ...byId.get(x.id)!, lectures: x.lectureIds.map((id) => all.get(id)!) }));
 }
 
-export function setQuiz(t: CourseTree, lectureId: string, questions: TreeQuestion[] | null) {
-  findLecture(t, lectureId).lecture.quiz = questions;
+/** `settings` undefined keeps the lecture's current assessment settings. */
+export function setQuiz(t: CourseTree, lectureId: string, questions: TreeQuestion[] | null, settings?: QuizSettings | null) {
+  const l = findLecture(t, lectureId).lecture;
+  l.quiz = questions;
+  l.quizSettings = questions ? (settings === undefined ? (l.quizSettings ?? null) : settings) : null;
 }
 
 export function addResource(t: CourseTree, lectureId: string, r: Omit<TreeResource, 'id'>) {
@@ -381,7 +383,7 @@ export function diffTrees(live: CourseTree, draft: CourseTree, categoryName: (id
     if (o.isPreview !== l.isPreview) out.push({ area: 'curriculum', kind: 'changed', message: `Free preview ${l.isPreview ? 'on' : 'off'}: ${name}` });
     if ((o.summary ?? '') !== (l.summary ?? '')) out.push({ area: 'curriculum', kind: 'changed', message: `Summary edited: ${name}` });
     if ((o.articleMd ?? '') !== (l.articleMd ?? '')) out.push({ area: 'curriculum', kind: 'changed', message: `Article text edited: ${name}` });
-    if (!same(o.quiz, l.quiz)) {
+    if (!same(o.quiz, l.quiz) || !same(o.quizSettings ?? null, l.quizSettings ?? null)) {
       out.push({ area: 'curriculum', kind: !o.quiz ? 'added' : !l.quiz ? 'removed' : 'changed', message: `Quiz ${!o.quiz ? 'added' : !l.quiz ? 'removed' : 'changed'}: ${name}` });
     }
     const oldRes = new Map(o.resources.map((r) => [r.id, r]));

@@ -73,7 +73,9 @@ final review below; only a super admin approves (Super Admin › Review queue).
 | Lab / exercise / source code `*.zip` | upload as **"Hands-on lab (ZIP)"** (zip loose source code first) |
 | PowerPoint `.ppt/.pptx` | never upload; if there's no PDF, convert (`soffice --headless --convert-to pdf`), check the page count and look at a page, then upload the PDF |
 | Thumbnails, raw/production files, temp files, agent instructions (`*.md` outside labs), `course.manifest.json`, `lesson.json` | never upload |
-| In-video quiz ("Question N of M … A: …; B: …; or C: …? … The answer is B: …") | imported as a quiz lesson "Quiz: <short lesson name>" right after the video (`course.quizzes: "from-captions"`); questions without spoken options are skipped and reported, or taken from the manifest only when every answer matches the video |
+| `quiz.json` in the lesson folder (owner 2026-11-28, schema `courses/quiz.schema.json`) | the lesson's quiz bank, preferred over the spoken questions; validated before upload (answer index, one explanation per option, no duplicates, timestamps inside the video, no answer given away; a count outside the range for the video's length is a warning) and replaced in place when the file changes |
+| `<assessments>/module-<n>-assessment.json`, `final-assessment.json`, `scenario-<name>.json` (plan field `assessments`) | module, final and scenario assessments, each a quiz lesson closing its module (`sampleSize`, `pool` for a bank drawn per attempt) |
+| In-video quiz ("Question N of M … A: …; B: …; or C: …? … The answer is B: …") | fallback when there is no `quiz.json`: imported as a quiz lesson "Quiz: <short lesson name>" right after the video (`course.quizzes: "from-captions"`); questions without spoken options are skipped and reported, or taken from the manifest only when every answer matches the video |
 | `.env`, keys, certificates, credentials, tokens | never upload; scan lab ZIPs before uploading (see step 3) |
 Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-lab.zip`), never internal names.
 
@@ -151,6 +153,10 @@ The first position of section 1 is reserved for the introduction without an empt
 `"role": "intro"` in its `lesson.json` / the manifest) is flagged `INTRODUCTION` in the watcher's inbox; put it first in
 section 1 with `"preview": true` (the dry run fails otherwise). With `promo: true` the publisher also sets it as the
 course page's promo video (`promoVideoAssetId`).
+**Quality bar (owner 2026-11-28, standard §4a):** before placing a new or replacement intro, watch it, score it in
+`courses/INTRO_VIDEOS.md` (minimum 90/100) and check it against the current curriculum. Below the bar, keep it out of the
+plan (the old intro stays live, or the position stays reserved) and send the specific fixes to the generation agent.
+A replacement uses the same plan entry (same lesson), so only the video, captions and slides change.
 
 ## Monitoring the course folders (del-watch-courses)
 `node tools/mcp-server/dist/watch.js [--env staging] [--settle 10] [--interval 15] [--once] [--dry-run] [--agent "<cmd>"]`
@@ -232,3 +238,11 @@ Course name · source folder · environment · account · course id · studio an
 videos (count, total duration processed) · captions · slides · labs · quiz lessons and questions (and skipped ones) ·
 price per environment · failed or skipped uploads · missing materials · final review (instructor / student / customer) ·
 QA results (what was checked, on which sizes and themes) · status (draft / in review / published) · decisions for the owner.
+
+## Quiz banks (owner 2026-11-28)
+No fixed number of questions: the lesson's length and content decide (standard §8a, `courses/QUIZ_AUDIT.md`). Before publishing,
+read every `quiz.json` against the captions: each answer right, each wrong option realistic and explained, scenario and
+troubleshooting questions where the lesson has them, timestamps pointing at the right moment. Too few, repetitive, too basic or
+inaccurate: send the specific fixes to GEN, don't edit its questions yourself. Full banks and assessments go out once
+`"quizBanks": true` is set in `courses/publisher.config.json` (after the quiz-bank API release); before that, `quiz.json` is
+folded into today's format.

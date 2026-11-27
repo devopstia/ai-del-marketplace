@@ -15,6 +15,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { ApiError, DelClient, isVideo, SessionClient, type FileRecord, type FileStore, type PublisherClient, type UploadResult } from './client.js';
+import { assessmentFiles, probeSeconds, readQuizFile, sha256Text, type BankSettings } from './quizfile.js';
 
 // ---------- plan ----------
 export type LessonRole = 'intro' | 'lesson' | 'vocabulary' | 'project' | 'conclusion';
@@ -52,14 +53,20 @@ export interface CoursePlan {
     taughtBy?: string;
     /** "suggested" (the template the platform suggests for the category) or a template id. */
     cover?: string;
-    /** "from-captions": import the in-video multiple-choice questions as a quiz lesson after each video. */
+    /** "from-captions": import the in-video multiple-choice questions as a quiz lesson after each video. A lesson's
+     *  `quiz.json` (owner 2026-11-28, courses/quiz.schema.json) is always preferred when the folder has one. */
     quizzes?: 'from-captions';
     /** Sharing banner (docs/SOCIAL_SHARING.md): topic design (ai, aws, azure, terraform, kubernetes, devops, automation,
      *  software-dev, cybersecurity, general), optional style (pro | marketplace | enterprise) and a shorter headline.
      *  Omitted values keep the platform defaults (topic design from the category, style from Super Admin). */
     share?: SharePlan;
+    /** Folder with the course's assessments, relative to `sourceDir` unless absolute (same as the top-level `assessments`). */
+    assessmentsDir?: string;
   };
   sections: SectionPlan[];
+  /** Folder with the course's assessments (module-<n>-assessment.json, final-assessment.json, scenario-<name>.json),
+   *  relative to `sourceDir` unless absolute (owner 2026-11-28). */
+  assessments?: string;
   /** "Continue your learning journey" (owner 2026-11-28): recommended next courses, in order. `course` is another plan's
    *  folder name under courses/ (resolved through its state.<env>.json); set directly, no revision review. */
   related?: RelatedPlan[];
@@ -95,7 +102,7 @@ const VIDEO = new Set(['.mp4', '.m4v', '.mov', '.webm']);
 const NEVER = [/^\.env$/i, /\.pem$/i, /\.key$/i, /^id_(rsa|ed25519|ecdsa)/i, /credential/i, /secret.*\.(json|txt|ya?ml)$/i];
 const SKIP_EXT = new Set(['.pptx', '.ppt', '.png', '.jpg', '.jpeg', '.psd', '.aep', '.prproj', '.tmp', '.log', '.md']);
 
-export interface LessonFiles { video?: string; captions?: string; slides?: string; lab?: string; skipped: { file: string; why: string }[]; problems: string[] }
+export interface LessonFiles { video?: string; captions?: string; slides?: string; lab?: string; /** The lesson's quiz bank (owner 2026-11-28). */ quiz?: string; skipped: { file: string; why: string }[]; problems: string[] }
 
 /** What a lesson folder holds, by the upload rules: one video, captions, the PDF slides, the lab ZIP; never PowerPoint or secrets. */
 export async function discover(folder: string): Promise<LessonFiles> {
@@ -111,9 +118,10 @@ export async function discover(folder: string): Promise<LessonFiles> {
   if (!out.slides && names.some((n) => /\.pptx?$/i.test(n))) out.problems.push('PowerPoint without a PDF: convert it to PDF and check it first');
   const zips = names.filter((n) => extname(n).toLowerCase() === '.zip');
   out.lab = zips.find((n) => /lab|exercise/i.test(n)) ? join(folder, zips.find((n) => /lab|exercise/i.test(n))!) : zips[0] ? join(folder, zips[0]) : undefined;
+  if (names.includes('quiz.json')) out.quiz = join(folder, 'quiz.json');
   for (const n of names) {
     const p = join(folder, n);
-    if ([out.video, out.slides, out.lab].includes(p)) continue;
+    if ([out.video, out.slides, out.lab, out.quiz].includes(p)) continue;
     if (NEVER.some((r) => r.test(n))) out.skipped.push({ file: n, why: 'looks like a secret: never uploaded' });
     else if (SKIP_EXT.has(extname(n).toLowerCase())) out.skipped.push({ file: n, why: /\.pptx?$/i.test(n) ? 'PowerPoint: the PDF is uploaded instead' : 'production file, not for learners' });
     else out.skipped.push({ file: n, why: 'not part of the upload rules' });
@@ -135,9 +143,45 @@ export const quizTitle = (lesson: { title: string; short?: string } | string) =>
   return `Quiz: ${(l.short?.trim() || l.title.split(':')[0]!.trim())}`.slice(0, 200);
 };
 
+/** A boolean switch from publisher.config.json (false when the file or the key is missing). */
+export async function readConfigFlag(path: string, key: string): Promise<boolean> {
+  try { return (JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>)[key] === true; } catch { return false; }
+}
+
 // ---------- quiz import (in-video questions read from the captions; never invented) ----------
-export interface QuizQuestion { q: string; options: string[]; correct: number; why: string }
-export interface ParsedQuiz { questions: QuizQuestion[]; skipped: string[] }
+export interface QuizQuestion { q: string; options: string[]; correct: number; why: string; id?: string; explanations?: string[]; takeaway?: string; difficulty?: string; type?: string; topic?: string; timestamp?: number; code?: string; fixedOrder?: boolean }
+export interface ParsedQuiz { questions: QuizQuestion[]; skipped: string[]; /** From quiz.json: its settings and checksum (the quiz is replaced when the file changes). */ settings?: BankSettings; sha?: string; source?: 'file' | 'captions' }
+
+/**
+ * Read a lesson's quiz.json (GEN's bank, courses/quiz.schema.json) into the quiz format the platform accepts today
+ * ({q, options 3–5, correct, why}). The explanation keeps why it is right, the takeaway and, when they fit, why each
+ * other option is wrong. Questions the platform can't hold yet are skipped and reported, never changed.
+ */
+export async function quizFromFile(path: string): Promise<ParsedQuiz | null> {
+  let raw: string;
+  try { raw = await readFile(path, 'utf8'); } catch { return null; }
+  const out: ParsedQuiz = { questions: [], skipped: [] };
+  let data: { questions?: Array<{ id?: string; q?: string; code?: string; options?: string[]; correct?: number; why?: string; explanations?: string[]; takeaway?: string }> };
+  try { data = JSON.parse(raw); } catch { out.skipped.push('quiz.json is not valid JSON: not used'); return out; }
+  const seen = new Set<string>();
+  for (const [i, x] of (data.questions ?? []).entries()) {
+    const id = x.id ?? `#${i + 1}`;
+    const opts = x.options ?? [];
+    const q = [x.q?.trim(), x.code ? `\n${x.code.trim()}` : ''].join('').trim();
+    if (!q || q.length > 500) { out.skipped.push(`${id}: question missing or longer than 500 characters`); continue; }
+    if (opts.length < 3 || opts.length > 5 || opts.some((o) => !o?.trim() || o.length > 300)) { out.skipped.push(`${id}: needs 3–5 options of at most 300 characters`); continue; }
+    if (!Number.isInteger(x.correct) || x.correct! < 0 || x.correct! >= opts.length) { out.skipped.push(`${id}: correct answer index invalid`); continue; }
+    if (!x.why?.trim()) { out.skipped.push(`${id}: no explanation`); continue; }
+    if (seen.has(q.toLowerCase())) { out.skipped.push(`${id}: duplicate question`); continue; }
+    seen.add(q.toLowerCase());
+    let why = x.why.trim();
+    if (x.takeaway?.trim()) why += ` Takeaway: ${x.takeaway.trim()}`;
+    const wrong = (x.explanations ?? []).map((e, j) => (j === x.correct || !e?.trim() ? '' : ` ${String.fromCharCode(65 + j)}: ${e.trim()}`)).join('');
+    if (wrong && why.length + wrong.length + 18 <= 1000) why += ` Why not the others:${wrong}`;
+    out.questions.push({ q, options: opts.map((o) => o.trim()), correct: x.correct!, why: why.slice(0, 1000) });
+  }
+  return out;
+}
 
 /** Caption text as one string: cue numbers and timings removed, lines joined (questions span cues). */
 export function captionText(srtOrVtt: string): string {
@@ -321,12 +365,19 @@ export function manifestNotes(plan: CoursePlan, m: CourseManifest): string[] {
 
 // ---------- curriculum (existing ids always reused: progress, completions and quiz results stay) ----------
 export interface SiteSection { id: string; title: string; lectures: { id: string; title: string }[] }
-export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[]) {
+export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[], assessments: { section: number; id: string }[] = []) {
   const issues: string[] = [];
   const used = new Set<string>();
-  const arranged = plan.sections.map((sp) => {
+  const arranged = plan.sections.map((sp, si) => {
     const order = sp.order ?? sp.lessons.map((l) => ({ folder: l.folder }));
-    const ids = order.flatMap((it) => ('article' in it ? [state.articles?.[it.article]] : [state.lessons[it.folder], withQuiz.has(it.folder) ? state.quizzes?.[it.folder] : undefined])).filter((x): x is string => !!x);
+    const parts = order.map((it) => ({ article: 'article' in it, ids: ('article' in it ? [state.articles?.[it.article]] : [state.lessons[it.folder], withQuiz.has(it.folder) ? state.quizzes?.[it.folder] : undefined]).filter((x): x is string => !!x) }));
+    // Assessments close their module (module, then scenarios, then the final assessment, in the order given), before
+    // the articles that end it (the closing "continue your learning journey" article stays last).
+    let cut = parts.length;
+    while (cut > 0 && parts[cut - 1]!.article) cut--;
+    const ids = parts.slice(0, cut).flatMap((x) => x.ids);
+    const closing = parts.slice(cut).flatMap((x) => x.ids);
+    ids.push(...assessments.filter((a) => a.section === si).map((a) => a.id).filter((id) => !ids.includes(id) && !closing.includes(id)), ...closing);
     ids.forEach((i) => used.add(i));
     return { id: state.sections[sp.title]!, lectureIds: ids };
   });
@@ -345,9 +396,9 @@ export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections
  * left empty that the plan doesn't name. Only for draft courses: on a published course students' progress would be
  * lost, so the change must go through a reviewed revision with the owner's OK. Media is never deleted (shared videos).
  */
-export function pruneTargets(status: string, plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[], allowPublished = false): { lectures: { id: string; title: string }[]; sections: { id: string; title: string }[] } {
+export function pruneTargets(status: string, plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles' | 'assessments'>, withQuiz: Set<string>, site: SiteSection[], allowPublished = false): { lectures: { id: string; title: string }[]; sections: { id: string; title: string }[] } {
   if (status !== 'draft' && !allowPublished) throw new Error(`--prune refused: the course is ${status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK.`);
-  const keep = new Set<string>();
+  const keep = new Set<string>(Object.values(state.assessments ?? {}));
   for (const sp of plan.sections) {
     for (const l of sp.lessons) { const a = state.lessons[l.folder]; if (a) keep.add(a); const q = withQuiz.has(l.folder) ? state.quizzes?.[l.folder] : undefined; if (q) keep.add(q); }
     for (const a of sp.articles ?? []) { const id = state.articles?.[a.key]; if (id) keep.add(id); }
@@ -364,7 +415,7 @@ interface Resource { id: string; title: string; sizeBytes?: number }
 interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; articleMd?: string | null; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
 interface Section { id: string; title: string; lectures: Lecture[] }
 interface CourseDetail { id: string; slug?: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
-interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Assessment quiz lessons by key (module-<n>, final, scenario-<name>). */ assessments?: Record<string, string>; /** Checksums of quiz.json / assessment files, so a changed file replaces the quiz (same quiz lesson). */ quizFiles?: Record<string, string>; /** Caption file checksum per video asset, so corrected captions replace the old ones. */ captions?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
 
 export type AuthMode = 'agent' | 'session';
 
@@ -436,7 +487,7 @@ export async function lessonFolders(plan: Pick<CoursePlan, 'sourceDir' | 'sectio
 
 type Log = (msg: string) => void;
 
-export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean; /** Owner-approved removal from a published course: the deletions go into its draft revision and take effect only when an admin approves it (owner 2026-11-28). */ prunePublished?: boolean } = {}) {
+export async function publish(planPath: string, opts: { /** Send full quiz banks and assessments (the quiz-bank API is live). Default: publisher.config.json `quizBanks`. */ quizBanks?: boolean; dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean; /** Owner-approved removal from a published course: the deletions go into its draft revision and take effect only when an admin approves it (owner 2026-11-28). */ prunePublished?: boolean } = {}) {
   const log = opts.log ?? ((m: string) => console.log(m));
   const plan = forEnv(normalizePlan(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan), opts.env);
   const planDir = dirname(resolve(planPath));
@@ -474,8 +525,63 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   log(`Inventory: ${planned.size} lessons${articleCount ? ` + ${articleCount} article(s)` : ''} in ${plan.sections.length} sections; ${issues.length} issue(s).`);
   for (const [k, f] of inventory) log(`  ${k}: video ${f.video ? 'yes' : 'NO'}, captions ${f.captions ? 'yes' : 'no'}, slides ${f.slides ? 'yes' : 'no'}, lab ${f.lab ? 'yes' : 'no'}${f.skipped.length ? `; skipped ${f.skipped.map((x) => x.file.replace(k, '…')).join(', ')}` : ''}`);
   const quizzes = new Map<string, ParsedQuiz>();
+  // A lesson's quiz.json (owner 2026-11-28) wins over the questions read from the captions. The full bank (explanations
+  // per option, takeaway, topic, timestamp, assessments) needs the quiz-bank API: switched on with "quizBanks": true in
+  // publisher.config.json (or DEL_QUIZ_BANKS=1) once that release is live; until then the legacy mapping below is used.
+  const banks = opts.quizBanks ?? (process.env.DEL_QUIZ_BANKS === '1' || (await readConfigFlag(opts.configPath ?? join(planDir, '..', 'publisher.config.json'), 'quizBanks')));
+  for (const [k, f] of inventory) {
+    if (!banks || !f.quiz) continue;
+    const r = await readQuizFile(f.quiz, { durationSec: f.video ? probeSeconds(f.video) : null });
+    r.errors.forEach((e) => issues.push(`${k}/quiz.json: ${e}`));
+    r.warnings.forEach((w) => warnings.push(`${k}/quiz.json: ${w}`));
+    if (r.errors.length) continue;
+    quizzes.set(k, { questions: r.file.questions, skipped: [], settings: r.file.settings, sha: sha256Text(await readFile(f.quiz, 'utf8')), source: 'file' });
+    log(`  ${k}: quiz ${r.file.questions.length} question(s) from quiz.json`);
+  }
+  // Assessments (module, final, scenario) from the plan's assessments folder.
+  const assessRel = plan.assessments ?? plan.course.assessmentsDir;
+  const assessDir = assessRel ? resolve(plan.sourceDir, assessRel) : null;
+  // Assessment questions name the lesson folder they come from ("21-n21-…"); catalogue plans use "<group>/<folder>".
+  const planFolders = plan.sections.flatMap((sp) => sp.lessons.map((l) => l.folder));
+  const planFolder = (lesson: string) => planFolders.find((f) => f === lesson || f.endsWith(`/${lesson}`));
+  const durations = new Map<string, number | null>();
+  const lessonDuration = (lesson: string): number | null | undefined => {
+    const f = planFolder(lesson);
+    if (!f) return undefined;
+    if (!durations.has(f)) { const v = inventory.get(f)?.video; durations.set(f, v ? probeSeconds(v) : null); }
+    return durations.get(f)!;
+  };
+  const assessments: { a: Awaited<ReturnType<typeof assessmentFiles>>[number]; quiz: ParsedQuiz; section: number }[] = [];
+  if (assessDir && !banks) warnings.push('assessments need the quiz-bank API ("quizBanks": true in publisher.config.json once it is live): not uploaded yet');
+  if (assessDir && banks) {
+    if (!existsSync(assessDir)) warnings.push(`assessments folder not found: ${assessDir}`);
+    for (const a of await assessmentFiles(assessDir)) {
+      const r = await readQuizFile(a.path, { assessment: true, lessonDuration });
+      if (r.file.kind && r.file.kind !== a.kind) warnings.push(`assessments/${basename(a.path)}: the file says kind ${r.file.kind}, its name says ${a.kind} (the name is used)`);
+      r.errors.forEach((e) => issues.push(`assessments/${basename(a.path)}: ${e}`));
+      r.warnings.forEach((w) => warnings.push(`assessments/${basename(a.path)}: ${w}`));
+      const last = plan.sections.length - 1;
+      const section = a.kind === 'module' ? a.section! - 1 : a.kind === 'scenario' && r.file.section ? r.file.section - 1 : last;
+      if (section < 0 || section > last) { issues.push(`assessments/${basename(a.path)}: module ${section + 1} is not in the plan`); continue; }
+      if (r.errors.length) continue;
+      const settings: BankSettings = { ...(r.file.settings ?? {}), kind: a.kind };
+      const title = (r.file.title?.trim() || a.title).slice(0, 200);
+      assessments.push({ a: { ...a, title }, quiz: { questions: r.file.questions, skipped: [], settings, sha: sha256Text(await readFile(a.path, 'utf8')), source: 'file' }, section });
+      log(`  assessment "${title}": ${r.file.questions.length} question(s)${settings.sampleSize ? `, ${settings.sampleSize} per attempt` : ''}${settings.pool && settings.pool !== 'own' ? ` (+ the ${settings.pool}'s lesson quizzes)` : ''}`);
+    }
+  }
   if (plan.course.quizzes === 'from-captions') {
     for (const [k, f] of inventory) {
+      if (quizzes.has(k)) continue;
+      // Until the quiz-bank API is live (publisher.config.json "quizBanks": true), GEN's quiz.json is folded into
+      // today's format (why + takeaway + why the others are wrong) and still wins over the spoken questions.
+      const fromFile = !banks && f.video ? await quizFromFile(join(dirname(f.video), 'quiz.json')) : null;
+      if (fromFile) {
+        quizzes.set(k, fromFile);
+        fromFile.skipped.forEach((x) => quizSkips.push(`${k}: ${x}`));
+        log(`  ${k}: quiz ${fromFile.questions.length} question(s) from quiz.json (today's format)${fromFile.skipped.length ? `, ${fromFile.skipped.length} skipped` : ''}`);
+        continue;
+      }
       if (!f.captions) continue;
       let qz = await quizFromCaptions(f.captions);
       // Options only on the slides: the manifest's quiz is used when every answer is the one the video says.
@@ -492,8 +598,8 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
     }
   }
   warnings.forEach((w) => log(`  note: ${w}`));
-  if (opts.dryRun) return { dryRun: true, environment: plan.environment, apiUrl: plan.apiUrl, priceCents: plan.course.priceCents, issues, warnings, quizSkips, inventory: Object.fromEntries(inventory), quizzes: Object.fromEntries([...quizzes].map(([k, v]) => [k, v.questions.length])) };
-  if (checks.errors.length || [...inventory.values()].some((f) => f.problems.length)) throw new Error(`Fix these before uploading:\n${issues.join('\n')}`);
+  if (opts.dryRun) return { dryRun: true, environment: plan.environment, apiUrl: plan.apiUrl, priceCents: plan.course.priceCents, issues, warnings, quizSkips, inventory: Object.fromEntries(inventory), quizzes: Object.fromEntries([...quizzes].map(([k, v]) => [k, v.questions.length])), assessments: Object.fromEntries(assessments.map((x) => [x.a.title, x.quiz.questions.length])) };
+  if (checks.errors.length || [...inventory.values()].some((f) => f.problems.length) || issues.some((i) => /quiz\.json: |^assessments\//.test(i))) throw new Error(`Fix these before uploading:\n${issues.join('\n')}`);
 
   const auth: AuthMode = opts.auth ?? (process.env.DEL_AUTH === 'session' ? 'session' : 'agent');
   let del: PublisherClient;
@@ -511,6 +617,20 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
     del.close?.();
   }
   async function run() {
+
+  /**
+   * A bank as the API takes it: a question's `lesson` / `related` lesson folders become the lesson ids on the site
+   * ("Watch this part" opens that video); a lesson not uploaded yet is left out and reported, never guessed.
+   */
+  const toApi = (questions: QuizQuestion[], where: string) => questions.map((q) => {
+    const { lesson, related, ...rest } = q as QuizQuestion & { lesson?: string; related?: { lesson: string; timestamp: number }[] };
+    const idOf = (folder: string) => { const f = planFolders.find((x) => x === folder || x.endsWith(`/${folder}`)); return f ? state.lessons[f] : undefined; };
+    const out: Record<string, unknown> = { ...rest };
+    if (lesson) { const id = idOf(lesson); if (id) out.lessonId = id; else { issues.push(`${where}: question ${q.id ?? q.q.slice(0, 40)}: lesson ${lesson} is not on the site yet ("Watch this part" left out)`); delete out.timestamp; } }
+    const rel = (related ?? []).map((r) => ({ lessonId: idOf(r.lesson), timestamp: r.timestamp })).filter((r): r is { lessonId: string; timestamp: number } => !!r.lessonId);
+    if (rel.length) out.related = rel;
+    return out;
+  });
 
   // 2. Right account?
   const me = await del.call<{ instructor: { id: string; name: string } }>('GET', '/whoami');
@@ -530,7 +650,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   } else log(`Using existing course ${courseId}`);
   state.courseId = courseId;
   await saveState();
-  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, share: _share, ...fields } = plan.course;
+  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, share: _share, assessmentsDir: _assess, ...fields } = plan.course;
   issues.push(...warnings);
   await del.call('PATCH', `/courses/${courseId}`, { ...fields, ...(categoryId ? { categoryId } : {}) });
 
@@ -589,9 +709,21 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
         if (v.duplicate) counts.reused++; else counts.uploaded++;
         if (lec.videoAssetId !== v.assetId) patch.videoAssetId = v.assetId;
         counts.videos++;
-        if (files.captions && !(lec.video?.id === v.assetId && lec.video?.hasCaptions)) {
-          try { await del.uploadCaptions(v.assetId!, files.captions); counts.captions++; } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
-        } else if (files.captions) counts.captions++;
+        // Captions: uploaded when missing, and again whenever the caption file changes (owner 2026-11-28: corrected
+        // captions re-delivered without a new video). A video with captions but no recorded checksum is refreshed once.
+        if (files.captions) {
+          const csha = await del.sha256(files.captions);
+          state.captions ??= {};
+          const has = lec.video?.id === v.assetId && lec.video?.hasCaptions;
+          if (has && state.captions[v.assetId!] === csha) counts.captions++;
+          else {
+            try {
+              await del.uploadCaptions(v.assetId!, files.captions); counts.captions++;
+              if (has) log(`  ~ captions refreshed: ${lp.title}`);
+              state.captions[v.assetId!] = csha; await saveState();
+            } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
+          }
+        }
       } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
         counts.failed++;
         issues.push(`${lp.folder}: video upload failed: ${(e as Error).message}`);
@@ -634,15 +766,27 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
         let ql = everything.find((l) => l.id === state.quizzes![lp.folder]) ?? everything.find((l) => l.title === title && (l.type ?? 'quiz') === 'quiz');
         try {
           if (!ql) {
-            const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections/${sec.id}/lectures`, { title, type: 'quiz', summary: `${qz.questions.length} questions from the video, with the answers explained.`.slice(0, 300) });
+            const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections/${sec.id}/lectures`, { title, type: 'quiz', summary: `${qz.questions.length} questions ${qz.source === 'file' ? 'on this lesson' : 'from the video'}, with the answers explained.`.slice(0, 300) });
             c = await detail();
             ql = c.sections.flatMap((s) => s.lectures).find((l) => l.id === made.id)!;
             log(`+ quiz ${title}`);
           } else if (ql.title !== title) await del.call('PATCH', `/courses/${courseId}/lectures/${ql.id}`, { title });
           state.quizzes![lp.folder] = ql.id;
           await saveState();
-          const same = JSON.stringify((ql.quiz?.questions ?? []).map((q) => ({ q: q.q, options: q.options, correct: q.correct, why: q.why }))) === JSON.stringify(qz.questions);
-          if (!same) await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: qz.questions });
+          if (qz.source === 'file') {
+            // A quiz.json bank: replaced when the file changes (checksum), keeping the quiz lesson and students' results.
+            state.quizFiles ??= {};
+            const fresh = state.quizFiles[lp.folder] === qz.sha && (ql.quiz?.questions?.length ?? 0) === qz.questions.length;
+            if (!fresh) {
+              await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: toApi(qz.questions, lp.folder), ...(qz.settings ? { settings: qz.settings } : {}) });
+              if (ql.quiz?.questions?.length) log(`  ~ quiz replaced (quiz.json changed): ${title}`);
+              state.quizFiles[lp.folder] = qz.sha!;
+              await saveState();
+            }
+          } else {
+            const same = JSON.stringify((ql.quiz?.questions ?? []).map((q) => ({ q: q.q, options: q.options, correct: q.correct, why: q.why }))) === JSON.stringify(qz.questions);
+            if (!same) await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: qz.questions });
+          }
           counts.quizzes++;
           counts.quizQuestions += qz.questions.length;
         } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
@@ -676,11 +820,45 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   }
   await saveState();
 
+  // 4b. Assessments: one quiz lesson each at the end of its module, replaced when its file changes (same lesson).
+  state.assessments ??= {};
+  state.quizFiles ??= {};
+  const placed: { section: number; id: string }[] = [];
+  for (const x of [...assessments].sort((p, q) => p.section - q.section || ['module', 'scenario', 'final'].indexOf(p.a.kind) - ['module', 'scenario', 'final'].indexOf(q.a.kind))) {
+    const secId = state.sections[plan.sections[x.section]!.title];
+    if (!secId) { issues.push(`${x.a.title}: its module was not created`); continue; }
+    try {
+      const everything = c.sections.flatMap((s) => s.lectures);
+      let ql = everything.find((l) => l.id === state.assessments![x.a.key]) ?? everything.find((l) => l.title === x.a.title && (l.type ?? 'quiz') === 'quiz');
+      if (!ql) {
+        const summary = `${x.quiz.settings?.sampleSize ?? x.quiz.questions.length} questions${x.a.kind === 'final' ? ' across the whole course' : x.a.kind === 'module' ? ' across this module' : ' on a real-world scenario'}, with every answer explained.`;
+        const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections/${secId}/lectures`, { title: x.a.title, type: 'quiz', summary });
+        c = await detail();
+        ql = c.sections.flatMap((s) => s.lectures).find((l) => l.id === made.id)!;
+        log(`+ ${x.a.title}`);
+      } else if (ql.title !== x.a.title) await del.call('PATCH', `/courses/${courseId}/lectures/${ql.id}`, { title: x.a.title });
+      state.assessments[x.a.key] = ql.id;
+      const k = `assessment:${x.a.key}`;
+      if (state.quizFiles[k] !== x.quiz.sha || (ql.quiz?.questions?.length ?? 0) !== x.quiz.questions.length) {
+        await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: toApi(x.quiz.questions, x.a.title), settings: x.quiz.settings });
+        if (ql.quiz?.questions?.length) log(`  ~ ${x.a.title} replaced (file changed)`);
+        state.quizFiles[k] = x.quiz.sha!;
+      }
+      await saveState();
+      placed.push({ section: x.section, id: ql.id });
+      counts.quizzes++;
+      counts.quizQuestions += x.quiz.questions.length;
+    } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
+      counts.failed++;
+      issues.push(`${x.a.title} failed: ${(e as Error).message}`);
+    }
+  }
+
   // 5. Curriculum in plan order (new lessons inserted where the plan puts them; ids never recreated). Lessons and
   // sections that are not in the plan stay, at the end, and are reported.
   c = await detail();
   const withQuiz = new Set([...quizzes].filter(([, q]) => q.questions.length).map(([k]) => k));
-  const { arranged, issues: arrangeIssues } = arrangeCurriculum(plan, state, withQuiz, c.sections);
+  const { arranged, issues: arrangeIssues } = arrangeCurriculum(plan, state, withQuiz, c.sections, placed);
   issues.push(...arrangeIssues);
   await del.call('PUT', `/courses/${courseId}/curriculum`, { sections: arranged });
   if (opts.prune) {
@@ -690,7 +868,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
     for (const s of t.sections) { await del.call('DELETE', `/courses/${courseId}/sections/${s.id}`); log(`- section removed: ${s.title}`); }
     // Forget ids that no longer exist, so a later run can't match them.
     const gone = new Set([...t.lectures.map((l) => l.id), ...t.sections.map((s) => s.id)]);
-    for (const m of [state.lessons, state.quizzes!, state.articles!, state.sections]) for (const [k, v] of Object.entries(m)) if (gone.has(v)) delete m[k];
+    for (const m of [state.lessons, state.quizzes!, state.articles!, state.sections, state.assessments!]) for (const [k, v] of Object.entries(m)) if (gone.has(v)) delete m[k];
     await saveState();
     if (t.lectures.length || t.sections.length) issues.push(`pruned ${t.lectures.length} lesson(s) and ${t.sections.length} section(s) not in the plan (media kept)`);
     for (let i = issues.length - 1; i >= 0; i--) if (/^(lesson|section) on the site but not in the plan/.test(issues[i]!)) issues.splice(i, 1);

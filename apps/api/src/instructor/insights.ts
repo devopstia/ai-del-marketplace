@@ -1,4 +1,5 @@
 import { mergeRanges, type Range } from '../access/consumption';
+import { attemptItems, questionId, type QuizQuestion } from '../learning/quiz-model';
 
 /**
  * Instructor insights (owner 2026-11-26, idea 5): pure numbers from what learners actually played and answered. Nothing is
@@ -48,12 +49,23 @@ export function averageWatched(watchedSec: number[], durationSec: number): numbe
 
 /**
  * Quiz questions answered wrong most often, from each learner's latest attempt (a retry replaces the earlier answer, so
- * one learner counts once). Attempts made with a different number of questions (the quiz was edited) are left out.
+ * one learner counts once). Answers are matched by question id (attempts since 2026-11-28) or, for older attempts, by
+ * position when the attempt had the current number of questions; a question needs enough learners to be shown.
  */
-export function quizMisses(questions: { q: string; correct: number }[], latestAnswers: unknown[]): { index: number; q: string; wrongPct: number; answered: number }[] {
-  const valid = latestAnswers.filter((a): a is number[] => Array.isArray(a) && a.length === questions.length && a.every((x) => typeof x === 'number'));
-  if (valid.length < MIN_SAMPLE) return [];
+export function quizMisses(questions: { id?: string; q: string; correct: number }[], latestAnswers: unknown[]): { index: number; q: string; wrongPct: number; answered: number }[] {
+  const tally = new Map<string, { answered: number; wrong: number }>();
+  for (const a of latestAnswers) {
+    if (Array.isArray(a) && (a.length !== questions.length || !a.every((x) => typeof x === 'number'))) continue; // older version of the quiz
+    for (const it of attemptItems(a, questions as QuizQuestion[])) {
+      const t = tally.get(it.id) ?? { answered: 0, wrong: 0 };
+      t.answered++;
+      if (!it.correct) t.wrong++;
+      tally.set(it.id, t);
+    }
+  }
   return questions
-    .map((q, i) => ({ index: i, q: q.q, answered: valid.length, wrongPct: Math.round((valid.filter((a) => a[i] !== q.correct).length / valid.length) * 100) }))
+    .map((q, i) => ({ index: i, q: q.q, t: tally.get(questionId(q)) ?? { answered: 0, wrong: 0 } }))
+    .filter((x) => x.t.answered >= MIN_SAMPLE)
+    .map((x) => ({ index: x.index, q: x.q, answered: x.t.answered, wrongPct: Math.round((x.t.wrong / x.t.answered) * 100) }))
     .sort((a, b) => b.wrongPct - a.wrongPct || a.index - b.index);
 }

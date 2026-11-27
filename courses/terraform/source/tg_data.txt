@@ -1,0 +1,305 @@
+M 0 | Introduction | The course trailer: what Terragrunt adds to Terraform, the finished multi-environment platform, the roadmap.
+L 0.1 | Course introduction: Terraform at scale with Terragrunt and AI | new | cloud | 10 | slides 574–576 | -
+O: See the finished platform (three environments, stacks, a gated pipeline with an AI review); Follow the animated roadmap of the course; Know what to install and what it costs
+D: Premium introduction (8–12 min): the capstone running first (a pull request that changes one unit, the affected-units plan, the AI review comment, approvals per environment), an animated roadmap of the ten modules, real previews of the projects, and a clear call to action.
+DA: Shown on AWS: S3 state with native locking, one account per environment, GitHub OIDC.
+DZ: Shown on Azure: Storage state with lease locking, one subscription per environment, workload identity.
+Q: What does Terragrunt add on top of Terraform? / DRY configuration, generated backends and providers, and orchestration across units / A new cloud provider / A state format / =a
+Q: Which course should you finish first? / The Terraform masterclass / None / The n8n course / =a
+Q: What happens after every lab? / Destroy and verify nothing is left / Keep it running / Stop the VMs only / =a
+
+M 1 | Terragrunt 1.x essentials | The owner's Terragrunt lessons on today's Terragrunt: units, the root file, inputs, generated code and the CLI.
+L 1.1 | Why Terragrunt: the repetition problem in big Terraform estates | owner | shared | 8 | slides 576–577 | terragrunt/README.md
+O: Name the repetition Terraform leaves in multi-environment code (backends, providers, inputs); Explain units and the live/modules split; Decide when Terragrunt is worth it
+D: The owner's slide 576 explanation with a neutral example: three environment folders of copy-pasted Terraform, then the same with one module, three small terragrunt.hcl files and one root.hcl.
+Q: What is a unit in Terragrunt? / A folder with a terragrunt.hcl that deploys one module instance / A Terraform provider / A state file / =a
+Q: What usually repeats across environments without Terragrunt? / Backend and provider blocks and inputs / Resource types / The Terraform binary / =a
+Q: When is Terragrunt not worth it? / A single small stack with one environment / Many environments and accounts / Many teams / =a
+L 1.2 | Install Terragrunt 1.x and pin versions | owner+improved | shared | 8 | slides 56–57 | -
+O: Install Terragrunt 1.2.x with a checksum check; Pin Terraform and Terragrunt versions per repo; Know the 0.x to 1.x renames
+D: The owner's install steps (slides 56–57) with Terragrunt 1.2.3 and Terraform 1.17.2, checksum verification, mise or tgenv pins, terraform_version_constraint / terragrunt_version_constraint; the renames: run-all → run --all, terragrunt.hcl root → root.hcl, hclfmt → hcl fmt.
+N: Outdated: the deck links the 0.x compatibility table and run-all commands; Terragrunt 1.x (v1.2.3, 2026-11-25) renamed the CLI.
+Q: Which command replaced run-all? / terragrunt run --all / terragrunt all / terragrunt run-all-units / =a
+Q: Why verify the download checksum? / To be sure the binary is the published one / It is faster / Terragrunt requires it / =a
+Q: Which setting pins the Terraform version a repo accepts? / terraform_version_constraint / required_terragrunt / tf_pin / =a
+L 1.3 | Units, root.hcl and include | owner+improved | shared | 10 | slides 580–582 | terragrunt/live/development/{vpc,ec2,bastion-host}/terragrunt.hcl
+O: Write a unit with terraform.source and inputs; Include a root.hcl with find_in_parent_folders("root.hcl"); Expose the root's locals to a unit
+D: The owner's development/vpc unit (slide 580) rebuilt with local_file and random_pet modules: source with the double slash, include "root" with expose, inputs; terragrunt render to see the final configuration.
+N: Improve: the owner's units use include { path = find_in_parent_folders() } and a root terragrunt.hcl; 1.x uses a named include and root.hcl.
+Q: What does the double slash in source = "../modules//vpc" mean? / Copy the modules folder, run in its vpc subfolder / A comment / A Git ref / =a
+Q: How does a unit read a value from root.hcl locals? / include "root" { expose = true } then include.root.locals.x / var.root / It cannot / =a
+Q: Which command shows the final configuration with includes resolved? / terragrunt render / terragrunt show / terragrunt print / =a
+L 1.4 | Inputs, locals and the common.yaml convention | owner | shared | 9 | slides 578–582 | terragrunt/live/*/common.yaml
+O: Pass inputs that become TF_VAR values; Load the owner's common.yaml with yamldecode; Build names from assetid, environment and project
+D: The owner's common.yaml (assetid 2560, environment, project del) loaded in root.hcl and used for names like 2560-dev-del-*, the same convention as the Terraform masterclass naming lesson.
+Q: How do inputs reach Terraform? / As TF_VAR_ environment variables for the module / As a tfvars file in Git / Through the state / =a
+Q: Which function reads the owner's common.yaml? / yamldecode(file(...)) / jsondecode / read_yaml / =a
+Q: Which function finds the nearest common.yaml above a unit? / find_in_parent_folders("common.yaml") / get_parent / path_relative / =a
+L 1.5 | Generate blocks: providers and versions once | new | shared | 8 | - | -
+O: Generate provider.tf and versions.tf from root.hcl; Use if_exists safely; Keep modules free of provider configuration
+D: A generate "provider" block with a neutral provider, then if_exists = "overwrite_terragrunt" vs "skip"; why modules must not configure providers themselves.
+Q: What does a generate block do? / Writes a file into the unit's working directory before Terraform runs / Generates a module / Creates state / =a
+Q: Why should modules not configure providers? / The caller decides region, account and credentials / Providers are deprecated / It is faster / =a
+Q: What does if_exists = "overwrite_terragrunt" protect? / Files you wrote yourself are never overwritten / Nothing / The state / =a
+L 1.6 | The Terragrunt 1.x CLI: run, run --all, find, list and dag graph | new | shared | 10 | - | -
+O: Run one unit and all units; List and find units and their dependencies; Draw the dependency graph
+D: terragrunt run plan, run --all plan, find, list --dag, dag graph (DOT), --filter and --parallelism on the course's neutral live tree.
+Q: Which command draws the dependency graph? / terragrunt dag graph / terragrunt graph-deps / terraform graph / =a
+Q: What does --filter do with run --all? / Limits the units that run / Filters output lines / Deletes units / =a
+Q: Which flag limits how many units run at once? / --parallelism / --max / --threads / =a
+
+M 2 | Remote state generation | One backend definition for every unit, with native locking; bootstrapping and migrating state.
+L 2.1 | Generate the backend for every unit | owner+improved | cloud | 12 | slides 578–579 | terragrunt/live/development/{terragrunt.hcl,backend.tf}; marketplace: code/terragrunt/aws/root.hcl, code/terragrunt/azure/root.hcl
+O: Define remote_state once in root.hcl; Give every unit its own state key with path_relative_to_include(); Show locking with two runs
+DA: Lesson code: backend "s3" generated with use_lockfile = true and a key per environment and unit (the owner's DynamoDB table removed); two applies at once show the lock.
+DZ: Lesson code: backend "azurerm" generated with use_azuread_auth and a key per environment and unit; blob lease locking.
+RA: S3 state bucket (from the masterclass lesson 8.2), SSM parameters
+RZ: Storage account and container (from masterclass lesson 8.2)
+CA: ~$0
+CZ: ~$0
+N: Outdated: the owner's root config sets dynamodb_table (deprecated since Terraform 1.11); replaced by use_lockfile = true.
+Q: What gives each unit its own state file? / A key built with path_relative_to_include() / A separate bucket per unit / Workspaces / =a
+Q: Where is remote_state defined? / Once, in root.hcl / In every module / In the state / =a
+Q: What does the generated backend.tf contain? / The backend block for that unit / The provider / Outputs / =a
+QA: Which S3 backend setting replaces the DynamoDB lock table? / use_lockfile = true / dynamodb_table / lock_table / =a
+QZ: How does the azurerm backend lock state? / A lease on the state blob / A lock table / A Git tag / =a
+L 2.2 | Bootstrap and migrate state with terragrunt backend | new | cloud | 9 | - | -
+O: Bootstrap the state store with terragrunt backend bootstrap; Move a unit's state with backend migrate; Delete state only on purpose
+DA: terragrunt backend bootstrap creating a versioned, encrypted bucket; backend migrate when a unit is renamed; why --backend-bootstrap stays off in CI.
+DZ: The state storage account created by the masterclass bootstrap; backend migrate after renaming a unit folder.
+CA: ~$0
+CZ: ~$0
+Q: What happens to state when you rename a unit folder? / Its key changes, so migrate the state first / Nothing / Terraform renames it / =a
+Q: Why keep automatic bootstrap off in CI? / The pipeline should never create state stores by surprise / It is slower / It is not supported / =a
+Q: Which command moves state between units? / terragrunt backend migrate / terragrunt state mv only / terragrunt copy / =a
+QA: Which bucket settings must bootstrap set? / Versioning, encryption and public access block / Static website / Replication only / =a
+QZ: Which auth should the azurerm backend use? / Entra ID (use_azuread_auth) / Storage account keys / Anonymous / =a
+
+M 3 | Dependencies and orchestration | Units that read each other's outputs, run in order, retry and run hooks.
+L 3.1 | dependency blocks and mock outputs | owner+improved | shared | 10 | slide 583 | terragrunt/live/development/eks-control-plane/terragrunt.hcl
+O: Read another unit's outputs with a dependency block; Plan before the dependency exists with mock outputs; Limit mocks to safe commands
+D: The owner's slide 583 (an RDS security group depending on the VPC) rebuilt with neutral units: dependency "network", outputs, mock_outputs with mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"].
+N: Improve: the owner's example uses dependencies { paths } only; dependency blocks also pass outputs.
+Q: What do mock outputs allow? / Planning a unit before its dependency is applied / Applying without dependencies / Skipping tests / =a
+Q: Why limit mocks to init, validate and plan? / An apply must never use fake values / Mocks are slow / It is required / =a
+Q: How does a unit read the network's vpc_id? / dependency.network.outputs.vpc_id / var.network / data.network / =a
+L 3.2 | run --all: order, filters, the affected units and parallelism | new | shared | 10 | - | -
+O: Predict the run order from the DAG; Run only what a change affects with --filter-affected; Destroy in reverse order safely
+D: run --all plan on the neutral tree, the order printed by list --dag, --filter-affected after a commit, run --all destroy in reverse order, --queue-ignore-dag-order and why not to use it.
+Q: In which order does run --all destroy run? / Reverse dependency order / Alphabetical / Random / =a
+Q: What does --filter-affected select? / Units changed between main and HEAD and what depends on them / Every unit / Only failed units / =a
+Q: Why avoid --queue-ignore-dag-order? / Dependencies may run before what they need / It is slower / It is deprecated / =a
+L 3.3 | Hooks, errors and retries | new | shared | 8 | - | -
+O: Run before and after hooks (fmt, tflint, checkov); Retry known transient errors; Ignore nothing silently
+D: before_hook running terraform fmt -check and TFLint, an after_hook posting a message, the errors block with retry rules for a throttling error.
+Q: What is a before_hook good for? / Checks such as fmt and lint before Terraform runs / Changing state / Creating units / =a
+Q: Which errors may be retried automatically? / Known transient ones like throttling / Every error / Validation errors / =a
+Q: Where are retry rules defined in Terragrunt 1.x? / The errors block / A shell loop / The provider / =a
+
+M 4 | Environments and the multi-account / multi-subscription layout | The owner's dev/staging/production tree, one account or subscription per environment, and promotion.
+L 4.1 | The live tree: environments, regions and units | owner+improved | cloud | 12 | slides 576–582 | terragrunt/live/{development,staging,production}; marketplace: code/terragrunt/aws/live, code/terragrunt/azure/live
+O: Lay out live/<environment>/<unit>; Keep environment values in common.yaml; Add an environment by copying four small files
+DA: Lesson code: development, staging and production, each with common.yaml (assetid, environment, project, region, account_id) and network/app units; terragrunt dag graph.
+DZ: Lesson code: the same tree with subscription_id, location and the state storage account in each common.yaml.
+RA: VPC, subnets, IGW, security groups, SSM parameters (all free)
+RZ: Resource groups, VNets, subnets, NSGs (all free)
+CA: $0
+CZ: $0
+Q: What changes between environment folders? / Only small value files and inputs / The modules / The Terraform version / =a
+Q: Where do environment values live in the owner's layout? / common.yaml per environment / main.tf / The state / =a
+Q: How do you add a new environment? / Copy an environment folder and change its values / Edit every module / Create a new repo / =a
+QA: What identifies the target AWS account in common.yaml? / account_id / region / assetid / =a
+QZ: What identifies the target Azure subscription in common.yaml? / subscription_id / location / tenant name / =a
+L 4.2 | One account or subscription per environment | new | cloud | 12 | slides 447–458 (masterclass) | marketplace: code/terragrunt/aws/root.hcl, code/terragrunt/azure/root.hcl
+O: Generate a provider that assumes the environment's role or targets its subscription; Guard against the wrong account; Explain why prod is isolated
+DA: The generated provider with assume_role per environment and allowed_account_ids; AWS Organizations layout explained; a deliberate wrong account id fails the plan.
+DZ: The generated provider with subscription_id per environment; management groups explained; a wrong subscription fails the guard.
+CA: $0
+CZ: $0
+Q: Why one account or subscription per environment? / A dev mistake cannot reach prod / It is cheaper / Terraform requires it / =a
+Q: Where is the provider written? / Generated once from root.hcl / In every unit / In the module / =a
+Q: What should a wrong-environment run do? / Fail before any change / Apply with a warning / Nothing / =a
+QA: Which provider argument blocks the wrong AWS account? / allowed_account_ids / assume_role / region / =a
+QZ: Which provider argument selects the Azure subscription? / subscription_id / tenant_id only / location / =a
+L 4.3 | Promote a module version from dev to staging to prod | new | cloud | 10 | - | -
+O: Source modules by Git tag; Promote a tag one environment at a time; Roll back by moving back a tag
+DA: The network module tagged v1.1.0, used by development, then staging, then production; a bad change rolled back to v1.0.0.
+DZ: The same promotion on the Azure tree.
+CA: $0
+CZ: $0
+Q: How is a module version pinned in a unit? / source = "git::...//network?ref=v1.1.0" / version = latest / A branch name / =a
+Q: In which order is a change promoted? / Development, staging, production / Production first / All at once / =a
+Q: How do you roll back a unit? / Point it at the previous tag and apply / Delete the state / Edit the cloud console / =a
+QA: What does the AWS promotion change in the tree? / Only the ref in each environment's unit / The bucket / The account / =a
+QZ: What does the Azure promotion change in the tree? / Only the ref in each environment's unit / The subscription / The storage account / =a
+
+M 5 | Catalogs and stacks | Reusable unit templates and Terragrunt 1.x stacks: a whole environment from one file.
+L 5.1 | A module catalog and scaffold | new | shared | 8 | - | -
+O: Organise modules and unit templates as a catalog; Start a unit with terragrunt scaffold; Browse it with terragrunt catalog
+D: The course modules folder as a catalog, terragrunt scaffold for a new unit, terragrunt catalog to browse, and versioning the catalog repo.
+Q: What does terragrunt scaffold create? / A new unit's terragrunt.hcl from a module / A module / A state / =a
+Q: Why version the catalog? / Environments choose when to take changes / It is required / Faster plans / =a
+Q: Where do unit templates live? / In the catalog (units/) / In every environment / In the state / =a
+L 5.2 | Stacks: an environment from one terragrunt.stack.hcl | new | shared | 12 | - | marketplace: code/terragrunt/aws/stacks/production, code/terragrunt/azure/stacks/production
+O: Write unit blocks with source, path and values; Generate and run a stack; Read values inside a unit template
+D: The course's production stack: unit "network" and unit "app" with values, terragrunt stack generate (.terragrunt-stack/), stack run plan, stack output, stack clean.
+Q: What does terragrunt stack generate do? / Writes the stack's units into .terragrunt-stack / Applies the stack / Deletes state / =a
+Q: How does a unit template read stack values? / values.<name> / var.<name> / local.<name> / =a
+Q: Should .terragrunt-stack be committed? / No, it is generated / Yes / Only in prod / =a
+L 5.3 | Move a live tree to stacks without destroying anything | new | shared | 10 | - | -
+O: Keep state keys stable while switching to stacks; Use backend migrate where keys change; Prove the change with a no-op plan
+D: The development tree turned into a stack: compare state keys, migrate where the path changes, and end with plans that show no changes.
+Q: What must a migration to stacks end with? / Plans with no changes / Recreated resources / New accounts / =a
+Q: Why do state keys matter in this move? / A new key means Terraform sees empty state and recreates resources / They do not / They change the region / =a
+Q: Which tool moves state to the new key? / terragrunt backend migrate / git mv / terraform import only / =a
+
+M 6 | CI/CD with OIDC | Pipelines that plan only what changed, apply environment by environment, and never store cloud keys.
+L 6.1 | Plan affected units on every pull request | new | cloud | 14 | slides 614–616 (masterclass) | marketplace: code/terragrunt/.github/workflows/terragrunt-plan.yml
+O: Sign in with OIDC from GitHub Actions; Plan only affected units with --filter-affected; Post the plan on the pull request
+DA: Lesson code: the plan workflow with configure-aws-credentials (plan role), Terragrunt installed with a checksum, hcl fmt --check, run --all --filter-affected plan, a PR comment.
+DZ: The Azure variant: azure/login with the plan identity's federated credential, ARM_USE_OIDC, the same affected-units plan.
+CA: $0
+CZ: $0
+Q: Why plan only affected units? / Faster runs and a smaller review / It is required / It hides changes / =a
+Q: What does the pipeline store for cloud access? / Nothing secret: OIDC gives short-lived credentials / Access keys / Passwords / =a
+Q: What must the checkout fetch for --filter-affected? / Enough history to compare with main / Nothing / Tags only / =a
+QA: Which action assumes the AWS plan role? / aws-actions/configure-aws-credentials / actions/cache / hashicorp/setup-terraform / =a
+QZ: Which action signs in to Azure with OIDC? / azure/login with a federated credential / actions/checkout / azure/cli with a password / =a
+L 6.2 | Apply environment by environment with approvals | new | cloud | 12 | - | marketplace: code/terragrunt/.github/workflows/terragrunt-apply.yml
+O: Apply after merge one environment at a time; Require a reviewer per environment; Stop on the first failure
+DA: Lesson code: the apply workflow with a matrix development → staging → production (max-parallel 1), each a GitHub environment with a required reviewer and its own role.
+DZ: The same with one managed identity per environment and its federated credential (environment:<name>).
+CA: $0
+CZ: $0
+Q: Why max-parallel 1 in the apply matrix? / Environments go one after the other / Speed / Cost / =a
+Q: Who approves production? / A named reviewer on the GitHub environment / The AI / Nobody / =a
+Q: What happens if staging fails? / Production does not run / Production runs anyway / The state is deleted / =a
+QA: How does each environment get its own AWS rights? / A role per environment trusted for that environment's OIDC subject / One shared key / The root user / =a
+QZ: How does each environment get its own Azure rights? / A managed identity per environment with its federated credential / One storage key / A password / =a
+L 6.3 | Terragrunt in Jenkins | owner+improved | cloud | 10 | slides 620–622 | terraform-concepts/terraform-with-jenkins-and-terragrunt (README)
+O: Run run --all plan and apply from a Jenkinsfile; Use the agent's role or managed identity; Gate apply with an input step
+DA: A Jenkinsfile for the owner's Jenkins (masterclass lesson 11.7): instance profile credentials, plan, input, apply per environment.
+DZ: The same on the Azure Jenkins VM with its managed identity (ARM_USE_MSI).
+RA: Jenkins EC2 from the masterclass (t3.small)
+RZ: Jenkins VM from the masterclass (B2s)
+CA: ~$0.10
+CZ: ~$0.15
+N: Gap: the owner's Jenkins + Terragrunt folder has no Jenkinsfile; written new.
+Q: Which Jenkins step waits for approval? / input / sh / build / =a
+Q: Where do Jenkins credentials come from? / The agent's role or managed identity / A key in the Jenkinsfile / The state / =a
+Q: Why apply a saved plan? / The apply does exactly what was reviewed / Speed / It is required / =a
+QA: How does the EC2 agent get AWS credentials? / Its instance profile / A key file / The root user / =a
+QZ: Which setting makes azurerm use the VM's managed identity? / ARM_USE_MSI=true / ARM_KEY / use_cli / =a
+
+M 7 | Drift detection and day-2 operations | Find drift every night, keep versions current, and destroy safely.
+L 7.1 | Nightly drift detection | new | cloud | 12 | - | marketplace: code/terragrunt/.github/workflows/terragrunt-drift.yml
+O: Plan every unit on a schedule with -detailed-exitcode; Open an issue when something drifted; Decide to revert or adopt the change
+DA: Lesson code: the nightly workflow; a security group rule added in the console is reported the next morning and reverted by apply.
+DZ: The same with an NSG rule added in the portal.
+CA: $0
+CZ: $0
+Q: What does exit code 2 from plan -detailed-exitcode mean? / There are changes / Error / No changes / =a
+Q: What are the two ways to fix drift? / Revert it with apply, or adopt it in code / Delete the state / Ignore it / =a
+Q: Why use -lock=false in the nightly plan? / It only reads and must not block real applies / It is faster / It is required / =a
+QA: Which change did the AWS demo detect? / A security group rule added in the console / A new region / A deleted bucket / =a
+QZ: Which change did the Azure demo detect? / An NSG rule added in the portal / A new subscription / A deleted RG / =a
+L 7.2 | Keep versions current: Terraform, providers and Terragrunt | new | cloud | 10 | slides 610–613 (masterclass) | -
+O: Upgrade one version step in a branch; Use the provider cache for speed; Read upgrade guides before major versions
+DA: A Terragrunt patch upgrade and an AWS provider minor upgrade across all units on a branch, with a no-change plan as the goal; --provider-cache.
+DZ: The same with azurerm.
+CA: $0
+CZ: $0
+Q: What is the goal plan after an upgrade? / No changes / Everything replaced / Any plan / =a
+Q: Why upgrade on a branch first? / The pipeline proves it before it reaches main / It is required / It is faster / =a
+Q: What does the provider cache save? / Downloading providers for every unit / State / Credentials / =a
+QA: Which AWS provider major is current? / 6 / 4 / 3 / =a
+QZ: Which azurerm major is current? / 5 / 3 / 2 / =a
+L 7.3 | Destroy safely and prove nothing is left | new | cloud | 8 | - | -
+O: Destroy in reverse order with run --all destroy; Protect production with prevent_destroy; Prove the account is clean by tags
+DA: run --all destroy in development, prevent_destroy on production data units, the tag search.
+DZ: The same with a Resource Graph query on the Course tag.
+CA: $0
+CZ: $0
+Q: Which units are destroyed first? / The ones that depend on others / The network / Random / =a
+Q: What protects production data units? / prevent_destroy / A comment / A tag / =a
+Q: How do you prove nothing is left? / A tag search returns nothing / The pipeline is green / Closing the terminal / =a
+QA: Which AWS tool searches by tag? / Resource Groups Tag Editor / IAM / CloudFront / =a
+QZ: Which Azure tool searches by tag? / Azure Resource Graph / Key Vault / Bastion / =a
+
+M 8 | AI for Terragrunt | AI drafts units and reviews changes; Terragrunt, the plan and a person verify.
+L 8.1 | AI generates units from the catalog | ai | shared | 10 | - | marketplace: code/terragrunt/ai/generate-unit.md
+O: Give an AI assistant the repository conventions in a professional prompt; Verify its unit with hcl fmt, hcl validate, render and a plan; Reject output that breaks conventions
+D: The prompt file run live; the first answer adds a provider block (against the rule) and a wrong include; the checks catch both; the fixed unit plans cleanly with mocks.
+Q: What did the checks catch in the first AI answer? / A provider block and a wrong include / Nothing / A typo in a comment / =a
+Q: Which command shows the unit's final configuration for review? / terragrunt render / terragrunt show / terragrunt graph / =a
+Q: Who decides to keep AI output? / A person, after the checks pass / The AI / The pipeline only / =a
+L 8.2 | AI review of a Terragrunt pull request | ai | cloud | 14 | - | marketplace: code/terragrunt/ai/review-terragrunt-plan.md, code/terragrunt/.github/workflows/terragrunt-plan.yml
+O: Feed the AI the affected units, the DAG and the plans; Get risks, blast radius and environment checks as a comment; Keep the human approval as the gate
+DA: The plan workflow plus a review job: affected units (find --filter-affected), dag graph and plans summarised by a model with the review prompt; a production change without staging is flagged HIGH RISK.
+DZ: The same on the Azure pipeline.
+CA: ~$0.10 (model calls)
+CZ: ~$0.10
+Q: What does the DAG add to an AI review? / The blast radius: units that depend on the change / Speed / Credentials / =a
+Q: Can the AI approve the change? / No, it only comments / Yes / Only on Fridays / =a
+Q: What should never be sent to the model? / Secrets and state / The plan summary / The diff / =a
+QA: Where does the model key live? / A GitHub secret / In root.hcl / In common.yaml / =a
+QZ: Where does the model key live in the Azure pipeline? / A GitHub secret (or Key Vault via OIDC) / In root.hcl / In the state / =a
+L 8.3 | A read-only MCP server for your Terragrunt repo | ai | shared | 10 | - | marketplace: code/terraform-mcp-server
+O: Serve Terragrunt to an AI agent with terragrunt mcp (experiment) in read-only mode; Add the Terraform MCP registry toolset for current docs; Keep apply and exec off
+D: terragrunt mcp with the mcp-command experiment and no --allow flags (apply and destroy are off unless --dangerously-allow-apply), plus the Terraform MCP server's registry toolset; the agent explains the DAG and a unit's inputs; it cannot apply.
+N: terragrunt mcp is an experiment in 1.2.3 (needs --experiment mcp-command): check its flags on the recording day.
+Q: Which flag would allow apply through Terragrunt's MCP server? / --dangerously-allow-apply (left off) / --read-only / --safe / =a
+Q: What does the Terraform MCP registry toolset add? / Current provider and module docs / Cloud credentials / State access / =a
+Q: What is the agent allowed to do in this lesson? / Read and explain / Apply / Destroy / =a
+
+M 9 | Capstone: a multi-account platform with Terragrunt | Three environments in separate accounts or subscriptions, stacks, the full pipeline, drift, destroy.
+L 9.1 | Capstone design and cost | new | cloud | 8 | - | -
+O: Read the requirements; Design accounts or subscriptions, state, stacks and the pipeline; Estimate the cost
+DA: Three accounts (or one with prefixes), state per account, a stack per environment from the catalog, the OIDC pipeline with AI review and approvals.
+DZ: Three subscriptions (or one with prefixes), Storage state per subscription, a stack per environment, workload identity per environment.
+CA: $0 (design)
+CZ: $0
+Q: What does each environment get? / Its own state, identity and stack / A copy of the modules / Nothing / =a
+Q: Why estimate before building? / To stay in budget and know what to destroy / It is required / For fun / =a
+Q: What is the single source of the environment's units? / Its terragrunt.stack.hcl / The state / The README / =a
+L 9.2 | Build the environments as stacks | new | cloud | 16 | - | marketplace: code/terragrunt/aws/stacks, code/terragrunt/azure/stacks
+O: Build development, staging and production stacks from the catalog; Apply development; Read stack outputs
+DA: Network, app and a small RDS PostgreSQL (db.t4g.micro, write-only password) unit per stack; development applied.
+DZ: Network, app and PostgreSQL Flexible B1ms (write-only password) per stack; development applied.
+RA: VPC, SG, SSM, RDS db.t4g.micro
+RZ: VNet, NSG, PostgreSQL Flexible B1ms
+CA: ~$0.10 per session; destroy the same day
+CZ: ~$0.10 per session; destroy the same day
+Q: How is the database password kept out of state? / Ephemeral value with a write-only argument / In common.yaml / In inputs / =a
+Q: Which environment is applied first? / Development / Production / All / =a
+Q: How do you read a stack's outputs? / terragrunt stack output / terraform output in root / cat state / =a
+QA: Which RDS class keeps the lab cheap? / db.t4g.micro / db.r6g.large / db.m5.xlarge / =a
+QZ: Which PostgreSQL Flexible SKU keeps the lab cheap? / B1ms / D4s / E8s / =a
+L 9.3 | The pipeline: affected plans, AI review, approvals and drift | new | cloud | 14 | - | marketplace: code/terragrunt/.github/workflows
+O: Run the full pipeline on a pull request; Promote through staging to production with approvals; Watch the nightly drift job
+DA: A PR changing the app unit: affected-units plan, AI review comment, merge, development → staging → production with approvals; drift found the next morning and reverted.
+DZ: The same on Azure.
+CA: ~$0.20 (model calls; infra in 9.2)
+CZ: ~$0.20
+Q: Which units does the PR plan? / Only the affected ones / All of them / None / =a
+Q: When does production apply? / After staging succeeds and a reviewer approves / Immediately / Never / =a
+Q: What does the drift job do when it finds a change? / Opens an issue / Applies automatically / Deletes the unit / =a
+QA: How does the AWS pipeline sign in? / OIDC roles per environment / Access keys / The root user / =a
+QZ: How does the Azure pipeline sign in? / Managed identities with federated credentials / Storage keys / Passwords / =a
+L 9.4 | Destroy the platform and prove it | new | cloud | 8 | - | -
+O: Destroy production, staging, then development; Remove state stores last; Prove nothing is left
+DA: stack run destroy per environment, state bucket emptied and deleted, tag search empty.
+DZ: The same with resource groups and the Resource Graph query.
+CA: $0
+CZ: $0
+Q: What is destroyed last? / The state store / The network / The app / =a
+Q: Why destroy production first in a lab? / It holds the most protected data and must be confirmed explicitly / It is cheaper / Random / =a
+Q: What proves the lab is clean? / An empty tag search / A green pipeline / Nothing / =a
+QA: What must be emptied before deleting the AWS state bucket? / All object versions / Nothing / Only the latest file / =a
+QZ: What usually remains after deleting Azure resource groups? / Nothing, if every resource was inside them / The VNets / The NSGs / =a
+L 9.5 | Wrap-up, final assessment and what to learn next | new | shared | 5 | - | -
+O: Review the skills; Take the final assessment; Choose the next course
+D: Recap, final assessment (20 questions), next: the AI for DevOps masterclass of your cloud, the other cloud's Terragrunt course, n8n automation.
+Q: Which rule held through the course? / AI drafts; Terragrunt, the plan and a person verify / AI applies / Never destroy / =a
+Q: What does every lab end with? / Destroy and verify / Apply to prod / Nothing / =a
+Q: What comes before this course in the path? / The Terraform masterclass / Nothing / The VS Code course only / =a

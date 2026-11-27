@@ -1,10 +1,11 @@
 import { ownsResourceKey } from '../common/storage-keys';
+import { quizProblems, type QuizQuestion, type QuizSettings } from '../learning/quiz-model';
 import { reviewerWatch, watchOf } from '../access/consumption';
 import { env } from '../config/env';
 import { JobsService } from '../common/jobs';
 import { Injectable, Optional } from '@nestjs/common';
 import { CoversService } from '../covers/covers.service';
-import type { Prisma } from '../generated/prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import type { LectureType } from '../generated/prisma/enums';
 import { AuditService } from '../common/audit.service';
 import { Actor } from '../common/auth-context';
@@ -42,12 +43,7 @@ export interface LectureInput {
   sectionId?: string;
 }
 
-export interface QuizQuestionInput {
-  q: string;
-  options: string[];
-  correct: number;
-  why: string;
-}
+export type QuizQuestionInput = QuizQuestion;
 
 const EDITABLE_LOCKED = new Set(['in_review']);
 
@@ -242,7 +238,8 @@ export class InstructorService {
       section: { id: found.section.id, title: found.section.title },
       lecture: { id: l.id, title: l.title, type: l.type, isPreview: l.isPreview, durationSec: l.durationSec, articleMd: l.articleMd, summary: l.summary ?? '' },
       video,
-      quiz: l.quiz?.length ? l.quiz.map((q) => ({ q: q.q, options: q.options, correct: q.correct, why: q.why })) : null,
+      quiz: l.quiz?.length ? l.quiz : null,
+      quizSettings: l.quizSettings ?? null,
       resources: l.resources.map((r) => ({ id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime })),
     };
   }
@@ -306,7 +303,7 @@ export class InstructorService {
             isPreview: l.isPreview,
             resources: l.resources.map((r) => ({ id: r.id, title: r.title, sizeBytes: r.sizeBytes, mime: r.mime })),
             video,
-            quiz: l.quiz ? { questions: l.quiz } : null,
+            quiz: l.quiz ? { questions: l.quiz, settings: l.quizSettings ?? null } : null,
           };
         }),
       })),
@@ -571,26 +568,21 @@ export class InstructorService {
     return { ok: true };
   }
 
-  async setQuiz(a: Actor, courseId: string, lectureId: string, questions: QuizQuestionInput[]) {
-    for (const [i, q] of questions.entries()) {
-      if (q.correct >= q.options.length) {
-        const message = `Question ${i + 1}: the correct answer must be one of its ${q.options.length} options`;
-        throw badRequest(message, 'invalid_quiz', [{ field: `questions.${i}.correct`, message }]);
-      }
-    }
+  async setQuiz(a: Actor, courseId: string, lectureId: string, questions: QuizQuestionInput[], settings?: QuizSettings) {
+    const problems = quizProblems(questions, settings);
+    if (problems.length) throw badRequest(problems[0]!.message, 'invalid_quiz', problems);
     const c = await this.editableCourse(a.user.id, courseId);
+    // Settings left out (the studio's question editor) keep the quiz's assessment settings.
+    const quizSettings = settings === undefined ? undefined : Object.keys(settings).length ? settings : null;
     if (c.status === 'published') {
       return this.revisions.mutate(courseId, (t) => {
-        T.setQuiz(t, lectureId, questions);
-        return { lectureId, questions };
+        T.setQuiz(t, lectureId, questions, quizSettings);
+        return { lectureId, questions, settings: quizSettings };
       });
     }
     await this.ownLecture(a.user.id, courseId, lectureId);
-    return this.prisma.quiz.upsert({
-      where: { lectureId },
-      create: { lectureId, questions: questions as unknown as Prisma.InputJsonValue },
-      update: { questions: questions as unknown as Prisma.InputJsonValue },
-    });
+    const data = { questions: questions as unknown as Prisma.InputJsonValue, ...(quizSettings === undefined ? {} : { settings: (quizSettings ?? Prisma.DbNull) as Prisma.InputJsonValue }) };
+    return this.prisma.quiz.upsert({ where: { lectureId }, create: { lectureId, ...data }, update: data });
   }
 
   async deleteQuiz(a: Actor, courseId: string, lectureId: string) {

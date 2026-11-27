@@ -16,17 +16,21 @@ in a chat or a context window.
 5. **Before you stop:** update `COURSE_STATUS.md`, the request statuses, `LESSONS_LEARNED.md`; commit; say in your final
    message what is waiting and on whom.
 
-## Now (2026-11-28): Terraform masterclasses (planning)
-- **AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced** (recommended titles, owner decides): plan,
-  inventory, both curricula and ready lab code in `courses/terraform/` (start at `TERRAFORM_MASTERCLASS_PLAN.md`).
-  Built on the owner's deck `/home/tia/work/terraform-course/Terraform.pptx` and repo `devopstia/terraform-course-del`
-  (use them, never replace them). Azure is a full mirror (owner): 37 shared videos + 58 lessons × 2 clouds = 153 videos.
-- Requests **CR-129 … CR-281** are in the register as `requested (planning)`. **Not sent to GEN**: the production order
-  (fundamentals block first, then weekly alternation with the AI masterclasses) waits for the owner's OK; the draft
-  message is in the plan §11.
-- **Waiting on the owner:** titles, price (suggested $49.99 launch, $69.99 later), order, the training domain (lesson
-  11.6). Budget: estimate, log, destroy; no owner pause (owner 2026-11-28); the $100/month alarms remain. Security note for the owner: the public Terraform repo contains private keys
-  and hard-coded passwords (`CONTENT_INVENTORY.md` › Repo findings).
+## Now (2026-11-28): Terraform masterclasses and Terragrunt (planning)
+- **AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced**: titles, 95 videos per course and the price
+  ($49.99 → $69.99) are **approved** by the owner. Plan, inventory, curricula and lab code in `courses/terraform/` (start at
+  `TERRAFORM_MASTERCLASS_PLAN.md`). Built on the owner's deck and repo (use them, never replace them). Azure is a full
+  mirror: 37 shared videos + 58 lessons × 2 clouds = 153 videos.
+- **Latest versions everywhere** (owner: "use new Terraform version"): Terraform 1.17.x, aws ~> 6.0, azurerm ~> 5.0,
+  Terragrunt 1.x, `use_lockfile`, HCP Terraform, EKS access entries; a Versions line in every lesson and request. The
+  owner's failing folders: 24 fixed in `code/owner-updated/`, all 45 fixes listed in `CONTENT_INVENTORY.md` › Fixes.
+- **Third course, AI-Powered Terragrunt on AWS / on Azure: Terraform at Scale** (`TERRAGRUNT_CURRICULUM.md`, code
+  `code/terragrunt/`, requests CR-282 … CR-299): two listings recommended (certificates need every lesson), price
+  suggested $39.99 → $49.99.
+- Requests CR-129 … CR-299 are `requested (planning)`; CR-129/130 superseded by the coordinator's premium introduction
+  request (CR-300 onward). **Not sent to GEN**: the recording order waits for the owner's OK (draft message: plan § 11).
+- **Waiting on the owner:** the recording order, the training domain (lesson 11.6), Terragrunt as one or two listings
+  and its price. Budget: estimate, log, destroy; no owner pause; the $100/month alarms remain.
 
 ## Earlier (2026-11-28): AI website development
 - Both masterclass plans have a new module "Build and ship websites with AI" (after the cloud's AI applications

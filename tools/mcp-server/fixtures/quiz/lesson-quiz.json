@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "lesson": "10-n10-n8n-kubernetes-alerts-live",
+  "questions": [
+    {
+      "id": "n10-q01",
+      "q": "A pod starts, crashes, and Kubernetes keeps restarting it, waiting longer each time. What status is that?",
+      "options": [
+        "Pending, with a FailedScheduling event",
+        "ImagePullBackOff",
+        "CrashLoopBackOff, restarting"
+      ],
+      "correct": 2,
+      "why": "The app starts, crashes, Kubernetes waits a little and starts it again. Back off means waiting longer between restarts; the app itself keeps crashing.",
+      "explanations": [
+        "Pending, with a FailedScheduling event, means no node can take the pod yet: it never starts, so it can't crash.",
+        "ImagePullBackOff means the image can't be pulled, for example a typo in the tag: the container never starts.",
+        "Correct. In the lab, the worker that can't reach its database flips between Error and CrashLoopBackOff."
+      ],
+      "takeaway": "CrashLoopBackOff: the app runs and crashes. ImagePullBackOff: it never gets its image. Pending: no room to run.",
+      "difficulty": "foundation",
+      "type": "concept",
+      "topic": "Kubernetes failure states",
+      "timestamp": 109
+    },
+    {
+      "id": "n10-q02",
+      "q": "In one run, a single broken pod has written several Warning events, so four items reach this node. What does it pass on?",
+      "code": "\"name\": \"One alert per pod\", \"type\": \"n8n-nodes-base.removeDuplicates\",\n\"parameters\": { \"compare\": \"selectedFields\", \"fieldsToCompare\": \"involvedObject.name\" }",
+      "options": [
+        "All four items, one per Warning event",
+        "One item for each broken pod's name",
+        "Only pods not seen in earlier runs",
+        "Only the newest event in the namespace"
+      ],
+      "correct": 1,
+      "why": "One alert per pod removes duplicates inside this run by comparing the pod's name (involvedObject.name): several warnings from one pod become one item.",
+      "explanations": [
+        "That would mean one alert per event: one broken pod would send several messages in the same run.",
+        "Correct. Four items became three: one per broken pod.",
+        "That is the next node, New problems only, which remembers earlier executions.",
+        "It keeps one item per pod, not one item for the whole namespace."
+      ],
+      "takeaway": "De-duplication step one: one item per pod within a run.",
+      "difficulty": "applied",
+      "type": "code/config analysis",
+      "topic": "De-duplication within a run",
+      "timestamp": 260
+    },
+    {
+      "id": "n10-q03",
+      "q": "A worker keeps crashing for an hour. The workflow checks every 30 seconds. How many alerts does the team get for that pod?",
+      "options": [
+        "About 120",
+        "Exactly one alert",
+        "None at all",
+        "One every two minutes"
+      ],
+      "correct": 1,
+      "why": "New problems only (Remove Duplicates, remove items processed in previous executions) remembers the pod names it already alerted on: one problem, one message.",
+      "explanations": [
+        "That would be one alert per check: exactly the flood the workflow is built to avoid.",
+        "Correct. In the lesson, later executions passed nothing on: Format and Post didn't run.",
+        "The first check after the crash does alert: the pod is new to New problems only.",
+        "The two-minute window decides which events count as recent; it does not repeat alerts."
+      ],
+      "takeaway": "Remember what you already alerted on, or people stop trusting the channel.",
+      "difficulty": "applied",
+      "type": "real-world scenario",
+      "topic": "De-duplication across runs",
+      "timestamp": 270
+    },
+    {
+      "id": "n10-q04",
+      "q": "This Role is bound to n8n's ServiceAccount. What can n8n do with its token?",
+      "code": "kind: Role\nmetadata:\n  name: n8n-reader\n  namespace: demo\nrules:\n  - apiGroups: [\"\"]\n    resources: [\"pods\", \"events\"]\n    verbs: [\"get\", \"list\", \"watch\"]\n  - apiGroups: [\"apps\"]\n    resources: [\"deployments\"]\n    verbs: [\"get\", \"list\", \"watch\"]",
+      "options": [
+        "Read pods, events and deployments in demo only",
+        "Read pods, events and deployments in every namespace",
+        "Read and restart pods and deployments in demo",
+        "Read secrets in demo, as part of the core group"
+      ],
+      "correct": 0,
+      "why": "The verbs are get, list and watch only; the resources are pods, events and deployments; and a Role, unlike a ClusterRole, only works inside its own namespace.",
+      "explanations": [
+        "Correct. No create, no delete, no secrets, no other namespace.",
+        "A Role is namespaced: it only works inside demo. Every namespace would need a ClusterRole.",
+        "Restarting a pod means deleting or changing it, and no such verb is listed.",
+        "Secrets are not in the resources list, so they stay locked even though they are in the core group."
+      ],
+      "takeaway": "Least privilege: only the verbs, resources and namespace the workflow needs.",
+      "difficulty": "applied",
+      "type": "security",
+      "topic": "RBAC least privilege",
+      "timestamp": 360
+    },
+    {
+      "id": "n10-q05",
+      "q": "The Get warning events node sends this request. What does it ask Kubernetes for?",
+      "code": "GET {{ $env.K8S_API_URL }}/api/v1/namespaces/{{ $env.K8S_NAMESPACE }}/events?fieldSelector=type=Warning\nAuthorization: Bearer {{ $env.K8S_TOKEN }}",
+      "options": [
+        "Every event in the cluster",
+        "The pods in the namespace that aren't Running",
+        "A stream of new events pushed as they happen",
+        "The namespace's Warning events"
+      ],
+      "correct": 3,
+      "why": "The URL is an expression: the cluster address from .env, then the events of our namespace, with a field selector type=Warning. The Authorization header uses the token from .env, which n8n never shows.",
+      "explanations": [
+        "The path names one namespace, and the field selector keeps only Warning events.",
+        "This is the events endpoint. Pods are read by the second workflow, the daily health report.",
+        "This is polling: one request every 30 seconds. Push would need a watcher inside the cluster.",
+        "Correct. One item comes back, a list of events, which One item per event then splits."
+      ],
+      "takeaway": "Let the API filter for you (fieldSelector), and keep address and token in .env.",
+      "difficulty": "advanced",
+      "type": "code/config analysis",
+      "topic": "Kubernetes API request",
+      "timestamp": 507
+    },
+    {
+      "id": "n10-q06",
+      "q": "You roll out a new web version with a typo in the image tag. kubectl rollout status times out. What are your users getting meanwhile?",
+      "options": [
+        "Errors: Kubernetes removed the old pods first",
+        "Nothing: the deployment is scaled to zero pods",
+        "A mix of both versions",
+        "The old version, still running"
+      ],
+      "correct": 3,
+      "why": "The rollout is stuck because the new pod can't pull its image (ImagePullBackOff), and the old pods keep serving. Kubernetes never removes the last good version for a broken one.",
+      "explanations": [
+        "The old pods are replaced only when new ones are ready; the new one never becomes ready.",
+        "The deployment still asks for two copies, and the two old ones stay up.",
+        "The broken pod never starts, so it can't serve anyone.",
+        "Correct. Stuck rollout, old pods still serving; fix.sh rolls web back to the last good version."
+      ],
+      "takeaway": "A stuck rollout is bad news, not an outage: alert on it before someone rolls out again.",
+      "difficulty": "applied",
+      "type": "real-world scenario",
+      "topic": "Stuck rollouts",
+      "timestamp": 576
+    },
+    {
+      "id": "n10-q07",
+      "q": "A report pod stays Pending. kubectl describe shows: FailedScheduling, 0/1 nodes are available: insufficient CPU. What is the cause?",
+      "options": [
+        "It asks for more CPU than any node has free",
+        "The image tag in the new version has a typo",
+        "The app crashes at start-up and backs off",
+        "n8n's token can't read the demo namespace"
+      ],
+      "correct": 0,
+      "why": "The greedy report pod asks for one hundred CPUs. No node has that much free, so it stays Pending, and Kubernetes writes a FailedScheduling Warning event.",
+      "explanations": [
+        "Correct. In Mattermost this alert is orange: it's waiting, not crashing.",
+        "An image typo gives ImagePullBackOff, after the pod was scheduled.",
+        "A crashing app gives CrashLoopBackOff; this pod never started.",
+        "Pod scheduling has nothing to do with n8n's permissions; n8n only reads the result."
+      ],
+      "takeaway": "Pending plus FailedScheduling: check the pod's resource requests against the nodes.",
+      "difficulty": "applied",
+      "type": "troubleshooting",
+      "topic": "FailedScheduling",
+      "timestamp": 643
+    },
+    {
+      "id": "n10-q08",
+      "q": "The Namespace health report runs every day at 8:00. You've just fixed the cluster and want to see the report now. What do you do?",
+      "options": [
+        "Wait until tomorrow's run at 8:00",
+        "Change the schedule to every 30 seconds",
+        "Click Execute workflow to run it now",
+        "Post the report by hand in Mattermost"
+      ],
+      "correct": 2,
+      "why": "Execute workflow runs it now. The lesson ran the report before and after fix.sh: three of five pods needed attention, then all two pods were healthy.",
+      "explanations": [
+        "That works, but there is no need to wait to check it.",
+        "That would post a full report every 30 seconds: a flood, and the alert workflow already covers fast checks.",
+        "Correct. Run it by hand, check the table, and the schedule keeps working for tomorrow.",
+        "The point is to see what the workflow builds from the cluster, not to type it yourself."
+      ],
+      "takeaway": "Test a scheduled workflow with Execute workflow instead of waiting for its schedule.",
+      "difficulty": "foundation",
+      "type": "command",
+      "topic": "Daily health report",
+      "timestamp": 716
+    },
+    {
+      "id": "n10-q09",
+      "q": "On minikube, the alert workflow fails with ECONNREFUSED right after n8n was recreated. What do you do?",
+      "options": [
+        "Disable certificate checks",
+        "Give n8n's token cluster-admin rights",
+        "Set K8S_API_URL to https://127.0.0.1:8443",
+        "Run connect-cluster.sh once more"
+      ],
+      "correct": 3,
+      "why": "When n8n is recreated it leaves minikube's network. connect-cluster.sh reconnects it, and renews the token.",
+      "explanations": [
+        "Certificate checks protect you from talking to the wrong server; they are not why the connection is refused.",
+        "A connection that is refused never gets as far as checking permissions, and cluster-admin would break least privilege.",
+        "Inside the n8n container, 127.0.0.1 is n8n itself; that is why the script uses the cluster's internal address.",
+        "Correct. It puts n8n back on minikube's network."
+      ],
+      "takeaway": "A recreated container loses extra networks it was connected to: reconnect it.",
+      "difficulty": "applied",
+      "type": "troubleshooting",
+      "topic": "Connecting n8n to minikube",
+      "timestamp": 786
+    },
+    {
+      "id": "n10-q10",
+      "q": "n8n's calls to the cluster fail with a self-signed certificate error. What is the right fix?",
+      "options": [
+        "Turn certificate checks off in the HTTP node",
+        "Fix the missing CA file (cluster/ca.crt)",
+        "Call the Kubernetes API over plain HTTP",
+        "Give n8n's token more permissions in demo"
+      ],
+      "correct": 1,
+      "why": "n8n checks it is talking to the real cluster with the cluster's certificate authority. The error means the CA file is missing: fix the file, never switch certificate checks off.",
+      "explanations": [
+        "That would let n8n send its token to any server that answers.",
+        "Correct. connect-cluster.sh saves the cluster's certificate authority in cluster/ca.crt for n8n.",
+        "Plain HTTP would send the token unprotected, and the API serves HTTPS.",
+        "Permissions come after the connection; this is a trust problem, not an access problem."
+      ],
+      "takeaway": "Trust the cluster's CA; never disable certificate checks.",
+      "difficulty": "applied",
+      "type": "security",
+      "topic": "Certificate authority",
+      "timestamp": 796
+    },
+    {
+      "id": "n10-q11",
+      "q": "Right after a fresh start, the workflow alerts about pods that no longer exist. Which part of the workflow prevents this, and why is it needed?",
+      "options": [
+        "One item per event, which splits the list",
+        "New problems only, which remembers earlier runs",
+        "The filter on events from the last 2 minutes",
+        "The Schedule trigger, which waits 30 seconds"
+      ],
+      "correct": 2,
+      "why": "Kubernetes keeps events for about an hour, so a fresh start would see old warnings. The filter only takes events updated in the last two minutes.",
+      "explanations": [
+        "Splitting turns the list into one item per event; it keeps old events too.",
+        "After a fresh start, New problems only has no memory yet: every old pod name looks new.",
+        "Correct. Old events about pods that are already gone are dropped.",
+        "The trigger only decides when to check, not which events count."
+      ],
+      "takeaway": "Events outlive pods: only act on recent ones.",
+      "difficulty": "advanced",
+      "type": "troubleshooting",
+      "topic": "Event freshness filter",
+      "timestamp": 804
+    },
+    {
+      "id": "n10-q12",
+      "q": "Your team wants the same alerts for a cluster on Amazon EKS. What changes?",
+      "options": [
+        "Same connect-cluster.sh; workflows unchanged",
+        "Both workflows must be rewritten for the EKS API",
+        "n8n given cluster-admin rights on EKS",
+        "A push watcher replaces the polling workflow"
+      ],
+      "correct": 0,
+      "why": "Nothing here is specific to minikube. connect-cluster.sh uses your cluster's own address and certificate authority and skips the minikube network step; the workflows stay the same. Delete the cluster when you finish.",
+      "explanations": [
+        "Correct. Point kubectl at the cluster (aws eks update-kubeconfig) and run the same script; az aks get-credentials does the same for AKS.",
+        "The workflows only use the standard Kubernetes API, which EKS serves as well.",
+        "The same read-only Role works on any cluster.",
+        "Polling works the same way on EKS; n8n talks to the cluster's public API endpoint or runs in the same network."
+      ],
+      "takeaway": "Plain Kubernetes API + any kubectl context = the same workflows on minikube, EKS or AKS.",
+      "difficulty": "advanced",
+      "type": "architecture",
+      "topic": "Running on EKS or AKS",
+      "timestamp": 840
+    }
+  ]
+}

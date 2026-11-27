@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import { Controller, Get, HttpCode, Param, Post, Put, Req } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Param, Post, Put, Req } from '@nestjs/common';
 import { z } from 'zod';
 import { CurrentUser, type AuthUser, Cap } from '../common/auth-context';
 import { ZBody } from '../common/zod';
@@ -8,7 +8,17 @@ import { StudentDashboardService } from './student-dashboard.service';
 
 /** `played`: [start, end] seconds actually played since the last save (unique-viewing tracking for the refund rule). */
 const progressSchema = z.object({ positionSec: z.number().int().min(0).max(24 * 3600), completed: z.boolean().optional(), played: z.array(z.tuple([z.number().min(0).max(24 * 3600), z.number().min(0).max(24 * 3600)])).max(200).optional() });
-const quizSchema = z.object({ answers: z.array(z.number().int().min(0).max(9)).min(1).max(50) });
+// Original form (answers in question order) or, since 2026-11-28, answers by question id with the signed draw.
+const quizSchema = z.union([
+  z.object({ answers: z.array(z.number().int().min(0).max(9)).min(1).max(60) }).strict(),
+  z
+    .object({
+      responses: z.array(z.object({ id: z.string().min(1).max(100), choice: z.number().int().min(0).max(9) }).strict()).min(1).max(60),
+      draw: z.string().max(8000).optional(),
+      mode: z.enum(['full', 'retry']).optional(),
+    })
+    .strict(),
+]);
 const reviewSchema = z.object({ rating: z.number().int().min(1).max(5), body: z.string().trim().max(4000).default('') });
 
 @Controller()
@@ -93,7 +103,18 @@ export class LearningController {
   @HttpCode(200)
   @Post('lectures/:id/quiz')
   submit(@Param('id') id: string, @ZBody(quizSchema) body: z.infer<typeof quizSchema>, @CurrentUser() u: AuthUser) {
-    return this.svc.submitQuiz(u, id, body.answers);
+    return this.svc.submitQuiz(u, id, 'answers' in body ? body.answers : body);
+  }
+
+  /** Bookmark a difficult question to review again (owner 2026-11-28). */
+  @Put('lectures/:id/quiz/bookmarks/:questionId')
+  bookmark(@Param('id') id: string, @Param('questionId') qid: string, @CurrentUser() u: AuthUser) {
+    return this.svc.bookmarkQuestion(u, id, qid, true);
+  }
+
+  @Delete('lectures/:id/quiz/bookmarks/:questionId')
+  unbookmark(@Param('id') id: string, @Param('questionId') qid: string, @CurrentUser() u: AuthUser) {
+    return this.svc.bookmarkQuestion(u, id, qid, false);
   }
 
   @Cap('student.reviews.write')

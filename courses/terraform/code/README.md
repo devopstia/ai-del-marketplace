@@ -17,6 +17,8 @@ builds the remaining labs from the curricula (`../TERRAFORM_AWS_CURRICULUM.md`, 
 | `ai-terraform-prompts` | 14.1–14.6 prompt files | both clouds | both clouds |
 | `terraform-mcp-server` | 14.5 Terraform MCP server (read-only) | shared | shared |
 | `terraform-bedrock-knowledge-base` | 15.2/15.3 RAG + guardrail | Bedrock KB on S3 Vectors | `azure/terraform-foundry-ai-search` |
+| `owner-updated/` | the owner's failing folders that lessons use, fixed for current versions (24 folders, see its README) | aws-terraform/… | azure-terraform/… |
+| `terragrunt/` | the Terragrunt courses: live trees (dev/staging/prod), stacks, CI, drift, AI prompts | `terragrunt/aws` | `terragrunt/azure` |
 
 **Checked 2026-11-27** with Terraform 1.17.2, aws 6.74.0, azurerm 5.15.0, random 3.9.1: `terraform fmt -check -recursive`
 clean; `terraform init -backend=false && terraform validate` succeeds in all 20 root folders; `terraform test` passes

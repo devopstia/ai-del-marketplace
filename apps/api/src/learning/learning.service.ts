@@ -10,19 +10,17 @@ import { AuditService } from '../common/audit.service';
 import { AuthUser, isAdmin } from '../common/auth-context';
 import { badRequest, conflict, forbidden, notFound } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
+import type { Prisma } from '../generated/prisma/client';
 import { StorageService } from '../common/storage.service';
 import { randomToken } from '../common/util';
+import { draw, questionId, signDraw, verifyDraw, type AttemptAnswersV2, type QuizQuestion, type QuizSettings } from './quiz-model';
 import { MediaService } from '../media/media.service';
 import { learningAiEnabled } from '../study/ai-client';
 import { RefundsService } from '../commerce/refunds.service';
 import { refundConsumption } from '../access/consumption';
 
-export interface QuizQuestion {
-  q: string;
-  options: string[];
-  correct: number;
-  why: string;
-}
+export type { QuizQuestion } from './quiz-model';
+interface PoolQuestion { id: string; q: QuizQuestion; lectureId: string; own: boolean }
 
 export type Access = 'enrolled' | 'owner' | 'admin';
 
@@ -322,22 +320,114 @@ export class LearningService {
     return quiz;
   }
 
+  /**
+   * The questions a student sees for one attempt (owner 2026-11-28): the quiz's own bank, plus the lesson quizzes of the
+   * module or course for pooled assessments, sampled when `sampleSize` is set. Answers are never sent before an attempt.
+   * The draw is signed so a sampled attempt is graded on exactly the questions handed out.
+   */
   async getQuiz(user: AuthUser, lectureId: string) {
     const quiz = await this.quizFor(user, lectureId);
-    const questions = quiz.questions as unknown as QuizQuestion[];
-    const last = await this.prisma.quizAttempt.findFirst({ where: { userId: user.id, quizId: quiz.id }, orderBy: { at: 'desc' }, select: { score: true, at: true } });
-    // Never send the answers before an attempt.
-    return { id: quiz.id, lectureId, questions: questions.map((q, i) => ({ index: i, q: q.q, options: q.options })), lastAttempt: last };
+    const settings = (quiz.settings ?? {}) as QuizSettings;
+    const pool = await this.quizPool(quiz);
+    const drawn = draw(pool, settings.sampleSize);
+    const [last, best, attempts, marks] = await Promise.all([
+      this.prisma.quizAttempt.findFirst({ where: { userId: user.id, quizId: quiz.id }, orderBy: { at: 'desc' }, select: { score: true, at: true } }),
+      this.prisma.quizAttempt.aggregate({ where: { userId: user.id, quizId: quiz.id }, _max: { score: true } }),
+      this.prisma.quizAttempt.count({ where: { userId: user.id, quizId: quiz.id } }),
+      this.prisma.quizBookmark.findMany({ where: { userId: user.id, quizId: quiz.id }, select: { questionId: true } }),
+    ]);
+    return {
+      id: quiz.id,
+      lectureId,
+      kind: settings.kind ?? 'lesson',
+      scenario: settings.scenario ?? null,
+      scenarioCode: settings.scenarioCode ?? null,
+      poolSize: pool.length,
+      draw: signDraw(env().SESSION_SECRET, user.id, quiz.id, drawn.map((p) => p.id)),
+      questions: drawn.map((p, i) => ({
+        index: i,
+        id: p.id,
+        q: p.q.q,
+        options: p.q.options,
+        ...(p.q.code ? { code: p.q.code } : {}),
+        ...(p.q.type ? { type: p.q.type } : {}),
+        ...(p.q.difficulty ? { difficulty: p.q.difficulty } : {}),
+        ...(p.q.topic ? { topic: p.q.topic } : {}),
+        ...(p.q.fixedOrder ? { fixedOrder: true } : {}),
+      })),
+      lastAttempt: last,
+      bestScore: best._max.score ?? null,
+      attempts,
+      bookmarks: marks.map((m) => m.questionId),
+    };
   }
 
-  async submitQuiz(user: AuthUser, lectureId: string, answers: number[]) {
+  /**
+   * Grades an attempt. Two forms: the original `answers` (one per question, in order) and, since 2026-11-28,
+   * `responses` by question id with the signed draw. `mode: "retry"` grades a practice round on missed questions:
+   * explained like any attempt, but not recorded and never completes the lesson (scores stay comparable).
+   */
+  async submitQuiz(user: AuthUser, lectureId: string, input: number[] | { responses: { id: string; choice: number }[]; draw?: string; mode?: 'full' | 'retry' }) {
     const quiz = await this.quizFor(user, lectureId);
-    const questions = quiz.questions as unknown as QuizQuestion[];
-    if (answers.length !== questions.length) throw badRequest(`Expected ${questions.length} answers`, 'answer_count');
-    const results = questions.map((q, i) => ({ index: i, chosen: answers[i], correct: q.correct, isCorrect: answers[i] === q.correct, why: q.why }));
-    const score = Math.round((results.filter((r) => r.isCorrect).length / questions.length) * 100);
-    await this.prisma.quizAttempt.create({ data: { userId: user.id, quizId: quiz.id, score, answers } });
+    const pool = await this.quizPool(quiz);
+    const byId = new Map(pool.map((p) => [p.id, p]));
+    let asked: { p: PoolQuestion; chosen: number }[];
+    let mode: 'full' | 'retry' = 'full';
+    if (Array.isArray(input)) {
+      const own = pool.filter((p) => p.own);
+      if (input.length !== own.length) throw badRequest(`Expected ${own.length} answers`, 'answer_count');
+      asked = own.map((p, i) => ({ p, chosen: input[i]! }));
+    } else {
+      mode = input.mode ?? 'full';
+      const seen = new Set<string>();
+      asked = input.responses.map((r) => {
+        const p = byId.get(r.id);
+        if (!p) throw badRequest('That question is not part of this quiz', 'unknown_question');
+        if (seen.has(r.id)) throw badRequest('A question was answered twice', 'answer_count');
+        seen.add(r.id);
+        return { p, chosen: r.choice };
+      });
+      if (mode === 'full') {
+        const ids = input.draw ? verifyDraw(env().SESSION_SECRET, user.id, quiz.id, input.draw) : null;
+        if (!ids) throw badRequest('This attempt has expired: reload the quiz', 'invalid_draw');
+        if (ids.length !== seen.size || ids.some((id) => !seen.has(id))) throw badRequest(`Expected ${ids.length} answers`, 'answer_count');
+      }
+    }
+    const videoOf = await this.videoLessons(pool);
+    // An assessment question names the lesson it comes from; a lesson quiz belongs to the video before it.
+    const watchOf = (p: PoolQuestion) => (p.q.lessonId ? (videoOf.get(p.q.lessonId) === p.q.lessonId ? p.q.lessonId : undefined) : videoOf.get(p.lectureId));
+    const results = asked.map(({ p, chosen }, index) => ({
+      index,
+      id: p.id,
+      chosen,
+      correct: p.q.correct,
+      isCorrect: chosen === p.q.correct,
+      why: p.q.why,
+      ...(p.q.explanations ? { explanations: p.q.explanations } : {}),
+      ...(p.q.takeaway ? { takeaway: p.q.takeaway } : {}),
+      ...(p.q.topic ? { topic: p.q.topic } : {}),
+      ...(p.q.difficulty ? { difficulty: p.q.difficulty } : {}),
+      ...(p.q.timestamp !== undefined && watchOf(p) ? { timestamp: p.q.timestamp, videoLectureId: watchOf(p)! } : {}),
+      ...(p.q.related?.length ? { related: p.q.related.filter((r) => videoOf.get(r.lessonId) === r.lessonId).map((r) => ({ videoLectureId: r.lessonId, timestamp: r.timestamp })) } : {}),
+    }));
+    const right = results.filter((r) => r.isCorrect).length;
+    const score = results.length ? Math.round((right / results.length) * 100) : 0;
+    const byTopic = new Map<string, { topic: string; correct: number; total: number }>();
+    for (const r of results) {
+      if (!r.topic) continue;
+      const t = byTopic.get(r.topic) ?? { topic: r.topic, correct: 0, total: 0 };
+      t.total++;
+      if (r.isCorrect) t.correct++;
+      byTopic.set(r.topic, t);
+    }
+    const topics = [...byTopic.values()];
+    if (mode === 'retry') return { score, passed: false, practice: true, results, topics };
+
+    const answers: AttemptAnswersV2 | number[] = Array.isArray(input) ? input : { v: 2, mode: 'full', items: results.map((r) => ({ id: r.id, chosen: r.chosen, correct: r.isCorrect })) };
+    await this.prisma.quizAttempt.create({ data: { userId: user.id, quizId: quiz.id, score, answers: answers as unknown as Prisma.InputJsonValue } });
+    const best = await this.prisma.quizAttempt.aggregate({ where: { userId: user.id, quizId: quiz.id }, _max: { score: true } });
     const passed = score >= QUIZ_PASS_PERCENT;
+    const base = { score, passed, results, topics, bestScore: best._max.score ?? score };
     if (passed) {
       await this.prisma.lectureProgress.upsert({
         where: { userId_lectureId: { userId: user.id, lectureId } },
@@ -347,10 +437,69 @@ export class LearningService {
       const lecture = await this.prisma.lecture.findUnique({ where: { id: lectureId }, select: { section: { select: { courseId: true } } } });
       if (lecture) {
         const certificateCode = await this.issueIfComplete(user, lecture.section.courseId, await this.progressFor(user.id, lecture.section.courseId));
-        return { score, passed, results, certificateCode };
+        return { ...base, certificateCode };
       }
     }
-    return { score, passed, results };
+    return base;
+  }
+
+  /** Marks or unmarks a question to review again (only questions of this quiz). */
+  async bookmarkQuestion(user: AuthUser, lectureId: string, questionId: string, on: boolean) {
+    const quiz = await this.quizFor(user, lectureId);
+    if (!(await this.quizPool(quiz)).some((p) => p.id === questionId)) throw notFound('Question');
+    const key = { userId: user.id, quizId: quiz.id, questionId };
+    if (on) await this.prisma.quizBookmark.upsert({ where: { userId_quizId_questionId: key }, create: key, update: {} });
+    else await this.prisma.quizBookmark.deleteMany({ where: key });
+    return { questionId, bookmarked: on };
+  }
+
+  /** The quiz's own questions, then (pooled assessments) the lesson quizzes of its module or course. */
+  private async quizPool(quiz: { id: string; lectureId: string; questions: unknown; settings: unknown }): Promise<PoolQuestion[]> {
+    const own: PoolQuestion[] = ((quiz.questions ?? []) as QuizQuestion[]).map((q) => ({ id: questionId(q), q, lectureId: quiz.lectureId, own: true }));
+    const settings = (quiz.settings ?? {}) as QuizSettings;
+    if (settings.pool !== 'module' && settings.pool !== 'course') return own;
+    const lecture = await this.prisma.lecture.findUniqueOrThrow({ where: { id: quiz.lectureId }, select: { sectionId: true, section: { select: { courseId: true } } } });
+    const others = await this.prisma.quiz.findMany({
+      where: { id: { not: quiz.id }, lecture: settings.pool === 'module' ? { sectionId: lecture.sectionId } : { section: { courseId: lecture.section.courseId } } },
+      select: { id: true, lectureId: true, questions: true, settings: true },
+      orderBy: [{ lecture: { section: { position: 'asc' } } }, { lecture: { position: 'asc' } }],
+    });
+    const seen = new Set(own.map((p) => p.id));
+    const out: PoolQuestion[] = [...own];
+    for (const o of others) {
+      const kind = ((o.settings ?? {}) as QuizSettings).kind;
+      if (kind && kind !== 'lesson') continue;
+      for (const q of (o.questions ?? []) as unknown as QuizQuestion[]) {
+        const id = `${o.id.slice(0, 8)}.${questionId(q)}`;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        out.push({ id, q, lectureId: o.lectureId, own: false });
+      }
+    }
+    return out;
+  }
+
+  /**
+   * For "Watch this part": the video lesson each quiz belongs to (the nearest video before it in its module), and the
+   * named lessons of assessment questions (kept only when they are video lessons of the same course: id → itself).
+   */
+  private async videoLessons(pool: PoolQuestion[]): Promise<Map<string, string>> {
+    const quizLectures = [...new Set(pool.filter((p) => p.q.timestamp !== undefined && !p.q.lessonId).map((p) => p.lectureId))];
+    const named = [...new Set(pool.flatMap((p) => [p.q.lessonId, ...(p.q.related ?? []).map((r) => r.lessonId)]).filter((x): x is string => !!x))];
+    const out = new Map<string, string>();
+    if (named.length && pool[0]) {
+      const course = await this.prisma.lecture.findUnique({ where: { id: pool[0].lectureId }, select: { section: { select: { courseId: true } } } });
+      const ok = await this.prisma.lecture.findMany({ where: { id: { in: named }, type: 'video', section: { courseId: course?.section.courseId ?? '' } }, select: { id: true } });
+      for (const l of ok) out.set(l.id, l.id);
+    }
+    if (!quizLectures.length) return out;
+    const rows = await this.prisma.lecture.findMany({ where: { id: { in: quizLectures } }, select: { id: true, sectionId: true, position: true } });
+    const siblings = await this.prisma.lecture.findMany({ where: { sectionId: { in: [...new Set(rows.map((r) => r.sectionId))] }, type: 'video' }, select: { id: true, sectionId: true, position: true } });
+    for (const r of rows) {
+      const before = siblings.filter((x) => x.sectionId === r.sectionId && x.position < r.position).sort((a, b) => b.position - a.position)[0];
+      if (before) out.set(r.id, before.id);
+    }
+    return out;
   }
 
   async review(user: AuthUser, slug: string, input: { rating: number; body: string }) {

@@ -492,11 +492,17 @@ function AddSection({ onAdd }: { onAdd: (t: string) => void }) {
 function QuizEditor({ courseId, lectureId, initial, run }: { courseId: string; lectureId: string; initial: QuizQuestion[]; run: (fn: () => Promise<unknown>, ok?: string) => Promise<void> }) {
   const blank = (): QuizQuestion => ({ q: "", options: ["", "", ""], correct: 0, why: "" });
   const [qs, setQs] = useState<QuizQuestion[]>(initial.length ? initial : [blank()]);
-  const upd = (i: number, p: Partial<QuizQuestion>) => setQs((x) => x.map((q, j) => (j === i ? { ...q, ...p } : q)));
+  // Changing the options drops their per-option explanations (they no longer line up); the rest of the bank stays.
+  const upd = (i: number, p: Partial<QuizQuestion>) => setQs((x) => x.map((q, j) => {
+    if (j !== i) return q;
+    const next = { ...q, ...p };
+    if (p.options && p.options.length !== q.options.length) delete next.explanations;
+    return next;
+  }));
   return (
     <div>
       <p className="label">Quiz questions</p>
-      <p className="hint !mt-0 mb-3">3–5 scenario questions work best. Each needs 3–5 options, the correct one, and why it’s right.</p>
+      <p className="hint !mt-0 mb-3">As many questions as the lesson needs (about 3–5 for a short video, 8–12 for 10–20 minutes, up to 60). Each needs 2–6 options, the correct one, and why it’s right.</p>
       <ol className="space-y-4">
         {qs.map((q, i) => (
           <li key={i} className="rounded-tile border border-line bg-surface p-4">
@@ -514,8 +520,8 @@ function QuizEditor({ courseId, lectureId, initial, run }: { courseId: string; l
                 </div>
               ))}
               <div className="flex gap-2">
-                {q.options.length < 5 ? <button type="button" className="btn btn-ghost btn-sm text-violet" onClick={() => upd(i, { options: [...q.options, ""] })}>Add option</button> : null}
-                {q.options.length > 3 ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => upd(i, { options: q.options.slice(0, -1), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>Remove last option</button> : null}
+                {q.options.length < 6 ? <button type="button" className="btn btn-ghost btn-sm text-violet" onClick={() => upd(i, { options: [...q.options, ""] })}>Add option</button> : null}
+                {q.options.length > 2 ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => upd(i, { options: q.options.slice(0, -1), correct: Math.min(q.correct ?? 0, q.options.length - 2) })}>Remove last option</button> : null}
               </div>
               <input aria-label={`Why the answer to question ${i + 1} is correct`} className="field !min-h-9 !py-1" value={q.why ?? ""} placeholder="Why this answer is correct" onChange={(e) => upd(i, { why: e.target.value })} />
             </fieldset>
@@ -523,7 +529,7 @@ function QuizEditor({ courseId, lectureId, initial, run }: { courseId: string; l
         ))}
       </ol>
       <div className="mt-3 flex flex-wrap gap-2">
-        {qs.length < 5 ? <button type="button" className="btn btn-ghost btn-sm text-violet" onClick={() => setQs((x) => [...x, blank()])}><Plus className="size-4" />Add question</button> : null}
+        {qs.length < 60 ? <button type="button" className="btn btn-ghost btn-sm text-violet" onClick={() => setQs((x) => [...x, blank()])}><Plus className="size-4" />Add question</button> : null}
         <button type="button" className="btn btn-primary btn-sm" onClick={() => run(() => api(E.quiz(courseId, lectureId), { method: "PUT", body: { questions: qs } }), "Quiz saved.")}>Save quiz</button>
       </div>
     </div>
