@@ -22,6 +22,7 @@ course's report before saying "done", submitting for review, or closing a conten
 ## Course page (as a prospective student; standard §3a)
 - [ ] Title, subtitle, objectives, requirements, description written to §3a; no banned phrases; no repetition between parts.
 - [ ] Two free previews: the intro (or overview) and the most convincing hands-on demo; they play signed out.
+- [ ] Introduction video meets standard §4a: scored ≥ 90/100 in `courses/INTRO_VIDEOS.md`, covers the current curriculum, plays signed out as the first preview with the enrol / start-free action.
 - [ ] Cover from a matching template; readable; nothing covers its title.
 - [ ] Price right (owner's decision); category right.
 

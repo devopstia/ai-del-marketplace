@@ -257,6 +257,12 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     preview. Change drawing code → bump `SHARE_RENDER_VERSION`. A custom banner upload is allowed for sharing banners only
     (validated 1200×630, re-encoded without metadata); course covers stay generated (rule 17) and a video frame is never
     used. Share buttons are plain links, no platform scripts or trackers.
+36. **Premium course introductions** (owner 2026-11-28; docs/COURSE_STANDARD.md §4a, register `courses/INTRO_VIDEOS.md`).
+    The intro is public and our strongest selling point: a course trailer plus a full overview (opening hook, why it
+    matters, animated roadmap of every module, real project footage, materials shown, audience, outcomes, call to
+    action), 3–5 min for short courses, 5–8 comprehensive, 8–12 masterclasses, unique per course, accurate to the
+    current curriculum. Never a static slide welcome. Scored before publishing (minimum 90/100, see §4a); replacing an
+    intro keeps the lesson id; revisit it whenever a course gains a module or a major project.
 
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).

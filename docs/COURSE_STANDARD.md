@@ -102,6 +102,50 @@ projects, direct links). Paid courses stay self-contained: they include every fo
   the upload agent detects it, reviews it, uploads it, puts it first in the first module, marks it as a free preview
   and may use it as the course promo video.
 
+### 4a. Premium introduction videos (owner 2026-11-28, permanent, every existing and future course)
+The introduction is public and is our strongest selling point: a **course trailer plus a full educational overview**,
+held to a higher visual and marketing standard than ordinary lessons. Never a static, slide-by-slide welcome.
+- **Study the whole course first**: every module, lesson, lab, project, assessment and objective. The intro represents
+  the complete course as it is today; it names only what exists ("more lessons are being added" for planned work).
+- **Structure** (in this order):
+  1. *Opening, first 15–30 s*: a strong statement over motion graphics and real project footage, DEL branding. No static
+     title card, no "welcome to the course" opener.
+  2. *Why it matters*: the problems these technologies solve, how teams use them, how they extend DevOps skills (no
+     career or income promises).
+  3. *Animated roadmap*: every major module, what you learn, what you build, which tools, how it leads to the next.
+     Not a list of module titles.
+  4. *Project showcase* (the most impressive part): real clips, browser and terminal recordings, screenshots and
+     animated architecture/data-flow diagrams taken from the course's own lessons (e.g. a PR triggers n8n → AI review →
+     Mattermost; Terraform reads config → plan → provider API → resources; the LLMOps lifecycle).
+  5. *Learning experience*: show (don't list) the real materials: lab ZIP, PDF slides, quizzes, cleanup steps, the
+     verifiable certificate.
+  6. *Who it's for*: audience, level, prerequisites, how difficulty builds.
+  7. *Outcomes*: what you can do at the end, specific to this course.
+  8. *Call to action*: course title, DEL branding, https://ai-devopseasylearning.com, "Enroll now" (paid) or
+     "Start learning for free" (free).
+- **Length**: short/specialised courses 3–5 min, comprehensive courses 5–8 min, masterclasses 8–12 min (longer if it
+  genuinely needs it). Value over a target duration.
+- **Production**: motion graphics that explain (animated diagrams, flows, pipelines, code running), smooth transitions,
+  clear narration, licensed music only, captions as normal text (AI, AWS, MCP), 1080p, readable on a phone (large
+  type, nothing small in corners). No excessive effects. Third-party logos only with permission (rule 17); otherwise
+  written names and original symbols.
+- **Unique per course**: its own identity, roadmap, demos and message; never one generic intro reused.
+- **Editable source**: the generation agent keeps the intro's source project per section, so a section can be redone
+  when the course grows without remaking the whole video.
+- **Keep it current**: when a course gains a module, a major project or a technology, the upload agent checks whether
+  the intro still represents it and, if not, files a content request for an updated intro.
+- **Replacing an intro** keeps the lesson (same lesson id, same position, free preview): only the video, captions and
+  slides change, so progress and enrolments are untouched.
+- **Approval score** (upload agent, before publishing; recorded in `courses/INTRO_VIDEOS.md`):
+  curriculum coverage and accuracy 20 · visual design and animation 20 · marketing effectiveness 15 · real project
+  demonstrations 15 · narration and audio 10 · engagement 10 · branding 5 · call to action 5. **Minimum 90/100**, and
+  regardless of score never approve inaccurate claims, broken demos, poor audio, a misleading description or
+  unlicensed assets. Below the bar: send the specific fixes to the generation agent; the old intro stays (or the
+  position stays reserved).
+- **On the site**: the intro is the course's first lesson and first free preview; it plays signed out from the course
+  page (Preview this course), labelled as the course overview, with the enrol / start-free action next to it, on
+  phone, tablet and desktop, fullscreen and captions available.
+
 ## 5. Free previews
 - At least **two** free preview videos on the course page: the introduction plus the best practical demonstration
   (chosen for teaching value and presentation quality). Until the intro exists: the overview lesson plus the best demo.
