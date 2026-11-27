@@ -37,6 +37,13 @@
       "title": "AI foundations for DevOps",
       "lessons": [
         {
+          "folder": "25-ai-devops-azure/00-intro-ai-for-devops-azure",
+          "title": "Welcome to AI for DevOps on Azure",
+          "summary": "What you will build on Microsoft Foundry: a full-stack chat app, RAG on Azure with Terraform, your first model deployment, agents, an MCP server and n8n automations, and how each lab stays cheap.",
+          "preview": true,
+          "short": "Course introduction"
+        },
+        {
           "folder": "01-before-ai/01-computers-before-ai",
           "title": "How computers solved problems before AI",
           "summary": "See how rule-based programs work, why most of the software you run still works that way, and where hand-written rules break down: everyday language, images and cases nobody planned for.",

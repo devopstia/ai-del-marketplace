@@ -37,6 +37,13 @@
       "title": "AI foundations for DevOps",
       "lessons": [
         {
+          "folder": "24-ai-devops-aws/00-intro-ai-for-devops-aws",
+          "title": "Welcome to AI for DevOps on AWS",
+          "summary": "What you will build on AWS: a Bedrock chatbot, RAG with Knowledge Bases, AI agents for Kubernetes, an MCP server and n8n automations, how each lab stays cheap (create, use, destroy) and who the course is for.",
+          "preview": true,
+          "short": "Course introduction"
+        },
+        {
           "folder": "01-before-ai/01-computers-before-ai",
           "title": "How computers solved problems before AI",
           "summary": "See how rule-based programs work, why most of the software you run still works that way, and where hand-written rules break down: everyday language, images and cases nobody planned for.",
