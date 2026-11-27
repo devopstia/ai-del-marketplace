@@ -330,6 +330,7 @@ export function toCertificate(x: unknown): Certificate {
       published: c.published !== false,
       instructorName: str(obj(c.instructor).name ?? c.instructorName) || undefined,
       brand: str(c.brand) || null,
+      designedBy: c.designedBy === true,
       totalDurationSec: c.totalDurationSec != null ? num(c.totalDurationSec) : undefined,
       lessons: c.lessons != null ? num(c.lessons) : undefined,
     },
