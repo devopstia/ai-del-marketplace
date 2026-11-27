@@ -212,6 +212,9 @@ export class CommerceService {
           }),
         metadata: { orderId: order.id },
         payment_intent_data: { transfer_group: order.id, metadata: { orderId: order.id } },
+        // Stripe "Managed Payments" (on by default on new accounts) doesn't support Connect, which pays instructors:
+        // turn it off for every marketplace checkout so a Dashboard default can't break payments (owner 2026-11-27).
+        ...({ managed_payments: { enabled: false } } as Record<string, unknown>),
         success_url: `${web}/checkout/success?order=${order.id}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${web}/cart?canceled=1`,
       },
