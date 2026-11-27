@@ -38,6 +38,35 @@ test.describe("public catalogue", () => {
     await expect.poll(() => dialog.locator("video").getAttribute("src")).toContain("http");
   });
 
+  test("the preview names the course overview and offers the right action, signed out (standard §4a)", async ({ page }) => {
+    // A free course from the catalogue, when the local catalogue has one (or E2E_FREE_COURSE_SLUG).
+    let freeSlug = process.env.E2E_FREE_COURSE_SLUG ?? "";
+    if (!freeSlug) {
+      await page.goto("/courses");
+      const row = page.getByTestId("course-row").filter({ hasText: /\bFree\b/ }).first();
+      if (await row.count()) freeSlug = ((await row.locator("a[href^='/courses/']").first().getAttribute("href")) ?? "").replace(/^\/courses\//, "");
+    }
+    const cases: [string, RegExp][] = [[PAID_COURSE, /^Enroll now · \$/]];
+    if (freeSlug) cases.push([freeSlug, /^Start learning for free$/]);
+    for (const [slug, cta] of cases) {
+      await page.goto(`/courses/${slug}`);
+      await page.getByTestId("preview-button").filter({ visible: true }).first().click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog.getByTestId("video-player")).toBeVisible();
+      await expect(dialog.getByTestId("preview-cta")).toHaveText(cta);
+      // The course overview is labelled at most once, on the top row; the same video is never listed twice
+      // (the trailer row is dropped when it is the intro lesson's video).
+      const rows = dialog.getByRole("listitem");
+      const labelled = dialog.getByTestId("preview-overview-row");
+      expect(await labelled.count()).toBeLessThanOrEqual(1);
+      if (await labelled.count()) await expect(rows.first().getByTestId("preview-overview-row")).toHaveCount(1);
+      const titles = (await rows.allInnerTexts()).map((t) => t.replace(/^Course overview\s*/, "").replace(/\s+\d+:\d+$/, "").trim());
+      expect(new Set(titles).size).toBe(titles.length);
+      if (titles.includes("Course trailer")) expect(titles[0]).toBe("Course trailer");
+      await dialog.getByRole("button", { name: "Close" }).click();
+    }
+  });
+
   test("the home page search finds courses (no popular-search chips, owner 2026-11-25)", async ({ page }) => {
     // a word from a real course title, so this works on any catalogue (local demo or staging)
     await page.goto("/courses");

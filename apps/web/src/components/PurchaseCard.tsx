@@ -16,10 +16,12 @@ import { PreviewButton } from "./PreviewContext";
 import { PaymentsClosed, usePaymentsMode } from "@/components/TestModeNotice";
 import { refundRule, useRefundPolicy } from "@/lib/refund-policy";
 
-export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail; firstPreviewId?: string }) {
-  const refundPolicy = useRefundPolicy();
+/**
+ * The course's purchase state and actions, shared by the purchase card and the preview player, so there is only one
+ * purchase path. Guests shop without an account; sign-in is asked only at checkout (owner 2026-11-25).
+ */
+export function usePurchase(course: CourseDetail) {
   const { me, loading: authLoading, refreshCart } = useAuth();
-  const payMode = usePaymentsMode();
   const toast = useToast();
   const router = useRouter();
   const [enrolled, setEnrolled] = useState(!!course.enrolled);
@@ -62,6 +64,20 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
     void refreshCart();
     return true;
   }
+
+  /** Add to cart, then straight to checkout (signed in) or the cart (guest). */
+  async function buyNow() {
+    setBusy("buy");
+    if (await add()) router.push(me ? "/checkout" : "/cart"); else setBusy(null);
+  }
+
+  return { me, authLoading, enrolled, inCart, busy, setBusy, add, buyNow, toast, router };
+}
+
+export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail; firstPreviewId?: string }) {
+  const refundPolicy = useRefundPolicy();
+  const payMode = usePaymentsMode();
+  const { me, authLoading, enrolled, inCart, busy, setBusy, add, buyNow, toast, router } = usePurchase(course);
 
   const free = course.priceCents === 0;
   const quizzes = course.sections.reduce((a, s) => a + s.lectures.filter((l) => l.hasQuiz).length, 0);
@@ -120,7 +136,7 @@ export function PurchaseCard({ course, firstPreviewId }: { course: CourseDetail;
                 </button>
               )}
               <button type="button" className="btn btn-outline w-full" disabled={!!busy || authLoading} data-testid="buy-now"
-                onClick={async () => { setBusy("buy"); if (await add()) router.push(me ? "/checkout" : "/cart"); else setBusy(null); }}>
+                onClick={buyNow}>
                 {busy === "buy" ? <Loader2 className="size-4 animate-spin" /> : null}{free ? "Enrol now" : "Buy now"}
               </button>
             </div>}

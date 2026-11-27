@@ -42,13 +42,18 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const policy = await getRefundPolicy();
   const reviews = await getReviews(slug, { ratingAvg: c.ratingAvg, ratingCount: c.ratingCount });
   const lecturePreviews = c.sections.flatMap((s) => s.lectures).filter((l) => l.isPreview && l.type === "video");
-  const previews = c.hasPromo ? [{ id: "promo", title: "Course trailer", type: "video" as const, durationSec: 0, isPreview: true }, ...lecturePreviews] : lecturePreviews;
+  // The course overview is listed once: when the trailer is the intro lesson's own video, that lesson goes first and
+  // the separate trailer row is dropped (owner 2026-11-28); a different trailer keeps its own row at the top.
+  const overviewLecture = c.promoLectureId ? lecturePreviews.find((l) => l.id === c.promoLectureId) : undefined;
+  const previews = overviewLecture
+    ? [overviewLecture, ...lecturePreviews.filter((l) => l !== overviewLecture)]
+    : c.hasPromo ? [{ id: "promo", title: "Course trailer", type: "video" as const, durationSec: 0, isPreview: true }, ...lecturePreviews] : lecturePreviews;
   const maxBar = Math.max(1, ...Object.values(reviews.breakdown));
   const totalB = Object.values(reviews.breakdown).reduce((a, b) => a + b, 0) || 1;
   const crumbs: [string, string][] = [["Courses", "/courses"], ...(c.category ? [[c.category.name, topicPath(c.category.slug)] as [string, string]] : []), [c.title, `/courses/${c.slug}`]];
 
   return (
-    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews}>
+    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews} course={c}>
       <JsonLd data={courseLd(c)} />
       <JsonLd data={breadcrumbLd(crumbs)} />
       <JsonLd data={faqLd(courseFaqItems(c, policy))} />

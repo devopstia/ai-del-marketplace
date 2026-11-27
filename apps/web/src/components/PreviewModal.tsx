@@ -1,14 +1,33 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, PlayCircle } from "lucide-react";
+import Link from "next/link";
+import { Loader2, PlayCircle, ShoppingCart } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
 import { obj } from "@/lib/normalize";
-import { clock } from "@/lib/format";
-import type { LectureOutline } from "@/lib/types";
+import { clock, money } from "@/lib/format";
+import type { CourseDetail, LectureOutline } from "@/lib/types";
 import { Modal } from "./Modal";
 import { VideoPlayer } from "./VideoPlayer";
+import { usePurchase } from "./PurchaseCard";
+import { usePaymentsMode } from "./TestModeNotice";
 
-export function PreviewModal({ courseTitle, slug, previews, lectureId, onClose }: { courseTitle: string; slug: string; previews: LectureOutline[]; lectureId: string | null; onClose: () => void }) {
+/** The enrol action beside the preview player, through the same purchase path as the purchase card. */
+function PreviewAction({ course }: { course: CourseDetail }) {
+  const { authLoading, enrolled, inCart, busy, buyNow } = usePurchase(course);
+  const payMode = usePaymentsMode();
+  const free = course.priceCents === 0;
+  if (enrolled) return <Link href={`/learn/${course.slug}`} className="btn btn-primary w-full" data-testid="preview-cta">Go to course</Link>;
+  if (!free && payMode === "off") return null;
+  if (inCart && !free) return <Link href="/cart" className="btn btn-primary w-full" data-testid="preview-cta"><ShoppingCart className="size-4" />Go to cart</Link>;
+  return (
+    <button type="button" className="btn btn-primary w-full" disabled={!!busy || authLoading} onClick={buyNow} data-testid="preview-cta">
+      {busy === "buy" ? <Loader2 className="size-4 animate-spin" /> : null}
+      {free ? "Start learning for free" : `Enroll now · ${money(course.priceCents, course.currency)}`}
+    </button>
+  );
+}
+
+export function PreviewModal({ courseTitle, slug, previews, lectureId, onClose, course, overviewIds = [] }: { courseTitle: string; slug: string; previews: LectureOutline[]; lectureId: string | null; onClose: () => void; course?: CourseDetail; overviewIds?: string[] }) {
   const [current, setCurrent] = useState<string | null>(lectureId);
   const [src, setSrc] = useState<{ url: string; format: "mp4" | "hls"; captionsUrl?: string | null } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -47,9 +66,14 @@ export function PreviewModal({ courseTitle, slug, previews, lectureId, onClose }
               {loading ? <Loader2 className="size-8 animate-spin" aria-label="Loading preview" /> : <p className="max-w-sm px-6 text-center text-sm">{err ?? "Pick a free preview to start watching."}</p>}
             </div>
           )}
-          {lec ? <p className="mt-3 font-display font-bold text-white">{lec.title}</p> : null}
+          {lec ? (
+            <div className="mt-3">
+              {overviewIds.includes(lec.id) ? <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9fd9f5]" data-testid="preview-overview-label">Course overview</p> : null}
+              <p className="font-display font-bold text-white">{lec.title}</p>
+            </div>
+          ) : null}
         </div>
-        <div className="border-t border-line p-3 md:border-l md:border-t-0">
+        <div className="flex flex-col border-t border-line p-3 md:border-l md:border-t-0">
           <p className="px-2 pb-2 pt-1 text-sm font-bold text-muted">Free previews</p>
           <ul>
             {previews.map((p) => (
@@ -57,12 +81,18 @@ export function PreviewModal({ courseTitle, slug, previews, lectureId, onClose }
                 <button type="button" onClick={() => load(p.id)} aria-current={p.id === current}
                   className={`flex w-full items-start gap-3 rounded-lg px-2 py-2.5 text-left text-sm hover:bg-surface-2 ${p.id === current ? "bg-violet-soft font-bold" : ""}`}>
                   <PlayCircle className="mt-0.5 size-4 shrink-0 text-violet" />
-                  <span className="flex-1">{p.title}</span>
+                  <span className="flex-1">
+                    {overviewIds.includes(p.id) ? <span className="mb-0.5 block text-xs font-bold text-violet" data-testid="preview-overview-row">Course overview</span> : null}
+                    {p.title}
+                  </span>
                   <span className="tabular-nums text-muted">{p.durationSec ? clock(p.durationSec) : ""}</span>
                 </button>
               </li>
             ))}
           </ul>
+          {course ? <div className="mt-3 border-t border-line px-2 pb-1 pt-3 md:mt-auto">
+            <PreviewAction course={course} />
+          </div> : null}
         </div>
       </div>
     </Modal>

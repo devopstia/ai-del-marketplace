@@ -196,6 +196,7 @@ export function toCourseDetail(x: unknown): CourseDetail {
     inCart: Boolean(raw.inCart ?? o.inCart ?? obj(raw.viewer).inCart),
     isOwner: Boolean(raw.isOwner ?? o.isOwner ?? obj(raw.viewer).isOwner),
     hasPromo: Boolean(o.hasPromo ?? o.promoVideoAssetId),
+    promoLectureId: typeof o.promoLectureId === "string" ? o.promoLectureId : null,
     resourceCount: num(raw.resourceCount ?? o.resourceCount ?? obj(raw.totals).resources),
     viewerSignedIn: Boolean(obj(raw.viewer).signedIn),
     access: (() => {

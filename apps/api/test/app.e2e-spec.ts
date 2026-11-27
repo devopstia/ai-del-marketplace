@@ -268,6 +268,25 @@ describe('e2e: buy and learn', () => {
     return { course, section, lecture };
   }
 
+  it('course overview: promoLectureId names the free-preview lesson that plays the trailer video, never a hidden lesson or the asset id', async () => {
+    if (!available) return;
+    const teacher = await userAgent('promo-teacher@e2e.example', ['student', 'instructor'], {});
+    const same = await publishedCourse(teacher.user.id, 'promo-same', 0);
+    await prisma.lecture.update({ where: { id: same.lecture.id }, data: { isPreview: true } });
+    await prisma.course.update({ where: { id: same.course.id }, data: { promoVideoAssetId: same.lecture.videoAssetId } });
+    const a = (await request(app.getHttpServer()).get('/api/courses/promo-same').expect(200)).body;
+    expect(a).toMatchObject({ hasPromo: true, promoLectureId: same.lecture.id });
+    expect(JSON.stringify(a.curriculum)).not.toContain(same.lecture.videoAssetId!);
+
+    // A trailer of its own (different asset), or the same video on a lesson that isn't a free preview: no overview lesson.
+    const other = await publishedCourse(teacher.user.id, 'promo-other', 1500);
+    const trailer = await prisma.videoAsset.create({ data: { ownerId: teacher.user.id, provider: 'local', status: 'ready', storageKey: 'videos/promo-other/trailer.mp4', durationSec: 30 } });
+    await prisma.course.update({ where: { id: other.course.id }, data: { promoVideoAssetId: trailer.id } });
+    expect((await request(app.getHttpServer()).get('/api/courses/promo-other').expect(200)).body).toMatchObject({ hasPromo: true, promoLectureId: null });
+    await prisma.lecture.update({ where: { id: same.lecture.id }, data: { isPreview: false } });
+    expect((await request(app.getHttpServer()).get('/api/courses/promo-same').expect(200)).body.promoLectureId).toBeNull();
+  });
+
   it('terms acceptance at purchase: refused without the current version, recorded on the order, shown on receipt and admin detail', async () => {
     if (!available) return;
     const teacher = await userAgent('terms-teacher@e2e.example', ['student', 'instructor'], {});

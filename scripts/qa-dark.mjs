@@ -3,7 +3,8 @@
 // default is light since 2026-11-25, pass --light to scan it) and reports:
 //  - text whose contrast against its actual background is under WCAG AA (4.5:1; 3:1 for large text),
 //  - pages that scroll sideways.
-// Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--act-as del] [--widths 390,768,1440] [--light] path [path…]
+// Usage: node scripts/qa-dark.mjs [--as student|instructor|admin] [--act-as del] [--widths 390,768,1440] [--light] [--open-preview] path [path…]
+// --open-preview: on course pages, open the course preview player first and scan with it open.
 // Signs in with the seed accounts (SEED_PASSWORD from .env). Exit code 1 when anything fails.
 import { freshCode, seedSecret } from "./totp.mjs";
 import { chromium } from "playwright";
@@ -19,6 +20,7 @@ const actAs = opt("--act-as", null);
 const apiBase = process.env.QA_API ?? base.replace(/:(\d+)$/, (_, p) => `:${Number(p) + 1000}`);
 const widths = opt("--widths", "390,1440").split(",").map(Number);
 const light = flag("--light");
+const openPreview = flag("--open-preview");
 const paths = args.length ? args : ["/"];
 const users = { student: "student@del.example", instructor: "nadia@instructor.example", admin: "admin@del.example" };
 const password = process.env.SEED_PASSWORD ?? readFileSync(new URL("../.env", import.meta.url), "utf8").match(/^SEED_PASSWORD=(.*)$/m)?.[1];
@@ -117,8 +119,13 @@ for (const w of widths) {
   for (const p of paths) {
     await page.goto(base + p, { waitUntil: "networkidle" });
     await page.waitForTimeout(300);
+    if (openPreview) {
+      await page.getByTestId("preview-button").filter({ visible: true }).first().click();
+      await page.getByRole("dialog").getByTestId("preview-cta").waitFor();
+      await page.waitForTimeout(600);
+    }
     const r = await page.evaluate(scan);
-    const tag = `${p} @${w}${role ? ` as ${role}` : ""}${light ? " (light)" : ""}`;
+    const tag = `${p}${openPreview ? " [preview open]" : ""} @${w}${role ? ` as ${role}` : ""}${light ? " (light)" : ""}`;
     if (!r.failures.length && r.overflow <= 0) { console.log(`ok    ${tag}`); continue; }
     bad++;
     console.log(`FAIL  ${tag}${r.overflow > 0 ? `  (scrolls sideways by ${r.overflow}px)` : ""}`);
