@@ -12,7 +12,7 @@
  * added to the plan uploads only what is new and re-arranges the curriculum in plan order. Never publishes.
  */
 import { existsSync } from 'node:fs';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
 import { ApiError, DelClient, isVideo, SessionClient, type FileRecord, type FileStore, type PublisherClient, type UploadResult } from './client.js';
 
@@ -339,11 +339,11 @@ export function pruneTargets(status: string, plan: CoursePlan, state: Pick<State
 }
 
 // ---------- API shapes (subset) ----------
-interface Resource { id: string; title: string }
+interface Resource { id: string; title: string; sizeBytes?: number }
 interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; articleMd?: string | null; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
 interface Section { id: string; title: string; lectures: Lecture[] }
 interface CourseDetail { id: string; slug?: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
-interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
 
 export type AuthMode = 'agent' | 'session';
 
@@ -580,11 +580,25 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
       // Study materials, attached once per title, with names learners understand.
       for (const [path, title, suffix, kind] of [[files.slides, SLIDES_TITLE, 'slides', 'slides'], [files.lab, LAB_TITLE, 'lab', 'labs']] as const) {
         if (!path) continue;
-        if (lec.resources.some((r) => r.title === title)) { counts[kind]++; continue; }
+        // A file already attached stays unless the source file changed (owner 2026-11-28: re-delivered labs replace the
+        // old download). Change = a different checksum from the one recorded, or, before anything was recorded, a
+        // different size from the attached file.
+        const rkey = `${lp.folder}#${kind}`;
+        const attached = lec.resources.find((r) => r.title === title);
+        const sha = await del.sha256(path);
+        state.resources ??= {};
+        if (attached) {
+          const known = state.resources[rkey];
+          const same = known ? known === sha : attached.sizeBytes === undefined || attached.sizeBytes === (await stat(path)).size;
+          if (same) { state.resources[rkey] = sha; counts[kind]++; continue; }
+        }
         try {
           const r = await uploadShared(del, media.map, media.save, courseSlug, path, { courseId, name: `${slug(lp.title)}-${suffix}${extname(path)}` });
           if (r.duplicate) counts.reused++; else counts.uploaded++;
           await del.call('POST', `/courses/${courseId}/lectures/${lec.id}/resources`, { title, storageKey: r.storageKey });
+          if (attached) { await del.call('DELETE', `/courses/${courseId}/resources/${attached.id}`); log(`  ~ ${title} replaced (source changed): ${lp.title}`); }
+          state.resources[rkey] = sha;
+          await saveState();
           counts[kind]++;
         } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
           counts.failed++;
