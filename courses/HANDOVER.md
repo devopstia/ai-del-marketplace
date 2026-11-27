@@ -16,9 +16,12 @@ in a chat or a context window.
 5. **Before you stop:** update `COURSE_STATUS.md`, the request statuses, `LESSONS_LEARNED.md`; commit; say in your final
    message what is waiting and on whom.
 
-## Now (2026-11-27)
-- Production course is live at $4.99; the live purchase test passed (see COURSE_STATUS). Production runs release
-  `2b84e9593d77` (Designed by Tia, description rendering, preview button, Managed Payments fix).
-- Waiting for a production sign-in: sync the new course copy, "Quiz: …" names and lesson 01's lab → submit → owner
-  approves in the Review queue.
-- GEN is producing CR-001, CR-003, CR-004, CR-005; CR-006–CR-013 requested.
+## Now (2026-11-27, evening)
+- **Production** runs release `2b84e9593d77`; live purchase test passed ($4.99). The owner set the price to **$29.99**
+  ($49.99 later); the production sync for price + new copy + quiz names + lab 01 needs a fresh owner sign-in (the
+  owner signing in in a browser ends the upload session: ask them to stay signed out during uploads).
+- **main** (local only, not pushed, not released) now also holds: Academic certificate, Corporate receipt, login logo
+  (white disc), Teach page without public earnings, dashboard phase 1 (/studio). The owner's local site
+  (127.0.0.1:3000) runs it. Next release needs the owner's "deploy to production".
+- Dashboard phase 3 (/admin) is being built on `feat/dashboard-admin`; phase 2 (Student) waits.
+- New course folders arrived: intro, GitHub PR, AWS automation (see COURSE_STATUS).

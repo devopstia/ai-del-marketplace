@@ -35,6 +35,12 @@ Read before every upload; add to it after every upload. Newest first.
 - Lab ZIPs for cloud lessons: check for `.tfstate`, `.terraform/`, `keys/` and `*.pem` too (lesson 18 was clean:
   `.gitignore` covers them).
 
+## 2026-11-27 (later): price change and sessions
+- A browser sign-in by the owner ends the CLI upload session ("replaced": one session per account). `/auth/me` still
+  answers 200 with `user: null`, so check `user`, not the status code. Ask the owner to stay signed out while a
+  production sync runs, or use an agent key (IMPROVEMENTS #2).
+- Price changes on a published course go to the draft revision like any other change; the owner approves them.
+
 ## 2026-11-27: n8n course to production
 - **Owner prefers no agent tokens in production**: session mode with `scripts/del-signin.sh` (the owner signs in;
   the skill's "Production upload: how it works" has every step).

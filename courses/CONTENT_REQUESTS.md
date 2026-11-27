@@ -46,11 +46,11 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
 
 | Id | Course | Module / lesson | Request | Owner | Opened | Priority | Status | Delivered at | Upload |
 |---|---|---|---|---|---|---|---|---|---|
-| CR-001 | AI-Powered DevOps Automation with n8n | Module 1, first lesson | Course introduction / overview video | GEN | 2026-11-27 | P1 | in-progress | `18-automation-n8n/00-intro…` | — |
+| CR-001 | AI-Powered DevOps Automation with n8n | Module 1, first lesson | Course introduction / overview video | GEN | 2026-11-27 | P1 | generated | `00-n0-n8n-course-intro` (3 min 32 s, captions, PDF) | review + staging next |
 | CR-002 | n8n | Module 1 · lesson 01 | Lab ZIP promised in the closing line | GEN | 2026-11-26 | P2 | ready-for-review | `01-n1-…/01-n1-n8n-mattermost-explained-lab.zip` | scanned 2026-11-27 (clean); upload on next sync |
 | CR-003 | n8n | Lessons 01–03 | Quiz options read aloud so the 12 questions can be imported | GEN | 2026-11-26 | P2 | in-progress | same folders (re-recorded quiz scenes) | — |
-| CR-004 | n8n | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | in-progress | `09-n7-n8n-github-pr-live` | — |
-| CR-005 | n8n | Module 3 | AWS automation (CloudWatch, S3, SQS) — proposed by GEN | GEN | 2026-11-27 | P2 | in-progress | `11-n11-n8n-aws-automation-live` | — |
+| CR-004 | n8n | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | generated (no lab ZIP yet) | `09-n7-n8n-github-pr-live` (16 min, captions, PDF) | waiting for the lab |
+| CR-005 | n8n | Module 3 | AWS automation (CloudWatch, S3, SQS) — proposed by GEN | GEN | 2026-11-27 | P2 | generated (no lab ZIP yet) | `11-n11-n8n-aws-automation-live` (18 min, captions, PDF) | waiting for the lab |
 | CR-006 | n8n | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | requested | — | — |
 | CR-007 | n8n | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | in-progress | `19-n19-n8n-ai-agent-live` | — |
 | CR-008 | n8n | Module 4 (AI) | AI incident triage and root-cause suggestions | GEN | 2026-11-27 | P1 | requested | — | — |
@@ -68,7 +68,8 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
   `intro` in `course.manifest.json`. Content: what the course is and why it matters, who it's for, prerequisites, tools,
   the projects, the 4 modules, what you can do afterwards. Honest: only what the videos teach.
 - **Placement:** first lesson of module 1, free preview, promo video.
-- **Log:** 2026-11-27 GEN: started, ~3 min. 2026-11-27 GEN: script written, build queued.
+- **Log:** 2026-11-27 GEN: started, ~3 min. 2026-11-27 GEN: script written, build queued. 2026-11-27 UPLOAD: folder seen
+  (video 3:32, captions, PDF); review, place first in module 1 as a preview and promo video, staging then production.
 
 ### CR-002 Lab for lesson 01
 - **Why:** the video ends with "Download the lab and practise".

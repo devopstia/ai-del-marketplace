@@ -17,4 +17,10 @@ One row per course, kept current by the Course Upload Agent after every sync (ow
 | Waiting | lesson 01 lab (CR-002); new course copy (merged to main 2026-11-27) | "Designed by Tia" and the description fix are live (release 2b84e9593d77); the new copy, Quiz names and lab 01 need a production sync (owner sign-in) → draft revision → owner approves |
 | Live payments | — | **Live purchase test passed 2026-11-27**: $4.99 order paid, enrolment created (source purchase), DEL keeps 100% (Stripe fee $0.44, net $4.55, instructor share $0). Checkout now turns off Stripe Managed Payments per session (release 2b84e9593d77). Receipt email unconfirmed: SES still in sandbox (IMPROVEMENTS #1) |
 
-Gaps and new content: CR-001 … CR-013 in `CONTENT_REQUESTS.md`.
+Gaps and new content: CR-001 … CR-013 in `CONTENT_REQUESTS.md`. New folders in the source (2026-11-27): the intro
+`00-n0-n8n-course-intro`, `09-n7-n8n-github-pr-live` and `11-n11-n8n-aws-automation-live` (the last two still without
+labs): to be reviewed, added to the plan in their place, synced to staging, then production.
+
+Production update waiting (2026-11-27): price **$29.99**, the rewritten course page, "Quiz: …" names and lesson 01's lab.
+The first try stopped because the owner's browser sign-in replaced the upload session; it needs a new sign-in, then
+goes to the Review queue as a draft revision.
