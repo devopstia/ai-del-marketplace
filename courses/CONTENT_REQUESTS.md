@@ -15,8 +15,10 @@ root `C:\Users\tiaje\Dropbox\AI-VIDEOS\ai-devops\videos` = `/mnt/c/Users/tiaje/D
 - GEN moves it to `in-progress`, `generated` (files written) and `ready-for-review` (files complete in Dropbox, no
   `*.part` left), fills **Delivered at**, and sends UPLOAD a message with the id.
 - Either side adds a dated line under the request's **Log** for anything that changes (scope, dates, problems).
-- Ids never change or get reused. Edit only your own columns: GEN edits Status (up to `ready-for-review`), Delivered at
-  and its Log lines; UPLOAD edits everything else.
+- Ids never change or get reused. **Only UPLOAD edits this file** (2026-11-27: the owner told GEN "do not do anything on
+  marketplace, just handle videos"). GEN reports every change as a message (id, status, delivered at, a log line) and
+  UPLOAD records it here the same day; GEN keeps a mirror in its repo
+  (`projects/ai-devops/docs/courses/n8n-devops-automation.md` › "Content requests").
 
 **Priority:** P1 = blocks selling or misleads students; P2 = makes the course clearly better; P3 = nice to have.
 
@@ -30,7 +32,7 @@ root `C:\Users\tiaje\Dropbox\AI-VIDEOS\ai-devops\videos` = `/mnt/c/Users/tiaje/D
 | CR-004 | n8n | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | in-progress | `09-n7-n8n-github-pr-live` | — |
 | CR-005 | n8n | Module 3 | AWS automation (CloudWatch, S3, SQS) — proposed by GEN | GEN | 2026-11-27 | P2 | in-progress | `11-n11-n8n-aws-automation-live` | — |
 | CR-006 | n8n | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | requested | — | — |
-| CR-007 | n8n | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | requested | — | — |
+| CR-007 | n8n | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | in-progress | `19-n19-n8n-ai-agent-live` | — |
 | CR-008 | n8n | Module 4 (AI) | AI incident triage and root-cause suggestions | GEN | 2026-11-27 | P1 | requested | — | — |
 | CR-009 | n8n | Module 4 (AI) | AI in CI/CD (explain failed pipelines, suggest fixes; never auto-deploy) | GEN | 2026-11-27 | P1 | requested | — | — |
 | CR-010 | n8n | Module 3 or 4 | Intelligent alerting (grouping, noise reduction, rules first, AI second) | GEN | 2026-11-27 | P2 | requested | — | — |
@@ -46,7 +48,7 @@ root `C:\Users\tiaje\Dropbox\AI-VIDEOS\ai-devops\videos` = `/mnt/c/Users/tiaje/D
   `intro` in `course.manifest.json`. Content: what the course is and why it matters, who it's for, prerequisites, tools,
   the projects, the 4 modules, what you can do afterwards. Honest: only what the videos teach.
 - **Placement:** first lesson of module 1, free preview, promo video.
-- **Log:** 2026-11-27 GEN: started, ~3 min.
+- **Log:** 2026-11-27 GEN: started, ~3 min. 2026-11-27 GEN: script written, build queued.
 
 ### CR-002 Lab for lesson 01
 - **Why:** the video ends with "Download the lab and practise".
@@ -64,13 +66,17 @@ Outlines and labs: `courses/GENERATION_FEEDBACK.md` (2026-11-26 later entry). Ea
 ZIP (README, `.env.example` only), 4 spoken multiple-choice questions, a `course.manifest.json` entry with `position`.
 - **Log:** 2026-11-27 GEN: CR-004 and CR-005 in production; CR-006–CR-010 next (folders from 19); CR-011 waits for the
   owner's Slack webhook (kept only in GEN's git-ignored `.secrets/`, never on screen or in a lab).
+  2026-11-27 GEN: CR-007 started (`19-n19-n8n-ai-agent-live`); CR-006, 008, 009, 010 start as slots free up; CR-003 01–03
+  next in the re-record queue.
 
 ### CR-012 Module assessments
 - **Why:** the owner wants assessments as a standard (lesson quizzes, module assessments, final assessment).
 - **Deliverables:** `assessments/module-<n>.json` per module: `{ "module": "<title>", "questions": [{ "q", "options"
   (3–5), "correct" (0-based), "why" }] }`, 8–10 questions drawn only from that module's videos, each with an
   explanation. UPLOAD adds it as the module's last lesson ("Module <n> assessment").
+- **Log:** 2026-11-27 GEN: accepted; written after each module's lessons are final, so they match what is taught.
 
 ### CR-013 Final assessment and conclusion
 - **Deliverables:** `assessments/final.json` (20 questions, same format), and `99-conclusion-…/` (2–3 min: recap, what
   to build next, how to get the certificate). Placement: last module, after the last lesson.
+- **Log:** 2026-11-27 GEN: accepted; the conclusion video comes last.

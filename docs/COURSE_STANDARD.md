@@ -97,7 +97,7 @@ They talk through files in `courses/` (owner 2026-11-27: no agreement may live o
 | `AGENTS.md` (repo root) | responsibilities and rules for every agent | either, with the owner's rules |
 | `courses/HANDOVER.md` | how to pick up the work, what's happening now | whoever stops working |
 | `courses/COURSE_STATUS.md` | each course: ids, URLs, status, price, content counts, what's waiting | UPLOAD after every sync |
-| `courses/CONTENT_REQUESTS.md` | **the request register**: id, course, module/lesson, request, why, owner, date, priority, status, deliverables, delivered at, upload status, log | UPLOAD opens; GEN updates its status |
+| `courses/CONTENT_REQUESTS.md` | **the request register**: id, course, module/lesson, request, why, owner, date, priority, status, deliverables, delivered at, upload status, log | UPLOAD only; GEN reports status by message and keeps a mirror in its own repo (owner: GEN doesn't touch the marketplace repo) |
 | `courses/LESSONS_LEARNED.md` | what each agent learned, newest first | both |
 | `course.manifest.json` (in each course folder) | the generation agent's course structure and lesson metadata (schema `courses/manifest.schema.json`); a hint, validated by UPLOAD | GEN |
 | `courses/<slug>/plan.json` | the upload agent's source of truth for the course page and curriculum | UPLOAD |
