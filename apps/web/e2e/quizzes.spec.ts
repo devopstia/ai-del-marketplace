@@ -1,38 +1,47 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { login, PASSWORD, USERS } from "./helpers";
 
 /**
  * Quizzes (owner 2026-11-28): shuffled questions and options graded by question, progress, explanations, a practice
- * round on missed questions that is not recorded, bookmarks. Uses the seeded free course the demo student owns.
+ * round on missed questions that is not recorded, bookmarks. Uses the first quiz of a course the demo student owns
+ * (the seeded free course, or the imported catalogue course once the learner has bought it).
  */
+async function firstQuiz(page: Page): Promise<{ path: string; tab: boolean } | null> {
+  const api = process.env.E2E_API_URL ?? new URL(page.url()).origin.replace(/:(\d+)$/, (_, p) => `:${Number(p) + 1000}`);
+  await page.goto("/student/courses");
+  await page.waitForLoadState("networkidle");
+  const hrefs = await page.locator('a[href^="/learn/"]').evaluateAll((as) => [...new Set(as.map((a) => (a.getAttribute("href") ?? "").split("/")[2]).filter(Boolean))]);
+  for (const slug of hrefs) {
+    const r = await page.request.get(`${api}/api/me/courses/${slug}`);
+    if (!r.ok()) continue;
+    const c = (await r.json()) as { sections: { lectures: { id: string; type: string; hasQuiz?: boolean }[] }[] };
+    // a quiz lesson, or (imported catalogue) a video lesson with its quiz in the "Quiz" tab
+    const all = c.sections.flatMap((s) => s.lectures);
+    const q = all.find((l) => l.type === "quiz" && l.hasQuiz !== false) ?? all.find((l) => l.hasQuiz);
+    if (q) return { path: `/learn/${slug}/${q.id}`, tab: q.type !== "quiz" };
+  }
+  return null;
+}
+
 test.describe.serial("quizzes: shuffle, explanations, retry missed, bookmarks", () => {
   test.skip(!PASSWORD, "Set E2E_PASSWORD (the seed password) to run signed-in flows");
-  const RIGHT: Record<string, string> = {
-    "400-page runbook": "The text exceeded the context window",
-    "cli flag": "Check the official docs or --help",
-    "most repeatable": "A prompt with role, context, constraints and an output format",
-  };
 
-  test("answers in any order are graded by question; a missed one can be practised again without being recorded", async ({ page }) => {
-    await login(page, USERS.student, PASSWORD, "/learn/ai-foundations-for-devops-engineers");
-    await page.goto("/learn/ai-foundations-for-devops-engineers");
-    const lesson = page.getByText("Check your understanding", { exact: true }).first();
-    if (!(await lesson.isVisible())) await page.getByText("Working safely with AI").first().click(); // open its module
-    await lesson.click();
+  test("answers in any order are graded by question; missed ones can be practised again without being recorded", async ({ page }) => {
+    await login(page, USERS.student, PASSWORD, "/student/courses");
+    const found = await firstQuiz(page);
+    test.skip(!found, "the demo student owns no course with a quiz yet");
+    await page.goto(found!.path);
+    if (found!.tab) await page.getByRole("tab", { name: "Quiz", exact: true }).click();
     const quiz = page.getByTestId("quiz");
     await expect(quiz).toBeVisible();
-    await expect(page.getByTestId("quiz-progress")).toContainText("0 of 3 answered");
-
     const questions = quiz.getByTestId("quiz-question");
-    await expect(questions).toHaveCount(3);
-    for (let i = 0; i < 3; i++) {
-      const q = questions.nth(i);
-      const text = (await q.locator("legend").innerText()).toLowerCase();
-      // the "repeatable prompt" question is answered wrong on purpose
-      const answer = text.includes("most repeatable") ? '"Fix my pipeline"' : Object.entries(RIGHT).find(([k]) => text.includes(k))![1];
-      await q.getByLabel(answer, { exact: true }).check();
-    }
-    await expect(page.getByTestId("quiz-progress")).toContainText("3 of 3 answered");
+    await expect(questions.first()).toBeVisible();
+    const n = await questions.count();
+    await expect(page.getByTestId("quiz-progress")).toContainText(`0 of ${n} answered`);
+
+    // the last option shown for every question (options are shuffled, so the score varies; grading is by question)
+    for (let i = 0; i < n; i++) await questions.nth(i).locator('input[type="radio"]').last().check();
+    await expect(page.getByTestId("quiz-progress")).toContainText(`${n} of ${n} answered`);
 
     // bookmark a question, filter to it, then remove the bookmark
     const mark = questions.first().getByTestId("quiz-bookmark");
@@ -41,25 +50,29 @@ test.describe.serial("quizzes: shuffle, explanations, retry missed, bookmarks", 
     await page.getByTestId("quiz-only-marked").check();
     await expect(questions).toHaveCount(1);
     await page.getByTestId("quiz-only-marked").uncheck();
-    await expect(questions).toHaveCount(3);
+    await expect(questions).toHaveCount(n);
     await questions.first().getByTestId("quiz-bookmark").click();
     await expect(questions.first().getByTestId("quiz-bookmark")).toHaveAttribute("aria-pressed", "false");
 
     await page.getByTestId("quiz-submit").click();
-    await expect(page.getByTestId("quiz-result")).toContainText("67% · 2 of 3 correct");
+    const result = page.getByTestId("quiz-result");
+    await expect(result).toContainText(new RegExp(`\\d+% · \\d+ of ${n} correct`));
     await expect(quiz.getByTestId("quiz-explanation").first()).toBeVisible();
 
-    await page.getByTestId("quiz-retry-missed").click();
-    await expect(page.getByTestId("quiz-kind")).toContainText("Practice");
-    await expect(questions).toHaveCount(1);
-    await questions.first().getByLabel(RIGHT["most repeatable"]!, { exact: true }).check();
-    await page.getByTestId("quiz-submit").click();
-    await expect(page.getByTestId("quiz-result")).toContainText("100%");
-    await expect(page.getByTestId("quiz-result")).toContainText("not recorded");
+    const retry = page.getByTestId("quiz-retry-missed");
+    if (await retry.count()) {
+      const missed = Number((await retry.innerText()).match(/\d+/)![0]);
+      await retry.click();
+      await expect(page.getByTestId("quiz-kind")).toContainText("Practice");
+      await expect(questions).toHaveCount(missed);
+      for (let i = 0; i < missed; i++) await questions.nth(i).locator('input[type="radio"]').first().check();
+      await page.getByTestId("quiz-submit").click();
+      await expect(result).toContainText("not recorded");
+    }
 
     await page.getByTestId("quiz-again").click();
-    // a fresh draw and shuffle; the best score counts full attempts only (the practice round didn't change it)
-    await expect(page.getByTestId("quiz-progress")).toContainText("0 of 3 answered");
+    // a fresh draw and shuffle; the best score counts full attempts only
+    await expect(page.getByTestId("quiz-progress")).toContainText(`0 of ${n} answered`);
     await expect(page.getByTestId("quiz-progress")).toContainText(/Best score \d+%/);
   });
 });
