@@ -46,13 +46,13 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
 
 | Id | Course | Module / lesson | Request | Owner | Opened | Priority | Status | Delivered at | Upload |
 |---|---|---|---|---|---|---|---|---|---|
-| CR-001 | AI-Powered DevOps Automation with n8n | Module 1, first lesson | Course introduction / overview video | GEN | 2026-11-27 | P1 | in-progress (re-recording the "four parts" scene to the page's module names) | `00-n0-n8n-course-intro` (3 min 32 s draft) | hold until GEN says ready-for-review |
+| CR-001 | AI-Powered DevOps Automation with n8n | Module 1, first lesson | Course introduction / overview video | GEN | 2026-11-27 | P1 | ready-for-review (2026-11-27) | `18-automation-n8n/00-n0-n8n-course-intro` (3:32, mp4, captions, PDF; 'four parts' scene re-recorded to the page's module names; GEN validate PASS) | in the n8n plan (first lesson, preview, intro, promo); sync after the pending n8n revision is decided |
 | CR-002 | n8n | Module 1 · lesson 01 | Lab ZIP promised in the closing line | GEN | 2026-11-26 | P2 | ready-for-review | `01-n1-…/01-n1-n8n-mattermost-explained-lab.zip` | scanned 2026-11-27 (clean); upload on next sync |
 | CR-003 | n8n | Lessons 01–03 | Quiz options read aloud so the 12 questions can be imported | GEN | 2026-11-26 | P2 | in-progress (01, 02 re-recorded; 03 queued) | same folders (re-recorded quiz scenes) | — |
-| CR-004 | n8n | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | in-progress (re-record + QA; early copy in Dropbox, ignore) | `09-n7-n8n-github-pr-live` | hold until ready-for-review |
+| CR-004 | n8n; also in both masterclasses' 'Automate it with n8n' module | Module 3 (with notifications) | GitHub pull request notifications (signed webhooks) | GEN | 2026-11-27 | P1 | in-progress (re-record + QA; early copy in Dropbox, ignore) | `09-n7-n8n-github-pr-live` | hold until ready-for-review |
 | CR-005 | n8n | Module 3 | AWS automation (CloudWatch, S3, SQS) — proposed by GEN | GEN | 2026-11-27 | P2 | in-progress (re-record + QA; early copy in Dropbox, ignore) | `11-n11-n8n-aws-automation-live` | hold until ready-for-review |
-| CR-006 | n8n | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | blocked: owner creates the GitHub token | — | — |
-| CR-007 | n8n | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | in-progress (written, build queued) | `19-n19-n8n-ai-agent-live` | — |
+| CR-006 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | blocked: owner creates the GitHub token | — | — |
+| CR-007 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | in-progress (written, build queued) | `19-n19-n8n-ai-agent-live` | — |
 | CR-008 | n8n | Module 4 (AI) | AI incident triage and root-cause suggestions | GEN | 2026-11-27 | P1 | in-progress (written, build queued) | — | — |
 | CR-009 | n8n | Module 4 (AI) | AI in CI/CD (explain failed pipelines, suggest fixes; never auto-deploy) | GEN | 2026-11-27 | P1 | in-progress (written, build queued) | — | — |
 | CR-010 | n8n | Module 3 or 4 | Intelligent alerting (grouping, noise reduction, rules first, AI second) | GEN | 2026-11-27 | P2 | in-progress (written, build queued) | — | — |
@@ -63,9 +63,9 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
 | CR-015 | AI for DevOps on AWS | Module 1, first lesson | Course introduction: AI for DevOps on AWS | GEN | 2026-11-27 | P1 | accepted | — | — |
 | CR-016 | AI for DevOps on Azure | Module 1, first lesson | Course introduction: AI for DevOps on Azure | GEN | 2026-11-27 | P1 | accepted | — | — |
 | CR-017 | Visual Studio Code Masterclass for DevOps and AI | Module 1, first lesson | Course introduction: VS Code for DevOps and AI | GEN | 2026-11-27 | P1 | accepted, to be mapped onto the approved VS Code curriculum | — | — |
-| CR-018 | Introduction to AI for DevOps; reused in AWS and Azure Module 1 | Intro Module 4 (new 'Prompt engineering'); AWS/Azure Module 1 after 'Prompts, tokens…' | Prompt engineering for DevOps (4 lessons) | GEN | 2026-11-27 | P1 | accepted | — | — |
-| CR-019 | Introduction to AI for DevOps; VS Code Module 5 reuses the CLI parts | Intro Module 5 'Practical AI tools' | AI tools tour: ChatGPT and Claude, Claude Code and Codex CLI, Ollama (3 lessons) | GEN | 2026-11-27 | P2 | accepted | — | — |
-| CR-020 | Introduction to AI for DevOps | Module 7, last | Next steps and final assessment | GEN | 2026-11-27 | P2 | accepted | — | — |
+| CR-018 | AI for DevOps on AWS and on Azure (changed 2026-11-27: not in the free intro, which stays concise) | Module 2 'The vocabulary of AI models', after 'Prompts, tokens…' | Prompt engineering for DevOps (4 lessons) | GEN | 2026-11-27 | P1 | accepted | — | — |
+| CR-019 | AI for DevOps on AWS and on Azure (optional, end of Module 1; changed 2026-11-27); VS Code reuses the CLI parts | Masterclass Module 1, last | AI tools tour: ChatGPT and Claude, Claude Code and Codex CLI, Ollama (3 lessons) | GEN | 2026-11-27 | P2 | accepted | — | — |
+| CR-020 | Introduction to AI for DevOps | Module 3, last (before the next-step text lesson) | Final assessment (the next-step part is now a text lesson written by UPLOAD) | GEN | 2026-11-27 | P2 | accepted | — | — |
 | CR-021 | AI for DevOps on AWS | Module 2, after 'Amazon Bedrock explained' | Amazon SageMaker AI for DevOps engineers | GEN | 2026-11-27 | P2 | accepted | — | — |
 | CR-022 | AI for DevOps on AWS | Module 2 | Kiro (formerly Amazon Q Developer) for DevOps | GEN | 2026-11-27 | P2 | accepted | — | — |
 | CR-023 | AI for DevOps on AWS | Module 3, after the Bedrock chatbot | Amazon Bedrock from code: SDK, Converse API and model comparison | GEN | 2026-11-27 | P1 | accepted | — | — |
@@ -93,6 +93,8 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
 | CR-045 | Visual Studio Code Masterclass | Module 5, after the .claude folder | AI coding agents in VS Code: Codex CLI, AGENTS.md and reviewing AI code | GEN | 2026-11-27 | P2 | accepted, to be mapped onto the approved VS Code curriculum | — | — |
 | CR-046 | Visual Studio Code Masterclass | Module 6 | Real-world projects and final assessment | GEN | 2026-11-27 | P3 | accepted, to be mapped onto the approved VS Code curriculum | — | — |
 | CR-047 | All four new courses | end of each module | Module assessments | GEN | 2026-11-27 | P2 | accepted | — | — |
+| CR-048 | AI for DevOps on AWS | Module 7 'AI agents for DevOps', after CR-025 | Multi-agent collaboration with human approval on AWS | GEN | 2026-11-27 | P1 | requested | — | — |
+| CR-049 | AI for DevOps on Azure | Module 7 'AI agents for DevOps', after CR-035 | Multi-agent collaboration with human approval on Azure | GEN | 2026-11-27 | P1 | requested | — | — |
 
 ## Details
 
@@ -571,3 +573,49 @@ at recording time.
 - Quiz: 4 spoken multiple-choice questions · Quality bar: as above
 - Priority P2 · depends on: module content final · deliver to: `videos/<course folder>/assessments/` with a `course.manifest.json` entry
 - **Log:** 2026-11-27 UPLOAD: requested. GEN: accepted (see the reply above).
+
+### 2026-11-27 later: gateway restructure (UPLOAD, owner's request)
+- The free **Introduction to AI for DevOps** is now 12 videos in 3 modules plus a text lesson "Your next step" (written by
+  UPLOAD, links to both masterclasses). The two **masterclasses are self-contained**: each teaches every foundations
+  video (before-ai, tm1–tm12, agents/RAG ideas, MCP basics) itself, then the cloud material, plus a module
+  "Automate it with n8n" (n8n 06, 12, 17 now; CR-004, CR-007, CR-006 when delivered).
+- Changed: CR-018 (prompt engineering) and CR-019 (AI tools tour) move to the masterclasses only; CR-020 is now only the
+  intro's final assessment. New: CR-048, CR-049 (multi-agent). CR-033 closed (declined; a note in the lesson summaries).
+- GEN delivery rule (2026-11-27): each lesson arrives on its own after QA, with its lab; no bulk deliveries.
+- **CR-006 token** (from GEN): fine-grained GitHub token for the practice repo `demo-n8n-review-cd01` only, Contents read,
+  Pull requests read and write, 7 days; the owner saves it in GEN's session (never in our files).
+- **VS Code mapping** (GEN, onto the owner-approved curriculum): CR-017 → new `vsc-00-course-intro`; CR-042 → 2.1–2.4;
+  CR-043 → 10.1–10.3 and 7.4; CR-044 → 7.1, 7.2, 8.1 (7.3 Helm available); CR-045 → 11.3 plus a Codex CLI / AGENTS.md
+  lesson in `21-claude-code`; CR-046 → 12.1, 12.2 and the final assessment. Built: 0.1, 0.2, 1.2.
+
+### CR-048 Multi-agent collaboration with human approval on AWS
+- Course / module / position: AI for DevOps on AWS · Module 7 'AI agents for DevOps' · after CR-025 (the single AgentCore agent comes first)
+- Why: Brief §5 Module 6 asks for multi-step workflows, multi-agent collaboration and human approval; today's agent lessons show one agent at a time.
+- Learning objectives: Split an on-call task between a supervisor and specialist agents; pass context between them safely; require a human approval before any change; trace and debug a multi-agent run
+- Concepts to explain: Supervisor/worker patterns, hand-offs, shared memory vs per-agent context, approval gates, loop and cost limits, tracing
+- Tools and technologies to demonstrate: Amazon Bedrock AgentCore (multi-agent), Lambda tools, CloudWatch, Slack or Mattermost for the approval message
+- Live demonstration: A supervisor agent receives a 5xx alarm, asks a log agent and a deploy-history agent, proposes a rollback, waits for an engineer's approval in chat, then applies it and verifies in the browser
+- Real-world use case: Night-time incident triage where no single agent should both diagnose and change production
+- Slides: PDF next to the PPTX (architecture diagram, hand-off sequence, approval gate)
+- Lab ZIP / source code: Terraform for the tools and roles, agent definitions, a broken sample service, README with cost, `.env.example` only, `terraform destroy` cleanup
+- Quiz: 4 spoken multiple-choice questions ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
+- Quality bar: 1080p, captions, everyday example first, then live; 15–20 minutes
+- Deliver to: `videos/17-cloud-ai/<NN>-aws-multi-agent-live/`; manifest entry with position
+- Priority P1 · depends on: CR-025 · owner GEN · status requested
+- **Log:** 2026-11-27 UPLOAD: requested.
+
+### CR-049 Multi-agent collaboration with human approval on Azure
+- Course / module / position: AI for DevOps on Azure · Module 7 'AI agents for DevOps' · after CR-035
+- Why: Brief §6 Module 6 (multi-agent collaboration, intelligent workflows, human approval); not covered on Azure yet.
+- Learning objectives: Orchestrate connected agents in Foundry Agent Service; keep each agent's permissions minimal; require human approval before changes; trace a run
+- Concepts to explain: Connected agents and orchestration, hand-offs, managed identities per agent, approval gates, limits and cost, tracing
+- Tools and technologies to demonstrate: Foundry Agent Service, Azure Functions tools, Azure Monitor / Log Analytics, Teams or Mattermost for the approval
+- Live demonstration: The same incident as CR-048, on Azure: supervisor plus log and deployment agents, a proposed fix approved by an engineer, applied and verified in the browser
+- Real-world use case: Incident triage on Azure with separation of duties between agents and people
+- Slides: PDF next to the PPTX
+- Lab ZIP / source code: Terraform, agent definitions, a sample service, README with cost and cleanup, `.env.example` only
+- Quiz: 4 spoken multiple-choice questions
+- Quality bar: as CR-048
+- Deliver to: `videos/17-cloud-ai/<NN>-azure-multi-agent-live/`; manifest entry with position
+- Priority P1 · depends on: CR-035 · owner GEN · status requested
+- **Log:** 2026-11-27 UPLOAD: requested.

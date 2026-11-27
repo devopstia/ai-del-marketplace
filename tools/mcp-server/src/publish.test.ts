@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { toVtt } from './client.js';
-import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, forEnv, lessonFolders, manifestNotes, parseQuiz, readManifest, slug, validatePlan } from './publish.js';
+import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, fillCourseLinks, forEnv, lessonFolders, manifestNotes, normalizePlan, parseQuiz, pruneTargets, readManifest, slug, validatePlan, type CoursePlan } from './publish.js';
 
 test('upload rules: one video, PDF not PowerPoint, lab ZIP, captions; secrets and thumbnails skipped', async () => {
   const d = await mkdtemp(join(tmpdir(), 'lesson-'));
@@ -223,4 +223,49 @@ test('catalogue plans list lesson folders only from the groups they use (owner 2
   assert.deepEqual(await lessonFolders({ ...plan, watchGroups: ['17-cloud-ai'] }), ['02-ai-foundations/01-a', '02-ai-foundations/02-b', '17-cloud-ai/01-c']);
   // One-folder courses keep listing the folder's own lessons.
   assert.deepEqual(await lessonFolders({ sourceDir: join(root, '02-ai-foundations'), sections: [{ title: 'S', lessons: [{ folder: '01-a', title: 'A' }] }] }), ['01-a', '02-b']);
+});
+
+// ---------- gateway course (owner 2026-11-27): article lessons, course links, safe prune ----------
+const gatewayPlan = (): CoursePlan => normalizePlan({
+  environment: 'staging', apiUrl: 'http://x/api', provider: 'DEL', instructorName: 'DEL', sourceDir: '/v',
+  course: { title: 'Intro' },
+  sections: [
+    { title: 'S1', lessons: [{ folder: 'g/a', title: 'A' }, { folder: 'g/b', title: 'B' }] },
+    { title: 'Next', lessons: [{ type: 'article', key: 'next-steps', title: 'Your next step', articleMd: 'See [AWS]({{course:aws}}).' } as never] },
+  ],
+} as CoursePlan);
+
+test('article lessons: normalizePlan keeps videos and articles apart, and the curriculum keeps their plan order', () => {
+  const plan = gatewayPlan();
+  assert.deepEqual(plan.sections[1]!.lessons, []);
+  assert.equal(plan.sections[1]!.articles![0]!.key, 'next-steps');
+  const state = { sections: { S1: 's1', Next: 's2' }, lessons: { 'g/a': 'la', 'g/b': 'lb' }, quizzes: { 'g/a': 'qa' }, articles: { 'next-steps': 'art' } };
+  const { arranged } = arrangeCurriculum(plan, state, new Set(['g/a']), [{ id: 's1', title: 'S1', lectures: [] }, { id: 's2', title: 'Next', lectures: [] }]);
+  assert.deepEqual(arranged, [{ id: 's1', lectureIds: ['la', 'qa', 'lb'] }, { id: 's2', lectureIds: ['art'] }]);
+  assert.deepEqual(validatePlan(plan).errors, []);
+  const bad = validatePlan(normalizePlan({ ...plan, sections: [{ title: 'X', lessons: [{ type: 'article', key: 'Bad Key', title: 't', articleMd: '' } as never] }] })).errors.join(' | ');
+  assert.match(bad, /key must be lowercase/);
+  assert.match(bad, /no text/);
+});
+
+test('course links: {{course:<plan>}} becomes the public URL; a course not uploaded yet is reported, never left as a broken link', () => {
+  assert.deepEqual(fillCourseLinks('See [AWS]({{course:aws}}) and [Azure]({{course:azure}}).', { aws: 'https://site/courses/ai-aws', azure: 'https://site/courses/ai-azure' }), { text: 'See [AWS](https://site/courses/ai-aws) and [Azure](https://site/courses/ai-azure).', missing: [] });
+  assert.deepEqual(fillCourseLinks('[x]({{course:aws}})', {}).missing, ['aws']);
+});
+
+test('prune: on a draft, lessons not in the plan go with their quiz lessons, plus empty unplanned sections; planned ones stay', () => {
+  const plan = gatewayPlan();
+  const state = { sections: { S1: 's1', Next: 's2' }, lessons: { 'g/a': 'la', 'g/b': 'lb' }, quizzes: { 'g/a': 'qa', 'g/old': 'qold' }, articles: { 'next-steps': 'art' } };
+  const site = [
+    { id: 's1', title: 'S1', lectures: [{ id: 'la', title: 'A' }, { id: 'qa', title: 'Quiz: A' }, { id: 'lb', title: 'B' }, { id: 'lold', title: 'Old lesson' }, { id: 'qold', title: 'Quiz: Old' }] },
+    { id: 's2', title: 'Next', lectures: [{ id: 'art', title: 'Your next step' }] },
+    { id: 's3', title: 'Old section', lectures: [{ id: 'lx', title: 'Gone too' }] },
+  ];
+  const t = pruneTargets('draft', plan, state, new Set(['g/a']), site);
+  assert.deepEqual(t.lectures.map((l) => l.id).sort(), ['lold', 'lx', 'qold']);
+  assert.deepEqual(t.sections.map((s) => s.id), ['s3']);
+});
+
+test('prune refuses a published course (students\' progress would be lost)', () => {
+  assert.throws(() => pruneTargets('published', gatewayPlan(), { sections: {}, lessons: {}, quizzes: {}, articles: {} }, new Set(), []), /refused.*published.*progress/);
 });

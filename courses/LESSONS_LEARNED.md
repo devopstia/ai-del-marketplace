@@ -3,6 +3,19 @@
 What the Course Upload and Publishing Agent learned on each course (skill: `.claude/skills/del-course-publisher`).
 Read before every upload; add to it after every upload. Newest first.
 
+
+## 2026-11-27: gateway course and self-contained masterclasses
+- **A free course is a gateway, not a copy of the paid ones:** about 12 engaging videos (hooks, one striking live demo,
+  the essential words), quizzes, and a last text lesson that introduces the paid courses with honest outcomes and
+  direct links. Paid courses stay **self-contained**: they repeat every foundations video, so skipping the free course
+  loses nothing. Shared videos cost nothing extra (one upload, `courses/media.<env>.json`).
+- Text lessons live in the plan (`{"type": "article", …}`); links to other courses use `{{course:<plan-slug>}}`, which
+  the publisher turns into the real public URL, so a course's slug is never guessed. The article waits until the linked
+  courses exist.
+- `--prune` removes lessons the plan dropped (with their quiz lessons) only from **draft** courses, and only in session
+  mode; on a published course it refuses: students' progress would be lost, so that change needs a reviewed revision
+  and the owner's explicit OK. Media is never deleted.
+
 ## 2026-11-27: production without agent keys (session mode)
 - **The owner doesn't want agent tokens for production** ("Please do not use agents"). The publisher now has
   `--auth session`: the owner signs in with `! scripts/del-signin.sh <site> <jar>` (email, hidden password, authenticator

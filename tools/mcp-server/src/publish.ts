@@ -19,7 +19,15 @@ import { ApiError, DelClient, isVideo, SessionClient, type FileRecord, type File
 // ---------- plan ----------
 export type LessonRole = 'intro' | 'lesson' | 'vocabulary' | 'project' | 'conclusion';
 export interface LessonPlan { folder: string; title: string; summary?: string; preview?: boolean; role?: LessonRole; /** Short name for its quiz row ("Quiz: <short>"); default: the title up to its first colon. */ short?: string }
-export interface SectionPlan { title: string; lessons: LessonPlan[] }
+/**
+ * A text lesson written in the plan (owner 2026-11-27: the free gateway course ends with a "your next step" lesson).
+ * Kept in `state.articles[key]`; `{{course:<plan-slug>}}` in `articleMd` becomes that course's public URL.
+ */
+export interface ArticlePlan { type: 'article'; key: string; title: string; summary?: string; articleMd: string }
+export type PlanItem = LessonPlan | ArticlePlan;
+export const isArticle = (x: unknown): x is ArticlePlan => !!x && typeof x === 'object' && (x as { type?: string }).type === 'article';
+/** After `normalizePlan`: `lessons` holds the video lessons, `articles` the text lessons, `order` both in plan order. */
+export interface SectionPlan { title: string; lessons: LessonPlan[]; articles?: ArticlePlan[]; order?: ({ folder: string } | { article: string })[] }
 export type Env = 'staging' | 'production';
 /** Per-environment settings; the chosen one overrides `apiUrl` and `course.priceCents`. */
 export interface EnvProfile { apiUrl: string; priceCents?: number }
@@ -155,6 +163,25 @@ export async function quizFromCaptions(path: string): Promise<ParsedQuiz> {
   return parseQuiz(captionText(await readFile(path, 'utf8')));
 }
 
+/** Splits each section's list into video lessons, article lessons and their order (plans may mix both). */
+export function normalizePlan(plan: CoursePlan): CoursePlan {
+  return {
+    ...plan,
+    sections: plan.sections.map((s) => {
+      const raw = s.lessons as PlanItem[];
+      return { ...s, lessons: raw.filter((l): l is LessonPlan => !isArticle(l)), articles: raw.filter(isArticle), order: raw.map((l) => (isArticle(l) ? { article: l.key } : { folder: l.folder })) };
+    }),
+  };
+}
+
+/** `{{course:<plan-slug>}}` placeholders in an article (the other course's public page). */
+export const COURSE_LINK = /\{\{course:([a-z0-9-]+)\}\}/g;
+export function fillCourseLinks(md: string, urls: Record<string, string | undefined>): { text: string; missing: string[] } {
+  const missing: string[] = [];
+  const text = md.replace(COURSE_LINK, (all, key: string) => { const u = urls[key]; if (!u) { missing.push(key); return all; } return u; });
+  return { text, missing: [...new Set(missing)] };
+}
+
 /** Plan with the chosen environment applied (`environments[env]` overrides apiUrl and the price). */
 export function forEnv(plan: CoursePlan, env?: Env): CoursePlan {
   const e = env ?? plan.environment;
@@ -186,8 +213,16 @@ export function validatePlan(plan: CoursePlan): { errors: string[]; warnings: st
   c.requirements?.forEach((o, i) => len(o, 200, `requirement ${i + 1}`));
   const folders = new Set<string>();
   const intros: string[] = [];
+  const keys = new Set<string>();
   plan.sections.forEach((s, si) => {
     len(s.title, 200, `section ${si + 1} title`);
+    (s.articles ?? []).forEach((a) => {
+      if (!a.key || !/^[a-z0-9-]+$/.test(a.key)) errors.push(`article "${a.title}": key must be lowercase letters, digits and dashes`);
+      if (keys.has(a.key)) errors.push(`article key ${a.key} is in the plan twice`);
+      keys.add(a.key);
+      len(a.title, 200, `article ${a.key} title`); len(a.summary, 300, `article ${a.key} summary`); len(a.articleMd, 100000, `article ${a.key} text`);
+      if (!a.articleMd?.trim()) errors.push(`article ${a.key} has no text`);
+    });
     s.lessons.forEach((l, li) => {
       if (folders.has(l.folder)) errors.push(`${l.folder} is in the plan twice`);
       folders.add(l.folder);
@@ -249,11 +284,12 @@ export function manifestNotes(plan: CoursePlan, m: CourseManifest): string[] {
 
 // ---------- curriculum (existing ids always reused: progress, completions and quiz results stay) ----------
 export interface SiteSection { id: string; title: string; lectures: { id: string; title: string }[] }
-export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes'>, withQuiz: Set<string>, site: SiteSection[]) {
+export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[]) {
   const issues: string[] = [];
   const used = new Set<string>();
   const arranged = plan.sections.map((sp) => {
-    const ids = sp.lessons.flatMap((l) => [state.lessons[l.folder], withQuiz.has(l.folder) ? state.quizzes?.[l.folder] : undefined]).filter((x): x is string => !!x);
+    const order = sp.order ?? sp.lessons.map((l) => ({ folder: l.folder }));
+    const ids = order.flatMap((it) => ('article' in it ? [state.articles?.[it.article]] : [state.lessons[it.folder], withQuiz.has(it.folder) ? state.quizzes?.[it.folder] : undefined])).filter((x): x is string => !!x);
     ids.forEach((i) => used.add(i));
     return { id: state.sections[sp.title]!, lectureIds: ids };
   });
@@ -267,12 +303,31 @@ export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections
   return { arranged, issues };
 }
 
+/**
+ * `--prune` (owner 2026-11-27): lessons on the site that the plan no longer has, with their quiz lessons, and sections
+ * left empty that the plan doesn't name. Only for draft courses: on a published course students' progress would be
+ * lost, so the change must go through a reviewed revision with the owner's OK. Media is never deleted (shared videos).
+ */
+export function pruneTargets(status: string, plan: CoursePlan, state: Pick<State, 'sections' | 'lessons' | 'quizzes' | 'articles'>, withQuiz: Set<string>, site: SiteSection[]): { lectures: { id: string; title: string }[]; sections: { id: string; title: string }[] } {
+  if (status !== 'draft') throw new Error(`--prune refused: the course is ${status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK.`);
+  const keep = new Set<string>();
+  for (const sp of plan.sections) {
+    for (const l of sp.lessons) { const a = state.lessons[l.folder]; if (a) keep.add(a); const q = withQuiz.has(l.folder) ? state.quizzes?.[l.folder] : undefined; if (q) keep.add(q); }
+    for (const a of sp.articles ?? []) { const id = state.articles?.[a.key]; if (id) keep.add(id); }
+  }
+  const plannedSections = new Set(plan.sections.map((sp) => state.sections[sp.title]).filter(Boolean));
+  const lectures = site.flatMap((s) => s.lectures).filter((l) => !keep.has(l.id)).map((l) => ({ id: l.id, title: l.title }));
+  const gone = new Set(lectures.map((l) => l.id));
+  const sections = site.filter((s) => !plannedSections.has(s.id) && s.lectures.every((l) => gone.has(l.id))).map((s) => ({ id: s.id, title: s.title }));
+  return { lectures, sections };
+}
+
 // ---------- API shapes (subset) ----------
 interface Resource { id: string; title: string }
-interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
+interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; articleMd?: string | null; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
 interface Section { id: string; title: string; lectures: Lecture[] }
-interface CourseDetail { id: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
-interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
+interface CourseDetail { id: string; slug?: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
 
 export type AuthMode = 'agent' | 'session';
 
@@ -344,14 +399,15 @@ export async function lessonFolders(plan: Pick<CoursePlan, 'sourceDir' | 'sectio
 
 type Log = (msg: string) => void;
 
-export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string } = {}) {
+export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean } = {}) {
   const log = opts.log ?? ((m: string) => console.log(m));
-  const plan = forEnv(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan, opts.env);
+  const plan = forEnv(normalizePlan(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan), opts.env);
   const planDir = dirname(resolve(planPath));
   if (!opts.dryRun) await assertEnvAllowed(plan.environment, opts.configPath ?? join(planDir, '..', 'publisher.config.json'));
   const statePath = join(planDir, `state.${plan.environment}.json`);
   const state: State = existsSync(statePath) ? JSON.parse(await readFile(statePath, 'utf8')) : { sections: {}, lessons: {} };
   state.quizzes ??= {};
+  state.articles ??= {};
   const saveState = () => writeFile(statePath, JSON.stringify(state, null, 2) + '\n');
   const courseSlug = basename(planDir);
   const media = await loadMediaMap(opts.mediaPath ?? join(planDir, '..', `media.${plan.environment}.json`));
@@ -377,7 +433,8 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   const nestedPlan = [...planned].some((f) => f.includes('/'));
   const unplanned = (nestedPlan ? (plan.watchGroups?.length ? await lessonFolders({ sourceDir: plan.sourceDir, sections: [], watchGroups: plan.watchGroups }) : []) : await lessonFolders(plan)).filter((f) => !planned.has(f));
   unplanned.forEach((d) => issues.push(`folder not in the plan (not uploaded): ${d}`));
-  log(`Inventory: ${planned.size} lessons in ${plan.sections.length} sections; ${issues.length} issue(s).`);
+  const articleCount = plan.sections.reduce((n, s) => n + (s.articles?.length ?? 0), 0);
+  log(`Inventory: ${planned.size} lessons${articleCount ? ` + ${articleCount} article(s)` : ''} in ${plan.sections.length} sections; ${issues.length} issue(s).`);
   for (const [k, f] of inventory) log(`  ${k}: video ${f.video ? 'yes' : 'NO'}, captions ${f.captions ? 'yes' : 'no'}, slides ${f.slides ? 'yes' : 'no'}, lab ${f.lab ? 'yes' : 'no'}${f.skipped.length ? `; skipped ${f.skipped.map((x) => x.file.replace(k, '…')).join(', ')}` : ''}`);
   const quizzes = new Map<string, ParsedQuiz>();
   if (plan.course.quizzes === 'from-captions') {
@@ -442,6 +499,23 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
 
   const detail = () => del.call<CourseDetail>('GET', `/courses/${courseId}`);
   let c = await detail();
+  if (opts.prune && c.status !== 'draft') throw new Error(`--prune refused: the course is ${c.status}. Removing lessons from a published course would delete students' progress; make that change through a reviewed revision with the owner's explicit OK. Nothing was removed.`);
+  if (opts.prune && auth !== 'session') throw new Error('--prune needs session mode (the agent API cannot delete lessons). Nothing was removed.');
+  // Public URLs of the account's other planned courses, for `{{course:<plan-slug>}}` (their state file has the id).
+  let links: Record<string, string | undefined> | undefined;
+  const courseLinks = async () => {
+    if (links) return links;
+    links = {};
+    const web = plan.apiUrl.replace(/\/api\/?$/, '');
+    const keys = new Set(plan.sections.flatMap((s) => (s.articles ?? []).flatMap((a) => [...a.articleMd.matchAll(COURSE_LINK)].map((m) => m[1]!))));
+    for (const k of keys) {
+      const sp = join(planDir, '..', k, `state.${plan.environment}.json`);
+      const id = existsSync(sp) ? (JSON.parse(await readFile(sp, 'utf8')) as State).courseId : undefined;
+      if (!id) continue;
+      try { const d = await del.call<CourseDetail>('GET', `/courses/${id}`); if (d.slug) links[k] = `${web}/courses/${d.slug}`; } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; }
+    }
+    return links;
+  };
 
   // 4. Sections and lessons.
   for (const sp of plan.sections) {
@@ -527,6 +601,27 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
       }
       log(`  ✓ ${lp.title}`);
     }
+    // Article lessons (text written in the plan), created or updated in place.
+    for (const ap of sp.articles ?? []) {
+      const { text, missing } = fillCourseLinks(ap.articleMd, await courseLinks());
+      if (missing.length) { issues.push(`article ${ap.key}: no public link yet for ${missing.join(', ')} (upload that course first); article not written`); continue; }
+      const everything = c.sections.flatMap((s) => s.lectures);
+      let al = everything.find((l) => l.id === state.articles![ap.key]) ?? everything.find((l) => l.title === ap.title && l.type === 'article');
+      if (!al) {
+        const made = await del.call<{ id: string }>('POST', `/courses/${courseId}/sections/${sec.id}/lectures`, { title: ap.title, type: 'article', summary: ap.summary ?? '', articleMd: text, isPreview: false });
+        c = await detail();
+        al = c.sections.flatMap((s) => s.lectures).find((l) => l.id === made.id)!;
+        log(`+ article ${ap.title}`);
+      } else {
+        const patch: Record<string, unknown> = {};
+        if (al.title !== ap.title) patch.title = ap.title;
+        if ((al.summary ?? '') !== (ap.summary ?? '')) patch.summary = ap.summary ?? '';
+        if ((al.articleMd ?? '') !== text) patch.articleMd = text;
+        if (Object.keys(patch).length) { await del.call('PATCH', `/courses/${courseId}/lectures/${al.id}`, patch); log(`~ article ${ap.title}`); }
+      }
+      state.articles![ap.key] = al.id;
+      await saveState();
+    }
   }
   await saveState();
 
@@ -537,6 +632,18 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   const { arranged, issues: arrangeIssues } = arrangeCurriculum(plan, state, withQuiz, c.sections);
   issues.push(...arrangeIssues);
   await del.call('PUT', `/courses/${courseId}/curriculum`, { sections: arranged });
+  if (opts.prune) {
+    c = await detail();
+    const t = pruneTargets(c.status, plan, state, withQuiz, c.sections);
+    for (const l of t.lectures) { await del.call('DELETE', `/courses/${courseId}/lectures/${l.id}`); log(`- lesson removed: ${l.title}`); }
+    for (const s of t.sections) { await del.call('DELETE', `/courses/${courseId}/sections/${s.id}`); log(`- section removed: ${s.title}`); }
+    // Forget ids that no longer exist, so a later run can't match them.
+    const gone = new Set([...t.lectures.map((l) => l.id), ...t.sections.map((s) => s.id)]);
+    for (const m of [state.lessons, state.quizzes!, state.articles!, state.sections]) for (const [k, v] of Object.entries(m)) if (gone.has(v)) delete m[k];
+    await saveState();
+    if (t.lectures.length || t.sections.length) issues.push(`pruned ${t.lectures.length} lesson(s) and ${t.sections.length} section(s) not in the plan (media kept)`);
+    for (let i = issues.length - 1; i >= 0; i--) if (/^(lesson|section) on the site but not in the plan/.test(issues[i]!)) issues.splice(i, 1);
+  }
 
   // Intro video as the course page's promo video (only when the plan asks for it and the video exists).
   const introLesson = plan.intro?.promo ? plan.sections.flatMap((x) => x.lessons).find((l) => isIntro(plan, l)) : undefined;
@@ -609,7 +716,7 @@ if (process.argv[1] && ['publish.js', 'del-publish-course'].includes(basename(pr
   const auth = val('--auth') as AuthMode | undefined;
   const planPath = args.find((a, i) => !a.startsWith('--') && !['--wait', '--env', '--auth'].includes(args[i - 1] ?? ''));
   if (!planPath || (env && !['staging', 'production'].includes(env)) || (auth && !['agent', 'session'].includes(auth))) { console.error('Usage: DEL_AGENT_TOKEN=del_agent_… node dist/publish.js <plan.json> [--env staging|production] [--dry-run] [--wait minutes]\n       DEL_SESSION_JAR=<cookie jar from scripts/del-signin.sh> node dist/publish.js <plan.json> --auth session [...]'); process.exit(2); }
-  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env, auth })
+  publish(planPath, { dryRun: args.includes('--dry-run'), waitMinutes: wait, env, auth, prune: args.includes('--prune') })
     .then((r) => { if ('dryRun' in r) console.log(JSON.stringify({ environment: r.environment, apiUrl: r.apiUrl, priceCents: r.priceCents, quizzes: r.quizzes, issues: r.issues, quizSkips: r.quizSkips?.length }, null, 2)); else console.log(JSON.stringify({ courseId: r.courseId, counts: r.counts, issues: r.issues.length }, null, 2)); })
     .catch((e) => { console.error(e instanceof ApiError ? `${e.code} (${e.status}): ${e.message}` : (e as Error).message); process.exit(1); });
 }

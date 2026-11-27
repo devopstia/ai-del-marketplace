@@ -39,6 +39,14 @@
       "title": "Set up your automation stack",
       "lessons": [
         {
+          "folder": "00-n0-n8n-course-intro",
+          "title": "Welcome: what you'll build in this course",
+          "role": "intro",
+          "preview": true,
+          "short": "Welcome",
+          "summary": "What the course covers and who it's for: the self-hosted n8n and Mattermost stack, the automations you'll build, how AI summaries fit with a human in charge, and how the labs and the four modules work."
+        },
+        {
           "folder": "01-n1-n8n-mattermost-explained",
           "title": "How n8n and Mattermost work together for DevOps",
           "summary": "See how the two fit together: an event triggers a workflow, n8n does the work and your team reads the result in a channel. One everyday example, the real screens, and why teams self-host both.",

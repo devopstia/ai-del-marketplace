@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream, existsSync } from 'node:fs';
 import { open, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, extname, join, relative, resolve } from 'node:path';
-import { captionText, DEFAULT_INTRO, lessonFolders, publish, readManifest, type AuthMode, type CoursePlan, type Env, type LessonHint, type LessonRole } from './publish.js';
+import { captionText, DEFAULT_INTRO, lessonFolders, normalizePlan, publish, readManifest, type AuthMode, type CoursePlan, type Env, type LessonHint, type LessonRole } from './publish.js';
 
 const VIDEO = new Set(['.mp4', '.m4v', '.mov', '.webm']);
 /** Only these files can change what learners get (PowerPoint, thumbnails and production files never are uploaded). */
@@ -116,7 +116,7 @@ export async function watchOnce(opts: { coursesDir: string; env: Env; settleMinu
   for (const slugName of slugs) {
     const dir = join(opts.coursesDir, slugName);
     const planPath = join(dir, 'plan.json');
-    const plan = JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan;
+    const plan = normalizePlan(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan);
     const res: PassResult = { course: slugName, env: opts.env, synced: [], waiting: [], inbox: [], newInbox: [] };
     results.push(res);
     if (!existsSync(plan.sourceDir)) { log(`${slugName}: source folder missing: ${plan.sourceDir}`); continue; }
