@@ -166,3 +166,51 @@ test('a manifest quiz fills in questions whose options are only on the slides, w
   assert.equal(r2.quizzes['01-a'], 0);
   assert.match(r2.quizSkips.join(), /does not match/);
 });
+
+test('re-run renames a section and a quiz lesson by their state ids (never recreates them); quiz rows are "Quiz: <short>"', async () => {
+  const { quizTitle } = await import('./publish.js');
+  assert.equal(quizTitle({ title: 'Manage incidents: severity, escalation and resolution' }), 'Quiz: Manage incidents');
+  assert.equal(quizTitle({ title: 'Alert on Kubernetes problems without the noise', short: 'Kubernetes alerts' }), 'Quiz: Kubernetes alerts');
+
+  const root = await mkdtemp(join(tmpdir(), 'rename-'));
+  const src = join(root, 'src');
+  await mkdir(join(src, '01-a', 'captions'), { recursive: true });
+  await writeFile(join(src, '01-a', '01-a.mp4'), 'video');
+  await writeFile(join(src, '01-a', 'captions', '01-a.en.srt'),
+    '1\n00:00:01,000 --> 00:00:09,000\nQuestion 1 of 1. What starts a workflow? A: The trigger; B: The last node; or C: The log? Pause the video. The answer is A: The trigger. It is the first node.\n');
+  const dir = join(root, 'course');
+  await mkdir(dir);
+  await writeFile(join(root, 'publisher.config.json'), JSON.stringify({ productionAllowed: true }));
+  await writeFile(join(dir, 'plan.json'), JSON.stringify({
+    environment: 'staging', apiUrl: 'https://x.test/api', provider: 'DEL', instructorName: 'DevOps Easy Learning', sourceDir: src,
+    course: { title: 'Course', quizzes: 'from-captions' },
+    sections: [{ title: 'New section', lessons: [{ folder: '01-a', title: 'Your first workflows', short: 'First workflows' }] }],
+  }));
+  await writeFile(join(dir, 'state.staging.json'), JSON.stringify({ courseId: 'c1', sections: { 'New section': 's1' }, lessons: { '01-a': 'l1' }, quizzes: { '01-a': 'q1' } }));
+
+  const calls: string[] = [];
+  const question = { q: 'What starts a workflow?', options: ['The trigger', 'The last node', 'The log'], correct: 0, why: 'It is the first node.' };
+  const course = { id: 'c1', title: 'Course', status: 'draft', coverTemplateId: 't', sections: [{ id: 's1', title: 'Old section', lectures: [
+    { id: 'l1', sectionId: 's1', title: 'Your first workflows', summary: '', isPreview: false, type: 'video', videoAssetId: 'v1', video: { id: 'v1', status: 'ready', durationSec: 60, hasCaptions: true }, resources: [] },
+    { id: 'q1', sectionId: 's1', title: 'Check your understanding: Your first workflows', summary: '', isPreview: false, type: 'quiz', videoAssetId: null, video: null, resources: [], quiz: { questions: [question] } },
+  ] }] };
+  const fetchImpl = (async (url: string | URL, init?: RequestInit) => {
+    const path = String(url).replace('https://x.test/api/agent', '');
+    const method = init?.method ?? 'GET';
+    calls.push(`${method} ${path}${init?.body ? ' ' + init.body : ''}`);
+    const json = (b: unknown) => new Response(JSON.stringify(b), { status: 200 });
+    if (path === '/whoami') return json({ instructor: { id: 'del', name: 'DevOps Easy Learning' } });
+    if (path === '/categories') return json({ items: [] });
+    if (path === '/courses' && method === 'GET') return json({ items: [{ id: 'c1', title: 'Course' }] });
+    if (path === '/courses/c1' && method === 'GET') return json(course);
+    if (path === '/uploads') return json({ duplicate: true, assetId: 'v1', status: 'ready' });
+    if (path === '/courses/c1/validation') return json({ ok: true });
+    return json({});
+  }) as typeof fetch;
+
+  await publish(join(dir, 'plan.json'), { token: 'del_agent_test', fetchImpl, waitMinutes: 0, log: () => undefined });
+  assert.ok(calls.some((c) => c.startsWith('PATCH /courses/c1/sections/s1 ') && c.includes('"title":"New section"')), 'section renamed in place');
+  assert.ok(calls.some((c) => c.startsWith('PATCH /courses/c1/lectures/q1 ') && c.includes('"title":"Quiz: First workflows"')), 'quiz renamed in place');
+  assert.ok(!calls.some((c) => c.startsWith('POST /courses/c1/sections')), 'nothing recreated');
+  assert.ok(!calls.some((c) => c.startsWith('PUT /courses/c1/lectures/q1/quiz')), 'unchanged questions are not resent');
+});

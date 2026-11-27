@@ -6,131 +6,157 @@
   "sourceDir": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos/18-automation-n8n",
   "course": {
     "title": "AI-Powered DevOps Automation with n8n",
-    "subtitle": "Self-host n8n and Mattermost, automate deployments, Kubernetes alerts, incidents and reports, then add AI summaries safely: redacted logs, labelled drafts and a human who decides.",
-    "description": "Your systems produce events all day: a deployment fails at 3 a.m., a pod keeps crashing, a report is due. In this course you automate the work around those events with **n8n**, deliver the result where your team already talks (**Mattermost**), and add **AI** where it genuinely helps: a model that reads the log and drafts a summary, while a person stays in charge.\n\n## What you'll build\n- A self-hosted **n8n + Mattermost** stack with Docker Compose, on your computer or on an **AWS EC2 VM created with Terraform** and reached through an SSH tunnel.\n- **Deployment notifications** from a CI pipeline (with a GitHub Actions example): green or red in the team channel, protected by a secret token.\n- Workflows that **fail safely**: retries, a fallback path, an error workflow that alerts the team, and node-by-node debugging.\n- **Kubernetes alerts** for crash loops, stuck rollouts and unschedulable pods, one message per problem, plus a daily namespace health report.\n- **Incident management**: repeated alerts become one incident with a severity, escalation when nobody acknowledges, and a resolved message.\n- **Scheduled reports** that collect deployments, failures and service status every morning.\n- **AI-assisted workflows** with OpenAI: a summary of a failed deployment (what failed, the likely cause, what to check), an error explainer, an incident summary and an AI-written morning report. Secrets, IP addresses and e-mails are redacted before anything is sent, logs are treated as untrusted text (prompt injection), every answer is labelled as a draft with its token cost, and a human reviews it. The AI never changes anything.\n\n## Who this course is for\nDevOps engineers, SREs and developers who are comfortable with a terminal and Docker and want to automate the notifications, alerts and reports around their systems, and to use AI in those workflows responsibly.\n\n## Tools and technologies\nn8n, Mattermost, Docker Compose, PostgreSQL, Redis (queue mode), Kubernetes (minikube and kubectl), Alertmanager-style alerts, GitHub Actions (example pipeline), webhooks and HMAC signatures, cron schedules, OpenAI (n8n's AI node; Amazon Bedrock and Azure AI Foundry are explained as alternatives), Terraform and AWS EC2.\n\n## How the course is organised\nFour sections, from your first workflow to production:\n1. **Getting started**: what n8n and Mattermost do, deploy both, channels and incoming webhooks, your first workflows, and the same lab on a cloud VM.\n2. **Core concepts and your first real automations**: n8n vocabulary, deployment notifications, errors, retries and debugging.\n3. **DevOps automations in practice**: automation and ChatOps vocabulary, Kubernetes alerts, incident management and scheduled reports.\n4. **Advanced patterns and production**: sub-workflows, signed webhooks, idempotency, rate limits, pagination and loop guards; n8n in production (Postgres, queue mode with workers, the encryption key, backups, upgrades and rollback); and AI-assisted workflows, safely.\n\nEvery idea starts with an everyday example, then you see it running live. Each hands-on lesson comes with its slides (PDF) and a lab (ZIP) with the Compose files, scripts and workflows from the video, and most lessons end with a short quiz with the answers explained.\n\n## Prerequisites\n- Comfortable with a terminal and basic Docker commands.\n- Docker with the Compose plugin, or a cloud VM where you can install it (the lab needs about 4 GB of free memory).\n- For the Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster.\n- For the AI lesson: your own OpenAI API key, with a monthly budget limit set.\n- For the cloud VM lesson (optional): an AWS account with a budget alarm, the AWS CLI and Terraform 1.5 or newer. A one-hour lab costs a few cents; you delete everything with terraform destroy.",
+    "subtitle": "Build the deployment notifications, Kubernetes alerts, incident workflows and daily reports DevOps teams rely on with n8n and Mattermost, then add AI summaries a human reviews.",
+    "description": "A deployment fails at 3 a.m. A pod keeps crashing. Someone asks, again, what shipped yesterday. Every DevOps team answers the same questions by hand, every day.\n\nThis course hands that work to **n8n**. It watches your systems, posts one clear message to your team's **Mattermost** channel and, with **AI**, drafts the summary of a failed deployment before anyone opens the log. You build every piece yourself, live, and keep the result.\n\n## What you'll build\n- **Your own automation stack:** n8n and Mattermost with Docker Compose, on your laptop or on an AWS VM created with Terraform.\n- **Deployment notifications:** your CI pipeline posts green or red to the team in seconds, behind a secret token. A GitHub Actions example is included.\n- **Kubernetes alerts people trust:** crash loops, failed image pulls and pods stuck in Pending, one message per problem instead of a flood.\n- **An incident workflow:** severity, escalation when nobody answers, acknowledgement and a resolved message.\n- **A morning report:** yesterday's deployments, failures and service status, posted before your day starts.\n- **AI summaries, done safely:** OpenAI reads a redacted log and drafts what failed, the likely cause and what to check. A person reviews it and makes the call.\n- **A production setup:** PostgreSQL, queue mode with workers, backups, a pinned upgrade and a tested rollback.\n\n## Why this course\n- **Every lesson runs live.** You watch each workflow built, broken and fixed on a real system, not described on slides.\n- **A ready-made lab for every hands-on lesson.** Compose files, scripts and workflows to import, with a step-by-step README, plus a short quiz with the answers explained.\n- **Self-hosted and portable.** Everything runs on your own Docker host, and the Kubernetes workflows work on minikube, EKS and AKS.\n- **AI with guardrails.** Secrets are removed before anything is sent, every answer is labelled as a draft with its token cost, and the AI never changes anything on its own.\n\n## Who it's for\nDevOps engineers, SREs and developers who are at home in a terminal and Docker and want their team to stop chasing the same information by hand. You don't need any n8n experience: you start from zero.",
     "level": "intermediate",
     "language": "en",
     "categorySlug": "automation-n8n",
     "cover": "suggested",
     "objectives": [
-      "Deploy n8n and Mattermost with Docker Compose, locally or on an AWS EC2 VM created with Terraform, and keep their data",
-      "Create Mattermost channels and incoming webhooks, and keep webhook URLs and secrets out of your workflows",
-      "Build n8n workflows with triggers, nodes, expressions and executions, and publish them to run on their own",
+      "Deploy n8n and Mattermost with Docker Compose, locally or on an AWS EC2 VM built with Terraform, and keep their data safe",
+      "Build, test and publish n8n workflows with triggers, nodes, expressions and the Executions log",
       "Send green and red deployment notifications from a CI pipeline through a token-protected webhook",
-      "Make workflows fail safely with retries, fallback paths, error workflows and step-by-step debugging",
-      "Watch a Kubernetes namespace and post one clear alert per problem, without duplicate floods",
-      "Turn alerts into incidents with severity, escalation, acknowledgement and resolution",
-      "Schedule reports that collect deployments, failures and service status every morning",
-      "Apply sub-workflows, signed webhooks, idempotency, rate limits, pagination and loop guards",
-      "Run n8n in production with Postgres, queue mode, the encryption key, backups, upgrades and rollback",
-      "Add AI summaries of failed deployments, errors and incidents with OpenAI: redacted input, labelled drafts, human review",
-      "Defend AI workflows against secret leaks and prompt injection, and keep an eye on token costs"
+      "Make workflows fail safely with retries, fallback paths, an error workflow and node-by-node debugging",
+      "Alert on Kubernetes crash loops, failed image pulls and pending pods with one message per problem",
+      "Turn repeated alerts into one incident with severity, escalation, acknowledgement and resolution",
+      "Schedule a daily report that gathers deployments, failures and service status into one message",
+      "Apply proven patterns: sub-workflows, signed webhooks, idempotency, rate limits, pagination and loop guards",
+      "Run n8n in production with PostgreSQL, queue mode, a protected encryption key, backups, upgrades and rollback",
+      "Use AI to summarise failed deployments, errors and incidents, with redaction, prompt-injection defences, cost tracking and human review"
     ],
     "requirements": [
       "Comfortable with a terminal and basic Docker commands",
-      "Docker with the Compose plugin on your computer (about 4 GB of free memory), or a cloud VM where you can install it",
-      "For the Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster",
-      "For the AI lesson: your own OpenAI API key with a monthly budget limit set",
-      "Optional, for the cloud VM lesson: an AWS account with a budget alarm, the AWS CLI and Terraform 1.5 or newer"
+      "Docker with the Compose plugin, and about 4 GB of free memory",
+      "Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster",
+      "AI lesson: your own OpenAI API key with a monthly budget limit",
+      "Optional cloud lesson: an AWS account, the AWS CLI and Terraform 1.5 or newer"
     ],
     "taughtBy": "Tia",
     "quizzes": "from-captions"
   },
   "sections": [
     {
-      "title": "Getting started: n8n and Mattermost",
+      "title": "Set up your automation stack",
       "lessons": [
         {
           "folder": "01-n1-n8n-mattermost-explained",
-          "title": "What n8n and Mattermost do for a DevOps team",
-          "summary": "Triggers, workflows, channels and incoming webhooks explained with one everyday example, and why DevOps teams self-host n8n and Mattermost together.",
-          "preview": true
+          "title": "How n8n and Mattermost work together for DevOps",
+          "summary": "See how the two fit together: an event triggers a workflow, n8n does the work and your team reads the result in a channel. One everyday example, the real screens, and why teams self-host both.",
+          "preview": true,
+          "short": "n8n and Mattermost"
         },
         {
           "folder": "02-n2-deploy-n8n-mattermost-live",
           "title": "Deploy n8n and Mattermost with Docker Compose",
-          "summary": "Read the Compose file block by block, start n8n, Mattermost and a demo site, fix a real port conflict, log in to both apps and prove your data survives new containers."
+          "summary": "Deploy n8n, Mattermost and a demo website from one Compose file. Read it block by block, fix a real port conflict, log in to both apps and prove your data survives new containers.",
+          "preview": false,
+          "short": "Deploy with Docker Compose"
         },
         {
           "folder": "03-n3-mattermost-webhook-live",
-          "title": "Set up Mattermost for automation: channels and incoming webhooks",
-          "summary": "Tour Mattermost, create an alerts channel and its incoming webhook, keep the webhook URL in .env, and prove that n8n can post to it from inside Docker."
+          "title": "Set up Mattermost channels and incoming webhooks",
+          "summary": "Create a team, an alerts channel and its incoming webhook, keep the webhook URL out of your workflows, and prove that n8n can post to the channel from inside Docker.",
+          "preview": false,
+          "short": "Channels and webhooks"
         },
         {
           "folder": "04-n4-n8n-tour-first-workflow-live",
           "title": "Tour n8n and build your first workflows",
-          "summary": "Every n8n menu and settings page, then two workflows that post real messages to Mattermost: run them by hand, publish them, fix a real error and read every run in Executions."
+          "summary": "Learn n8n from zero: a full tour of the editor and settings, then two workflows that post real messages to Mattermost. Run them, publish them, fix a real error and catch a real outage.",
+          "preview": false,
+          "short": "Your first workflows"
         },
         {
           "folder": "18-n18-n8n-cloud-vm-live",
-          "title": "Run the automation lab on a cloud VM with Terraform",
-          "summary": "Create an AWS EC2 VM with Terraform, start the same n8n and Mattermost lab on it and reach it through an SSH tunnel. Only SSH from your IP is open; then terraform destroy and check that nothing is left."
+          "title": "Run the lab on an AWS VM with Terraform",
+          "summary": "Move the same lab to an AWS EC2 VM so schedules and webhooks keep running when your laptop sleeps. Terraform creates it, an SSH tunnel reaches it, and terraform destroy removes every resource.",
+          "preview": false,
+          "short": "The lab on AWS"
         }
       ]
     },
     {
-      "title": "Core concepts and your first real automations",
+      "title": "Your first real automations",
       "lessons": [
         {
           "folder": "05-nt1-n8n-words",
-          "title": "n8n vocabulary: workflows, triggers, nodes, items and executions",
-          "summary": "Workflow, trigger, node, item, expression, execution and publish, one word at a time: an everyday example, an animation, then the real n8n screen."
+          "title": "n8n vocabulary: workflows, triggers, nodes and executions",
+          "summary": "The words you'll use every day in n8n: workflow, trigger, node, item, expression, execution and publish. Each one explained with an everyday example, an animation and the real n8n screen.",
+          "preview": false,
+          "short": "n8n vocabulary"
         },
         {
           "folder": "06-n6-n8n-deploy-notifications-live",
-          "title": "Deployment notifications from your CI pipeline",
-          "summary": "A CI pipeline calls an n8n webhook after each deployment and the team sees a green or red message in Mattermost, protected by a token so forged calls get a 401.",
-          "preview": true
+          "title": "Send deployment notifications from your CI pipeline",
+          "summary": "Your pipeline calls an n8n webhook after each deployment and the team sees a green or red message in seconds. Secure it with a token so forged calls get a 401, and wire it into GitHub Actions.",
+          "preview": false,
+          "short": "Deployment notifications"
         },
         {
           "folder": "07-n5-n8n-errors-retries-debugging-live",
-          "title": "Errors, retries and debugging",
-          "summary": "Retries, a fallback path, an error workflow that alerts the team, and debugging a failed execution node by node with pinned mock data, against an API that fails on purpose."
+          "title": "Handle failures with retries, fallbacks and debugging",
+          "summary": "Break an API on purpose and make your workflows survive it: retries for short blips, a fallback path, an error workflow that alerts the team, and debugging a failed run node by node.",
+          "preview": false,
+          "short": "Retries and debugging"
         }
       ]
     },
     {
-      "title": "DevOps automations in practice",
+      "title": "Alerts, incidents and reports",
       "lessons": [
         {
           "folder": "08-nt2-automation-chatops-words",
           "title": "Automation and ChatOps vocabulary",
-          "summary": "Webhook or polling, cron, sub-workflows, idempotency, rate limits, queue mode and slash commands, explained with one café example, then where you meet each in n8n and Mattermost."
+          "summary": "Webhooks or polling, cron, sub-workflows, idempotency, rate limits, queue mode and slash commands, explained with one café example, then shown where you meet each in n8n and Mattermost.",
+          "preview": false,
+          "short": "Automation and ChatOps words"
         },
         {
           "folder": "10-n10-n8n-kubernetes-alerts-live",
-          "title": "Kubernetes alerts in Mattermost",
-          "summary": "n8n checks a namespace every 30 seconds and posts one clear alert for crash loops, stuck rollouts and unschedulable pods, without duplicates, plus a daily namespace health report."
+          "title": "Alert on Kubernetes problems without the noise",
+          "summary": "n8n checks a namespace every 30 seconds with a read-only service account and posts one alert per crash loop, failed image pull or pending pod. Break a real cluster three ways, then add a daily health report.",
+          "preview": false,
+          "short": "Kubernetes alerts"
         },
         {
           "folder": "12-n12-n8n-incident-management-live",
-          "title": "Incident management: severity, escalation and resolution",
-          "summary": "Turn repeated alerts into one incident with a severity, escalate when nobody acknowledges, and close the loop with a resolved message, on a real outage."
+          "title": "Manage incidents: severity, escalation and resolution",
+          "summary": "Turn a flood of repeated alerts into one incident with a severity. Escalate when nobody acknowledges, show who is on it, and close the loop with a resolved message, on a real outage.",
+          "preview": false,
+          "short": "Incident management"
         },
         {
           "folder": "13-n13-n8n-scheduled-reports-live",
-          "title": "Scheduled reports for your team",
-          "summary": "Schedule Trigger workflows that collect deployments, failures and service status, write a short report and post it to Mattermost every morning."
+          "title": "Schedule a morning report for your team",
+          "summary": "Answer the team's morning questions automatically: a scheduled workflow collects deployments, failures and service status, writes one short report and posts it to Mattermost every day.",
+          "preview": false,
+          "short": "Morning reports"
         }
       ]
     },
     {
-      "title": "Advanced patterns and production",
+      "title": "Production-ready and AI-assisted",
       "lessons": [
         {
           "folder": "15-n15-n8n-advanced-design-live",
-          "title": "Advanced workflow design",
-          "summary": "Sub-workflows, signed webhooks, idempotency, rate limits and batches, pagination, loop guards, workflows in git and where the logs are, each one run for real."
+          "title": "Advanced patterns: signed webhooks, idempotency and more",
+          "summary": "Patterns for workflows that hold up: sub-workflows, signed webhooks, idempotency, rate limits and batches, pagination, loop guards, workflows in git and where the logs are. Each one tested live.",
+          "preview": false,
+          "short": "Advanced patterns"
         },
         {
           "folder": "16-n16-n8n-production-live",
-          "title": "Running n8n in production",
-          "summary": "Postgres, queue mode with workers, the encryption key, backups and restores, pinned upgrades with a rollback, and a disaster recovery drill."
+          "title": "Run n8n in production: Postgres, workers, backups, upgrades",
+          "summary": "Run n8n itself for the long term: PostgreSQL, queue mode with Redis and workers, the encryption key, backups and restores, a pinned upgrade with a rollback, and a disaster recovery drill.",
+          "preview": false,
+          "short": "n8n in production"
         },
         {
           "folder": "17-n17-n8n-ai-assisted-live",
-          "title": "AI-assisted workflows, safely",
-          "summary": "AI summaries of failed deployments, incidents and errors: sensitive data removed first, output labelled as a draft, and a human always decides."
+          "title": "Add AI summaries to your workflows, safely",
+          "summary": "Let AI draft what failed, the likely cause and what to check. Redact secrets first, defend against prompt injection, label every answer as a draft with its token cost, and keep a human in charge.",
+          "preview": true,
+          "short": "AI summaries"
         }
       ]
     }
