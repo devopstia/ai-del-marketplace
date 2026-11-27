@@ -48,7 +48,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const crumbs: [string, string][] = [["Courses", "/courses"], ...(c.category ? [[c.category.name, topicPath(c.category.slug)] as [string, string]] : []), [c.title, `/courses/${c.slug}`]];
 
   return (
-    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews}>
+    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews} course={c}>
       <JsonLd data={courseLd(c)} />
       <JsonLd data={breadcrumbLd(crumbs)} />
       <JsonLd data={faqLd(courseFaqItems(c, policy))} />

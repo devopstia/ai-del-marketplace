@@ -60,7 +60,7 @@ export function CoursePath({ c }: { c: CourseDetail }) {
   ].filter(Boolean) as string[];
 
   return (
-    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews}>
+    <PreviewProvider courseTitle={c.title} slug={c.slug} previews={previews} course={c}>
       <section aria-labelledby="path-title" className="container-x pt-16 md:pt-20" data-testid="course-path">
         <h2 id="path-title" className="max-w-3xl font-display text-[clamp(1.5rem,2.6vw,2.1rem)] font-extrabold text-ink">
           One course, from the first idea to agents in production

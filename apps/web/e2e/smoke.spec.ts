@@ -38,6 +38,34 @@ test.describe("public catalogue", () => {
     await expect.poll(() => dialog.locator("video").getAttribute("src")).toContain("http");
   });
 
+  test("the preview names the course overview and offers the right action, signed out (standard §4a)", async ({ page }) => {
+    // A free course from the catalogue, when the local catalogue has one (or E2E_FREE_COURSE_SLUG).
+    let freeSlug = process.env.E2E_FREE_COURSE_SLUG ?? "";
+    if (!freeSlug) {
+      await page.goto("/courses");
+      const row = page.getByTestId("course-row").filter({ hasText: /\bFree\b/ }).first();
+      if (await row.count()) freeSlug = ((await row.locator("a[href^='/courses/']").first().getAttribute("href")) ?? "").replace(/^\/courses\//, "");
+    }
+    const cases: [string, RegExp][] = [[PAID_COURSE, /^Enroll now · \$/]];
+    if (freeSlug) cases.push([freeSlug, /^Start learning for free$/]);
+    for (const [slug, cta] of cases) {
+      await page.goto(`/courses/${slug}`);
+      await page.getByTestId("preview-button").filter({ visible: true }).first().click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog.getByTestId("video-player")).toBeVisible();
+      await expect(dialog.getByTestId("preview-cta")).toHaveText(cta);
+      // The trailer and an intro-titled first lesson are labelled "Course overview"; other lessons never are.
+      const rows = dialog.getByRole("listitem");
+      for (let i = 0; i < (await rows.count()); i++) {
+        const text = await rows.nth(i).innerText();
+        const title = text.replace(/^Course overview\s*/, "");
+        const isOverview = /Course trailer/.test(title) || (i <= 1 && /^(welcome|introduction|course (overview|introduction)|intro\b)/i.test(title.trim()));
+        await expect(rows.nth(i).getByTestId("preview-overview-row")).toHaveCount(isOverview ? 1 : 0);
+      }
+      await dialog.getByRole("button", { name: "Close" }).click();
+    }
+  });
+
   test("the home page search finds courses (no popular-search chips, owner 2026-11-25)", async ({ page }) => {
     // a word from a real course title, so this works on any catalogue (local demo or staging)
     await page.goto("/courses");
