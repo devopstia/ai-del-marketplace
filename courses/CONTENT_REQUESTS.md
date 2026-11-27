@@ -76,8 +76,8 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
 | CR-015 | AI for DevOps on AWS | Module 1, first lesson | Course introduction: AI for DevOps on AWS | GEN | 2026-11-27 | P1 | accepted | — | — |
 | CR-016 | AI for DevOps on Azure | Module 1, first lesson | Course introduction: AI for DevOps on Azure | GEN | 2026-11-27 | P1 | accepted | — | — |
 | CR-017 | Visual Studio Code Masterclass for DevOps and AI | Module 1, first lesson | Course introduction: VS Code for DevOps and AI | GEN | 2026-11-27 | P1 | accepted, to be mapped onto the approved VS Code curriculum | — | — |
-| CR-018 | AI for DevOps on AWS and on Azure (changed 2026-11-27: not in the free intro, which stays concise) | Module 2 'The vocabulary of AI models', after 'Prompts, tokens…' | Prompt engineering for DevOps (4 lessons) | GEN | 2026-11-27 | P1 | accepted | — | — |
-| CR-019 | AI for DevOps on AWS and on Azure (optional, end of Module 1; changed 2026-11-27); VS Code reuses the CLI parts | Masterclass Module 1, last | AI tools tour: ChatGPT and Claude, Claude Code and Codex CLI, Ollama (3 lessons) | GEN | 2026-11-27 | P2 | accepted | — | — |
+| CR-018 | AI for DevOps on AWS and on Azure (changed 2026-11-27: not in the free intro, which stays concise) | Module 2 'The vocabulary of AI models', after 'Prompts, tokens…' | Prompt engineering for DevOps (4 lessons) | GEN | 2026-11-27 | P1 | merged 2026-11-28 into the prompt engineering module (CR-077–CR-083; see details) | — | — |
+| CR-019 | AI for DevOps on AWS and on Azure (optional, end of Module 1; changed 2026-11-27); VS Code reuses the CLI parts | Masterclass Module 1, last | AI tools tour: ChatGPT and Claude, Claude Code and Codex CLI, Ollama (3 lessons) | GEN | 2026-11-27 | P2 | merged 2026-11-28: chat assistants + Ollama → CR-084; Claude Code/Codex CLI → CR-089 (VS Code keeps CR-045) | — | — |
 | CR-020 | Introduction to AI for DevOps | Module 3, last (before the next-step text lesson) | Final assessment (the next-step part is now a text lesson written by UPLOAD) | GEN | 2026-11-27 | P2 | accepted | — | — |
 | CR-021 | AI for DevOps on AWS | Module 2, after 'Amazon Bedrock explained' | Amazon SageMaker AI for DevOps engineers | GEN | 2026-11-27 | P2 | accepted | — | — |
 | CR-022 | AI for DevOps on AWS | Module 2 | Kiro (formerly Amazon Q Developer) for DevOps | GEN | 2026-11-27 | P2 | accepted | — | — |
@@ -135,6 +135,34 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
 | CR-074 | LLMOps: Project 6 (both) | — | Project 6: operate an enterprise RAG app with LLMOps | GEN | 2026-11-28 | P2 | requested | see details | — |
 | CR-075 | LLMOps: M1–M8 wrap | — | LLMOps review and assessment | GEN | 2026-11-28 | P2 | requested | see details | — |
 | CR-076 | LLMOps: M9 n8n | — | LLMOps automation with n8n: failure alerts, cost alerts, evaluation reports and health checks | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-077 | PE: M1 Introduction | — | What prompt engineering is: same AI, two people, two very different answers | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-078 | PE: M2 Anatomy | — | Anatomy of a professional prompt: role, context, constraints, deliverables and acceptance criteria | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-079 | PE: M3 Techniques (1) | — | Prompting techniques you'll use daily: zero-, one- and few-shot, role, context and instruction prompting | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-080 | PE: M3 Techniques (2) | — | Structured output and prompt templates: JSON schema answers your scripts can trust | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-081 | PE: M3 Techniques (3) | — | Break big tasks down: decomposition, iterative prompting, chaining and asking AI to clarify | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-082 | PE: M3 Techniques (4) | — | Reasoning you can check, and prompts with images and documents | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-083 | PE: M4 Advanced | — | Master prompts for complex work: requirements, constraints, checkpoints and reusable templates | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-084 | PE: M5 Platforms | — | One prompt, many models: ChatGPT, Claude, Bedrock, Foundry and Ollama compared | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-085 | PE: M6 DevOps (1) | — | Prompt AI for infrastructure code: Terraform, Dockerfiles, Compose, Kubernetes and Helm, validated | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-086 | PE: M6 DevOps (2) | — | Prompt AI for pipelines and scripts: GitHub Actions, Argo CD, Bash and Python | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-087 | PE: M6 DevOps (3) | — | Prompt AI to investigate: logs, Kubernetes failures, CI/CD failures and incident reports | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-088 | PE: M6 DevOps (4) | — | Prompt AI to review: pull requests, documentation, security and cost of your infrastructure | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-089 | PE: M7 AI coding agents | — | Work with AI coding agents professionally: study, plan, branch, change little, test, ask first | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-090 | PE: M7 Project 2 | — | Project 2: build a complete app from one master prompt | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-091 | PE: M8 Agents | — | Instructions for AI agents: system prompts, tools, memory, AGENTS.md, skills, handover and approvals | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-092 | PE: M8 Project 6 | — | Project 6: build a reusable DevOps AI agent | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-093 | PE: M9 RAG and LLMOps | — | Prompts for RAG: answer only from approved sources, cite them, and say when you don't know | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-094 | PE: M9 Project 7 | — | Project 7: compare prompt versions automatically and ship only the better one | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-095 | PE: M10 Security | — | Prompt security and reliability: hallucinations, injection, secrets and validating AI output | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-096 | PE: Project 1 | — | Project 1: from a vague prompt to a professional one, step by step | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-097 | PE: Project 3 (AWS) | — | Project 3: AI-assisted AWS infrastructure with Terraform, reviewed and destroyed | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-098 | PE: Project 4 (Azure) | — | Project 4: AI-assisted Azure infrastructure with Terraform, reviewed and destroyed | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-099 | PE: Project 5 | — | Project 5: troubleshoot Kubernetes with AI, without blindly running its commands | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-100 | PE: Project 8 (n8n) | — | Project 8: prompts that change how an n8n AI workflow behaves | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-101 | PE: Free intro teaser (1) | — | Same AI, better prompt: one question asked two ways | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-102 | PE: Free intro teaser (2) | — | Give AI the right context: fix a broken Dockerfile in one prompt | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-103 | PE: Toolkit | — | The Prompt Engineering Toolkit (downloadable ZIP) | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-104 | PE: Assessment | — | Prompt engineering review and assessment | GEN | 2026-11-28 | P2 | requested | see details | — |
 
 ## Details
 
@@ -267,6 +295,9 @@ at recording time.
 - Priority P1 · depends on: — · deliver to: `videos/23-intro-ai-devops/<NN>-prompt-engineering-*/ (4 folders)` with a `course.manifest.json` entry
 - **Log:** 2026-11-27 UPLOAD: requested. GEN: accepted (see the reply above).
 
+- **Log:** 2026-11-28 UPLOAD: merged into the prompt engineering module (owner's Prompt Engineering brief): CR-077–CR-083 cover
+  it in depth; no separate CR-018 video. GEN: please don't record CR-018 separately.
+
 ### CR-019 AI tools tour: ChatGPT and Claude, Claude Code and Codex CLI, Ollama (3 lessons)
 - Course / module / position: Introduction to AI for DevOps; VS Code Module 5 reuses the CLI parts · Intro Module 5 'Practical AI tools'
 - Why: Brief §7 Module 5; students need a hands-on start with today's tools before the cloud courses.
@@ -278,6 +309,9 @@ at recording time.
 - Quiz: 4 spoken multiple-choice questions · Quality bar: as above
 - Priority P2 · depends on: CR-018 · deliver to: `videos/23-intro-ai-devops/<NN>-ai-tools-*/` with a `course.manifest.json` entry
 - **Log:** 2026-11-27 UPLOAD: requested. GEN: accepted (see the reply above).
+
+- **Log:** 2026-11-28 UPLOAD: merged: chat assistants and Ollama → CR-084, Claude Code and Codex CLI → CR-089 (VS Code keeps its
+  own CR-045). GEN: no separate CR-019 videos.
 
 ### CR-020 Next steps and final assessment
 - Course / module / position: Introduction to AI for DevOps · Module 7, last
@@ -726,3 +760,77 @@ What each one teaches and demonstrates:
 - **CR-074 Project 6: operate an enterprise RAG app with LLMOps:** Take the existing production-style RAG stack and operate it: ingestion and re-indexing, Ragas evaluation, retrieval accuracy monitoring, prompt versions, Langfuse traces, cost per answer, security and continuous deployment.
 - **CR-075 LLMOps review and assessment:** A short recap video and `assessments/llmops.json` (12–15 questions with explanations) over the whole module.
 - **CR-076 LLMOps automation with n8n: failure alerts, cost alerts, evaluation reports and health checks:** n8n workflows that post LLM app failures to Mattermost, token/cost alerts to Slack, a daily evaluation report from the CI results, and an AI app health check; reuses the n8n stack lab. In the masterclasses it points to the complete n8n course.
+
+### CR-077 … CR-104 Prompt engineering (owner 2026-11-28, "Comprehensive Prompt Engineering Training")
+Every lesson follows the 13 steps (docs/COURSE_STANDARD.md §8e) and the prompt rule (§8f): **a poor prompt and a
+professional prompt, both executed live, results compared, real failures shown**, and every generated artefact
+validated with real tools. Each ships a PDF, a lab ZIP (prompts as files, sample data or repo, validation scripts,
+`.env.example`, README with prerequisites, cost and cleanup) and 3–5 spoken quiz questions. Techniques taught are the
+ones the providers document for all current models (clear instructions and context, examples, structure, decomposition,
+structured outputs, self-review); model-specific features are labelled as such. Budget: owner's $100/month for training
+labs, local first; ask the owner before any run over ~$5 or any EKS/AKS. **Recommended order:** CR-077, CR-078, CR-096
+(basics + Project 1) → CR-079–CR-082 → CR-085–CR-088 (DevOps prompting) → CR-089, CR-090 (coding agents + Project 2) →
+CR-091, CR-092 (agents + Project 6) → CR-097, CR-098, CR-099 (cloud and Kubernetes projects) → CR-093, CR-094 (with the
+LLMOps evaluation lessons) → CR-095 (security) → CR-083, CR-084 → CR-103 (toolkit) → CR-100 (n8n) → CR-101, CR-102
+(free intro) → CR-104 (assessment).
+
+| CR | Title | Courses | Position | Priority | Est. cost per run | Depends on |
+|---|---|---|---|---|---|---|
+| CR-077 | What prompt engineering is: same AI, two people, two very different answers | AWS, Azure | Prompt engineering module, after 'Prompts, tokens…' | P1 | tokens < $0.20 | — |
+| CR-078 | Anatomy of a professional prompt: role, context, constraints, deliverables and acceptance criteria | AWS, Azure | after CR-077 | P1 | $0 (Minikube); tokens < $0.20 | CR-077 |
+| CR-079 | Prompting techniques you'll use daily: zero-, one- and few-shot, role, context and instruction prompting | AWS, Azure | after CR-078 | P1 | tokens < $0.30 | CR-078 |
+| CR-080 | Structured output and prompt templates: JSON schema answers your scripts can trust | AWS, Azure | after CR-079 | P1 | tokens < $0.30 | CR-079 |
+| CR-081 | Break big tasks down: decomposition, iterative prompting, chaining and asking AI to clarify | AWS, Azure | after CR-080 | P1 | tokens < $0.50 | CR-080 |
+| CR-082 | Reasoning you can check, and prompts with images and documents | AWS, Azure | after CR-081 | P2 | tokens < $0.50 | CR-081 |
+| CR-083 | Master prompts for complex work: requirements, constraints, checkpoints and reusable templates | AWS, Azure | after CR-082 | P1 | tokens < $1 | CR-081 |
+| CR-084 | One prompt, many models: ChatGPT, Claude, Bedrock, Foundry and Ollama compared | AWS, Azure (cloud part per course) | after CR-083 | P1 | tokens < $1; Ollama local $0 | CR-083 |
+| CR-085 | Prompt AI for infrastructure code: Terraform, Dockerfiles, Compose, Kubernetes and Helm, validated | AWS, Azure | Prompt engineering module, DevOps section | P1 | $0 locally (terraform validate/plan only, Minikube); tokens < $1 | CR-078 |
+| CR-086 | Prompt AI for pipelines and scripts: GitHub Actions, Argo CD, Bash and Python | AWS, Azure | after CR-085 | P1 | $0 (GitHub Actions free tier, Argo CD on Minikube); tokens < $1 | CR-085 |
+| CR-087 | Prompt AI to investigate: logs, Kubernetes failures, CI/CD failures and incident reports | AWS, Azure | after CR-086 | P1 | $0 (Minikube); tokens < $1 | CR-085 |
+| CR-088 | Prompt AI to review: pull requests, documentation, security and cost of your infrastructure | AWS, Azure | after CR-087 | P2 | tokens < $1 | CR-087 |
+| CR-089 | Work with AI coding agents professionally: study, plan, branch, change little, test, ask first | AWS, Azure; VS Code reuses it | Prompt engineering module, after the Claude Code instruction-file lessons | P1 | $0 (local repo); agent subscription/tokens < $2 | CR-083 |
+| CR-090 | Project 2: build a complete app from one master prompt | AWS, Azure | after CR-089 | P1 | $0 locally; tokens < $3 | CR-089 |
+| CR-091 | Instructions for AI agents: system prompts, tools, memory, AGENTS.md, skills, handover and approvals | AWS, Azure | Prompt engineering module, agents section | P1 | tokens < $1 | CR-083 |
+| CR-092 | Project 6: build a reusable DevOps AI agent | AWS, Azure | after CR-091 | P1 | $0 locally; tokens < $3 | CR-091 |
+| CR-093 | Prompts for RAG: answer only from approved sources, cite them, and say when you don't know | AWS, Azure | Prompt engineering module, after CR-092 (links to the RAG and LLMOps modules) | P1 | tokens < $0.50 (reuses the RAG stack lab) | CR-080 |
+| CR-094 | Project 7: compare prompt versions automatically and ship only the better one | AWS, Azure | after CR-093 | P1 | GitHub Actions free tier; tokens < $1 per run | CR-063 (LLMOps eval gate), CR-061 |
+| CR-095 | Prompt security and reliability: hallucinations, injection, secrets and validating AI output | AWS, Azure | Prompt engineering module, last lesson before the projects | P1 | $0 locally | CR-068 (LLMOps security) |
+| CR-096 | Project 1: from a vague prompt to a professional one, step by step | AWS, Azure | after CR-078 | P1 | tokens < $0.50 | CR-078 |
+| CR-097 | Project 3: AI-assisted AWS infrastructure with Terraform, reviewed and destroyed | AWS | Prompt engineering module, projects | P1 | ≈ $0.50–1 per run (small VPC, EC2 t3.micro or App Runner, S3; under 1 h); terraform destroy + verification | CR-085 |
+| CR-098 | Project 4: AI-assisted Azure infrastructure with Terraform, reviewed and destroyed | Azure | Prompt engineering module, projects | P1 | ≈ $0.50–1 per run (resource group, VNet, Container Apps or a B-series VM, Key Vault; under 1 h); terraform destroy + verification | CR-085 |
+| CR-099 | Project 5: troubleshoot Kubernetes with AI, without blindly running its commands | AWS, Azure | Prompt engineering module, projects | P1 | $0 on Minikube (main path); EKS/AKS variant only with the owner's OK | CR-087 |
+| CR-100 | Project 8: prompts that change how an n8n AI workflow behaves | n8n course; AWS and Azure (n8n module) | n8n course module 4; masterclass n8n module after the AI ops agent | P2 | $0 locally; tokens < $0.50 | CR-080 |
+| CR-101 | Same AI, better prompt: one question asked two ways | Intro (free) | Intro module 3, before 'Your next step' | P1 | tokens < $0.10 | — |
+| CR-102 | Give AI the right context: fix a broken Dockerfile in one prompt | Intro (free) | after CR-101 | P2 | $0 locally; tokens < $0.10 | CR-101 |
+| CR-103 | The Prompt Engineering Toolkit (downloadable ZIP) | AWS, Azure, n8n | Attached as a lesson file to the first prompt engineering lesson of each masterclass (CR-077) and to the n8n prompting lesson (CR-100) | P1 | $0 | CR-078, CR-085, CR-091 |
+| CR-104 | Prompt engineering review and assessment | AWS, Azure | end of the prompt engineering module | P2 | $0 | the module's lessons |
+
+What each one teaches and demonstrates:
+- **CR-077 What prompt engineering is: same AI, two people, two very different answers:** Two people ask the same model for the same thing: one vague prompt, one professional prompt; run both live and compare. How an LLM reads instructions (tokens, context window, what it cannot know), why it misunderstands or invents, and the limits no prompt removes. Poor vs professional prompt, executed live.
+- **CR-078 Anatomy of a professional prompt: role, context, constraints, deliverables and acceptance criteria:** The 11 parts (role, objective, background, instructions, technical requirements, constraints, deliverables, output format, examples, acceptance criteria, validation). The owner's example: 'Create a Kubernetes deployment' vs a structured prompt (image, namespace, resources, probes, security context, environment); both outputs applied to Minikube and checked with kubeconform and kubectl.
+- **CR-079 Prompting techniques you'll use daily: zero-, one- and few-shot, role, context and instruction prompting:** Each technique on one DevOps task (classify alerts, write a runbook step): when it helps, when it hurts, and how to tell from the output. Common mistakes and how to fix them.
+- **CR-080 Structured output and prompt templates: JSON schema answers your scripts can trust:** Free text vs JSON mode vs schema-constrained output (provider structured outputs); validate with a JSON schema in Python; templates with variables; what still breaks (refusals, truncation) and how the code must handle it.
+- **CR-081 Break big tasks down: decomposition, iterative prompting, chaining and asking AI to clarify:** Turn a large request into steps; iterate on a weak answer; chain prompts where each output feeds the next; tell the AI to ask clarifying questions first. Shown on writing and testing a small Bash/Python tool.
+- **CR-082 Reasoning you can check, and prompts with images and documents:** Ask for verifiable intermediate results (assumptions, a plan, numbers you can check) rather than hidden reasoning; multimodal prompts: an architecture diagram screenshot, a PDF runbook, a log file. Flag model-specific features (extended thinking, file inputs) as such.
+- **CR-083 Master prompts for complex work: requirements, constraints, checkpoints and reusable templates:** Write a master prompt for a real multi-step job: architecture and business constraints, reference documents, 'list missing requirements first', 'review and improve your own plan', implementation and validation checkpoints, 'do not change what works', reusable template. Managing large context; prompts for autonomous agents.
+- **CR-084 One prompt, many models: ChatGPT, Claude, Bedrock, Foundry and Ollama compared:** Run the same professional prompt in ChatGPT, Claude, Amazon Bedrock (AWS course) or Microsoft Foundry (Azure course) and a local Ollama model; compare quality, format adherence, cost and latency; adjust the prompt per model without locking students to one provider. **Absorbs CR-019's chat-assistant and Ollama parts.**
+- **CR-085 Prompt AI for infrastructure code: Terraform, Dockerfiles, Compose, Kubernetes and Helm, validated:** Poor vs professional prompt for each artefact; every output validated with real tools: terraform fmt/validate/plan, hadolint, docker build, docker compose config, kubeconform, helm lint, then deployed to Minikube. Show a wrong answer and how the prompt fixes it.
+- **CR-086 Prompt AI for pipelines and scripts: GitHub Actions, Argo CD, Bash and Python:** Generate a GitHub Actions workflow, an Argo CD Application and two scripts from structured prompts; actionlint, shellcheck and a real run prove them; fix a failing step by giving the AI the right context.
+- **CR-087 Prompt AI to investigate: logs, Kubernetes failures, CI/CD failures and incident reports:** What context to give (logs, events, manifests, versions) and what to keep out (secrets); ask for ranked hypotheses with evidence and a structured troubleshooting plan; write the incident report. Feeds Project 5 (CR-099).
+- **CR-088 Prompt AI to review: pull requests, documentation, security and cost of your infrastructure:** Review a PR diff with a checklist prompt; generate docs from code; find security issues in Terraform/Kubernetes (cross-checked with checkov/tfsec); suggest cost optimisations and monitoring/alerting configs; every claim verified.
+- **CR-089 Work with AI coding agents professionally: study, plan, branch, change little, test, ask first:** With Claude Code and Codex CLI on a real repository: make the agent study the repo and architecture, find the right files/services, write a plan, work on a feature branch, avoid unrelated changes, run tests, verify, document, and request approval before anything sensitive. **Absorbs CR-019's Claude Code/Codex CLI parts** (VS Code keeps its own CR-045 lesson).
+- **CR-090 Project 2: build a complete app from one master prompt:** Master prompt → AI coding agent designs a small website, writes the code, Dockerfile, Compose, docs and tests, runs it locally, verifies it in the browser and fixes what fails; the instructor shows every step and every mistake.
+- **CR-091 Instructions for AI agents: system prompts, tools, memory, AGENTS.md, skills, handover and approvals:** System vs user prompts for agents, roles and limits, tool descriptions that steer tool choice, memory and context management, AGENTS.md and CLAUDE.md, reusable skills (SKILL.md), handover files, multi-agent roles, human approval checkpoints, MCP tools and permissions; keep instructions improving. Builds on the three existing instruction-file lessons.
+- **CR-092 Project 6: build a reusable DevOps AI agent:** Turn a general assistant into a DevOps agent with instruction files, skills and authorised tools: review code, analyse infrastructure, write docs, help troubleshoot, run allowed tests, keep project context, coordinate with a second agent, write an implementation report.
+- **CR-093 Prompts for RAG: answer only from approved sources, cite them, and say when you don't know:** Retrieved documents as context, 'use only these sources', citations and evidence, handling missing information, structured RAG answers, fewer unsupported claims. Then hands off to LLMOps: prompt versions in Git (CR-061), evaluation (CR-062), the CI gate (CR-063) and token cost (CR-070) are reused, not repeated.
+- **CR-094 Project 7: compare prompt versions automatically and ship only the better one:** Prompt-specific extension of the LLMOps gate: three versions of one prompt, a test dataset, expected formats, scores per version, a quality threshold, approval, rollback and a Slack/Mattermost message. Reuses CR-063's pipeline; only the prompt-comparison part is new.
+- **CR-095 Prompt security and reliability: hallucinations, injection, secrets and validating AI output:** A good prompt raises the odds, it never guarantees correctness: hallucinations; direct and indirect prompt injection (live); keeping credentials and confidential data out of prompts; reviewing AI-generated code and infrastructure; human approval; stopping unauthorised agent actions; checking facts against trusted sources. Coordinated with CR-068 to avoid overlap.
+- **CR-096 Project 1: from a vague prompt to a professional one, step by step:** A vague prompt gets an unusable answer; add context, requirements, constraints and acceptance criteria one at a time, run each version and show what changed and why.
+- **CR-097 Project 3: AI-assisted AWS infrastructure with Terraform, reviewed and destroyed:** Requirements, architecture, security → Terraform from a structured prompt → human review → validate/plan → deploy approved training infrastructure → verify → troubleshoot an error with the AI → destroy and prove nothing is left.
+- **CR-098 Project 4: AI-assisted Azure infrastructure with Terraform, reviewed and destroyed:** The same flow, with prompts adapted to Azure networking, managed identity, RBAC and Key Vault; show where an AWS-shaped prompt goes wrong on Azure.
+- **CR-099 Project 5: troubleshoot Kubernetes with AI, without blindly running its commands:** A Minikube app with planted faults (bad image, missing ConfigMap, failing probe, resource limits); collect the right evidence, ask for root causes and a plan, review it, apply and validate the fix, document the resolution.
+- **CR-100 Project 8: prompts that change how an n8n AI workflow behaves:** Same n8n workflow, different prompts: AI agent behaviour, PR review comments, incident summaries, notification quality, structured JSON for decisions, reliability. Ends by pointing to the complete n8n course (link, no price).
+- **CR-101 Same AI, better prompt: one question asked two ways:** 4–6 min: a vague request and a professional prompt for the same DevOps task, run live; the three changes that made the difference; invitation to the masterclasses' prompt engineering module (no prices).
+- **CR-102 Give AI the right context: fix a broken Dockerfile in one prompt:** 4–6 min: the AI guesses without the error message and versions; with the right context it fixes the build; docker build proves it.
+- **CR-103 The Prompt Engineering Toolkit (downloadable ZIP):** Markdown templates: master prompt, DevOps, AWS, Azure, Kubernetes troubleshooting, Terraform, CI/CD, code review, documentation, AI agent instructions (AGENTS.md/CLAUDE.md/skill skeletons), RAG, LLM evaluation, n8n automation; prompt-improvement and security/validation checklists; poor-vs-improved examples; a README on adapting each template (never copy blindly). Delivered as `prompt-engineering-toolkit.zip` next to CR-077's video.
+- **CR-104 Prompt engineering review and assessment:** Short recap video and `assessments/prompt-engineering.json` (12–15 questions with explanations).

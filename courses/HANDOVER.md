@@ -16,7 +16,13 @@ in a chat or a context window.
 5. **Before you stop:** update `COURSE_STATUS.md`, the request statuses, `LESSONS_LEARNED.md`; commit; say in your final
    message what is waiting and on whom.
 
-## Now (2026-11-27, night): AI for DevOps catalogue
+## Now (2026-11-28): prompt engineering
+- Both masterclass plans have a new module "Prompt engineering for DevOps" and a description section (commit on
+  `feat/course-catalog`); sync AWS and Azure to production and publish (owner asked to publish updates). The section
+  rename/insert is safe: new section, tm4 moves with its id.
+- Requests CR-077–CR-104 sent to the video agent; CR-018/019 merged into them.
+
+## Earlier (2026-11-27, night): AI for DevOps catalogue
 - Four new courses are planned (`courses/COURSE_CATALOG.md`) and exist on **staging as drafts** with every lesson that
   exists today (ids in `COURSE_STATUS.md`); nothing in production yet. Production needs the categories `cloud-ai`,
   `ai-foundations` and `developer-tools` first, then a sync with the owner's sign-in, then the owner's approval.

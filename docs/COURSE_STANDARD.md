@@ -192,6 +192,15 @@ concept say what it is, why organisations need it, when to use it, the problem i
 engineers use it in production and how students do it themselves. Labs follow §8b/§8c and the $100/month training
 cloud budget rule in `courses/CONTENT_REQUESTS.md`.
 
+## 8f. Prompt engineering is a core strand (owner 2026-11-28)
+Prompt engineering is taught as an engineering skill in both AI for DevOps masterclasses (module "Prompt engineering
+for DevOps"), with the same weight as RAG, agents, MCP and LLMOps. **The poor-vs-professional rule:** every prompting
+lesson runs a vague prompt and a professional one (role, objective, context, instructions, requirements, constraints,
+deliverables, format, examples, acceptance criteria, validation) live, compares the real results, shows failures
+honestly, and validates generated code or infrastructure with real tools. Teach what works across models; label
+model-specific features. A good prompt raises the odds; it never replaces checking the answer. Templates go into the
+Prompt Engineering Toolkit (CR-103) with guidance on adapting them.
+
 ## 9. Before students see it: three reviews
 - **Instructor:** sound, logically ordered, accurate, practical; every promise ("download the lab") kept.
 - **Student:** easy to navigate, every video plays, Next/Previous, downloads open, captions only on CC, quizzes work,

@@ -202,5 +202,8 @@
     "folderPattern": "^00-",
     "section": 0,
     "promo": true
-  }
+  },
+  "notes": [
+    "2026-11-28: prompting in n8n workflows (Project 8, CR-100) planned for module 4, with the Prompt Engineering Toolkit attached; recommends the masterclasses."
+  ]
 }

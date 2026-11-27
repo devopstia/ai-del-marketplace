@@ -356,3 +356,44 @@ AWS and Azure; Project 2 is AWS-only, Project 3 Azure-only.
 
 **Future course:** a standalone "LLMOps for DevOps Engineers: From Fundamentals to Production" only once there is enough
 distinct content beyond the masterclasses (`docs/IMPROVEMENTS.md`).
+
+
+## Prompt engineering (owner 2026-11-28)
+A core strand of both masterclasses, next to RAG, agents, MCP and LLMOps: students learn to turn an idea, requirement
+or incident into a clear prompt, then **check** the answer. Module "Prompt engineering for DevOps" sits after the AI
+vocabulary and before the cloud services in both masterclasses (12 modules now). Every lesson runs a poor and a
+professional prompt live and compares the real results, failures included (standard §8f).
+
+**Research (2026-11-28):** the providers' own guides agree on the portable core: clear and direct instructions with
+context, examples (few-shot), structure (sections or tags), roles, decomposition and chaining, and iterating against
+tests ([Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct),
+[OpenAI](https://developers.openai.com/api/docs/guides/prompt-engineering.md)). For machine-readable answers,
+schema-constrained **structured outputs** replace "please return JSON" (the app still handles refusals and truncation;
+[OpenAI](https://developers.openai.com/api/docs/guides/structured-outputs),
+[Foundry](https://learn.microsoft.com/azure/ai-foundry/openai/how-to/structured-outputs)). **Prompt caching** cuts cost
+and latency for long reused context ([Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html),
+1-hour TTL for some models since Jan 2026). Agent instructions: **AGENTS.md** is an open format under the Linux
+Foundation's Agentic AI Foundation ([InfoQ](https://infoq.com/news/2025/08/agents-md/)); **Agent Skills (SKILL.md)** are
+an open standard adopted by several coding agents; CLAUDE.md is Claude Code's equivalent. Model-specific features
+(extended thinking, XML-tag habits, file inputs, OpenAI's deprecated `v1/prompts` API) are taught as such.
+
+| Module | Available now | Planned |
+|---|---|---|
+| 1 Introduction | tm4 "Prompts, tokens, context windows and temperature" (moved into the module), tm5 answer quality (stays in vocabulary) | CR-077 |
+| 2 Anatomy of a prompt | — | CR-078 |
+| 3 Techniques | — | CR-079, CR-080, CR-081, CR-082 |
+| 4 Advanced | — | CR-083 |
+| 5 Across platforms | — | CR-084 (absorbs CR-019's chat/Ollama parts) |
+| 6 DevOps prompting | — | CR-085, CR-086, CR-087, CR-088 |
+| 7 AI-assisted development | — | CR-089 (absorbs CR-019's Claude Code/Codex parts), CR-090 |
+| 8 AI agents | 21-claude-code: instruction files in depth, instruction files live, agent permissions (shared with VS Code) | CR-091, CR-092 |
+| 9 RAG and LLMOps | reuse LLMOps CR-061 (versions), CR-062 (evaluation), CR-063 (CI gate), CR-070 (cost) | CR-093, CR-094 |
+| 10 Security | tm12 (operating and securing) in the LLMOps module | CR-095 (with CR-068) |
+
+**Projects:** 1 poor vs professional (CR-096) · 2 an app from a master prompt (CR-090) · 3 AWS Terraform with AI (CR-097,
+AWS only) · 4 Azure Terraform with AI (CR-098, Azure only) · 5 Kubernetes troubleshooting with AI (CR-099, Minikube) ·
+6 reusable DevOps AI agent (CR-092) · 7 prompt version comparison on the LLMOps gate (CR-094) · 8 prompting in n8n
+(CR-100, ends with the n8n course link). **Toolkit:** CR-103, a ZIP of templates, checklists and before/after examples,
+attached to CR-077 in each masterclass and to CR-100. **Free intro:** CR-101 (and CR-102) short "same AI, better
+prompt" teasers before "Your next step". **n8n course:** CR-100 planned in module 4. Earlier CR-018 is merged into
+CR-077–CR-083; CR-019 into CR-084 and CR-089.

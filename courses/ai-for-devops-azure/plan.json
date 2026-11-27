@@ -7,7 +7,7 @@
   "course": {
     "title": "AI for DevOps on Azure: From Fundamentals to Production",
     "subtitle": "Deploy models in Microsoft Foundry, build RAG with Azure AI Search and run troubleshooting agents, with Terraform, Docker, Entra ID and a clean exit every time.",
-    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## LLMOps: run AI applications in production\nBuilding an AI app is the start; operating it is the job. This course treats LLMOps as a core skill, the way DevOps treats running any service.\n- **Available now:** what LLMOps is and how it differs from DevOps and MLOps, the four LLMOps pipelines (ingestion, deployment, evaluation, observability), who builds and who runs an AI system, managed versus self-hosted models, operating and securing AI (versions, latency, token cost, drift, prompt injection, least privilege), a production-style RAG stack with Prometheus, Loki, Jaeger and Grafana, and AI in your CI/CD pipeline.\n- **Coming next (in production now, added as each lesson is finished):** prompt versioning in Git with rollback, automated LLM evaluation that blocks a bad prompt in a pull request, LLM observability with Langfuse and OpenTelemetry (traces, tokens, latency, cost), caching, fallbacks and cost control, CI/CD and Kubernetes deployment for LLM apps, and an end-to-end LLMOps project on Microsoft Foundry, Azure Monitor and Application Insights, managed identities and Key Vault.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
+    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## Prompt engineering: talk to AI like a professional\nMost people use AI tools without knowing how to give them instructions. This course teaches prompting as an engineering skill: context, requirements, constraints, deliverables and acceptance criteria, then checking the answer instead of trusting it.\n- **Available now:** how you talk to a model (system prompt, tokens, context window, temperature, structured output), judging answers (hallucination, grounding, citations, golden sets), and instruction files for AI coding agents: what to put in them, how they load, and permissions that really block an agent.\n- **Coming next (in production now, added as each lesson is finished):** poor versus professional prompts run side by side; zero-, one- and few-shot, structured JSON output, task decomposition and prompt chaining; master prompts and reusable templates; the same prompt across Microsoft Foundry, ChatGPT, Claude and local Ollama models; prompting for Terraform, Kubernetes, GitHub Actions, log analysis and incident reports, with every result validated; AI coding agents that plan, branch, test and ask before risky changes; building a reusable DevOps AI agent; grounded RAG prompts with citations; prompt security; and a downloadable Prompt Engineering Toolkit of templates and checklists.\n\n## LLMOps: run AI applications in production\nBuilding an AI app is the start; operating it is the job. This course treats LLMOps as a core skill, the way DevOps treats running any service.\n- **Available now:** what LLMOps is and how it differs from DevOps and MLOps, the four LLMOps pipelines (ingestion, deployment, evaluation, observability), who builds and who runs an AI system, managed versus self-hosted models, operating and securing AI (versions, latency, token cost, drift, prompt injection, least privilege), a production-style RAG stack with Prometheus, Loki, Jaeger and Grafana, and AI in your CI/CD pipeline.\n- **Coming next (in production now, added as each lesson is finished):** prompt versioning in Git with rollback, automated LLM evaluation that blocks a bad prompt in a pull request, LLM observability with Langfuse and OpenTelemetry (traces, tokens, latency, cost), caching, fallbacks and cost control, CI/CD and Kubernetes deployment for LLM apps, and an end-to-end LLMOps project on Microsoft Foundry, Azure Monitor and Application Insights, managed identities and Key Vault.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
     "level": "intermediate",
     "language": "en",
     "categorySlug": "cloud-ai",
@@ -78,12 +78,6 @@
           "short": "Model words"
         },
         {
-          "folder": "02-ai-foundations/04-tm4-talking-to-a-model",
-          "title": "Prompts, tokens, context windows and temperature",
-          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill.",
-          "short": "Talking to a model"
-        },
-        {
           "folder": "02-ai-foundations/05-tm5-answer-quality",
           "title": "Hallucinations, grounding and judging AI answers",
           "summary": "Fluent is not correct. Learn hallucination, grounding, citations, groundedness, evaluation and the golden set, and how to measure whether an AI answer can be trusted.",
@@ -94,6 +88,35 @@
           "title": "Running models: GPUs, VRAM, quantisation and licences",
           "summary": "What it takes to run a model yourself: runtime versus model, GPUs and VRAM, parameters and quantisation, self-hosted versus managed, and open source versus open weights.",
           "short": "Running models"
+        }
+      ]
+    },
+    {
+      "title": "Prompt engineering for DevOps",
+      "lessons": [
+        {
+          "folder": "02-ai-foundations/04-tm4-talking-to-a-model",
+          "title": "Prompts, tokens, context windows and temperature",
+          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill.",
+          "short": "Talking to a model"
+        },
+        {
+          "folder": "21-claude-code/01-cc1-claude-md-in-depth",
+          "title": "Agent instruction files in depth: how CLAUDE.md tells a coding agent your rules",
+          "short": "CLAUDE.md",
+          "summary": "How a coding agent learns your build commands, conventions and mistakes to avoid: where instruction files live, the order they load, imports and rules, and what to put in or keep out. The same thinking applies to AGENTS.md and other agents."
+        },
+        {
+          "folder": "21-claude-code/02-cc1-claude-md-live",
+          "title": "Write instruction files for a coding agent, live",
+          "short": "Instruction files lab",
+          "summary": "On a real sample repository, generate a first instruction file, trim it, add rules and an import, then check exactly what the agent loads and when. The lab gives you the repository and the finished files."
+        },
+        {
+          "folder": "21-claude-code/03-cc2-claude-folder-live",
+          "title": "Set an AI coding agent's permissions and project settings",
+          "short": "Agent permissions",
+          "summary": "Global versus project settings for a coding agent: what goes where, which wins, what goes into Git, and a live proof that a deny rule really blocks the agent from running a command."
         }
       ]
     },
