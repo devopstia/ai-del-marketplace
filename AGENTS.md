@@ -201,7 +201,8 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     `del-course-agent`). Think like an instructor; study every lesson's content before placing it; an honest, compelling
     course page; an introduction video first (position reserved, never an empty lesson); at least two free previews;
     modules in a learning order; new lessons inserted where they belong with existing lesson ids kept (progress,
-    enrolments, quiz results preserved); lesson quizzes, module and final assessments; agents find gaps proactively and
+    enrolments, quiz results preserved); lesson quizzes, module and final assessments; a lesson is complete only with its video, captions, PDF slides, lab ZIP
+    and quiz uploaded and checked as a student (§8b); agents find gaps proactively and
     coordinate only through files: `courses/HANDOVER.md` (read first), `COURSE_STATUS.md`, `CONTENT_REQUESTS.md` (the
     request register and its lifecycle), `LESSONS_LEARNED.md`, `course.manifest.json`; instructor, student and customer review before anything goes to students; the course page is written and checked
     to the presentation standard (§3a: premium, persuasive, honest, no AI-generic wording, reviewed in the browser).

@@ -16,7 +16,8 @@ Start: read `courses/HANDOVER.md`, `COURSE_STATUS.md`, `CONTENT_REQUESTS.md`, `L
 course's row in `COURSE_STATUS.md`, every request you touched (status + a dated Log line), `LESSONS_LEARNED.md`, and the
 "Now" part of `HANDOVER.md`; commit. Requests to the generation agent: write them in `CONTENT_REQUESTS.md` first (id,
 module/lesson, what, why, deliverables, priority), then message its session with the ids. Look for gaps
-(standard §7) and missing assessments (§8a) on every course, not only missing files.
+(standard §7) and missing assessments (§8a) on every course, not only missing files. A lesson is done only when its
+video, captions, PDF, ZIP and quiz are attached and a PDF and a ZIP per module were downloaded as a student (§8b).
 
 ## Settings (remembered)
 `courses/publisher.config.json`: environment **staging** (`https://staging.ai-devopseasylearning.com/api`), provider
