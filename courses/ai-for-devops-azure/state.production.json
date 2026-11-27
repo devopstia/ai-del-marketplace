@@ -55,7 +55,8 @@
     "04-by-hand-vs-ai/01-devops-with-ai": "040e23c5-ea64-4a06-aaff-2d2f3ec0efc1",
     "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "8d52d596-7197-4fbe-ac7e-19400e47e7a6",
     "18-automation-n8n/09-n7-n8n-github-pr-live": "a18eb3c3-340c-4f3d-92cd-a849c4233619",
-    "18-automation-n8n/12-n12-n8n-incident-management-live": "141713d1-37da-4492-bfe6-f805f6665baf"
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "141713d1-37da-4492-bfe6-f805f6665baf",
+    "18-automation-n8n/19-n19-n8n-ai-agent-live": "a89ec2f9-3af9-4ef6-80a5-b01e1d7997d9"
   },
   "quizzes": {
     "17-cloud-ai/02-azure-ai-services-map": "df556a89-a441-47d8-8cc1-be2acd69a792",
@@ -71,7 +72,8 @@
     "20-mcp/03-m3-first-mcp-server-live": "dc11f57d-a2a5-4eef-ab3d-d054021f9ebd",
     "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "13151879-03cc-4355-abde-9bbcfa9a119f",
     "18-automation-n8n/09-n7-n8n-github-pr-live": "3f30de4b-aa08-42c6-8ab6-e25885b583aa",
-    "18-automation-n8n/12-n12-n8n-incident-management-live": "a3f466a6-c8fb-430f-87cd-19e598090b01"
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "a3f466a6-c8fb-430f-87cd-19e598090b01",
+    "18-automation-n8n/19-n19-n8n-ai-agent-live": "4a534d2e-6096-4673-a27d-d2133b150d06"
   },
   "files": {
     "bcf79e95b624063084e39f151e51558bcdbd8affd5d4c72ab5fc69a1430a0adc": {

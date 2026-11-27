@@ -281,6 +281,12 @@
           "title": "AI summaries in n8n workflows, safely",
           "summary": "Add AI to real automations with n8n: summaries of failed deployments and incidents with secrets removed first, logs treated as untrusted text, drafts labelled, and a human who decides.",
           "short": "AI summaries"
+        },
+        {
+          "folder": "18-automation-n8n/19-n19-n8n-ai-agent-live",
+          "title": "Build an AI ops agent in n8n with tools, memory and guardrails",
+          "short": "AI ops agent",
+          "summary": "Ask \"why is payments slow?\" and let an n8n AI Agent check health, metrics, logs and the runbook with read-only tools. Risky actions become requests: a separate approval workflow restarts only after a human clicks."
         }
       ]
     },

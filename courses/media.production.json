@@ -1434,6 +1434,40 @@
         "n8n-automation"
       ],
       "status": "ready"
+    },
+    "c9a6ed7a5b260db2d861ecc910d145cfc6216d6e40dfaa71d434baffa343809e": {
+      "kind": "video",
+      "assetId": "2710ec3d-76f3-4160-9023-83fe10a64a5f",
+      "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails.mp4",
+      "at": "2026-11-27T12:18:41.643Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ],
+      "status": "ready"
+    },
+    "3d2b5db430fee8ca7bc3bb550039a0a28bec42210f8e5e2b33f4567318374d56": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/e473ccea-0c56-454f-a93d-755098b24b24/build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-slides.pdf",
+      "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-slides.pdf",
+      "at": "2026-11-27T12:18:43.445Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
+    },
+    "44a04f4abefa12bf95c09fbd82402ad938ba835bec630d9d65e98ff217d5abed": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/a1d51985-eb85-4e91-9fa3-b0ed27c3889a/build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
+      "name": "build-an-ai-ops-agent-in-n8n-with-tools-memory-and-guardrails-lab.zip",
+      "at": "2026-11-27T12:18:43.736Z",
+      "courses": [
+        "n8n-automation",
+        "ai-for-devops-aws",
+        "ai-for-devops-azure"
+      ]
     }
   }
 }

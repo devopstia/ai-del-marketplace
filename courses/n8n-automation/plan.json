@@ -171,6 +171,12 @@
           "summary": "Let AI draft what failed, the likely cause and what to check. Redact secrets first, defend against prompt injection, label every answer as a draft with its token cost, and keep a human in charge.",
           "preview": true,
           "short": "AI summaries"
+        },
+        {
+          "folder": "19-n19-n8n-ai-agent-live",
+          "title": "Build an AI ops agent in n8n with tools, memory and guardrails",
+          "short": "AI ops agent",
+          "summary": "Ask \"why is payments slow?\" and let an n8n AI Agent check health, metrics, logs and the runbook with read-only tools. Risky actions become requests: a separate approval workflow restarts only after a human clicks."
         }
       ]
     }
