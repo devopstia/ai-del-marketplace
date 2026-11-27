@@ -211,6 +211,14 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     request register and its lifecycle), `LESSONS_LEARNED.md`, `course.manifest.json`; instructor, student and customer review before anything goes to students; the course page is written and checked
     to the presentation standard (§3a: premium, persuasive, honest, no AI-generic wording, reviewed in the browser).
 
+31. **Certificates** (owner 2026-11-27; docs/CERTIFICATES.md). One official template (Academic Excellence) for every
+    course, rendered on the server (`apps/api/src/certificates/`) so the page, PNG and PDF are the same drawing; one
+    landscape page (Letter/A4), fixed colours. Issued automatically when every lesson is complete, kept for good,
+    signed automatically with the DEL seal + "Authorized Representative · DevOps Easy Learning" (never a person's
+    handwriting), verifiable by QR or ID against the database (valid / revoked / invalid), revoked only by a super
+    admin with a reason and code. Never "accredited". Change the template only with the owner's approval and bump
+    `RENDER_VERSION`.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a
@@ -227,4 +235,4 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 `docs/ROADMAP.md` (2026-11-24 roadmap, historical) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
 `docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md` · **`docs/HANDOFF.md`** ·
 `docs/FINAL_REVIEW_2026-11-26.md` (latest audit + release) · `docs/AWS_COSTS.md` · `docs/STORAGE.md` · `docs/PAYMENTS.md` ·
-`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md` · `docs/COURSE_PLATFORM_REFERENCE.md` · `docs/IMPROVEMENTS.md` · `courses/` (HANDOVER, COURSE_STATUS, CONTENT_REQUESTS, QA_CHECKLIST, LESSONS_LEARNED). Local email inbox: http://127.0.0.1:8025.
+`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md` · `docs/COURSE_PLATFORM_REFERENCE.md` · `docs/CERTIFICATES.md` · `docs/IMPROVEMENTS.md` · `courses/` (HANDOVER, COURSE_STATUS, CONTENT_REQUESTS, QA_CHECKLIST, LESSONS_LEARNED). Local email inbox: http://127.0.0.1:8025.

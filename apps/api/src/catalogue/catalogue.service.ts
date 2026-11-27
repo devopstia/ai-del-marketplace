@@ -1,6 +1,6 @@
 import { accessState, daysLeft, hasAccess } from '../access/access';
 import { reviewerWatch, watchOf } from '../access/consumption';
-import { certificateUrl, linkedInAddUrl, quizSummary } from './certificate-share';
+import { certificateUrl, linkedInAddUrl } from './certificate-share';
 import { env } from '../config/env';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '../generated/prisma/client';
@@ -390,25 +390,29 @@ export class CatalogueService {
       select: {
         code: true,
         issuedAt: true,
+        revokedAt: true,
         userId: true,
         user: { select: { name: true } },
         course: {
           select: {
-            title: true, slug: true, status: true, objectives: true, taughtBy: true, instructor: { select: { name: true, instructorProfile: { select: brandSelect } } },
-            sections: { select: { lectures: { select: { durationSec: true, quiz: { select: { id: true } } } } } },
+            title: true, slug: true, status: true, taughtBy: true, instructor: { select: { name: true, instructorProfile: { select: brandSelect } } },
+            sections: { select: { lectures: { select: { durationSec: true } } } },
           },
         },
       },
     });
     if (!cert) throw notFound('Certificate');
     const lectures = cert.course.sections.flatMap((s) => s.lectures);
-    const quizIds = lectures.flatMap((l) => (l.quiz ? [l.quiz.id] : []));
-    const attempts = quizIds.length ? await this.prisma.quizAttempt.findMany({ where: { userId: cert.userId, quizId: { in: quizIds } }, select: { quizId: true, score: true } }) : [];
     const url = certificateUrl(env().WEB_URL, cert.code);
-    // Public by link: only the learner's name and course facts, never email or account details (docs/TRUST.md).
+    const status = cert.revokedAt ? ('revoked' as const) : ('valid' as const);
+    // Public by link: only what verification needs (status, name, course, issuer, date, ID), never email, quiz scores,
+    // payments or account details (docs/CERTIFICATES.md, docs/TRUST.md). Unknown codes are a 404 ("invalid").
     return {
       code: cert.code,
+      status,
+      issuer: 'DevOps Easy Learning',
       issuedAt: cert.issuedAt,
+      revokedAt: cert.revokedAt,
       studentName: cert.user.name,
       course: {
         title: cert.course.title,
@@ -421,12 +425,10 @@ export class CatalogueService {
         totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
         lessons: lectures.length,
       },
-      skills: cert.course.objectives.filter((s) => s.trim()).slice(0, 12),
-      quizzes: quizSummary(quizIds, attempts),
       completed: true,
-      valid: true,
+      valid: status === 'valid',
       url,
-      linkedInUrl: linkedInAddUrl({ courseTitle: cert.course.title, issuedAt: cert.issuedAt, code: cert.code, certUrl: url }),
+      linkedInUrl: status === 'valid' ? linkedInAddUrl({ courseTitle: cert.course.title, issuedAt: cert.issuedAt, code: cert.code, certUrl: url }) : null,
     };
   }
 }

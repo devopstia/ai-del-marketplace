@@ -322,7 +322,10 @@ export function toCertificate(x: unknown): Certificate {
   const c = obj(o.course ?? raw.course);
   return {
     code: str(o.code),
+    status: o.status === "revoked" ? "revoked" : "valid",
+    issuer: str(o.issuer, "DevOps Easy Learning"),
     issuedAt: str(o.issuedAt),
+    revokedAt: str(o.revokedAt) || null,
     user: { name: str(u.name ?? o.studentName ?? o.userName, "Student") },
     course: {
       title: str(c.title ?? o.courseTitle),
@@ -330,6 +333,7 @@ export function toCertificate(x: unknown): Certificate {
       published: c.published !== false,
       instructorName: str(obj(c.instructor).name ?? c.instructorName) || undefined,
       brand: str(c.brand) || null,
+      designedBy: c.designedBy === true,
       totalDurationSec: c.totalDurationSec != null ? num(c.totalDurationSec) : undefined,
       lessons: c.lessons != null ? num(c.lessons) : undefined,
     },

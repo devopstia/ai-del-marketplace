@@ -68,6 +68,14 @@ GEN copies files as `*.part` and renames when complete; the watcher waits for th
 Resource titles the publisher uses: **"Slides (PDF)"** and **"Hands-on lab (ZIP)"**; download names
 `<lesson-title>-slides.pdf`, `<lesson-title>-lab.zip`.
 
+## 5a. Certificates
+Automatic on completion of every lesson; one official template for every course (Academic Excellence). Renderer
+`apps/api/src/certificates/certificate-render.ts` → `GET /api/certificates/:code/certificate.svg|.png|.pdf?paper=letter|a4`;
+public check `GET /api/certificates/:code` and the page `/certificates/<ID>` (QR target) or `/certificates/verify`;
+Student Studio › Learning progress lists them; Super Admin › Certificates revokes/restores. Full details:
+`docs/CERTIFICATES.md`. Course agents never create or sign certificates; they make sure a course can be completed
+(every lesson completable) and check the certificate once per new course.
+
 ## 6. Environments
 Staging https://staging.ai-devopseasylearning.com (no sign-in codes; seed admin from SSM), production
 https://ai-devopseasylearning.com (owner's sign-in with authenticator; no agent keys unless the owner says so). Code
