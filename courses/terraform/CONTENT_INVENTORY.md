@@ -88,8 +88,8 @@ Lessons: `TERRAFORM_AWS_CURRICULUM.md` / `TERRAFORM_AZURE_CURRICULUM.md` (same i
 - **Format:** `terraform fmt -check -recursive` flags 5 files (`modules/vpc-01/outputs.tf`, `modules/vpc-03/outputs.tf`,
   `terraform-module-publish/vpc/outputs.tf`, `terraform-remote-state-data-source/example-002/modules/vpc-01/outputs.tf`,
   `terraform-variables/map-of-object-variable/example-02/main.tf`).
-- **Validate** (`init -backend=false` + `validate`, Terraform 1.17.2, no credentials; full run results in
-  "Validation results" below).
+- **Validate:** 285 of 386 folders validate on Terraform 1.17.2 (`init -backend=false` + `validate`, no credentials);
+  45 fail for real reasons, 56 could not be checked here (details in "Validation results" below).
 - **Security (for the owner, outside the course):** the public repo contains **private keys**:
   `terraform-concepts/terraform-provisioner/example-01|02/private-key/terraform-aws.pem`,
   `terraform-top-level-blocks/terraform-provisioner/example-01/private-key/terraform-aws.pem`,
@@ -130,5 +130,20 @@ Lessons: `TERRAFORM_AWS_CURRICULUM.md` / `TERRAFORM_AZURE_CURRICULUM.md` (same i
 | Foundry as code | `azurerm_cognitive_account` (kind AIServices, `project_management_enabled`), `azurerm_cognitive_account_project`, `azurerm_cognitive_deployment`, `azurerm_search_service`, `azurerm_cognitive_account_rai_policy` | azurerm 5.15.0 schema |
 | Stacks | HCP Terraform Stacks exist (MCP server has Stacks tools); not taught (HCP-only, beyond the budget and scope); mentioned in 13.2 | HashiCorp blog |
 
-## Validation results
-See the section appended after the full run (`terraform validate` on every folder).
+## Validation results (2026-11-28)
+Every folder with `.tf` files in `aws-terraform/{terraform-concepts,modules,resources,base-code}` and `azure-terraform/`
+(386 folders), validated in place on a copy of the repo with Terraform 1.17.2, `init -backend=false`, then `validate`.
+No credentials, nothing applied.
+
+| Result | Folders | Examples |
+|---|---:|---|
+| Valid | 272 | most concept examples, 36 of 40 AWS modules, all `base-code` except 3 |
+| Valid with warnings (deprecated arguments) | 13 | |
+| `required_version` pins an old Terraform (`~> 1.0.0`, `~> 0.14`) | 13 | `terraform-concepts/learning-basic-commands`, `sessions/s5/*` |
+| Breaks on today's provider majors (unpinned or `>=` pins pick up helm 3 / azurerm 5 / new module versions) | 22 | helm `set {}` blocks in `modules/aws-ebs-csi-driver`, `aws-load-balancer-controller`, `cluster-auto-scaler`, `external-dns`, Azure `nginx-ingress`; removed azurerm arguments in `aks-linux-node-group`, `aks-linux-spot-node-group`, `aks-windows-node-group`, `azure-mysql`, `aks-controle-plane`; registry module arguments in `resources/vpc-02`, `vpc-03`, `terraform-module/ec2` |
+| Code errors (undeclared references, wrong arguments or functions) | 8 | `terraform-loops/others-examples-01/example-001`, `-004`, `terraform-join-function/example-03`, `terraform-comments/example-02`, `terraform-contitions/example-08`, `azure-terraform/modules/acr`, `youtube/manage-credentials/db` |
+| Need sibling folders that are not in the repo (`Unreadable module directory`) | 2 | `resources/all`, `azure-terraform/resources/sc` |
+| **Not checked here** (my local plugin cache was locked by leftover provider processes, or the registry query failed) | 56 | mostly `azure-terraform/resources*` and some AWS modules; not a finding about the code |
+
+Lesson for the course: the breakages are the case for lesson 3.5 (pin providers with `~>`) and 13.5 (upgrade one step at
+a time). Every lab the video agent takes from the repo gets current pins and a clean `validate` before recording.
