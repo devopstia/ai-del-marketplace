@@ -228,7 +228,8 @@ GEN writes `quiz.json` in each lesson folder and `assessments/*.json` per course
 delivered with the video, captions, PDF and lab. UPLOAD validates every question against the captions (answers right,
 explanations consistent, nothing outside the lesson, no duplicates, count in range, timestamps inside the video) and
 sends weak, repetitive, inaccurate or too-basic quizzes back to GEN with the specific fixes. Expanding a quiz keeps the
-quiz lesson and past attempts (questions have stable ids). Status per lesson: `courses/QUIZ_AUDIT.md`.
+quiz lesson and past attempts (questions have stable ids). **Retrofitting existing lessons never modifies a built video** (owner
+2026-11-28): only `quiz.json` and the course `assessments/` files are added; video, captions, PDF and lab stay as they are. Status per lesson: `courses/QUIZ_AUDIT.md`.
 
 ## 8b. A lesson is complete only with its materials (owner 2026-11-27, every course)
 Uploading the video is not the end of a lesson. Before a lesson counts as done, the upload agent compares it with its
