@@ -147,6 +147,22 @@ export interface CourseDetail extends CourseCard {
   hasCaptions: boolean;
   /** One-year access (owner 2026-11-25): the viewer's access to this course, when they have or had it. */
   access?: { state: "active" | "expiring" | "expired"; expiresAt: string | null; daysLeft: number | null; canRenew: boolean } | null;
+  /** "Continue your learning journey" (owner 2026-11-28): published related courses, in order. */
+  related: RelatedCourse[];
+}
+
+/** A recommended next course. `owned`: the viewer already has access, so offer "Continue learning", never a price. */
+export interface RelatedCourse {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  coverUrl: string | null;
+  priceCents: number;
+  listPriceCents: number;
+  currency: string;
+  reason: string;
+  owned: boolean;
 }
 
 export interface Review {

@@ -21,7 +21,7 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
    implemented and tested end to end. Unfinished features are hidden, not shown as placeholders.
 5. **Exceptional, premium design**: impressive from the first screen; consistent typography, colour, spacing, motion; no excess
    empty space, no repetitive rectangle grids, no generic template look; every page has a clear purpose. **Light is the default
-   theme for the whole site** (owner, 2026-11-25, final review; it replaced the earlier dark default); dark is available from the toggle and remembered. Outgoing emails always use the dark email design. Light/dark, 390–1440 px,
+   theme for the whole site** (owner, 2026-11-25, final review; it replaced the earlier dark default); dark is available from the toggle and remembered. Outgoing emails always use the light email design (owner 2026-11-28; it replaced the dark one). Light/dark, 390–1440 px,
    accessible (keyboard, focus, contrast, reduced motion). Review every changed screen in screenshots at **390, 1440 and 1920 px** (the owner works on a ~1970 px screen) before calling it done; no empty regions or stranded elements (owner, 2026-11-24: homepage hero "empty", instructor band "not good", /teach "not well design").
 6. **Dashboards are organized, not overloaded**: student (engaging learning), instructor (professional business tools), super admin
    (full operational visibility).
@@ -238,6 +238,12 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     EmptyNote/ErrorNote/PanelSkeleton) and the rules in `docs/DASHBOARD_DESIGN.md`: real records only, money from the
     order-line snapshots, DEL-owned courses report DEL net revenue (never "$0 earnings"), loading/zero/no data/error
     look different, no big empty boxes. Don't build one-off dashboard figures or charts.
+
+34. **Related courses** (owner 2026-11-28; docs/COURSE_PLATFORM_REFERENCE.md §5b). Every new course gets its related
+    courses set (plan field `related` or Details › Related courses), each with a one-line honest reason. Recommendations
+    are optional, relevant and unobtrusive: one block per screen, never inside a video or a pop-up, only published
+    courses, and never offer a course the learner already owns (they see "Continue learning"). A paid course never
+    holds back lessons it advertises to push another purchase.
 
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).

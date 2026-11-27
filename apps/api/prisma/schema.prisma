@@ -134,6 +134,9 @@ model User {
   email        String     @unique
   /// Null for accounts that only use Google, GitHub, Facebook or LinkedIn (no marketplace password).
   passwordHash String?
+  /// The learner turned off learning tips and course suggestions (one-click link in those emails). Account,
+  /// security, receipt and access emails are not affected.
+  learningEmailsOptOutAt DateTime?
   name         String
   avatarUrl    String?
   roles        Role[]     @default([student])
@@ -328,6 +331,10 @@ model Course {
   certificates Certificate[]
   sales        CourseSale[]
   pathSteps    CareerPathStep[]
+  /// "Continue your learning journey" (owner 2026-11-28): courses recommended from this one, in order. Not course
+  /// content: set directly (no revision review), audited.
+  relatedTo    CourseRelated[] @relation("RelatedFrom")
+  relatedFrom  CourseRelated[] @relation("RelatedTo")
 
   // ---- Super Admin › Courses (owner 2026-11-26, docs/SUPER_ADMIN.md) ----
   /// Featured courses lead the "popular" order (homepage and catalogue).
@@ -674,6 +681,8 @@ model Enrollment {
   accessExpiresAt DateTime?
   /// Expiry reminders already sent ('30d', '7d', '1d', 'expired').
   remindersSent   String[]  @default([])
+  /// Free-course learning emails already sent ('welcome', 'keep-going', 'next-courses'); owner 2026-11-28.
+  nudgesSent      String[]  @default([])
 }
 
 model LectureProgress {
@@ -1510,4 +1519,22 @@ model Notification {
 
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+/// A recommended next course (owner 2026-11-28, docs/COURSE_PLATFORM_REFERENCE.md › Recommendations). Shown only while
+/// the related course is published; never offered for purchase to someone who already owns it.
+model CourseRelated {
+  id              String   @id @default(uuid())
+  courseId        String
+  course          Course   @relation("RelatedFrom", fields: [courseId], references: [id], onDelete: Cascade)
+  relatedCourseId String
+  relatedCourse   Course   @relation("RelatedTo", fields: [relatedCourseId], references: [id], onDelete: Cascade)
+  position        Int      @default(0)
+  /// "Why this course next", shown on the card (200 characters at most).
+  reason          String   @default("")
+  createdAt       DateTime @default(now())
+
+  @@unique([courseId, relatedCourseId])
+  @@index([courseId, position])
+  @@map("course_related")
 }

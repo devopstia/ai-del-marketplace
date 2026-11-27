@@ -1,7 +1,9 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { accessState, daysLeft, hasAccess } from '../access/access';
 import { mergeRanges, parseRanges, rangeSeconds, reviewerWatch, watchOf } from '../access/consumption';
-import { QUIZ_PASS_PERCENT } from '../catalogue/certificate-share';
+import { QUIZ_PASS_PERCENT, certificateUrl, linkedInAddUrl } from '../catalogue/certificate-share';
+import { JobsService } from '../common/jobs';
+import { env } from '../config/env';
 import { sizesOf } from '../protection/data-saver';
 import { ProtectionService } from '../protection/protection.service';
 import { AuditService } from '../common/audit.service';
@@ -33,6 +35,7 @@ export class LearningService {
     private readonly audit: AuditService,
     @Optional() private readonly protection?: ProtectionService,
     @Optional() private readonly refunds?: RefundsService,
+    @Optional() private readonly jobs?: JobsService,
   ) {}
 
   /** Who may open the paid content of a course: an active enrolment, the course owner, or an admin. */
@@ -382,6 +385,7 @@ export class LearningService {
     try {
       const cert = await this.prisma.certificate.create({ data: { userId, courseId, code: `DEL-${randomToken(9).replace(/[-_]/g, 'X').toUpperCase()}` } });
       await this.audit.log({ actorId: userId, action: 'certificate.issued', targetType: 'certificate', targetId: cert.id, meta: { courseId, code: cert.code } });
+      await this.sendCompletionEmail(userId, courseId, cert).catch(() => undefined);
       return cert;
     } catch (e) {
       // Two requests finishing the course at once: the unique (user, course) keeps one certificate.
@@ -389,6 +393,27 @@ export class LearningService {
       if (again) return again;
       throw e;
     }
+  }
+
+  /**
+   * The completion moment (owner 2026-11-28): one email when the certificate is issued, with the certificate link,
+   * Add to LinkedIn, and a rating request when the learner hasn't reviewed the course yet. Once per certificate.
+   */
+  private async sendCompletionEmail(userId: string, courseId: string, cert: { id: string; code: string; issuedAt: Date }) {
+    if (!this.jobs) return;
+    const [user, course, review] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, status: true } }),
+      this.prisma.course.findUnique({ where: { id: courseId }, select: { title: true, slug: true } }),
+      this.prisma.review.findUnique({ where: { userId_courseId: { userId, courseId } }, select: { id: true } }),
+    ]);
+    if (!user || user.status !== 'active' || !course) return;
+    const certUrl = certificateUrl(env().WEB_URL, cert.code);
+    await this.jobs.sendEmail({
+      to: user.email,
+      template: 'course-completed',
+      dedupeKey: `completed:${cert.id}`,
+      data: { name: user.name, course: course.title, slug: course.slug, code: cert.code, certUrl, linkedInUrl: linkedInAddUrl({ courseTitle: course.title, issuedAt: cert.issuedAt, code: cert.code, certUrl }), reviewed: !!review },
+    });
   }
 
   /**

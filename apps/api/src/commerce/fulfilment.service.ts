@@ -13,7 +13,7 @@ import { ReceiptsService } from '../receipts/receipts.service';
 
 export interface PaymentInfo {
   /** where the confirmation came from (audit) */
-  via: 'stripe_webhook' | 'dev_test_payment' | 'free_checkout' | 'reconcile';
+  via: 'stripe_webhook' | 'checkout_confirm' | 'dev_test_payment' | 'free_checkout' | 'reconcile';
   paymentIntentId?: string | null;
   chargeId?: string | null;
   actorId?: string | null;

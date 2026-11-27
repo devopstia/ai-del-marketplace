@@ -82,9 +82,20 @@ Admin) follow after the owner reviews phase 1 (AGENTS.md rule 12: front end in s
   events received and warns when there were sales but no events), per-currency totals (USD only), payout dates (the
   paid-out figure is "to date").
 
+- `GET /api/me/dashboard` (Student Studio home; `apps/api/src/learning/student-dashboard.service.ts`, helpers + tests
+  `student-dashboard.spec.ts`, e2e "student dashboard: …"). **The signed-in student's own data only.** Returns
+  `learning` (the same items/expired as `GET /me/learning`), `continueLearning` (the most recently studied unfinished
+  course: lesson id and title, module title, saved position, lessons left and their video time), `certificates`,
+  `quizzes` (best score per quiz, averaged overall and per course; the 5 latest attempts with a retake link),
+  `activity` (30 UTC days: lessons opened = distinct video lessons with a playback session that day, plus quiz
+  attempts; active days; the current streak), `downloads` (5 latest lesson files), `purchases` (3 latest paid or
+  refunded orders with receipt number) and `freeCourses` (free published courses, only for a student with no courses).
+- Not computed: **watch minutes per day** (playback keeps a running total per lesson, not per day), so activity counts
+  lessons opened and quizzes taken; time left in a course is the video length of the lessons not yet completed.
+
 ## Pages
 | Page | Status |
 |---|---|
 | `/studio` Instructor / DEL Studio | Phase 1, Option A (KPI strip; revenue chart + catalogue figures beside revenue by course and activity; course table; students + reviews) |
 | `/admin` Admin and Super Admin | Phase 3, Option A: KPI strip (gross, DEL net, instructor earnings, fees, refunds, new users); marketplace chart with DEL-courses net, commission and payouts beside **Needs attention** and revenue by course; revenue by instructor beside payments (failed payments, Stripe events); platform figures; service health beside recent admin activity. Every figure links to its management page; blocks the admin can't see are left out |
-| `/student` Student | Phase 2, pending |
+| `/student` Student | Phase 2, Option A: **Continue learning** first (cover, module and lesson, lessons and video time left, resume at the saved position); KPI strip (enrolled, in progress, completed, quiz average, learning streak, lessons opened); my courses (progress, last studied, "access ends" under 30 days) beside needs-your-attention and the "Continue your learning journey" panel; learning activity chart beside quiz results; certificates, recent downloads and purchases. A new student sees "Start your first course" with the free courses |

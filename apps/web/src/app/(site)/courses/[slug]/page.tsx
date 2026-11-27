@@ -19,6 +19,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { WatchedBadge } from "@/components/WatchedBadge";
 import { courseBy, taughtBy } from "@/lib/brand";
 import { OfficialBadge } from "@/components/OfficialBadge";
+import { RelatedCourses } from "@/components/RelatedCourses";
 
 export const dynamic = "force-dynamic";
 
@@ -196,6 +197,9 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               <p className="mt-6 text-ink-2">No reviews yet. Learners who finish the course can rate it here.</p>
             )}
           </section>
+
+          {/* Related courses the instructor chose (owner 2026-11-28); nothing is shown when there are none. */}
+          <RelatedCourses items={c.related} className="mt-14" intro="Courses that build on what you learn here." />
         </div>
 
         <aside className="relative hidden lg:block" aria-label="Purchase">

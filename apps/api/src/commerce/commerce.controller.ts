@@ -25,6 +25,7 @@ const checkoutSchema = z.object({
 const reviewSchema = z.object({ note: z.string().trim().min(10, 'Tell us briefly what happened (10 characters or more)').max(2000) });
 const refundRequestSchema = z.object({ lineIds: z.array(z.string().uuid()).max(50).optional(), reason: z.string().trim().max(500).optional() });
 export const courseIdsSchema = z.object({ courseIds: z.array(z.string().uuid()).max(50) });
+const confirmSchema = z.object({ sessionId: z.string().trim().max(255).optional() }).strict().default({});
 
 @Controller()
 export class CommerceController {
@@ -34,7 +35,17 @@ export class CommerceController {
     private readonly refunds: RefundsService,
     private readonly finance: FinanceService,
     private readonly refundPolicy: RefundPolicyService,
+    private readonly hooks: WebhooksService,
   ) {}
+
+  /** Return from Stripe: confirm the order's own Checkout Session with Stripe and fulfil if paid (webhook safety net). */
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @HttpCode(200)
+  @Post('orders/:id/confirm')
+  confirmOrder(@Param('id') id: string, @ZBody(confirmSchema) b: z.infer<typeof confirmSchema>, @ActorCtx() a: Actor) {
+    return this.hooks.confirmCheckout(a.user.id, id, b.sessionId ?? null, a.ip);
+  }
 
   /** The refund policy in force (public pages, course page, checkout) and the dates of earlier versions. */
   @Public()

@@ -38,6 +38,32 @@ function ProfileForm() {
   );
 }
 
+/** Learning tips and course suggestions after a free enrolment (owner 2026-11-28); other emails are not affected. */
+function LearningEmailsChoice() {
+  const toast = useToast();
+  const [on, setOn] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { api("/email/learning-emails").then((r) => setOn(obj(r).enabled !== false)).catch(() => setOn(null)); }, []);
+  if (on === null) return null;
+  return (
+    <section className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-panel border border-line bg-surface p-6 sm:p-8" data-testid="learning-emails-choice">
+      <div className="min-w-0">
+        <h2 className="font-display text-lg font-bold">Learning tips and course suggestions</h2>
+        <p className="mt-1 text-sm text-ink-2">A few short emails after you join a free course. Receipts, access reminders and security emails always reach you.</p>
+      </div>
+      <label className="flex items-center gap-3 text-sm font-bold">
+        <input type="checkbox" className="size-5 accent-[var(--violet)]" checked={on} disabled={busy} onChange={async (e) => {
+          const next = e.target.checked;
+          setBusy(true);
+          try { await api("/email/learning-emails", { method: "POST", body: { on: next } }); setOn(next); toast("ok", next ? "Learning emails are on." : "Learning emails are off."); }
+          catch (err) { toast("error", errMsg(err)); } finally { setBusy(false); }
+        }} />
+        {on ? "On" : "Off"}
+      </label>
+    </section>
+  );
+}
+
 export default function AccountPage() {
   const { me } = useAuth();
   const toast = useToast();
@@ -76,6 +102,8 @@ export default function AccountPage() {
       <section className="mt-6 rounded-panel border border-line bg-surface p-6 sm:p-8">
         <ProfileForm />
       </section>
+
+      <LearningEmailsChoice />
 
       <Suspense><SecuritySection /></Suspense>
 

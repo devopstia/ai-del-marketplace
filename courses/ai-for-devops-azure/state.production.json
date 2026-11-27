@@ -12,7 +12,9 @@
     "Retrieval-Augmented Generation (RAG)": "ee37bce3-8c87-471b-a655-d829084e8c04",
     "AI in CI/CD and operations": "2783a7da-b9fe-41ff-af63-6f4b884dcd7b",
     "Automate it with n8n": "249e1a40-67ed-4c80-9a3a-51a1c732bca3",
-    "LLMOps: run AI applications in production": "0b131c3c-99f2-4627-b71d-8940f2254bb1"
+    "LLMOps: run AI applications in production": "0b131c3c-99f2-4627-b71d-8940f2254bb1",
+    "Prompt engineering for DevOps": "b1575365-aac3-4d9b-9137-e32b3bfcd257",
+    "Build and ship websites with AI": "fedc626e-1161-4973-b8df-808fe8366cd9"
   },
   "lessons": {
     "02-ai-foundations/01-tm1-big-words": "9992cd87-e075-471c-8d87-0c18a8e13859",
@@ -56,7 +58,12 @@
     "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "8d52d596-7197-4fbe-ac7e-19400e47e7a6",
     "18-automation-n8n/09-n7-n8n-github-pr-live": "a18eb3c3-340c-4f3d-92cd-a849c4233619",
     "18-automation-n8n/12-n12-n8n-incident-management-live": "141713d1-37da-4492-bfe6-f805f6665baf",
-    "18-automation-n8n/19-n19-n8n-ai-agent-live": "a89ec2f9-3af9-4ef6-80a5-b01e1d7997d9"
+    "18-automation-n8n/19-n19-n8n-ai-agent-live": "a89ec2f9-3af9-4ef6-80a5-b01e1d7997d9",
+    "21-claude-code/01-cc1-claude-md-in-depth": "aa93edf8-b47c-42d6-ad1e-0a2a12e9711f",
+    "21-claude-code/02-cc1-claude-md-live": "a8afab98-5708-4f93-8849-7c8eb8a42e5d",
+    "21-claude-code/03-cc2-claude-folder-live": "6362506e-7475-4006-9e00-b0abf81b0dc1",
+    "18-automation-n8n/20-n20-n8n-ai-incident-triage-live": "4fdeb849-dc2f-4890-a406-58551080eb0b",
+    "18-automation-n8n/22-n22-n8n-ai-cicd-live": "2733cf67-9c88-44ac-a258-723f1b215330"
   },
   "quizzes": {
     "17-cloud-ai/02-azure-ai-services-map": "df556a89-a441-47d8-8cc1-be2acd69a792",
@@ -73,7 +80,12 @@
     "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "13151879-03cc-4355-abde-9bbcfa9a119f",
     "18-automation-n8n/09-n7-n8n-github-pr-live": "3f30de4b-aa08-42c6-8ab6-e25885b583aa",
     "18-automation-n8n/12-n12-n8n-incident-management-live": "a3f466a6-c8fb-430f-87cd-19e598090b01",
-    "18-automation-n8n/19-n19-n8n-ai-agent-live": "4a534d2e-6096-4673-a27d-d2133b150d06"
+    "18-automation-n8n/19-n19-n8n-ai-agent-live": "4a534d2e-6096-4673-a27d-d2133b150d06",
+    "21-claude-code/01-cc1-claude-md-in-depth": "30a2f923-c41b-43b6-88f4-9de7e1089dab",
+    "21-claude-code/02-cc1-claude-md-live": "d01cc121-6b82-47b1-a73c-3addd823e686",
+    "21-claude-code/03-cc2-claude-folder-live": "3e33cce3-c01c-4062-8804-34604cdfd7b7",
+    "18-automation-n8n/20-n20-n8n-ai-incident-triage-live": "2a5436cb-2f1f-43d5-834c-2b1a6484feb6",
+    "18-automation-n8n/22-n22-n8n-ai-cicd-live": "e2fe3c3b-4b56-472d-9f3b-11ab7bf9a3c9"
   },
   "files": {
     "bcf79e95b624063084e39f151e51558bcdbd8affd5d4c72ab5fc69a1430a0adc": {
