@@ -94,3 +94,14 @@ Module "Build and ship websites with AI" added to both masterclass plans (availa
 Foundry full-stack chat app on Azure) and a description section (available now / coming next). 24 videos requested
 (CR-105–CR-128) including a 10-template library; CR-111/112 blocked on the owner's training-domain choice. Plan
 changes need a production sync (session) to go live.
+
+## Terraform on AWS and on Azure: planning (owner 2026-11-28)
+| | AI-Powered Terraform on AWS | AI-Powered Terraform on Azure |
+|---|---|---|
+| Status | **planning** (no course on staging or production) | **planning** (full mirror of AWS) |
+| Plan | `courses/terraform/TERRAFORM_AWS_CURRICULUM.md` | `courses/terraform/TERRAFORM_AZURE_CURRICULUM.md` |
+| Size | 18 modules, 95 videos, ~17 h 27 min | same; 37 videos shared with AWS |
+| Requests | CR-129 … CR-281 (153 videos for both), not yet sent to GEN | same |
+| Code | 11 lesson folders ready in `courses/terraform/code/` | 6 in `code/azure/` |
+| Waiting | owner: titles, price, production order, EKS module, training domain | owner: same, AKS module |
+

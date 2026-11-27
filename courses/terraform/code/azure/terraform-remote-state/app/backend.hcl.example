@@ -1,0 +1,5 @@
+resource_group_name  = "rg-del-training-tfstate"
+storage_account_name = "deltfstate<suffix>"
+container_name       = "tfstate"
+key                  = "lessons/remote-state.tfstate"
+use_azuread_auth     = true # Entra ID instead of storage keys

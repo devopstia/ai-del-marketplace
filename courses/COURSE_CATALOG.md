@@ -17,6 +17,8 @@ would duplicate the three above.
 | Introduction to Artificial Intelligence for DevOps | `intro-ai-for-devops` | Free | ai-foundations | beginner |
 | Visual Studio Code Masterclass for DevOps and AI | `vscode-masterclass` | Free | developer-tools | beginner |
 | AI-Powered DevOps Automation with n8n | `n8n-automation` | $29.99 now, $49.99 after the AI lessons | automation-n8n | intermediate |
+| *planned:* AI-Powered Terraform on AWS: From Beginner to Advanced | `terraform-aws` | suggested $49.99 launch, $69.99 later (owner decides) | infrastructure-as-code (new) | beginner → advanced |
+| *planned:* AI-Powered Terraform on Azure: From Beginner to Advanced | `terraform-azure` | same | infrastructure-as-code (new) | beginner → advanced |
 
 **Titles:** the owner's titles are kept. They already lead with AI and DevOps, are under 60 characters, and the two
 cloud courses share one pattern (`AI for DevOps on <cloud>: From Fundamentals to Production`) that reads as a series.
@@ -443,3 +445,16 @@ Sources: [App Runner availability change](https://docs.aws.amazon.com/apprunner/
 [CloudFront pricing](https://aws.amazon.com/cloudfront/pricing/),
 [Static Web Apps plans](https://learn.microsoft.com/en-us/azure/static-web-apps/plans),
 [Static Web Apps FAQ](https://learn.microsoft.com/en-us/azure/static-web-apps/faq).
+
+## Terraform masterclasses: AWS and Azure (planned, owner 2026-11-28)
+Built on the owner's Terraform deck and repo (`courses/terraform/`; plan `TERRAFORM_MASTERCLASS_PLAN.md`). Titles must
+contain AI (owner); recommended "AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced". The Azure course is a
+full mirror (owner: some students use only AWS, others only Azure): same 18 modules and order, 95 videos each
+(~17 h 27 min), 37 cloud-neutral videos shared, 58 lessons with an AWS and an Azure version. AI strand: module 14
+"AI-Powered Terraform" (prompts, plan explanations, tests and refactors, Terraform MCP server, AI PR review) and module 15
+"Terraform for AI infrastructure" (Bedrock Knowledge Bases on S3 Vectors, Guardrails, AgentCore / Foundry, Azure AI
+Search, content filters, Agent Service); rule: AI drafts, Terraform and a person verify. Requests CR-129 … CR-281.
+**Recommends:** the AI for DevOps masterclass of the same cloud, n8n automation, the other cloud's Terraform course,
+VS Code (free). **Recommended by:** both AI masterclasses (website hosting CR-108/CR-109, CR-028/CR-038, prompt
+engineering projects CR-097/CR-098, which point to module 14), the free AI intro, the VS Code masterclass (CR-044).
+

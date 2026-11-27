@@ -16,7 +16,19 @@ in a chat or a context window.
 5. **Before you stop:** update `COURSE_STATUS.md`, the request statuses, `LESSONS_LEARNED.md`; commit; say in your final
    message what is waiting and on whom.
 
-## Now (2026-11-28): AI website development
+## Now (2026-11-28): Terraform masterclasses (planning)
+- **AI-Powered Terraform on AWS / on Azure: From Beginner to Advanced** (recommended titles, owner decides): plan,
+  inventory, both curricula and ready lab code in `courses/terraform/` (start at `TERRAFORM_MASTERCLASS_PLAN.md`).
+  Built on the owner's deck `/home/tia/work/terraform-course/Terraform.pptx` and repo `devopstia/terraform-course-del`
+  (use them, never replace them). Azure is a full mirror (owner): 37 shared videos + 58 lessons × 2 clouds = 153 videos.
+- Requests **CR-129 … CR-281** are in the register as `requested (planning)`. **Not sent to GEN**: the production order
+  (fundamentals block first, then weekly alternation with the AI masterclasses) waits for the owner's OK; the draft
+  message is in the plan §11.
+- **Waiting on the owner:** titles, price (suggested $49.99 launch, $69.99 later), order, EKS/AKS module 16 (cluster
+  cost), the training domain (lesson 11.6). Security note for the owner: the public Terraform repo contains private keys
+  and hard-coded passwords (`CONTENT_INVENTORY.md` › Repo findings).
+
+## Earlier (2026-11-28): AI website development
 - Both masterclass plans have a new module "Build and ship websites with AI" (after the cloud's AI applications
   module; the S3 help-site lab (AWS) and the Foundry full-stack chat app (Azure) moved into it with their ids) and a
   "Build websites and digital products with AI" description section. Sync AWS and Azure to production and publish

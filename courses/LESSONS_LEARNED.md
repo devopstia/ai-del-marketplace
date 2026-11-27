@@ -4,6 +4,21 @@ What the Course Upload and Publishing Agent learned on each course (skill: `.cla
 Read before every upload; add to it after every upload. Newest first.
 
 
+## 2026-11-28: planning a course from an instructor's deck and repo (Terraform)
+- **A deck can be all pictures.** The Terraform deck has a background picture on every slide, but its text boxes hold
+  the titles, explanations and code: extract text with python-pptx (walk group shapes), hyperlinks per run, then
+  sample pictures. LibreOffice could not open it; there is no OCR on this machine.
+- **The slides' links show the real exercise map.** 704 hyperlinks pointed to repo folders (and to an old repo name
+  that GitHub redirects), which mapped deck sections to code faster than reading 504 folders.
+- **Validate the instructor's code in place**, on a copy of the whole repo: copying one folder breaks relative module
+  paths ("Unreadable module directory"). Use a plugin cache, and a fresh `.terraform` per folder.
+- **Check provider schemas, not blog posts**, for new resources: `terraform providers schema -json` on the current
+  provider confirmed `aws_s3vectors_*`, `azurerm_cognitive_account_project` and `value_wo` before writing code.
+- **Public teaching repos can hold real keys.** Scan for private keys and passwords; never copy them; tell the owner.
+- **Two clouds, one curriculum:** cloud-neutral lessons (local/random/terraform_data providers) are shared; every lesson
+  that touches a cloud gets one request per cloud. Generating both curricula and the requests from one data file keeps
+  ids, quizzes and costs consistent.
+
 ## 2026-11-27: gateway course and self-contained masterclasses
 - **A free course is a gateway, not a copy of the paid ones:** about 12 engaging videos (hooks, one striking live demo,
   the essential words), quizzes, and a last text lesson that introduces the paid courses with honest outcomes and

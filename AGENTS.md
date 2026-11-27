@@ -219,6 +219,8 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     coordinate only through files: `courses/HANDOVER.md` (read first), `COURSE_STATUS.md`, `CONTENT_REQUESTS.md` (the
     request register and its lifecycle), `LESSONS_LEARNED.md`, `course.manifest.json`; instructor, student and customer review before anything goes to students; the course page is written and checked
     to the presentation standard (§3a: premium, persuasive, honest, no AI-generic wording, reviewed in the browser).
+    Terraform masterclasses (AWS + Azure mirror): `courses/terraform/` (plan, inventory, curricula, lab code); the owner's
+    Terraform deck and repo are the foundation, used and updated, never replaced.
 
 31. **Certificates** (owner 2026-11-27; docs/CERTIFICATES.md). One official template (Academic Excellence) for every
     course, rendered on the server (`apps/api/src/certificates/`) so the page, PNG and PDF are the same drawing; one
