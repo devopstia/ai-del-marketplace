@@ -7,7 +7,7 @@
   "course": {
     "title": "AI for DevOps on Azure: From Fundamentals to Production",
     "subtitle": "Deploy models in Microsoft Foundry, build RAG with Azure AI Search and run troubleshooting agents, with Terraform, Docker, Entra ID and a clean exit every time.",
-    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
+    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## LLMOps: run AI applications in production\nBuilding an AI app is the start; operating it is the job. This course treats LLMOps as a core skill, the way DevOps treats running any service.\n- **Available now:** what LLMOps is and how it differs from DevOps and MLOps, the four LLMOps pipelines (ingestion, deployment, evaluation, observability), who builds and who runs an AI system, managed versus self-hosted models, operating and securing AI (versions, latency, token cost, drift, prompt injection, least privilege), a production-style RAG stack with Prometheus, Loki, Jaeger and Grafana, and AI in your CI/CD pipeline.\n- **Coming next (in production now, added as each lesson is finished):** prompt versioning in Git with rollback, automated LLM evaluation that blocks a bad prompt in a pull request, LLM observability with Langfuse and OpenTelemetry (traces, tokens, latency, cost), caching, fallbacks and cost control, CI/CD and Kubernetes deployment for LLM apps, and an end-to-end LLMOps project on Microsoft Foundry, Azure Monitor and Application Insights, managed identities and Key Vault.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
     "level": "intermediate",
     "language": "en",
     "categorySlug": "cloud-ai",
@@ -321,14 +321,8 @@
       ]
     },
     {
-      "title": "Security, reliability and cost",
+      "title": "LLMOps: run AI applications in production",
       "lessons": [
-        {
-          "folder": "02-ai-foundations/12-tm12-operating-securing",
-          "title": "Operating and securing AI in production",
-          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
-          "short": "Operating and securing"
-        },
         {
           "folder": "08-ai-production/19-r1-llmops-day-to-day",
           "title": "LLMOps day to day: what you manage once an AI app is live",
@@ -346,6 +340,12 @@
           "title": "Managed AI or self-hosted: Bedrock, Foundry or Ollama",
           "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide.",
           "short": "Managed or self-hosted"
+        },
+        {
+          "folder": "02-ai-foundations/12-tm12-operating-securing",
+          "title": "Operating and securing AI in production",
+          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
+          "short": "Operating and securing"
         },
         {
           "type": "article",

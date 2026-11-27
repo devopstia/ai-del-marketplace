@@ -46,6 +46,15 @@ Missing slides, labs, quizzes, assessments or documentation use the same templat
 built but not QA'd: treat their folders as not ready. No AWS resources left running. CR-006 needs the owner's GitHub token.
 Each lesson arrives on its own after QA (lab included); ignore a folder until GEN's "ready-for-review" message.
 
+**Training cloud budget (owner 2026-11-28): $100 per month, total across AWS and Azure.** Rules for every lab:
+- Prefer local runs (Docker Compose, Minikube) with a cloud variant.
+- Estimate the cost before each lab (written in its request and README).
+- Ask the owner before any single lab over ~$5 per run, any EKS/AKS cluster, or going past $100 in a month.
+- GEN keeps a running monthly total in its notes and reports it with each delivery.
+- Billing budget alarms in both accounts (AWS Budgets and an Azure cost alert at $80 and $100); GEN sets them if missing
+  and asks the owner if that needs permissions it doesn't have.
+- Terraform for everything; destroy right after recording and verify nothing is left.
+
 ## Register
 
 | Id | Course | Module / lesson | Request | Owner | Opened | Priority | Status | Delivered at | Upload |
@@ -105,6 +114,27 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
 | CR-053 | Azure masterclass (last module) | — | Short video: "Building your multi-cloud AI and DevOps skills" (Azure → AWS masterclass, n8n, VS Code) | GEN | 2026-11-28 | P2 | accepted (after the n8n batch; CR-051 first) | `99-next-<course>/` in the course's source folder group | — |
 | CR-054 | n8n course (last lesson) | — | Short video: "From automation to AI systems: continue with AWS or Azure" (recommends both masterclasses) | GEN | 2026-11-28 | P2 | accepted (after the n8n batch; CR-051 first) | `99-next-<course>/` in the course's source folder group | — |
 | CR-055 | VS Code masterclass (last lesson) | — | Short video: "Continue your AI learning journey" (free AI intro, then the masterclasses) | GEN | 2026-11-28 | P3 | accepted (after the n8n batch; CR-051 first) | `99-next-<course>/` in the course's source folder group | — |
+| CR-056 | LLMOps: M1 Introduction | — | DevOps, MLOps, LLMOps, AIOps and AgentOps: one story, five disciplines | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-057 | LLMOps: Free intro (teaser) | — | What LLMOps is, and why your next AI app needs it | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-058 | LLMOps: M1 Introduction | — | The LLM application lifecycle versus a traditional app lifecycle | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-059 | LLMOps: M2 / Project 1 | — | Project 1a: a simple LLM app with Ollama and Docker Compose | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-060 | LLMOps: M2 / Project 1 | — | Project 1b: from demo to production-ready | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-061 | LLMOps: M3 Prompt management | — | Version prompts like code: Git, environments and rollback | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-062 | LLMOps: M4 Evaluation | — | LLM evaluation explained: golden sets, LLM-as-judge and hallucination tests (promptfoo) | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-063 | LLMOps: M4 / Project 5 | — | Project 5: an evaluation gate in GitHub Actions that blocks a bad prompt | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-064 | LLMOps: M4 Evaluation | — | Evaluate a RAG app: retrieval and faithfulness with Ragas | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-065 | LLMOps: M5 Observability | — | LLM observability with Langfuse and OpenTelemetry: traces, tokens, latency and cost | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-066 | LLMOps: M5 (AWS) | — | Monitor Bedrock apps with CloudWatch: invocations, tokens, latency, alarms and cost | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-067 | LLMOps: M5 (Azure) | — | Monitor Foundry apps with Azure Monitor and Application Insights | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-068 | LLMOps: M6 Security | — | Secure an LLM application: secrets, least privilege, prompt injection, PII and audit logs | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-069 | LLMOps: M7 CI/CD | — | CI/CD for LLM apps: test, evaluate, build, deploy with approvals and rollback | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-070 | LLMOps: M8 Cost and reliability | — | Control LLM cost and keep it up: caching, rate limits, retries and fallbacks (LiteLLM) | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-071 | LLMOps: Project 2 (AWS) | — | Project 2: LLMOps with Amazon Bedrock, end to end | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-072 | LLMOps: Project 3 (Azure) | — | Project 3: LLMOps with Microsoft Foundry, end to end | GEN | 2026-11-28 | P1 | requested | see details | — |
+| CR-073 | LLMOps: Project 4 (both) | — | Project 4: LLMOps on Kubernetes with Helm and Argo CD | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-074 | LLMOps: Project 6 (both) | — | Project 6: operate an enterprise RAG app with LLMOps | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-075 | LLMOps: M1–M8 wrap | — | LLMOps review and assessment | GEN | 2026-11-28 | P2 | requested | see details | — |
+| CR-076 | LLMOps: M9 n8n | — | LLMOps automation with n8n: failure alerts, cost alerts, evaluation reports and health checks | GEN | 2026-11-28 | P2 | requested | see details | — |
 
 ## Details
 
@@ -641,3 +671,58 @@ at recording time.
   course's cover style, and a calm invitation ("you'll find it on DevOps Easy Learning"). No prices, no discounts, no
   pressure, no claims about lessons not yet published. Never interrupt a technical demo: these are separate lessons.
 - **Placement:** after the course's last lesson (CR-051–055) or the n8n module's last lesson (CR-050).
+
+### CR-056 … CR-076 LLMOps (owner 2026-11-28, "LLMOps Curriculum Development")
+Every lesson follows the 13-step progressive structure (docs/COURSE_STANDARD.md §8e) and ships a PDF, a lab ZIP (source,
+diagrams, Terraform, Compose, Kubernetes/Helm where relevant, CI config, `.env.example`, README with prerequisites, VM
+sizing, estimated cost, troubleshooting and cleanup) and 3–5 spoken quiz questions. Recommended order: concepts
+(056, 058, 057) → Project 1 (059, 060) → prompts (061) → evaluation and Project 5 (062, 063, 064) → observability (065,
+066, 067) → security (068) → CI/CD (069) → cost (070) → cloud projects (071, 072) → Kubernetes (073) → RAG ops (074) →
+n8n (076) → assessment (075).
+
+| CR | Title | Courses | Position | Priority | Est. cost per run | Depends on |
+|---|---|---|---|---|---|---|
+| CR-056 | DevOps, MLOps, LLMOps, AIOps and AgentOps: one story, five disciplines | AWS, Azure | LLMOps module, before "LLMOps day to day" | P1 | $0 (concept, animations) | — |
+| CR-057 | What LLMOps is, and why your next AI app needs it | Intro | Intro, module 3, before "Your next step" | P1 | $0 (Docker Compose, a local model optional) | CR-056 (can share animations) |
+| CR-058 | The LLM application lifecycle versus a traditional app lifecycle | AWS, Azure | LLMOps module | P2 | $0 | CR-056 |
+| CR-059 | Project 1a: a simple LLM app with Ollama and Docker Compose | AWS, Azure | LLMOps module (projects start) | P1 | $0 locally (16 GB RAM); cloud VM variant t3.xlarge/D4s ≈ $0.17–0.20/h, < $1 per run | — |
+| CR-060 | Project 1b: from demo to production-ready | AWS, Azure | after CR-059 | P1 | $0 locally | CR-059 |
+| CR-061 | Version prompts like code: Git, environments and rollback | AWS, Azure | after CR-060 | P1 | $0 (tokens < $0.10) | CR-060 |
+| CR-062 | LLM evaluation explained: golden sets, LLM-as-judge and hallucination tests (promptfoo) | AWS, Azure | after CR-061 | P1 | tokens < $0.50 per run | CR-061 |
+| CR-063 | Project 5: an evaluation gate in GitHub Actions that blocks a bad prompt | AWS, Azure, (n8n link) | after CR-062 | P1 | GitHub Actions free tier; tokens < $1 per run | CR-062 |
+| CR-064 | Evaluate a RAG app: retrieval and faithfulness with Ragas | AWS, Azure | after CR-063 (or in the RAG module) | P2 | tokens < $1 | CR-063; uses the RAG stack lab |
+| CR-065 | LLM observability with Langfuse and OpenTelemetry: traces, tokens, latency and cost | AWS, Azure | after CR-064 | P1 | $0 (self-hosted Langfuse in Docker Compose) | CR-060 |
+| CR-066 | Monitor Bedrock apps with CloudWatch: invocations, tokens, latency, alarms and cost | AWS | after CR-065 | P1 | < $1 per run (CloudWatch metrics/alarms, a few Bedrock calls) | CR-065 |
+| CR-067 | Monitor Foundry apps with Azure Monitor and Application Insights | Azure | after CR-065 | P1 | < $1 per run | CR-065 |
+| CR-068 | Secure an LLM application: secrets, least privilege, prompt injection, PII and audit logs | AWS, Azure | after the observability lessons | P1 | $0 locally | CR-060 |
+| CR-069 | CI/CD for LLM apps: test, evaluate, build, deploy with approvals and rollback | AWS, Azure | after CR-068 | P1 | < $1 (GitHub Actions free tier, a small VM or Container Apps/App Runner for the deploy stage) | CR-063 |
+| CR-070 | Control LLM cost and keep it up: caching, rate limits, retries and fallbacks (LiteLLM) | AWS, Azure | after CR-069 | P1 | $0 locally; tokens < $0.50 | CR-065 |
+| CR-071 | Project 2: LLMOps with Amazon Bedrock, end to end | AWS | LLMOps module, projects | P1 | ≈ $1–3 per run (EC2 or App Runner, CloudWatch, Bedrock calls); cleanup with terraform destroy | CR-063, CR-066, CR-069 |
+| CR-072 | Project 3: LLMOps with Microsoft Foundry, end to end | Azure | LLMOps module, projects | P1 | ≈ $1–3 per run (Container Apps, Key Vault, App Insights, Foundry calls); cleanup with terraform destroy | CR-063, CR-067, CR-069 |
+| CR-073 | Project 4: LLMOps on Kubernetes with Helm and Argo CD | AWS, Azure | LLMOps module, projects | P2 | $0 on Minikube (main path). EKS/AKS variant ≈ $5–10 per run (control plane + nodes): **ask the owner before provisioning** | CR-069 |
+| CR-074 | Project 6: operate an enterprise RAG app with LLMOps | AWS, Azure | LLMOps module, last project | P2 | $0 locally (reuses the RAG stack lab); cloud variant optional < $3 | CR-064, CR-065 |
+| CR-075 | LLMOps review and assessment | AWS, Azure | end of the LLMOps module | P2 | $0 | the module's lessons |
+| CR-076 | LLMOps automation with n8n: failure alerts, cost alerts, evaluation reports and health checks | n8n course; AWS and Azure (n8n module) | n8n course module 4; masterclass n8n module after the AI ops agent | P2 | $0 locally | CR-063, CR-065 |
+
+What each one teaches and demonstrates:
+- **CR-056 DevOps, MLOps, LLMOps, AIOps and AgentOps: one story, five disciplines:** What each discipline manages (code, models, LLM apps, operations data, agents), with one everyday example (a restaurant: recipes, a chef learning, a chef who talks, a manager watching, assistants acting) before the architectures; how they complement each other; why LLMOps is the DevOps engineer's job. Animated comparison table; no lab.
+- **CR-057 What LLMOps is, and why your next AI app needs it:** 5–6 min. An AI app that worked on Friday gives worse answers on Monday: what changed (prompt, model, data, cost)? The 4 LLMOps pipelines in one picture; a 60-second demo of an eval run failing then passing. Ends by pointing to the masterclasses' LLMOps module (no prices).
+- **CR-058 The LLM application lifecycle versus a traditional app lifecycle:** Side by side: build-test-deploy-monitor vs prompt-and-data-evaluate-deploy-observe-improve; what is new (non-deterministic output, prompts as code, data freshness, token cost, safety); the DevOps engineer's role; enterprise use cases.
+- **CR-059 Project 1a: a simple LLM app with Ollama and Docker Compose:** A small FastAPI chatbot calling a local model through Ollama, then the same app pointed at Bedrock or Foundry by config only. Teaches endpoints, model choice, environment config. Lab: compose.yaml, app, .env.example, README with VM sizing and cleanup.
+- **CR-060 Project 1b: from demo to production-ready:** Take Project 1a step by step to production shape: settings and secrets out of code, prompts as files in Git, unit tests and a first eval, health checks, structured logs, a container image, a deployment checklist. Shows the gap between building and operating an AI app.
+- **CR-061 Version prompts like code: Git, environments and rollback:** Prompts in Git with semantic versions; dev/staging/prod prompt selection by config; comparing two prompt versions on the same questions; rolling back a bad prompt; where hosted prompt stores (Langfuse prompts, Bedrock Prompt Management, Foundry) fit and when Git is enough.
+- **CR-062 LLM evaluation explained: golden sets, LLM-as-judge and hallucination tests (promptfoo):** Why unit tests are not enough; a golden set; deterministic checks (structured output, must-contain), model-graded checks, hallucination/groundedness checks; thresholds. Tool: promptfoo (open source, YAML, runs locally, native GitHub Action).
+- **CR-063 Project 5: an evaluation gate in GitHub Actions that blocks a bad prompt:** The owner's scenario end to end: a developer edits a prompt → pull request → promptfoo eval in GitHub Actions → score below threshold → merge blocked, PR comment, Mattermost/Slack notification → corrected prompt passes → deploy. Lab: repo template, workflow YAML, golden set, notification webhook as a secret placeholder.
+- **CR-064 Evaluate a RAG app: retrieval and faithfulness with Ragas:** Context precision/recall, faithfulness, answer relevancy on a small test set; wiring Ragas metrics into the same CI gate (via a script or DeepEval); what to do when retrieval, not the model, is the problem.
+- **CR-065 LLM observability with Langfuse and OpenTelemetry: traces, tokens, latency and cost:** Instrument Project 1 with OpenTelemetry (GenAI attributes are still evolving: teach the idea, show what Langfuse maps); see each request's prompt, model, tokens, latency and cost; trace an agent's tool calls; a dashboard of p95 latency, error rate and cost per day; link to Prometheus/Grafana from the RAG stack lesson.
+- **CR-066 Monitor Bedrock apps with CloudWatch: invocations, tokens, latency, alarms and cost:** Bedrock's CloudWatch metrics and model invocation logging, a dashboard and an alarm on errors and token spikes, a budget alert, and cleanup.
+- **CR-067 Monitor Foundry apps with Azure Monitor and Application Insights:** Foundry tracing to Application Insights, the Foundry observability dashboard, an alert on errors and token spikes, a budget alert, and cleanup.
+- **CR-068 Secure an LLM application: secrets, least privilege, prompt injection, PII and audit logs:** Threat model of an LLM app; secrets out of code (Kubernetes secrets, Secrets Manager/Key Vault shown briefly); prompt-injection demo (direct and indirect) and defences; PII redaction before the model; audit logs. Cloud-native guardrails are covered in CR-029 (Bedrock Guardrails) and CR-039 (Azure Content Safety and Prompt Shields).
+- **CR-069 CI/CD for LLM apps: test, evaluate, build, deploy with approvals and rollback:** Extend a normal pipeline: unit tests → eval gate (CR-063) → Docker image → Terraform → deploy to staging → approval → production → rollback of image or prompt. Shows LLMOps extending DevOps, not replacing it.
+- **CR-070 Control LLM cost and keep it up: caching, rate limits, retries and fallbacks (LiteLLM):** Token pricing and a cost-per-answer calculation; a LiteLLM proxy with caching, per-key budgets, rate limits, retries and a fallback model (cloud model → local Ollama); measuring the savings in the observability dashboard.
+- **CR-071 Project 2: LLMOps with Amazon Bedrock, end to end:** Terraform: least-privilege IAM, the app, logging; Bedrock model; prompt evaluation in CI; CloudWatch tokens and cost; deliberate failures (throttling, access denied, bad prompt) and how to troubleshoot; cleanup and a check that nothing is left.
+- **CR-072 Project 3: LLMOps with Microsoft Foundry, end to end:** Terraform: managed identity (no keys), Key Vault, Foundry deployment, the app on Container Apps, Application Insights; automated evaluation; cost monitoring; deliberate failures and troubleshooting; cleanup.
+- **CR-073 Project 4: LLMOps on Kubernetes with Helm and Argo CD:** Containerised LLM app with a Helm chart, ConfigMaps, secrets, readiness/liveness probes, HPA, Prometheus/Grafana, GitHub Actions building the image, Argo CD syncing, a bad release and an automated rollback. Minikube first; the managed-cluster variant only if approved.
+- **CR-074 Project 6: operate an enterprise RAG app with LLMOps:** Take the existing production-style RAG stack and operate it: ingestion and re-indexing, Ragas evaluation, retrieval accuracy monitoring, prompt versions, Langfuse traces, cost per answer, security and continuous deployment.
+- **CR-075 LLMOps review and assessment:** A short recap video and `assessments/llmops.json` (12–15 questions with explanations) over the whole module.
+- **CR-076 LLMOps automation with n8n: failure alerts, cost alerts, evaluation reports and health checks:** n8n workflows that post LLM app failures to Mattermost, token/cost alerts to Slack, a daily evaluation report from the CI results, and an AI app health check; reuses the n8n stack lab. In the masterclasses it points to the complete n8n course.

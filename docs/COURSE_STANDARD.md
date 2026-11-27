@@ -181,6 +181,17 @@ A cloud-agnostic video (AI concepts, RAG, MCP, agents, Claude Code, Ollama, Dock
 uploaded once per environment (`courses/media.<env>.json`) and attached to each course's own lesson; every course keeps its
 own curriculum, lesson text, quizzes, progress, access and certificate. Never copy a whole course into another.
 
+## 8e. Progressive hands-on lessons and LLMOps (owner 2026-11-28)
+LLMOps (deploy, evaluate, observe, secure, run and improve LLM apps) is a core strand of the AI for DevOps masterclasses,
+not an appendix; plan new AI lessons with it in mind (`courses/COURSE_CATALOG.md` › LLMOps). Students are working
+professionals who may know nothing about AI: start simple, then go deep. Every hands-on lesson follows this order:
+1 the concept with a simple example → 2 the problem → 3 the architecture → 4 the technologies → 5 prepare the environment →
+6 walk through the source → 7 implement → 8 deploy → 9 verify in the browser or the right interface → 10 common failures
+and troubleshooting → 11 how organisations use it in production → 12 clean up → 13 a short assessment. For every major
+concept say what it is, why organisations need it, when to use it, the problem it solves, how it works, how DevOps
+engineers use it in production and how students do it themselves. Labs follow §8b/§8c and the $100/month training
+cloud budget rule in `courses/CONTENT_REQUESTS.md`.
+
 ## 9. Before students see it: three reviews
 - **Instructor:** sound, logically ordered, accurate, practical; every promise ("download the lab") kept.
 - **Student:** easy to navigate, every video plays, Next/Previous, downloads open, captions only on CC, quizzes work,

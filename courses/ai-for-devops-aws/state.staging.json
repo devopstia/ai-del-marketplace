@@ -8,12 +8,12 @@
     "AI agents for DevOps": "fd90c1da-7e0d-406f-8d5a-d7fd53edee5c",
     "AI-powered DevOps automation": "fe276d2a-5d2d-4aa4-84b4-4bca410fd9b4",
     "Model Context Protocol (MCP)": "cdb67563-b913-4ddf-beb3-95f294e6ee3b",
-    "Security, reliability and cost": "0423c1ff-a208-43b6-a596-3eed52acfed5",
     "The vocabulary of AI models": "9ecb8e5c-0c55-463f-aa7e-3eac4aa5eeda",
     "AI applications on AWS: a real outage": "e2746d2f-263b-41c0-9fc5-c6beec92dc6a",
     "Retrieval-Augmented Generation (RAG)": "0d05ae72-1a81-4af3-8413-cb27953c0226",
     "AI in CI/CD and operations": "af3335ff-1c57-4136-a81d-6f9a60dcf895",
-    "Automate it with n8n": "e1e01c1b-3500-423d-ba03-b7e5ba83706a"
+    "Automate it with n8n": "e1e01c1b-3500-423d-ba03-b7e5ba83706a",
+    "LLMOps: run AI applications in production": "0423c1ff-a208-43b6-a596-3eed52acfed5"
   },
   "lessons": {
     "02-ai-foundations/01-tm1-big-words": "a3abee56-1da5-4a05-a0ef-3952c51356d5",

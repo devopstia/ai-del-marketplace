@@ -7,7 +7,7 @@
   "course": {
     "title": "AI for DevOps on AWS: From Fundamentals to Production",
     "subtitle": "Build AI chatbots, RAG systems and troubleshooting agents on Amazon Bedrock with Terraform, Docker and least-privilege IAM, then run them like any other production service.",
-    "description": "A model that answers questions is easy. Running it on AWS with the right permissions, real data, a pipeline and a budget is the DevOps part, and it is what this course teaches.\n\n## What you'll build\n- **A Bedrock chatbot, the DevOps way:** permission to call exactly one model, no long-lived keys, a container, a browser test, then the same with Terraform.\n- **A RAG system on AWS:** S3, Amazon Bedrock Knowledge Bases and S3 Vectors, answering from your own documents with sources and refusing what they don't cover.\n- **A self-hosted RAG stack** with Docker Compose, per-user permissions and Grafana observability, to compare with the managed version.\n- **Troubleshooting agents** that investigate, ask for your approval, fix, verify and report: Docker skill agents and a Kubernetes doctor.\n- **Your own MCP server** in Python, connected to real AI agents.\n- **An AI on-call helper** on Amazon Bedrock for a real 502 outage.\n\n## Why this course\n- **Every lab runs for real** in your own AWS account, created with Terraform and destroyed at the end, with a budget alarm first.\n- **AI the way operations teams need it:** IAM least privilege, keys out of code, human approval for every change, cost and quotas watched.\n- **Concepts first, in plain words:** each idea starts with an everyday example before you see it on AWS.\n- **Labs and quizzes:** download the exact files from the video and check your understanding after each lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know AWS basics and Docker, and want to build, secure and operate AI applications rather than only call a chatbot.",
+    "description": "A model that answers questions is easy. Running it on AWS with the right permissions, real data, a pipeline and a budget is the DevOps part, and it is what this course teaches.\n\n## What you'll build\n- **A Bedrock chatbot, the DevOps way:** permission to call exactly one model, no long-lived keys, a container, a browser test, then the same with Terraform.\n- **A RAG system on AWS:** S3, Amazon Bedrock Knowledge Bases and S3 Vectors, answering from your own documents with sources and refusing what they don't cover.\n- **A self-hosted RAG stack** with Docker Compose, per-user permissions and Grafana observability, to compare with the managed version.\n- **Troubleshooting agents** that investigate, ask for your approval, fix, verify and report: Docker skill agents and a Kubernetes doctor.\n- **Your own MCP server** in Python, connected to real AI agents.\n- **An AI on-call helper** on Amazon Bedrock for a real 502 outage.\n\n## LLMOps: run AI applications in production\nBuilding an AI app is the start; operating it is the job. This course treats LLMOps as a core skill, the way DevOps treats running any service.\n- **Available now:** what LLMOps is and how it differs from DevOps and MLOps, the four LLMOps pipelines (ingestion, deployment, evaluation, observability), who builds and who runs an AI system, managed versus self-hosted models, operating and securing AI (versions, latency, token cost, drift, prompt injection, least privilege), a production-style RAG stack with Prometheus, Loki, Jaeger and Grafana, and AI in your CI/CD pipeline.\n- **Coming next (in production now, added as each lesson is finished):** prompt versioning in Git with rollback, automated LLM evaluation that blocks a bad prompt in a pull request, LLM observability with Langfuse and OpenTelemetry (traces, tokens, latency, cost), caching, fallbacks and cost control, CI/CD and Kubernetes deployment for LLM apps, and an end-to-end LLMOps project on Amazon Bedrock, CloudWatch, IAM and Bedrock Guardrails.\n\n## Why this course\n- **Every lab runs for real** in your own AWS account, created with Terraform and destroyed at the end, with a budget alarm first.\n- **AI the way operations teams need it:** IAM least privilege, keys out of code, human approval for every change, cost and quotas watched.\n- **Concepts first, in plain words:** each idea starts with an everyday example before you see it on AWS.\n- **Labs and quizzes:** download the exact files from the video and check your understanding after each lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know AWS basics and Docker, and want to build, secure and operate AI applications rather than only call a chatbot.",
     "level": "intermediate",
     "language": "en",
     "categorySlug": "cloud-ai",
@@ -321,14 +321,8 @@
       ]
     },
     {
-      "title": "Security, reliability and cost",
+      "title": "LLMOps: run AI applications in production",
       "lessons": [
-        {
-          "folder": "02-ai-foundations/12-tm12-operating-securing",
-          "title": "Operating and securing AI in production",
-          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
-          "short": "Operating and securing"
-        },
         {
           "folder": "08-ai-production/19-r1-llmops-day-to-day",
           "title": "LLMOps day to day: what you manage once an AI app is live",
@@ -346,6 +340,12 @@
           "title": "Managed AI or self-hosted: Bedrock, Foundry or Ollama",
           "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide.",
           "short": "Managed or self-hosted"
+        },
+        {
+          "folder": "02-ai-foundations/12-tm12-operating-securing",
+          "title": "Operating and securing AI in production",
+          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI.",
+          "short": "Operating and securing"
         },
         {
           "type": "article",

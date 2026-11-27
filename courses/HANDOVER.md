@@ -36,3 +36,4 @@ in a chat or a context window.
   (127.0.0.1:3000) runs it. Next release needs the owner's "deploy to production".
 - Dashboard phase 3 (/admin) is being built on `feat/dashboard-admin`; phase 2 (Student) waits.
 - New course folders arrived: intro, GitHub PR, AWS automation (see COURSE_STATUS).
+- **LLMOps (2026-11-28):** curriculum in `COURSE_CATALOG.md` › LLMOps, requests CR-056–076 with the $100/month budget rule; AWS/Azure plans have the renamed LLMOps module and description section (state files carry the section id under the new title); sync to production with a session, then publish.

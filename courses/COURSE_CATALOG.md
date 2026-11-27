@@ -321,3 +321,38 @@ demonstration, never a course the student already owns (then "continue learning"
 advertised outcomes; nothing essential is left out to sell another course. Links use `{{course:<plan-slug>}}` so they
 always resolve to the live course page. For every new course, decide what it recommends and what recommends it, and
 update this table.
+
+
+## LLMOps: a core strand of the AI for DevOps masterclasses (owner 2026-11-28)
+LLMOps is one of the masterclasses' main selling points. It lives in the last module of both,
+**"LLMOps: run AI applications in production"**, and grows as the lessons below arrive (CR-056–076, in
+`CONTENT_REQUESTS.md`, with the $100/month training budget rule). Cloud-agnostic lessons are recorded once and shared by
+AWS and Azure; Project 2 is AWS-only, Project 3 Azure-only.
+
+| Owner module | Available now (folder) | Planned |
+|---|---|---|
+| 1 Introduction to LLMOps | `08-ai-production/19-r1-llmops-day-to-day`, `08-ai-production/20-r6-who-builds-who-runs`, `02-ai-foundations/02-tm2-practice-architecture-application` (DevOps, MLOps, LLMOps words; in foundations) | CR-056 five disciplines, CR-058 lifecycle |
+| 2 Build and deploy LLM apps | `08-ai-production/21-r8-managed-or-self-hosted`, `16-cloud-labs/04-bedrock-chatbot-live` (AWS), `16-cloud-labs/05-foundry-chat-live` (Azure) | CR-059 Project 1a (Ollama + Compose), CR-060 Project 1b (production-ready) |
+| 3 Prompt management | — | CR-061 |
+| 4 Evaluation and testing | (evaluation idea in r1 and tm12) | CR-062, CR-063 Project 5 (eval gate), CR-064 RAG evaluation |
+| 5 Monitoring and observability | `16-cloud-labs/06-rag-stack-live` (Prometheus, Loki, Jaeger, Grafana; in the RAG module), tm12 | CR-065 Langfuse + OpenTelemetry, CR-066 CloudWatch (AWS), CR-067 Azure Monitor / App Insights (Azure) |
+| 6 Security and governance | `02-ai-foundations/12-tm12-operating-securing` | CR-068; cloud guardrails CR-029 (AWS), CR-039 (Azure) |
+| 7 CI/CD for LLM apps | `19-ai-cicd/01-ci1-ai-in-cicd` (in "AI in CI/CD and operations") | CR-069 |
+| 8 Cost and reliability | (token cost in r1, tm12) | CR-070 (LiteLLM caching, budgets, fallbacks) |
+| 9 LLMOps automation with n8n | n8n 12 incidents, 17 AI summaries, 19 AI ops agent (in "Automate it with n8n") | CR-076 failure/cost alerts, eval reports, health checks |
+| Projects | — | P1 CR-059/060, P2 CR-071 (AWS), P3 CR-072 (Azure), P4 CR-073 (Kubernetes, Minikube first), P5 CR-063, P6 CR-074 (RAG ops) |
+| Wrap-up | — | CR-075 recap + assessment |
+
+**Free intro:** one short teaser, CR-057 "What LLMOps is, and why your next AI app needs it", before "Your next step".
+**n8n course:** CR-076 adds the LLMOps automation workflows; the course already recommends the masterclasses.
+
+**Tool choices (checked 2026-11-28):**
+- **Evaluation: promptfoo.** Open source, YAML tests, runs locally, a maintained GitHub Action that compares before and after on a PR and fails the build under a threshold. This makes it the clearest teaching tool for the eval gate. Ragas adds RAG metrics (context precision and recall, faithfulness); DeepEval is mentioned as the pytest-style alternative.
+- **Observability: Langfuse, self-hosted in Docker Compose, with OpenTelemetry.** Free and visual, it maps OTel GenAI attributes (still in development, so taught as a concept). Prometheus, Grafana, Loki and Jaeger are reused from the RAG stack lab. CloudWatch is used for AWS, Azure Monitor and Application Insights (where Foundry observability lands) for Azure.
+- **Prompt management: prompts in Git first.** Hosted prompt stores are introduced as options: Langfuse prompts, Bedrock Prompt Management, Foundry. Bedrock added prompt optimisation with built-in evaluations in May 2026.
+- **Gateway, caching and cost: LiteLLM proxy.** It provides caching, per-key budgets, retries, fallbacks to another model or a local Ollama, and rate limits.
+- **Guardrails:** Bedrock Guardrails, including the 2026 additions (cross-account safeguards, an API for agent workflows, AgentCore policy support). On Azure, Content Safety with Prompt Shields, plus Foundry safety evaluations.
+- **Deployment:** Docker Compose, then Kubernetes with Helm and Argo CD on Minikube; EKS and AKS only with the owner's OK. vLLM and KServe are mentioned as the next step for self-hosted models, but not built, given the cost.
+
+**Future course:** a standalone "LLMOps for DevOps Engineers: From Fundamentals to Production" only once there is enough
+distinct content beyond the masterclasses (`docs/IMPROVEMENTS.md`).

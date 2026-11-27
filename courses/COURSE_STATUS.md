@@ -79,3 +79,6 @@ Catalog: `COURSE_CATALOG.md`; source inventory: `INVENTORY.md`. Shared videos ar
 - **AWS** and **Azure** masterclasses: 40 videos each (5.0 h / 5.2 h), self-contained foundations, module "Automate it
   with n8n" (06, 12, 17). Re-sync production after merge (no prune needed: lessons are only added and re-ordered).
 - n8n: CR-001 intro added to the plan (first lesson, preview, promo); sync after the pending revision is decided.
+
+## LLMOps (owner 2026-11-28)
+Both masterclasses' last module is now **"LLMOps: run AI applications in production"** (available: LLMOps day to day, who builds and who runs, managed or self-hosted, operating and securing) and their descriptions have an LLMOps section (available now / coming next). 21 LLMOps videos requested (CR-056–076), training cloud budget $100/month. Plan changes need a production sync (session) to go live.
