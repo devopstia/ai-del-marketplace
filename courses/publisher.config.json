@@ -22,5 +22,6 @@
     "intervalMinutes": 15,
     "introFolderPattern": "^00-",
     "note": "Planned lessons with changed files are synced automatically; new folders go to courses/<slug>/inbox.json for the agent to review and place in plan.json."
-  }
+  },
+  "quizBanks": true
 }
