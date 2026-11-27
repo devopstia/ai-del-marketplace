@@ -5,16 +5,16 @@ import type { CourseDetail, LectureOutline } from "@/lib/types";
 import { PreviewModal } from "./PreviewModal";
 
 /**
- * The course overview: the promo video (the intro set as the course trailer) and the first lesson of the first section
- * when it is the introduction (standard §4a; titled "Welcome…", "Introduction…" or "Course overview…"). A course whose
- * intro isn't recorded yet labels nothing.
+ * The course overview, labelled once (standard §4a, owner 2026-11-28): the intro lesson when the trailer plays its
+ * video; otherwise the trailer; with no trailer, the first lesson of the first section when it is the introduction
+ * (titled "Welcome…", "Introduction…" or "Course overview…"). A course whose intro isn't recorded yet labels nothing.
  */
 export function courseOverviewIds(course?: CourseDetail): string[] {
   if (!course) return [];
+  if (course.promoLectureId) return [course.promoLectureId];
+  if (course.hasPromo) return ["promo"];
   const first = course.sections[0]?.lectures[0];
-  const ids = course.hasPromo ? ["promo"] : [];
-  if (first && /^(welcome|introduction|course (overview|introduction)|intro\b)/i.test(first.title.trim())) ids.push(first.id);
-  return ids;
+  return first && /^(welcome|introduction|course (overview|introduction)|intro\b)/i.test(first.title.trim()) ? [first.id] : [];
 }
 
 const Ctx = createContext<(id: string) => void>(() => {});

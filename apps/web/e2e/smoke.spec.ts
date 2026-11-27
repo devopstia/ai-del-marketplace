@@ -54,14 +54,15 @@ test.describe("public catalogue", () => {
       const dialog = page.getByRole("dialog");
       await expect(dialog.getByTestId("video-player")).toBeVisible();
       await expect(dialog.getByTestId("preview-cta")).toHaveText(cta);
-      // The trailer and an intro-titled first lesson are labelled "Course overview"; other lessons never are.
+      // The course overview is labelled at most once, on the top row; the same video is never listed twice
+      // (the trailer row is dropped when it is the intro lesson's video).
       const rows = dialog.getByRole("listitem");
-      for (let i = 0; i < (await rows.count()); i++) {
-        const text = await rows.nth(i).innerText();
-        const title = text.replace(/^Course overview\s*/, "");
-        const isOverview = /Course trailer/.test(title) || (i <= 1 && /^(welcome|introduction|course (overview|introduction)|intro\b)/i.test(title.trim()));
-        await expect(rows.nth(i).getByTestId("preview-overview-row")).toHaveCount(isOverview ? 1 : 0);
-      }
+      const labelled = dialog.getByTestId("preview-overview-row");
+      expect(await labelled.count()).toBeLessThanOrEqual(1);
+      if (await labelled.count()) await expect(rows.first().getByTestId("preview-overview-row")).toHaveCount(1);
+      const titles = (await rows.allInnerTexts()).map((t) => t.replace(/^Course overview\s*/, "").replace(/\s+\d+:\d+$/, "").trim());
+      expect(new Set(titles).size).toBe(titles.length);
+      if (titles.includes("Course trailer")) expect(titles[0]).toBe("Course trailer");
       await dialog.getByRole("button", { name: "Close" }).click();
     }
   });

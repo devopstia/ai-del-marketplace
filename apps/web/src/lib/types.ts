@@ -144,6 +144,8 @@ export interface CourseDetail extends CourseCard {
   inCart?: boolean;
   isOwner?: boolean;
   hasPromo?: boolean;
+  /** The free-preview lesson that plays the same video as the trailer (the intro): listed once as the course overview. */
+  promoLectureId?: string | null;
   /** Downloadable files across the course; "Downloadable lab files" is shown only when > 0. */
   resourceCount: number;
   /** True when the server already answered for a signed-in visitor (enrolled/inCart are then authoritative). */

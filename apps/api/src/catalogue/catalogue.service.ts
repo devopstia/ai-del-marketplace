@@ -175,6 +175,7 @@ export class CatalogueService {
                 summary: true,
                 durationSec: true,
                 isPreview: true,
+                videoAssetId: true,
                 quiz: { select: { id: true } },
                 videoAsset: { select: { captionsKey: true } },
                 resources: { orderBy: { createdAt: 'asc' }, select: { id: true, title: true, sizeBytes: true, mime: true } },
@@ -226,6 +227,9 @@ export class CatalogueService {
       status: c.status,
       updatedAt: c.updatedAt,
       hasPromo: !!c.promoVideoAssetId,
+      // The free-preview lesson that plays the same video as the trailer (usually the intro), so the page lists the
+      // course overview once (owner 2026-11-28).
+      promoLectureId: (c.promoVideoAssetId && lectures.find((l) => l.isPreview && l.type === 'video' && l.videoAssetId === c.promoVideoAssetId)?.id) || null,
       lastVerifiedAt: c.lastVerifiedAt,
       resourceCount: totals.resources,
       hasCaptions: totals.captionedLectures > 0,
@@ -245,7 +249,7 @@ export class CatalogueService {
       curriculum: c.sections.map((s) => ({
         id: s.id,
         title: s.title,
-        lectures: s.lectures.map(({ resources, quiz, videoAsset, ...l }) => ({ ...l, resourceCount: resources.length, hasQuiz: !!quiz, hasCaptions: !!videoAsset?.captionsKey })),
+        lectures: s.lectures.map(({ resources, quiz, videoAsset, videoAssetId: _asset, ...l }) => ({ ...l, resourceCount: resources.length, hasQuiz: !!quiz, hasCaptions: !!videoAsset?.captionsKey })),
       })),
       viewer: viewerState,
       // "Continue your learning journey" (owner 2026-11-28): published related courses only; `owned` only for a signed-in viewer.
