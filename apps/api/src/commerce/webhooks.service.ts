@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type Stripe from 'stripe';
 import { AuditService } from '../common/audit.service';
+import { AppError, notFound } from '../common/errors';
 import { PrismaService } from '../common/prisma.service';
 import { ConnectService } from './connect.service';
 import { FulfilmentService } from './fulfilment.service';
@@ -44,13 +45,7 @@ export class WebhooksService {
         if (s.payment_status !== 'paid' && s.payment_status !== 'no_payment_required') return; // async method: wait
         const orderId = await this.orderForSession(s);
         if (!orderId) return;
-        const piId = typeof s.payment_intent === 'string' ? s.payment_intent : (s.payment_intent?.id ?? null);
-        let chargeId: string | null = null;
-        if (piId && this.stripe.configured) {
-          const pi = await this.stripe.client.paymentIntents.retrieve(piId);
-          chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : (pi.latest_charge?.id ?? null);
-        }
-        await this.fulfilment.fulfil(orderId, { via: 'stripe_webhook', paymentIntentId: piId, chargeId });
+        await this.fulfilFromSession(orderId, s, 'stripe_webhook');
         return;
       }
       case 'checkout.session.async_payment_failed':
@@ -145,6 +140,51 @@ export class WebhooksService {
         }
         this.logger.debug(`ignored event ${event.type}`);
     }
+  }
+
+  /** The same fulfilment for the webhook and the return-page confirm: whichever arrives first wins, the other is a no-op. */
+  private async fulfilFromSession(orderId: string, s: Stripe.Checkout.Session, via: 'stripe_webhook' | 'checkout_confirm', actor?: { actorId: string; ip?: string | null }) {
+    const piId = typeof s.payment_intent === 'string' ? s.payment_intent : (s.payment_intent?.id ?? null);
+    let chargeId: string | null = null;
+    if (piId && this.stripe.configured) {
+      const pi = await this.stripe.client.paymentIntents.retrieve(piId);
+      chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : (pi.latest_charge?.id ?? null);
+    }
+    return this.fulfilment.fulfil(orderId, { via, paymentIntentId: piId, chargeId, ...(actor ? { actorId: actor.actorId, ip: actor.ip ?? null } : {}) });
+  }
+
+  /**
+   * Safety net (owner 2026-11-28): when the buyer comes back from Stripe, ask Stripe about the order's own Checkout
+   * Session and fulfil if it is paid, so a late or misrouted webhook never leaves a buyer waiting. The session id and
+   * the amount come from our order and from Stripe, never from the browser; a mismatch is refused and audited.
+   */
+  async confirmCheckout(userId: string, orderId: string, sessionIdHint: string | null, ip?: string | null) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      select: { id: true, status: true, provider: true, totalCents: true, currency: true, stripeCheckoutSessionId: true },
+    });
+    if (!order) throw notFound('Order');
+    const state = (status: string, confirmed = false) => ({ orderId: order.id, status, confirmed });
+    if (order.status !== 'pending' && order.status !== 'failed') return state(order.status);
+    if (order.provider !== 'stripe' || !order.stripeCheckoutSessionId || !this.stripe.configured) return state(order.status);
+    if (sessionIdHint && sessionIdHint !== order.stripeCheckoutSessionId) {
+      await this.audit.log({ actorId: userId, action: 'order.confirm_refused', targetType: 'order', targetId: order.id, ip: ip ?? null, meta: { reason: 'session_mismatch' } });
+      this.logger.warn(`confirm refused for order ${order.id}: the browser sent another session id`);
+      throw new AppError(409, 'session_mismatch', 'This payment session does not belong to this order');
+    }
+    const s = await this.stripe.client.checkout.sessions.retrieve(order.stripeCheckoutSessionId);
+    const amountOk = s.amount_total === order.totalCents && (s.currency ?? '').toLowerCase() === order.currency.toLowerCase();
+    const sessionOk = s.id === order.stripeCheckoutSessionId && s.metadata?.orderId === order.id;
+    if (!sessionOk || !amountOk) {
+      const reason = sessionOk ? 'amount_mismatch' : 'session_mismatch';
+      await this.audit.log({ actorId: userId, action: 'order.confirm_refused', targetType: 'order', targetId: order.id, ip: ip ?? null, meta: { reason, stripeAmount: s.amount_total, orderAmount: order.totalCents } });
+      this.logger.warn(`confirm refused for order ${order.id}: ${reason}`);
+      throw new AppError(409, reason, 'The payment does not match this order; support has been notified');
+    }
+    if (s.payment_status !== 'paid' && s.payment_status !== 'no_payment_required') return state(order.status);
+    await this.fulfilFromSession(order.id, s, 'checkout_confirm', { actorId: userId, ip });
+    const after = await this.prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { status: true } });
+    return state(after.status, true);
   }
 
   private async orderForSession(s: Stripe.Checkout.Session): Promise<string | null> {

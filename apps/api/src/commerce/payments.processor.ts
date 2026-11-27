@@ -6,6 +6,7 @@ import { env } from '../config/env';
 import { PayoutsService } from './payouts.service';
 import { PrismaService } from '../common/prisma.service';
 import { sendAccessReminders } from '../access/reminders';
+import { sendLearningNudges } from '../learning/nudges';
 import { purgeDueCourses } from '../admin/course-lifecycle';
 import { AuditService } from '../common/audit.service';
 import { StorageService } from '../common/storage.service';
@@ -32,6 +33,11 @@ export class PaymentsProcessor extends WorkerHost {
     if (job.name === 'access-reminders') {
       const r = await sendAccessReminders(this.prisma, this.jobs);
       if (r.sent) this.logger.log(`sent ${r.sent} access reminders`);
+      return r;
+    }
+    if (job.name === 'learning-nudges') {
+      const r = await sendLearningNudges(this.prisma, this.jobs);
+      if (r.sent) this.logger.log(`sent ${r.sent} free-course learning emails`);
       return r;
     }
     if (job.name === 'course-purge') {
