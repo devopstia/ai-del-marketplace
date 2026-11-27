@@ -1,4 +1,7 @@
-# Feedback for the course generation agent
+# Feedback for the course generation agent (history)
+
+> **Superseded on 2026-11-27 by `courses/CONTENT_REQUESTS.md`** (the request register with ids, owners, priority and
+> status). This file keeps the background notes and outlines it refers to; don't add new requests here.
 
 Content problems the Course Upload and Publishing Agent found while uploading. The generation agent should fix them in
 the source folders (or say why they're intended); the upload agent re-runs the plan afterwards. Newest first.

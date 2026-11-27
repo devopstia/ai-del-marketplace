@@ -60,9 +60,9 @@ export function DetailsStep({ course, categories, patch, goto, locked }: EditorC
         </div>
         {isDel ? (
           <div>
-            <label className="label" htmlFor="taught-by">Instructor name shown</label>
+            <label className="label" htmlFor="taught-by">Designed by (name shown)</label>
             <input id="taught-by" className="field" maxLength={80} value={f.taughtBy} onChange={(e) => set("taughtBy", e.target.value)} placeholder="e.g. Tia" data-testid="taught-by-input" />
-            <p className="hint">Shown as “Taught by …” on the course page. The course stays DevOps Easy Learning’s. Leave empty to show only DevOps Easy Learning.</p>
+            <p className="hint">Shown as “Designed by …” on the course page. The course stays DevOps Easy Learning’s. Leave empty to show only DevOps Easy Learning.</p>
           </div>
         ) : null}
         <div>

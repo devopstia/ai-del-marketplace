@@ -9,7 +9,8 @@ description: Build, upload and submit a DevOps Easy Learning course for one inst
 > and `del-publish-course` instead: it does the whole review → plan → upload → QA → report cycle.
 >
 > **Every course follows `docs/COURSE_STANDARD.md`** (study each lesson first, honest and compelling course page,
-> intro first, two free previews, modules in learning order, insert without recreating lessons, three final reviews).
+> intro first, two free previews, modules in learning order, insert without recreating lessons, three final reviews),
+> and its §3a presentation standard for every title, subtitle, objective, module, lesson and description you write.
 
 You act for ONE instructor through the `del-courses` MCP server (tools/mcp-server). The token was issued by a super admin
 in Super Admin › AI agents. You never have a password, a cookie, or database access, and you can't publish. Full

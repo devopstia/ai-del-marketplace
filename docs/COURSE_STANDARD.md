@@ -34,6 +34,34 @@ Every course has, written from the content, specific and honest:
 | Curriculum: modules and lesson titles that are descriptive, consistent, professional | sections / lessons |
 | FAQ | the platform FAQ on the course page (access, refunds, certificate); course-specific answers go in the description |
 
+### 3a. Presentation quality (owner 2026-11-27, permanent)
+Write like a senior instructor and a course marketer, for a busy engineer deciding in 30 seconds. A visitor must see
+at once: what the course is, why it is worth it, what they will be able to do, which real problems they will solve
+(and, for AI courses, what AI really adds), and why this course rather than another.
+
+**How the course page reads** (top to bottom; write each part for its place, never repeat one in another):
+| Part | Rules |
+|---|---|
+| Title | ≤ 60 characters, the outcome and the main tool; no codes, no hype words |
+| Subtitle | one sentence (≤ 200), the concrete value; no list of every tool |
+| What you'll learn (objectives) | 6–10 outcomes, each starting with a verb, specific (a reader can picture it), ≤ 200 characters |
+| Course content | modules named by what the learner achieves, short and parallel; lesson titles descriptive (≤ ~70), the same style throughout; quizzes named "Quiz: …" or "Quiz", never long |
+| Lesson summaries | ≤ 300: what you do in the video and what you walk away with |
+| Requirements | short, real (from the labs): tools, accounts, hardware; marks optional ones |
+| About this course (description) | hook (2–3 lines: the problem, the promise) → **What you'll build** (5–7 bullets, bold outcome first) → **Why this course** (3–4 true differentiators) → **Who it's for**. No prerequisites or objectives again, no full curriculum again |
+| Free previews | the intro + the most convincing hands-on demo (chosen from the captions: clear result, good pace) |
+| Cover | a platform template whose motif matches the topic (rule 17) |
+
+**Style:** short paragraphs (≤ 3 lines), plain words, active voice, the learner as "you", numbers and concrete
+examples over adjectives. Never: "unlock", "supercharge", "dive into", "seamless", "leverage", "game-changer",
+"in today's fast-paced world", "comprehensive guide", emoji, ALL CAPS, exclamation marks, chains of dashes. Honest:
+every claim is something a video shows; no future lessons, no "master", "expert" or job promises.
+
+**Formatting:** the description is Markdown rendered by `components/Markdown.tsx`: `##` headings, `-` and `1.` lists,
+`**bold**`; no tables or HTML. After any change, open the course page in a browser at 390, 1440 and 1920 px in light
+and dark: headings render (no stray `##`), nothing overlaps the cover, no empty or cluttered regions, the price,
+previews and curriculum read well. Fix and look again before reporting.
+
 No generic filler, no exaggeration, nothing the videos don't teach. If the owner wants a topic the content doesn't
 cover (e.g. more AI), say so, describe only what exists, and send the gap to the generation agent (§7).
 
@@ -55,7 +83,7 @@ cover (e.g. more AI), say so, describe only what exists, and send the gap to the
 Modules, not a long list. Adapt this progression to the content: introduction and overview → fundamentals →
 environment setup → core tools → guided demonstrations → intermediate implementations → advanced concepts →
 real-world projects → troubleshooting and best practices → final assessment and conclusion.
-Vocabulary lessons go just before the lessons that use the words. Quizzes ("Check your understanding") follow
+Vocabulary lessons go just before the lessons that use the words. Quizzes ("Quiz: <short lesson name>") follow
 their lesson.
 
 ## 7. How the agents work together
@@ -63,14 +91,25 @@ their lesson.
 |---|---|
 | curriculum, videos, PDF slides (always a PDF next to any PowerPoint), labs as ZIP, quiz questions, transcripts (SRT), lesson metadata, intro video, its own content QA | watches the course folders, studies the content, organises modules and lessons, writes the course page, picks the cover, sets previews, uploads, keeps the order, validates the student experience, maintains published courses, reports missing content and quality issues |
 
-They talk through files:
-- **`course.manifest.json`** in each course folder, written by the generation agent: course structure, per lesson
-  title, description, objectives, prerequisites, role (`intro|lesson|vocabulary|project|conclusion`),
-  recommended position, resource files, quiz. Schema: `courses/manifest.schema.json`. A hint, validated by the upload
-  agent against the content; `courses/<slug>/plan.json` (the upload agent's) is the source of truth.
-- **`courses/GENERATION_FEEDBACK.md`**: the upload agent's findings for the generation agent (missing labs, gaps,
-  topics the owner wants but the course lacks), newest first.
-- **`courses/LESSONS_LEARNED.md`**: what the upload agent learned, read before every upload.
+They talk through files in `courses/` (owner 2026-11-27: no agreement may live only in a chat or a context window):
+| File | What | Who writes |
+|---|---|---|
+| `AGENTS.md` (repo root) | responsibilities and rules for every agent | either, with the owner's rules |
+| `courses/HANDOVER.md` | how to pick up the work, what's happening now | whoever stops working |
+| `courses/COURSE_STATUS.md` | each course: ids, URLs, status, price, content counts, what's waiting | UPLOAD after every sync |
+| `courses/CONTENT_REQUESTS.md` | **the request register**: id, course, module/lesson, request, why, owner, date, priority, status, deliverables, delivered at, upload status, log | UPLOAD only; GEN reports status by message and keeps a mirror in its own repo (owner: GEN doesn't touch the marketplace repo) |
+| `courses/LESSONS_LEARNED.md` | what each agent learned, newest first | both |
+| `course.manifest.json` (in each course folder) | the generation agent's course structure and lesson metadata (schema `courses/manifest.schema.json`); a hint, validated by UPLOAD | GEN |
+| `courses/<slug>/plan.json` | the upload agent's source of truth for the course page and curriculum | UPLOAD |
+
+**Request lifecycle:** requested → in-progress → generated → ready-for-review → validated → uploaded → verified → completed
+(or declined with a reason). The register is updated first; then a short message (Claude Code `SendMessage`) names the
+request ids. When GEN marks a request `ready-for-review`, UPLOAD reviews, uploads, verifies and closes it.
+
+**Find gaps proactively.** UPLOAD doesn't just upload what exists: after studying a course it checks for a missing intro,
+fundamentals, prerequisite lessons, demonstrations, advanced topics, real-world use cases, slides, labs, source code,
+transcripts, quizzes and assessments, troubleshooting, best practices and a conclusion, and opens a request for each gap
+it can justify (what, why, where it fits).
 
 ## 8. Updating courses
 - New content is **inserted where it belongs**, not appended: the upload agent decides the module and position.
@@ -79,11 +118,21 @@ They talk through files:
   admin approves it in the Review queue.
 - After significant new content: review the description, objectives, curriculum, total duration and course page.
 
+## 8a. Assessments (owner 2026-11-27, standard for every course)
+- **Lesson quizzes** after lessons that teach something checkable (3–5 options, the correct one, an explanation);
+  imported from the spoken in-video questions or from the manifest, never invented by the upload agent.
+- **Module assessment** at the end of each module (8–10 questions over the module), and a **final assessment**
+  (about 20 questions) before the conclusion.
+- Questions come only from the course's own content. GEN writes them; UPLOAD checks every answer against the captions,
+  then uploads them as quiz lessons named "Quiz: …" / "Module <n> assessment" / "Final assessment".
+- Missing assessments are a content request (CR) like any other.
+
 ## 9. Before students see it: three reviews
 - **Instructor:** sound, logically ordered, accurate, practical; every promise ("download the lab") kept.
 - **Student:** easy to navigate, every video plays, Next/Previous, downloads open, captions only on CC, quizzes work,
   on phone/tablet/desktop, light and dark.
-- **Prospective customer:** the course page says clearly what you get and why to enrol; previews play; price right.
+- **Prospective customer:** the course page says clearly what you get and why to enrol (§3a: the 30-second test);
+  previews play; price right; the page looks premium on phone and desktop, light and dark.
 Record what was actually checked. A course that fails any of the three is not submitted.
 
 ## 10. Safety rules (unchanged)

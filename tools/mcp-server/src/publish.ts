@@ -18,7 +18,7 @@ import { ApiError, DelClient, SessionClient, type FileRecord, type FileStore, ty
 
 // ---------- plan ----------
 export type LessonRole = 'intro' | 'lesson' | 'vocabulary' | 'project' | 'conclusion';
-export interface LessonPlan { folder: string; title: string; summary?: string; preview?: boolean; role?: LessonRole }
+export interface LessonPlan { folder: string; title: string; summary?: string; preview?: boolean; role?: LessonRole; /** Short name for its quiz row ("Quiz: <short>"); default: the title up to its first colon. */ short?: string }
 export interface SectionPlan { title: string; lessons: LessonPlan[] }
 export type Env = 'staging' | 'production';
 /** Per-environment settings; the chosen one overrides `apiUrl` and `course.priceCents`. */
@@ -87,7 +87,11 @@ export async function discover(folder: string): Promise<LessonFiles> {
 export const slug = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 80);
 export const SLIDES_TITLE = 'Slides (PDF)';
 export const LAB_TITLE = 'Hands-on lab (ZIP)';
-export const quizTitle = (lessonTitle: string) => `Check your understanding: ${lessonTitle}`.slice(0, 200);
+/** Quiz row in the curriculum, right after its lesson: short so the list stays scannable (owner review 2026-11-27). */
+export const quizTitle = (lesson: { title: string; short?: string } | string) => {
+  const l = typeof lesson === 'string' ? { title: lesson } : lesson;
+  return `Quiz: ${(l.short?.trim() || l.title.split(':')[0]!.trim())}`.slice(0, 200);
+};
 
 // ---------- quiz import (in-video questions read from the captions; never invented) ----------
 export interface QuizQuestion { q: string; options: string[]; correct: number; why: string }
@@ -386,6 +390,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
       sec = c.sections.find((s) => s.id === made.id)!;
       log(`+ section ${sp.title}`);
     }
+    if (sec.title !== sp.title) { await del.call('PATCH', `/courses/${courseId}/sections/${sec.id}`, { title: sp.title }); log(`~ section renamed: ${sp.title}`); }
     state.sections[sp.title] = sec.id;
     for (const lp of sp.lessons) {
       const files = inventory.get(lp.folder)!;
@@ -437,7 +442,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
       // Quiz lesson right after the video (questions only from the captions).
       const qz = quizzes.get(lp.folder);
       if (qz?.questions.length) {
-        const title = quizTitle(lp.title);
+        const title = quizTitle(lp);
         const everything = c.sections.flatMap((s) => s.lectures);
         let ql = everything.find((l) => l.id === state.quizzes![lp.folder]) ?? everything.find((l) => l.title === title && (l.type ?? 'quiz') === 'quiz');
         try {

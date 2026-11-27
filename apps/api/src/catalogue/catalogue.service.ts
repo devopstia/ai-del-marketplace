@@ -415,6 +415,8 @@ export class CatalogueService {
         slug: cert.course.slug,
         published: cert.course.status === 'published',
         instructorName: (cert.course.instructor.instructorProfile?.isPlatform && cert.course.taughtBy) || cert.course.instructor.name,
+        // "Designed by <name>" on DEL courses that name a person (owner 2026-11-27).
+        designedBy: !!(cert.course.instructor.instructorProfile?.isPlatform && cert.course.taughtBy),
         brand: brandOf(cert.course.instructor.instructorProfile),
         totalDurationSec: lectures.reduce((n, l) => n + l.durationSec, 0),
         lessons: lectures.length,

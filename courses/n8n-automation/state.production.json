@@ -1,9 +1,9 @@
 {
   "sections": {
-    "Getting started: n8n and Mattermost": "792c8169-27ac-46ff-9a8f-183df37a5974",
-    "Core concepts and your first real automations": "482753d2-eaeb-4917-9b6b-663b6a071243",
-    "DevOps automations in practice": "af876583-3106-4ba7-b8d7-9fb177ba7620",
-    "Advanced patterns and production": "e265270d-19d1-463e-b259-04abe97907a3"
+    "Set up your automation stack": "792c8169-27ac-46ff-9a8f-183df37a5974",
+    "Your first real automations": "482753d2-eaeb-4917-9b6b-663b6a071243",
+    "Alerts, incidents and reports": "af876583-3106-4ba7-b8d7-9fb177ba7620",
+    "Production-ready and AI-assisted": "e265270d-19d1-463e-b259-04abe97907a3"
   },
   "lessons": {
     "01-n1-n8n-mattermost-explained": "9ee48af5-2e7f-498f-b9f5-700a8e3a4278",

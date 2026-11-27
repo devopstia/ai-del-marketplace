@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const c = await getCourse(slug);
   if (!c) return { title: "Course not found", robots: { index: false } };
-  const description = plainText(c.subtitle || c.description) || `${c.title}: an online course by ${courseBy(c.instructor)}${taughtBy(c.instructor) ? `, taught by ${c.instructor.name},` : ""} on DevOps Easy Learning.`;
+  const description = plainText(c.subtitle || c.description) || `${c.title}: an online course by ${courseBy(c.instructor)}${c.instructor.taughtBy ? `, designed by ${c.instructor.taughtBy},` : taughtBy(c.instructor) ? `, taught by ${c.instructor.name},` : ""} on DevOps Easy Learning.`;
   return pageMeta({ title: c.title, description, path: `/courses/${c.slug}`, image: c.thumbnailUrl, imageAlt: `${c.title} course cover`, type: "article" });
 }
 
@@ -66,7 +66,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               {c.studentCount ? <span className="inline-flex items-center gap-1.5 text-white/80"><Users className="size-4" />{plural(c.studentCount, "learner")}</span> : null}
             </div>
             {taughtBy(c.instructor) ? (
-              <p className="mt-4 text-sm text-white/80" data-testid="course-brand">Created by <b className="text-white">{courseBy(c.instructor)}</b> · Taught by {c.instructor.taughtBy ? <b className="text-[#9fd9f5]">{c.instructor.taughtBy}</b> : <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link>}</p>
+              <p className="mt-4 text-sm text-white/80" data-testid="course-brand">Created by <b className="text-white">{courseBy(c.instructor)}</b> · {c.instructor.taughtBy ? <>Designed by <b className="text-[#9fd9f5]">{c.instructor.taughtBy}</b></> : <>Taught by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></>}</p>
             ) : (
               <p className="mt-4 text-sm text-white/80">Created by <Link href={`/instructors/${c.instructor.id}`} className="font-bold text-[#9fd9f5] underline-offset-2 hover:underline">{c.instructor.name}</Link></p>
             )}
@@ -115,14 +115,14 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           ) : null}
 
           <section className="mt-12" aria-labelledby="instructor-h">
-            <h2 id="instructor-h" className="font-display text-2xl font-extrabold">Your instructor</h2>
+            <h2 id="instructor-h" className="font-display text-2xl font-extrabold">{c.instructor.taughtBy ? "Course designer" : "Your instructor"}</h2>
             {c.instructor.taughtBy ? (
-              // A DEL course taught by a named member of the DEL team (owner 2026-11-26): the person, under the DEL brand.
+              // A DEL course designed by a named member of the DEL team (owner 2026-11-26; "Designed by", owner 2026-11-27).
               <div className="mt-5 flex flex-col gap-5 sm:flex-row" data-testid="taught-by">
                 <Avatar name={c.instructor.taughtBy} size={88} />
                 <div className="min-w-0">
                   <p className="font-display text-xl font-bold text-ink">{c.instructor.taughtBy}</p>
-                  <p className="text-ink-2">Instructor at <Link href={`/instructors/${c.instructor.id}`} className="link">{courseBy(c.instructor)}</Link></p>
+                  <p className="text-ink-2">Course designer at <Link href={`/instructors/${c.instructor.id}`} className="link">{courseBy(c.instructor)}</Link></p>
                 </div>
               </div>
             ) : (

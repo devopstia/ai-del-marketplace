@@ -11,6 +11,13 @@ the account and course-specific wishes; everything else is here. **The authority
 Course Creation and Publishing Standard shared with the Course Generation Agent); where this skill and the standard
 differ, the standard wins and this skill gets fixed.
 
+## Start and finish every session (owner 2026-11-27)
+Start: read `courses/HANDOVER.md`, `COURSE_STATUS.md`, `CONTENT_REQUESTS.md`, `LESSONS_LEARNED.md`. Finish: update the
+course's row in `COURSE_STATUS.md`, every request you touched (status + a dated Log line), `LESSONS_LEARNED.md`, and the
+"Now" part of `HANDOVER.md`; commit. Requests to the generation agent: write them in `CONTENT_REQUESTS.md` first (id,
+module/lesson, what, why, deliverables, priority), then message its session with the ids. Look for gaps
+(standard §7) and missing assessments (§8a) on every course, not only missing files.
+
 ## Settings (remembered)
 `courses/publisher.config.json`: environment **staging** (`https://staging.ai-devopseasylearning.com/api`), provider
 **DevOps Easy Learning**, account **DevOps Easy Learning** (`courses@del.example`, DEL Studio), videos root
@@ -60,7 +67,7 @@ final review below; only a super admin approves (Super Admin › Review queue).
 | Lab / exercise / source code `*.zip` | upload as **"Hands-on lab (ZIP)"** (zip loose source code first) |
 | PowerPoint `.ppt/.pptx` | never upload; if there's no PDF, convert (`soffice --headless --convert-to pdf`), check the page count and look at a page, then upload the PDF |
 | Thumbnails, raw/production files, temp files, agent instructions (`*.md` outside labs), `course.manifest.json`, `lesson.json` | never upload |
-| In-video quiz ("Question N of M … A: …; B: …; or C: …? … The answer is B: …") | imported as a quiz lesson "Check your understanding: <lesson>" right after the video (`course.quizzes: "from-captions"`); questions without spoken options are skipped and reported, or taken from the manifest only when every answer matches the video |
+| In-video quiz ("Question N of M … A: …; B: …; or C: …? … The answer is B: …") | imported as a quiz lesson "Quiz: <short lesson name>" right after the video (`course.quizzes: "from-captions"`); questions without spoken options are skipped and reported, or taken from the manifest only when every answer matches the video |
 | `.env`, keys, certificates, credentials, tokens | never upload; scan lab ZIPs before uploading (see step 3) |
 Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-lab.zip`), never internal names.
 
@@ -75,7 +82,8 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
    Delete the extracted copy afterwards.
    Read the generation agent's **manifest** (`course.manifest.json`, `lesson.json`; schema `courses/manifest.schema.json`)
    as hints: check each title, role, position and quiz against the captions before using it.
-4. **Write the plan** `courses/<course-slug>/plan.json` (format below): course title (prefer the name the labs and slides
+4. **Write the plan** to the presentation standard (`docs/COURSE_STANDARD.md` §3a: what each part of the course page is
+   for, the style rules and banned phrases; the n8n course plan is the reference example) `courses/<course-slug>/plan.json` (format below): course title (prefer the name the labs and slides
    use), subtitle, description, objectives (≤ 200 characters each), requirements (from the lab READMEs: tools, keys,
    hardware), level, category slug (`GET /api/categories`), cover `"suggested"`, sections in a learning order, and per
    lesson a professional title and a ≤ 300-character summary of what the video really does. The description is markdown
@@ -109,7 +117,7 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
    Then **submit** (`submit_for_review`, scope `submit`) when the owner wants it live; a super admin approves.
 10. **Report** to the owner (template below) with the studio link and the open decisions (price, publish).
 11. **Learn**: add what you learned to `courses/LESSONS_LEARNED.md` and content problems for the video-generation agent to
-    `courses/GENERATION_FEEDBACK.md`; improve this skill when a step was wrong or missing.
+    `courses/CONTENT_REQUESTS.md` (the request register; `GENERATION_FEEDBACK.md` is history); improve this skill when a step was wrong or missing.
 
 ## Adding lessons to an existing course (insert, don't append)
 Insert each new lesson folder at its **correct position** in `plan.json` (the section and place a learner should watch it,
@@ -180,7 +188,7 @@ Follow this exactly; it is what worked.
               "categorySlug": "", "cover": "suggested", "objectives": [], "requirements": [], "taughtBy": "", "quizzes": "from-captions" },
   "sections": [ { "title": "", "lessons": [ { "folder": "01-…", "title": "", "summary": "", "preview": false, "role": "lesson" } ] } ] }
 ```
-Manifest (from the generation agent, hints only): `courses/manifest.schema.json`; example in `courses/GENERATION_FEEDBACK.md`.
+Manifest (from the generation agent, hints only): `courses/manifest.schema.json`; example in `courses/CONTENT_REQUESTS.md` (the request register; `GENERATION_FEEDBACK.md` is history).
 
 ## Report template
 Course name · source folder · environment · account · course id · studio and course URLs · sections / lessons ·
