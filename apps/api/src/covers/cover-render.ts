@@ -57,8 +57,7 @@ function wrap(font: opentype.Font, words: string[], size: number, maxW: number):
 export interface FittedTitle { size: number; lineHeight: number; lines: string[] }
 
 /** Largest size (step 2px) at which the title fits `maxLines` lines of `maxW`; below `min`, the last line is shortened with "…". */
-export function fitTitle(title: string, maxW: number, maxLines: number, max: number, min: number): FittedTitle {
-  const font = fonts().title;
+export function fitTitle(title: string, maxW: number, maxLines: number, max: number, min: number, font: opentype.Font = fonts().title): FittedTitle {
   const words = title.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
   if (!words.length) words.push('Untitled course');
   for (let size = max; size >= min; size -= 2) {
@@ -559,6 +558,39 @@ function motifSvg(m: Motif, b: Box, p: Palette): string {
       });
       return out;
     }
+    // ---- night-blueprint technology symbols: original drawings (never third-party logos), in prototype units of ±100 ----
+    case 'cloud-chip': {
+      const s = u / 266;
+      const g = (inner: string) => `<g transform="translate(${cx} ${cy}) scale(${s})">${inner}</g>`;
+      const pins = [-14, 0, 14].map((t) => `<path d="M${t},-22v-12M${t},30v12M-26,${t + 4}h-12M26,${t + 4}h12" stroke="${a}" stroke-width="5" stroke-linecap="round"/>`).join('');
+      return g(`<path d="M-70,30 a40,40 0 0 1 10,-78 a55,55 0 0 1 104,-8 a42,42 0 0 1 26,86 z" fill="none" stroke="${a}" stroke-width="7" stroke-linejoin="round"/><rect x="-26" y="-22" width="52" height="52" rx="8" fill="${a}"/><rect x="-14" y="-10" width="28" height="28" rx="4" fill="${p.bg[0]}"/>${pins}<text x="0" y="9" text-anchor="middle" font-family="${FAMILY}" font-weight="800" font-size="16" fill="${a}">AI</text>`);
+    }
+    case 'cloud-nodes': {
+      const s = u / 266;
+      const pts: [number, number][] = [[-30, 0], [10, -24], [34, 12], [-4, 20]];
+      const cloud = 'M-72,32 a40,40 0 0 1 8,-78 a56,56 0 0 1 106,-6 a42,42 0 0 1 28,84 z';
+      const edges = pts.map(([x, y], i) => `<line x1="${x}" y1="${y}" x2="${pts[(i + 1) % 4]![0]}" y2="${pts[(i + 1) % 4]![1]}" stroke="${c}" stroke-width="4"/>`).join('');
+      const nodes = pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="${c}"/>`).join('');
+      return `<g transform="translate(${cx} ${cy}) scale(${s})"><path d="${cloud}" fill="${a}" fill-opacity="0.16"/><path d="${cloud}" fill="none" stroke="${a}" stroke-width="7" stroke-linejoin="round"/>${edges}${nodes}</g>`;
+    }
+    case 'neural-net': {
+      const s = u / 266;
+      const L: [number, number[]][] = [[-70, [-40, 0, 40]], [0, [-60, -20, 20, 60]], [70, [-30, 30]]];
+      let e = '';
+      for (let i = 0; i < 2; i++) for (const y1 of L[i]![1]) for (const y2 of L[i + 1]![1]) e += `<line x1="${L[i]![0]}" y1="${y1}" x2="${L[i + 1]![0]}" y2="${y2}" stroke="${i ? c : a}" stroke-width="3" stroke-opacity="0.7"/>`;
+      const n = L.map(([x, ys], i) => ys.map((y) => `<circle cx="${x}" cy="${y}" r="13" fill="${i === 1 ? a : c}" stroke="${p.bg[0]}" stroke-width="4"/>`).join('')).join('');
+      return `<g transform="translate(${cx} ${cy}) scale(${s})">${e}${n}</g>`;
+    }
+    case 'editor': {
+      const s = u / 266;
+      const dots = ['#ff6b6b', '#ffc145', '#4fd69a'].map((col, i) => `<circle cx="${-76 + i * 16}" cy="-57" r="5" fill="${col}"/>`).join('');
+      return `<g transform="translate(${cx} ${cy}) scale(${s})"><rect x="-95" y="-70" width="190" height="140" rx="14" fill="#11163a" stroke="${a}" stroke-width="6"/><path d="M-95,-44 h190" stroke="${a}" stroke-width="4" stroke-opacity="0.6"/>${dots}<text x="-72" y="-6" font-family="${FAMILY}" font-weight="700" font-size="30" fill="${a}">{ }</text><rect x="-10" y="-22" width="72" height="8" rx="4" fill="${c}"/><rect x="-10" y="-4" width="52" height="8" rx="4" fill="${c}" fill-opacity="0.7"/><rect x="-72" y="22" width="120" height="8" rx="4" fill="#3db1ec" fill-opacity="0.6"/><path d="M-72,50 l10,6 l-10,6" fill="none" stroke="#4fd69a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="-52" y="50" width="10" height="14" fill="#4fd69a"/></g>`;
+    }
+    case 'flow-ai': {
+      const s = u / 266;
+      const boxes = ([[-80, 0], [0, -40], [0, 40], [80, 0]] as [number, number][]).map(([x, y]) => `<rect x="${x - 22}" y="${y - 22}" width="44" height="44" rx="12" fill="#11163a" stroke="${a}" stroke-width="5"/>`).join('');
+      return `<g transform="translate(${cx} ${cy}) scale(${s})">${boxes}<path d="M-58,0 C-30,0 -30,-40 -22,-40 M-58,0 C-30,0 -30,40 -22,40 M22,-40 C50,-40 50,0 58,0 M22,40 C50,40 50,0 58,0" fill="none" stroke="${c}" stroke-width="5"/><circle cx="0" cy="-40" r="9" fill="${a}"/><circle cx="0" cy="40" r="9" fill="${c}"/><text x="80" y="8" text-anchor="middle" font-family="${FAMILY}" font-weight="800" font-size="20" fill="${a}">AI</text></g>`;
+    }
     case 'container': {
       const s = u * 0.15;
       const iso = (x: number, y: number, col: string, op: number) => {
@@ -604,6 +636,7 @@ function layoutFrame(l: Layout, p: Palette): Frame {
       return { bg: `<rect x="36" y="36" width="${COVER_W - 72}" height="${COVER_H - 72}" rx="30" fill="none" stroke="${p.a}" stroke-opacity="0.45" stroke-width="3"/>`, motif: { x: 850, y: 300, w: 360, h: 360 }, title: { x: 96, y: 170, w: 740, h: 400, anchor: 'top', align: 'start', maxLines: 3, max: 84, min: 42 }, label: { x: 96, y: 96, align: 'start' }, mark: { x: 96, y: COVER_H - 96 + 4, align: 'start' } };
     case 'spotlight':
       return { bg: '', motif: { x: 290, y: 20, w: 700, h: 680 }, motifOpacity: 0.22, title: { x: 150, y: 150, w: COVER_W - 300, h: 420, anchor: 'center', align: 'middle', maxLines: 3, max: 88, min: 44 }, label: { x: COVER_W / 2, y: M, align: 'middle' }, mark: { x: COVER_W / 2, y: COVER_H - M + 4, align: 'middle' } };
+    case 'night-blueprint': // drawn by nightBlueprintSvg; this frame only keeps the switch exhaustive
     case 'column':
       return { bg: `<rect x="0" y="0" width="400" height="${COVER_H}" fill="${p.tone === 'dark' ? '#000' : '#fff'}" fill-opacity="${p.tone === 'dark' ? 0.24 : 0.5}"/><rect x="400" y="0" width="6" height="${COVER_H}" fill="url(#acc)"/>`, motif: { x: 20, y: 150, w: 360, h: 420 }, title: { x: 470, y: 150, w: 740, h: 440, anchor: 'center', align: 'start', maxLines: 4, max: 80, min: 42 }, label: { x: 470, y: M, align: 'start' }, mark: { x: 470, y: COVER_H - M + 4, align: 'start' } };
   }
@@ -612,7 +645,75 @@ function layoutFrame(l: Layout, p: Palette): Frame {
 // ---------- the cover ----------
 export interface CoverSpec { layout: Layout; palette: Palette; motif: Motif }
 
+// ---------- the night-blueprint family (owner 2026-11-27: "Mix A + C") ----------
+/** "AI for DevOps on AWS: From Fundamentals to Production" → title + subtitle; titles without ": " stay whole. */
+export function splitTitle(title: string): { main: string; sub: string | null } {
+  const t = title.replace(/\s+/g, ' ').trim();
+  const i = t.indexOf(': ');
+  if (i < 3 || i > t.length - 4) return { main: t, sub: null };
+  return { main: t.slice(0, i), sub: t.slice(i + 2) };
+}
+
+function nightBlueprintSvg(spec: CoverSpec, input: { title: string; topic?: string | null }): string {
+  const p = spec.palette;
+  const X = 80;
+  const W = 680; // the title column ends well before the symbol
+  const { main, sub } = splitTitle(input.title);
+  const tf = fonts();
+  const t = fitTitle(main, W, sub ? 2 : 3, 84, 46);
+  const st = sub ? fitTitle(sub, W, 2, Math.max(30, Math.min(44, Math.round(t.size * 0.52))), 26, tf.label) : null;
+  const cap = ((tf.title.tables.os2 as { sCapHeight?: number } | undefined)?.sCapHeight ?? tf.title.ascender * 0.7) / tf.title.unitsPerEm;
+  const gap = st ? Math.round(st.size * 0.95) : 0;
+  const blockH = cap * t.size + (t.lines.length - 1) * t.lineHeight + (st ? gap + cap * st.size + (st.lines.length - 1) * st.lineHeight : 0);
+  const top = 150;
+  const bottom = 492;
+  const y0 = top + Math.max(0, (bottom - top - blockH) / 2) + cap * t.size;
+  let y = y0;
+  let text = t.lines.map((line, i) => `<text x="${X}" y="${Math.round(y0 + i * t.lineHeight)}" font-family="${FAMILY}" font-weight="800" font-size="${t.size}" letter-spacing="${TRACK * t.size}" fill="${p.ink}">${esc(line)}</text>`).join('');
+  y = y0 + (t.lines.length - 1) * t.lineHeight;
+  if (st) {
+    const sy = y + gap + cap * st.size;
+    text += st.lines.map((line, i) => `<text x="${X}" y="${Math.round(sy + i * st.lineHeight)}" font-family="${FAMILY}" font-weight="600" font-size="${st.size}" fill="${p.ink}" fill-opacity="0.86">${esc(line)}</text>`).join('');
+    y = sy + (st.lines.length - 1) * st.lineHeight;
+  }
+  const ruleY = Math.max(520, Math.round(y + 34));
+
+  let label = '';
+  if (input.topic) {
+    const ls = 24;
+    const lw = tf.label.getAdvanceWidth(input.topic, ls, { kerning: true }) + 40;
+    label = `<rect x="${X}" y="72" width="${lw}" height="44" rx="22" fill="${p.b}" fill-opacity="0.16" stroke="${p.b}" stroke-width="2"/><text x="${X + 20}" y="101" font-family="${FAMILY}" font-weight="700" font-size="${ls}" fill="${p.b}">${esc(input.topic)}</text>`;
+  }
+  const markText = 'DevOps Easy Learning';
+  const my = COVER_H - M + 4 - 28;
+  const mark = `<g transform="translate(${X} ${my}) scale(${56 / 120})" fill="none" stroke-width="10" stroke-linecap="round"><path d="${LOOP}" stroke="url(#delmark)"/></g><text x="${X + 70}" y="${my + 22}" font-family="${FAMILY}" font-weight="700" font-size="24" fill="${p.ink}" fill-opacity="0.82">${markText}</text>`;
+  const circuits = `<path d="M1280,150 H1120 l-36,36 H880 M1280,590 H1150 l-30,-30 H900 M720,690 V640 l30,-30 H860" fill="none" stroke="${p.a}" stroke-width="3" stroke-opacity="0.7"/>${[[880, 186], [900, 560], [860, 610]].map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="7" fill="${p.a}"/>`).join('')}`;
+  const box: Box = { x: 830, y: 180, w: 360, h: 360 };
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${COVER_W}" height="${COVER_H}" viewBox="0 0 ${COVER_W} ${COVER_H}">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${p.bg[0]}"/><stop offset="1" stop-color="${p.bg[1]}"/></linearGradient>
+  <radialGradient id="glow" cx="0.8" cy="0.45" r="0.58"><stop offset="0" stop-color="${p.a}" stop-opacity="0.42"/><stop offset="1" stop-color="${p.a}" stop-opacity="0"/></radialGradient>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-width="1"/></pattern>
+  <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.45" stop-color="#fff" stop-opacity="0.25"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>
+  <mask id="gridmask"><rect width="${COVER_W}" height="${COVER_H}" fill="url(#fade)"/></mask>
+  <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${p.a}"/><stop offset="1" stop-color="${p.b}"/></linearGradient>
+  <linearGradient id="delmark" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b7bff"/><stop offset="1" stop-color="#3db1ec"/></linearGradient>
+</defs>
+<rect width="${COVER_W}" height="${COVER_H}" fill="url(#bg)"/>
+<rect width="${COVER_W}" height="${COVER_H}" fill="url(#grid)" mask="url(#gridmask)"/>
+<rect width="${COVER_W}" height="${COVER_H}" fill="url(#glow)"/>
+${circuits}
+${motifSvg(spec.motif, box, p)}
+${label}
+${text}
+<rect x="${X}" y="${ruleY}" width="90" height="6" rx="3" fill="${p.a}"/>
+${mark}
+</svg>`;
+}
+
+
 export function coverSvg(spec: CoverSpec, input: { title: string; topic?: string | null }): string {
+  if (spec.layout === 'night-blueprint') return nightBlueprintSvg(spec, input);
   const p = spec.palette;
   const f = layoutFrame(spec.layout, p) as Frame & { veil?: string };
   const t = fitTitle(input.title, f.title.w, f.title.maxLines, f.title.max, f.title.min);
