@@ -317,6 +317,12 @@
           "summary": "Ask \"why is payments slow?\" and let an n8n AI Agent check health, metrics, logs and the runbook with read-only tools. Risky actions become requests: a separate approval workflow restarts only after a human clicks."
         },
         {
+          "folder": "18-automation-n8n/22-n22-n8n-ai-cicd-live",
+          "title": "AI in CI/CD: explain a failed pipeline and suggest the fix",
+          "short": "AI in CI/CD",
+          "summary": "When a GitHub Actions job fails, n8n reads the failed log, an AI model explains it in plain words and suggests a fix, and the team sees the draft in Mattermost. The AI explains and suggests; it never merges or deploys."
+        },
+        {
           "type": "article",
           "key": "go-further-n8n",
           "title": "Go further with n8n: the complete automation course",

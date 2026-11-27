@@ -72,7 +72,7 @@ basics + DevOps prompting (CR-077–CR-082, CR-096, CR-085–CR-088) → 4. LLMO
 | CR-006 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI pull request review assistant | GEN | 2026-11-27 | P1 | blocked: owner creates the GitHub token | — | — |
 | CR-007 | n8n; also in both masterclasses' n8n module | Module 4 (AI) | AI agents in n8n (AI Agent node, tools, guardrails, human approval) | GEN | 2026-11-27 | P1 | completed (published 2026-11-28: n8n module 4 after AI summaries; both masterclasses' n8n module) | `19-n19-n8n-ai-agent-live` | — |
 | CR-008 | n8n | Module 4 (AI) | AI incident triage and root-cause suggestions | GEN | 2026-11-27 | P1 | in-progress (written, build queued) | — | — |
-| CR-009 | n8n | Module 4 (AI) | AI in CI/CD (explain failed pipelines, suggest fixes; never auto-deploy) | GEN | 2026-11-27 | P1 | in-progress (written, build queued) | — | — |
+| CR-009 | n8n | Module 4 (AI) | AI in CI/CD (explain failed pipelines, suggest fixes; never auto-deploy) | GEN | 2026-11-27 | P1 | validated (lab scanned clean 2026-11-28) | `22-n22-n8n-ai-cicd-live` (17:05, lab) | in the n8n plan (after the AI ops agent) and both masterclasses (n8n module); publish at the next production sign-in |
 | CR-010 | n8n | Module 3 or 4 | Intelligent alerting (grouping, noise reduction, rules first, AI second) | GEN | 2026-11-27 | P2 | in-progress (written, build queued) | — | — |
 | CR-011 | n8n | Module 3 | Slack integration | GEN | 2026-11-27 | P2 | blocked: needs the owner's Slack webhook | — | — |
 | CR-012 | n8n | End of each module | Module assessment (8–10 multiple-choice questions over the module, answers + explanations) | GEN | 2026-11-27 | P2 | requested | `18-automation-n8n/assessments/module-<n>.json` | — |
