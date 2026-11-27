@@ -23,6 +23,12 @@ function fakeDb() {
   const tx: any = {
     order: {
       updateMany: jest.fn(async ({ where, data }: any) => {
+        // receipt number: only while the order has none (docs/RECEIPTS.md)
+        if ('receiptNumber' in where) {
+          if (where.id !== state.order.id || (state.order as any).receiptNumber) return { count: 0 };
+          Object.assign(state.order, data);
+          return { count: 1 };
+        }
         if (where.id !== state.order.id || !where.status.in.includes(state.order.status)) return { count: 0 };
         Object.assign(state.order, data);
         return { count: 1 };
@@ -53,6 +59,8 @@ function fakeDb() {
     // Paid (non-preview) video length per course, recorded on each line at purchase (refund measure).
     lecture: { aggregate: jest.fn(async ({ where }: any) => ({ _sum: { durationSec: where.section.courseId === 'c1' ? 3600 : 1200 } })) },
   };
+  let seq = 41;
+  tx.$queryRaw = jest.fn(async () => [{ n: BigInt(++seq) }]);
   const prisma: any = { ...tx, $transaction: jest.fn(async (fn: any) => fn(tx)) };
   return { state, prisma };
 }
@@ -80,6 +88,8 @@ describe('FulfilmentService.fulfil', () => {
     expect(state.cartDeleted).toBe(1);
     expect(state.audits).toContain('order.paid');
     expect(jobs.sendEmail).toHaveBeenCalledTimes(1);
+    // One receipt number, assigned once: duplicates never take another from the sequence (docs/RECEIPTS.md).
+    expect((state.order as any).receiptNumber).toMatch(/^DEL-RCP-\d{4}-000042$/);
   });
 
   it('is idempotent: a second call (duplicate webhook / double click) changes nothing', async () => {

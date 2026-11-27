@@ -256,6 +256,8 @@ export function toOrder(x: unknown): Order {
   const u = obj(o.user);
   return {
     id: str(o.id),
+    receiptNumber: str(o.receiptNumber) || null,
+    orderRef: str(o.orderRef) || undefined,
     status: str(o.status, "pending") as Order["status"],
     totalCents: num(o.totalCents),
     currency: str(o.currency, "usd"),

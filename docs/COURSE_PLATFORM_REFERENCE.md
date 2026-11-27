@@ -75,6 +75,7 @@ public check `GET /api/certificates/:code` and the page `/certificates/<ID>` (QR
 Student Studio › Learning progress lists them; Super Admin › Certificates revokes/restores. Full details:
 `docs/CERTIFICATES.md`. Course agents never create or sign certificates; they make sure a course can be completed
 (every lesson completable) and check the certificate once per new course.
+Receipts for course purchases: `docs/RECEIPTS.md` (private; `/student/purchases/<order id>`, PDF from `apps/api/src/receipts`).
 
 ## 6. Environments
 Staging https://staging.ai-devopseasylearning.com (no sign-in codes; seed admin from SSM), production

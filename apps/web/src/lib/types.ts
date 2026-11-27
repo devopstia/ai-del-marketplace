@@ -195,6 +195,9 @@ export interface OrderLine {
 
 export interface Order {
   id: string;
+  /** Customer-facing references (docs/RECEIPTS.md): DEL-RCP-2026-000123 and ORD-XXXXXXXX. */
+  receiptNumber?: string | null;
+  orderRef?: string;
   status: "pending" | "paid" | "failed" | "refunded" | "partially_refunded";
   totalCents: number;
   currency: string;
@@ -454,4 +457,28 @@ export interface AuditEntry {
   ip?: string | null;
   meta?: unknown;
   at: string;
+}
+
+/** The official receipt (docs/RECEIPTS.md): the same view model the PDF is drawn from. */
+export interface Receipt {
+  orderId: string;
+  receiptNumber: string;
+  orderRef: string;
+  status: "paid" | "partially_refunded" | "refunded";
+  statusLabel: string;
+  purchasedAt: string;
+  paidAt: string | null;
+  paymentMethod: string;
+  transactionRef: string | null;
+  currency: string;
+  customer: { name: string; email: string };
+  company: { legalName: string; address: string[]; supportEmail: string; website: string; taxId: string | null };
+  lines: { title: string; quantity: number; unitCents: number; discountCents: number; amountCents: number; discountLabel: string | null; refundedAt: string | null }[];
+  subtotalCents: number;
+  discountCents: number;
+  tax: { cents: number; included: boolean } | null;
+  totalCents: number;
+  refunds: { title: string; at: string; cents: number }[];
+  refundedCents: number;
+  netCents: number;
 }

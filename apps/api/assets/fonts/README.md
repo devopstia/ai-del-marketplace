@@ -10,3 +10,8 @@ EB Garamond (Regular, Medium, SemiBold, Italic), used by `src/certificates/certi
 certificate (Academic Excellence). Licence: SIL Open Font License 1.1. Source: the EB Garamond project
 (https://github.com/octaviopardo/EBGaramond12, static TTFs), the same family Google Fonts serves.
 
+# Receipt fonts
+
+Atkinson Hyperlegible Next (400, 600, 700; the site's text font, by the Braille Institute) and JetBrains Mono (400, by
+JetBrains), static TTFs from Google Fonts, embedded (subset) in receipt PDFs by `src/receipts/receipt-pdf.ts` together
+with Schibsted Grotesk 700/800. Licence: SIL Open Font License 1.1.

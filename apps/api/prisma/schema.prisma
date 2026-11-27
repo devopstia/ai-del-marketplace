@@ -591,6 +591,12 @@ model Order {
   feeSource                String? // stripe | simulated | none
   balanceTxnId             String?
   taxCents                 Int             @default(0)
+  /// Customer-facing receipt number, DEL-RCP-<year>-<6 digits>, assigned once when the order is paid (docs/RECEIPTS.md).
+  receiptNumber            String?         @unique
+  /// Masked payment method from Stripe (brand + last 4, wallet), for the receipt. Never a full card number.
+  paymentBrand             String?
+  paymentLast4             String?
+  paymentWallet            String?
   refundEligibleUntil      DateTime?
   /// Buyer asked for immediate access and acknowledged the withdrawal-right rule (EU/UK digital content).
   immediateAccessConsentAt DateTime?

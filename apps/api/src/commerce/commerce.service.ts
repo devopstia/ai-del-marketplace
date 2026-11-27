@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { orderRef } from '../receipts/receipt-number';
 import { blockingEnrollmentWhere } from '../access/access';
 import { AuditService } from '../common/audit.service';
 import { Actor } from '../common/auth-context';
@@ -253,11 +254,14 @@ export class CommerceService {
 
   private orderView(o: {
     id: string; status: string; totalCents: number; currency: string; provider: string; paidAt: Date | null; createdAt: Date;
-    termsVersion: string | null; termsAcceptedAt: Date | null;
+    termsVersion: string | null; termsAcceptedAt: Date | null; receiptNumber?: string | null;
     lines:{ id: string; courseId: string; priceCents: number; listPriceCents: number | null; saleKind: string | null; refundedAt: Date | null; course: { slug: string; title: string } }[];
   }) {
     return {
       id: o.id,
+      // The customer-facing references (docs/RECEIPTS.md); the uuid stays the key.
+      receiptNumber: o.receiptNumber ?? null,
+      orderRef: orderRef(o.id),
       status: o.status,
       totalCents: o.totalCents,
       currency: o.currency,
