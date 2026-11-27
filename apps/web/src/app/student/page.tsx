@@ -131,7 +131,8 @@ export default function StudentDashboard() {
             </section>
           ) : null}
 
-          <div className={current || !sorted.length ? "mt-6" : ""}>
+          {/* A new student sees the way in, not a row of zeros. */}
+          {sorted.length ? <div className={current ? "mt-6" : ""}>
             <KpiStrip items={[
               { label: "Enrolled courses", value: String(sorted.length), note: d.expired.length ? `${d.expired.length} expired` : undefined },
               { label: "In progress", value: String(inProgress.length) },
@@ -140,10 +141,11 @@ export default function StudentDashboard() {
               { label: "Learning streak", value: `${d.activity.streak} day${d.activity.streak === 1 ? "" : "s"}`, note: `${d.activity.activeDays} active days in 30` },
               { label: "Lessons opened", value: String(d.activity.lessonsOpened), note: "Last 30 days" },
             ]} />
-          </div>
+          </div> : null}
 
           {sorted.length ? (
             <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+              <div className="grid gap-6">
               <Panel title="My courses" href="/student/courses" linkLabel="All courses">
                 <ul className="-mx-1 divide-y divide-line" data-testid="my-courses">
                   {sorted.slice(0, 6).map((i) => {
@@ -165,11 +167,17 @@ export default function StudentDashboard() {
                   })}
                 </ul>
               </Panel>
+              <Panel title="Learning activity, last 30 days">
+                {d.activity.activeDays ? (
+                  <TimeChart points={d.activity.days.map((x) => ({ date: x.date, a: x.lessons, b: x.quizzes }))} labelA="Lessons opened" labelB="Quiz attempts" format={(v) => (Number.isInteger(v) ? String(v) : "")} height={220} ariaLabel="Your learning activity over the last 30 days" />
+                ) : <EmptyNote href={current ? resumeHref(current) : "/student/courses"} action="Open a lesson">No lessons opened in the last 30 days.</EmptyNote>}
+              </Panel>
+              </div>
               <div className="grid gap-6">
                 <Panel title="Needs your attention">
                   {attention.length ? (
                     <ul className="-mx-1 divide-y divide-line" data-testid="attention">
-                      {attention.slice(0, 5).map((a) => (
+                      {attention.slice(0, 4).map((a) => (
                         <li key={a.key} className="flex items-start gap-3 px-1 py-2.5 text-sm">
                           <a.icon className={`mt-0.5 size-4 shrink-0 ${a.tone}`} aria-hidden="true" />
                           <span className="min-w-0 flex-1 text-ink-2">{a.text}</span>
@@ -179,19 +187,6 @@ export default function StudentDashboard() {
                     </ul>
                   ) : <EmptyNote>Nothing waiting. Enjoy your next lesson.</EmptyNote>}
                 </Panel>
-                {/* One recommendation block at a time: your next courses when there are any, else DEL's full program. */}
-                {related.length ? <RelatedCourses items={related} variant="compact" /> : <ProgramNote placement="student-dashboard" />}
-              </div>
-            </div>
-          ) : null}
-
-          {sorted.length ? (
-            <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-              <Panel title="Learning activity, last 30 days">
-                {d.activity.activeDays ? (
-                  <TimeChart points={d.activity.days.map((x) => ({ date: x.date, a: x.lessons, b: x.quizzes }))} labelA="Lessons opened" labelB="Quiz attempts" format={(v) => String(Math.round(v))} height={220} ariaLabel="Your learning activity over the last 30 days" />
-                ) : <EmptyNote href={current ? resumeHref(current) : "/student/courses"} action="Open a lesson">No lessons opened in the last 30 days.</EmptyNote>}
-              </Panel>
               <Panel title="Quiz results">
                 {d.quizzes.quizzesTaken ? (
                   <div data-testid="quiz-results">
@@ -215,8 +210,12 @@ export default function StudentDashboard() {
                   </div>
                 ) : <EmptyNote>Quizzes after lessons show your score here.</EmptyNote>}
               </Panel>
+                {/* One recommendation block at a time: your next courses when there are any, else DEL's full program. */}
+                {related.length ? <RelatedCourses items={related} variant="compact" /> : <ProgramNote placement="student-dashboard" />}
+              </div>
             </div>
           ) : null}
+
 
           {sorted.length || d.purchases.length ? (
             <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
@@ -240,7 +239,7 @@ export default function StudentDashboard() {
                     {d.downloads.map((x) => (
                       <li key={x.id} className="flex items-center gap-3 px-1 py-2">
                         {/zip/i.test(x.title) ? <Download className="size-4 shrink-0 text-violet" aria-hidden="true" /> : <FileText className="size-4 shrink-0 text-violet" aria-hidden="true" />}
-                        <span className="min-w-0 flex-1"><span className="line-clamp-1">{x.title}</span><span className="text-xs text-muted">{x.course?.title ?? ""}{x.course ? " · " : ""}{date(x.at)}</span></span>
+                        <span className="min-w-0 flex-1"><span className="line-clamp-1">{x.title}</span><span className="block truncate text-xs text-muted">{x.course?.title ?? ""}{x.course ? " · " : ""}{date(x.at)}</span></span>
                         {x.course ? <Link href={`/learn/${x.course.slug}`} className="link shrink-0">Open</Link> : null}
                       </li>
                     ))}
@@ -253,7 +252,7 @@ export default function StudentDashboard() {
                     {d.purchases.map((p) => (
                       <li key={p.id} className="flex items-center gap-3 px-1 py-2">
                         <Receipt className="size-4 shrink-0 text-violet" aria-hidden="true" />
-                        <span className="min-w-0 flex-1"><span className="line-clamp-1">{p.courses.join(", ")}</span><span className="text-xs text-muted">{date(p.paidAt)} · {p.receiptNumber ?? p.orderRef}{p.status !== "paid" ? ` · ${p.status.replace("_", " ")}` : ""}</span></span>
+                        <span className="min-w-0 flex-1"><span className="line-clamp-1">{p.courses.join(", ")}</span><span className="block truncate text-xs text-muted">{date(p.paidAt)} · {p.receiptNumber ?? p.orderRef}{p.status !== "paid" ? ` · ${p.status.replace("_", " ")}` : ""}</span></span>
                         <span className="shrink-0 tabular-nums font-bold">{moneyExact(p.totalCents, p.currency)}</span>
                         <Link href={`/student/purchases/${p.id}`} className="link shrink-0">Receipt</Link>
                       </li>
