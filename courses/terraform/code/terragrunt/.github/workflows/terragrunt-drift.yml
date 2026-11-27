@@ -1,0 +1,50 @@
+# Nightly drift detection: plan every unit with -detailed-exitcode (2 = changes) and open an issue when something drifted.
+name: terragrunt-drift
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.17.2"
+          terraform_wrapper: false
+      - name: Install Terragrunt 1.2.3 (checksum verified)
+        run: |
+          curl -fsSLO https://github.com/gruntwork-io/terragrunt/releases/download/v1.2.3/terragrunt_linux_amd64
+          curl -fsSLO https://github.com/gruntwork-io/terragrunt/releases/download/v1.2.3/SHA256SUMS
+          grep " terragrunt_linux_amd64$" SHA256SUMS | sha256sum -c -
+          sudo install terragrunt_linux_amd64 /usr/local/bin/terragrunt
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Plan everything
+        id: plan
+        working-directory: aws/live
+        run: |
+          set +e
+          terragrunt run --all --non-interactive -- plan -detailed-exitcode -no-color -lock=false > drift.txt 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+      - name: Open an issue on drift
+        if: steps.plan.outputs.code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('aws/live/drift.txt', 'utf8').slice(-60000);
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: "Drift detected by the nightly Terragrunt plan",
+              body: "Exit code ${{ steps.plan.outputs.code }} (2 = changes, 1 = error).\n```\n" + body + "\n```"
+            });

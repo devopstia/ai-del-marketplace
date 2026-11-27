@@ -7,12 +7,14 @@ The owner's deck (`/home/tia/work/terraform-course/Terraform.pptx`, 624 slides) 
 **Self-contained:** a student of this course never needs the Azure course. Every lesson that touches a cloud has its own AWS video and lab.
 **Budget (rule in `CONTENT_REQUESTS.md`):** $100/month for AWS and Azure together; the video agent estimates each run, logs it in its CLOUD_BUDGET.md and destroys and verifies right after recording (no owner pause, owner 2026-11-28); the $80/$100 budget alarms in both clouds stay as the safety net.
 **The AI rule, in every lesson that uses AI:** AI drafts; fmt, validate, tests, policy, the plan and a person verify; never auto-apply.
+**Versions (owner 2026-11-28: "use new Terraform version"):** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries. Every lesson, lab and request uses them; no lesson teaches 0.12/1.0 syntax (13.5 shows old code only as the starting point of an upgrade). [owner original, updated] lessons are re-recorded on these versions; the owner's repo code is used from re-pinned, validated lab copies (`code/owner-updated/`, fixes listed in `CONTENT_INVENTORY.md`).
+**Title, size and price approved by the owner (2026-11-28):** this title, 95 videos, $49.99 at launch and $69.99 once complete and reviewed. The recording order is not confirmed yet.
 
-**Size:** 18 modules, 95 videos, about 17 h 27 min. 37 videos are shared with the Azure course.
+**Size:** 18 modules, 95 videos, about 17 h 32 min. 37 videos are shared with the Azure course.
 
 | Module | Videos | Minutes | Owner original / updated / new / AI |
 |---|---:|---:|---|
-| 0 Welcome and safe set-up | 2 | 15 | 0 / 0 / 2 / 0 |
+| 0 Welcome and safe set-up | 2 | 20 | 0 / 0 / 2 / 0 |
 | 1 Why Infrastructure as Code | 3 | 25 | 2 / 1 / 0 / 0 |
 | 2 Set up your workstation | 3 | 31 | 1 / 2 / 0 / 0 |
 | 3 The Terraform language and workflow | 7 | 63 | 6 / 1 / 0 / 0 |
@@ -35,10 +37,11 @@ The owner's deck (`/home/tia/work/terraform-course/Terraform.pptx`, 624 slides) 
 Both courses: what you will build, how the labs work, and an account that cannot surprise you with a bill.
 
 ### 0.1 Course introduction: what you will build and how to learn here  [new, proposed]
-- **Request:** CR-129 · **Duration:** ~5 min · **Depends on:** —
+- **Request:** the premium introduction request (CR-300 onward, written by the coordinator); CR-129/CR-130 are superseded by it · **Duration:** ~10 min · **Depends on:** —
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Describe the path from first resource to the enterprise capstone; Explain how lessons, labs, quizzes and the AI strand fit together; Plan a study rhythm that includes destroying every lab
 - **Slides:** slides 1–8 (table of contents) · **Owner's repo:** — (none in the owner's repo)
-- **Demo:** The finished capstone pipeline first (a pull request, the plan, the AI review comment, a person approving, apply), then the module map and how labs and cleanup work. Shown on AWS (S3 state, GitHub OIDC, Bedrock).
+- **Demo:** Premium introduction (8–12 min): the finished capstone first (a pull request, the plan, the AI review comment, a person approving, apply), an animated roadmap of the 18 modules, real previews of the projects (first resource, the owner's module projects, the RAG stack, the capstone), how labs, quizzes and cleanup work, and a clear call to action. Shown on AWS (S3 state, GitHub OIDC, Bedrock).
 - **Code:** no lab (introduction video)
 - **Cloud resources:** none or free resources only · **Cost per run:** $0 · **Cleanup:** nothing is created
 - **Materials:** PDF slides from the owner's deck (slides 1–8 (table of contents)), redrawn to the course standard; lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)
@@ -49,6 +52,7 @@ Both courses: what you will build, how the labs work, and an account that cannot
 
 ### 0.2 Your training account, safely: budgets, MFA and the cleanup habit  [new, proposed]
 - **Request:** CR-131 · **Duration:** ~10 min · **Depends on:** 0.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Turn on MFA and avoid long-lived admin keys; Create a budget alert below the training budget; Find and delete leftover resources
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** AWS: root MFA, IAM Identity Center user, AWS Budgets alert at $20 (student) and the Cost Explorer view; a Resource Groups tag search on Course=terraform-aws-masterclass.
@@ -66,6 +70,7 @@ The owner's opening: the problems of manual infrastructure and why teams moved t
 
 ### 1.1 From click-ops to code: how infrastructure used to be managed  [owner original] **[shared]**
 - **Request:** CR-133 · **Duration:** ~8 min · **Depends on:** 0.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Describe the manual way of building servers and networks; Name three problems it causes (drift, slowness, no history); Explain what changes when infrastructure is code
 - **Slides:** slides 15–22 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The owner's diagrams (slides 17–22): ticket, manual console clicks, configuration drift, then the same environment rebuilt from code in minutes.
@@ -79,6 +84,7 @@ The owner's opening: the problems of manual infrastructure and why teams moved t
 
 ### 1.2 What IaC is and why it pays off  [owner original] **[shared]**
 - **Request:** CR-134 · **Duration:** ~7 min · **Depends on:** 1.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Define Infrastructure as Code; Explain disaster recovery, consistency and visibility benefits; Connect IaC to code review and version control
 - **Slides:** slides 23–27 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Slides 24–27 with one example per benefit: rebuild after a deleted network, two identical environments, the code as documentation.
@@ -92,6 +98,7 @@ The owner's opening: the problems of manual infrastructure and why teams moved t
 
 ### 1.3 IaC tools compared: Terraform, OpenTofu, CloudFormation, Bicep and Pulumi  [owner original, updated] **[shared]**
 - **Request:** CR-135 · **Duration:** ~10 min · **Depends on:** 1.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Compare declarative multi-cloud tools with cloud-native ones; Explain Terraform's BSL licence and the OpenTofu fork in one minute; Choose a tool for a given team
 - **Slides:** slides 28–32 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The owner's Terraform vs CloudFormation slide (32) extended with Bicep (Azure), Pulumi and OpenTofu; a decision table.
@@ -109,6 +116,7 @@ Editor, Terraform at the right version, and signed-in cloud tools.
 
 ### 2.1 VS Code and the Terraform extensions  [owner original] **[shared]**
 - **Request:** CR-136 · **Duration:** ~7 min · **Depends on:** 1.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Install the HashiCorp Terraform extension; Turn on format-on-save; Use completion and hover docs
 - **Slides:** slides 33–36 · **Owner's repo:** `aws-terraform/terraform-concepts/youtube/vs-code-plugins`
 - **Demo:** Slide 36's plugin list reduced to the official HashiCorp Terraform extension (others are optional); format on save; hover docs. Links the free VS Code masterclass.
@@ -123,6 +131,7 @@ Editor, Terraform at the right version, and signed-in cloud tools.
 
 ### 2.2 Install Terraform the right way: versions, tfenv and Docker  [owner original, updated] **[shared]**
 - **Request:** CR-137 · **Duration:** ~12 min · **Depends on:** 2.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Install a pinned Terraform version on Windows, macOS or Linux; Switch versions with tfenv; Run Terraform in Docker
 - **Slides:** slides 43–57 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-installation, Dockerfile in slide 49/54`
 - **Demo:** The owner's three platforms (slides 45–53) and Docker (54–55) with today's version; tfenv to switch; the official HashiCorp package repositories as an option.
@@ -137,6 +146,7 @@ Editor, Terraform at the right version, and signed-in cloud tools.
 
 ### 2.3 Your cloud CLI and credentials  [owner original, updated]
 - **Request:** CR-138 · **Duration:** ~12 min · **Depends on:** 0.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Install the cloud CLI; Sign in without long-lived admin keys; Check which identity Terraform will use
 - **Slides:** slides 37–42 · **Owner's repo:** `aws-terraform/terraform-concepts/aws-cli-installation`, `aws-terraform/youtube/manage-credentials`
 - **Demo:** AWS CLI v2 install (slides 39–41), then `aws configure sso` and `aws sso login`, `aws sts get-caller-identity`; why slide 42's admin user with access keys is replaced.
@@ -155,6 +165,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.1 HCL: blocks, arguments and resources  [owner original] **[shared]**
 - **Request:** CR-140 · **Duration:** ~10 min · **Depends on:** 2.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Read a resource block (type, local name, arguments); Tell blocks, arguments and expressions apart; Explain what tags/labels are for
 - **Slides:** slides 58–69 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Slides 61–69 annotated on screen with a cloud-neutral resource (local_file, random_pet), then the same anatomy on an aws_instance and an azurerm_resource_group.
@@ -168,6 +179,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.2 The core workflow: init, fmt, validate, plan, apply, destroy  [owner original] **[shared]**
 - **Request:** CR-141 · **Duration:** ~12 min · **Depends on:** 3.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Run the six core commands in order; Read a plan's create/change/destroy summary; Destroy safely
 - **Slides:** slides 80–97 · **Owner's repo:** `aws-terraform/terraform-concepts/learning-basic-commands, terraform-commands`
 - **Demo:** The owner's command slides (82–93) and workflow (95–97) with a local_file and random_pet project: init downloads providers, fmt, validate, plan, apply, change, destroy.
@@ -181,6 +193,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.3 Comments and code style  [owner original] **[shared]**
 - **Request:** CR-142 · **Duration:** ~5 min · **Depends on:** 3.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Use #, // and /* */ comments; Comment out a block safely; Keep comments useful
 - **Slides:** slides 98–104 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-comments`
 - **Demo:** The owner's comments example; commenting out a resource and what plan does next (it plans a destroy).
@@ -194,6 +207,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.4 Terraform files and project layout  [owner original] **[shared]**
 - **Request:** CR-143 · **Duration:** ~8 min · **Depends on:** 3.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Split a configuration into main, variables, outputs and versions files; Explain terraform.tfvars and the .terraform folder; Write a .gitignore for Terraform
 - **Slides:** slides 163–170 · **Owner's repo:** `aws-terraform/terraform-concepts/terrafrom-files`
 - **Demo:** Slides 165–170 on a real folder; a .gitignore that excludes .terraform/, *.tfstate*, *.tfvars (keep *.tfvars.example).
@@ -207,6 +221,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.5 Providers and version constraints  [owner original, updated]
 - **Request:** CR-144 · **Duration:** ~10 min · **Depends on:** 3.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Declare required_version and required_providers; Use ~>, >= and exact constraints; Explain the provider's role between Terraform and the API
 - **Slides:** slides 70–79, 460–466 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-providers, youtube/terraform-providers-version-block`
 - **Demo:** hashicorp/aws ~> 6.0 (6.74.0 on 2026-11-27); region; default_tags; what the v6 major changed (per-resource `region` argument).
@@ -222,6 +237,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.6 The dependency lock file  [owner original] **[shared]**
 - **Request:** CR-146 · **Duration:** ~6 min · **Depends on:** 3.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Explain what .terraform.lock.hcl records; Commit it; Upgrade providers with init -upgrade
 - **Slides:** slides 151–156 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-lock-file`
 - **Demo:** Slides 153–156; delete .terraform, init again (same version from the lock); init -upgrade; terraform providers lock for several platforms.
@@ -235,6 +251,7 @@ HCL, the core commands, files and providers, with cloud-neutral demos first.
 
 ### 3.7 Your first resources on the cloud  [owner original]
 - **Request:** CR-147 · **Duration:** ~12 min · **Depends on:** 2.3, 3.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Create, change and destroy a first real resource; Find it in the console; Read the plan for a change versus a replacement
 - **Slides:** slides 80–97 (applied) · **Owner's repo:** `aws-terraform/terraform-concepts/learning-basic-commands`
 - **Demo:** The owner's learning-basic-commands: an EC2 instance (t3.micro, AMI from SSM), tag change (update in place) vs AMI change (replace), destroy.
@@ -253,6 +270,7 @@ Connect resources together, read what already exists, and name things consistent
 
 ### 4.1 Resource references: connect resources together  [owner original]
 - **Request:** CR-149 · **Duration:** ~12 min · **Depends on:** 3.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Reference another resource's attribute; Explain how references create the dependency order; Build a small connected stack
 - **Slides:** slides 131–138 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-resources-reference (example-01…06)`
 - **Demo:** The owner's six examples: EIP attached to an instance, VPC → subnet → instance, AMI lookup → instance, security group → instance, IAM user → group with a policy.
@@ -267,6 +285,7 @@ Connect resources together, read what already exists, and name things consistent
 
 ### 4.2 Data sources: read what already exists  [owner original]
 - **Request:** CR-151 · **Duration:** ~12 min · **Depends on:** 4.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Write a data block with filters; Use data sources for images, networks and identities; Explain when to use a data source instead of a resource
 - **Slides:** slides 139–150, 472–482 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-data-source (example-01…03)`
 - **Demo:** The owner's examples: latest Ubuntu/Amazon Linux/RHEL/Windows AMIs, a security group found by tag, the default VPC's subnets, aws_caller_identity.
@@ -282,6 +301,7 @@ Connect resources together, read what already exists, and name things consistent
 
 ### 4.3 Interpolation and the format function  [owner original] **[shared]**
 - **Request:** CR-153 · **Duration:** ~10 min · **Depends on:** 4.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Build strings with ${} interpolation; Use format() with 1–4 arguments; Apply a naming convention
 - **Slides:** slides 105–121 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-interpolation, terraform-format`
 - **Demo:** The owner's naming convention (2560-dev-del-private-01-us-east-1a, slides 111–121) built with interpolation and format() in terraform console and on local_file names.
@@ -295,6 +315,7 @@ Connect resources together, read what already exists, and name things consistent
 
 ### 4.4 Tags: merge, default tags and a tagging standard  [owner original, updated]
 - **Request:** CR-154 · **Duration:** ~8 min · **Depends on:** 4.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Combine common and resource-specific tags with merge(); Set organisation-wide tags once; Find resources by tag
 - **Slides:** slides 122–130 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-merge-tags`
 - **Demo:** The owner's merge-tags examples (bastion host names, slides 124–129) plus provider `default_tags` (no merge needed for common tags) and a tag-based cost report.
@@ -312,6 +333,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.1 Input variables, types and .tfvars files  [owner original] **[shared]**
 - **Request:** CR-156 · **Duration:** ~10 min · **Depends on:** 4.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Declare variables with type, default and description; Pass values with -var, -var-file and TF_VAR_; Explain variable precedence
 - **Slides:** slides 171–176, 193–195, 500–502 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-variables`
 - **Demo:** Slides 173–176; the same variable set four ways (default, terraform.tfvars, -var-file=dev.tfvars, TF_VAR_); precedence order on screen.
@@ -325,6 +347,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.2 Locals: name an expression once  [owner original] **[shared]**
 - **Request:** CR-157 · **Duration:** ~6 min · **Depends on:** 5.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Define locals; Use them to avoid repetition; Choose between a variable and a local
 - **Slides:** slides 177–179, 497–499 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-variables/local-variables`
 - **Demo:** The owner's local-variables example rewritten with local_file; a naming local reused in three places.
@@ -339,6 +362,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.3 String, number and bool variables  [owner original] **[shared]**
 - **Request:** CR-158 · **Duration:** ~8 min · **Depends on:** 5.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Use string, number and bool types; Turn a resource on or off with a bool; Catch wrong types early
 - **Slides:** slides 180–192 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-variables/{string,number,boolean}-variable`
 - **Demo:** The owner's examples (create_instance = true/false, instance counts) shown with random_pet and count so they run anywhere.
@@ -352,6 +376,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.4 Collections: list, set and tuple  [owner original] **[shared]**
 - **Request:** CR-159 · **Duration:** ~10 min · **Depends on:** 5.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Use list, set and tuple variables; Explain order and duplicates; Pick the right collection
 - **Slides:** slides 196–209, 226–231 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-variables/{list,set,tuple}-variable`
 - **Demo:** The owner's comparison slides (204–206, 227–229) as a table; each type in terraform console; allowed IP set example.
@@ -365,6 +390,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.5 Structures: map, object, any and optional attributes  [owner original, updated] **[shared]**
 - **Request:** CR-160 · **Duration:** ~12 min · **Depends on:** 5.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Use map, object and map(object) types; Make object attributes optional with defaults; Explain why any should be rare
 - **Slides:** slides 210–225 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-variables/{map,object,map-of-object,any}-variable`
 - **Demo:** The owner's object and map-of-object examples (slides 217–223) with try(); then optional(type, default) which replaces most try() workarounds (Terraform >= 1.3).
@@ -379,6 +405,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.6 Outputs: share results  [owner original] **[shared]**
 - **Request:** CR-161 · **Duration:** ~6 min · **Depends on:** 5.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Declare outputs; Read them with terraform output (-raw, -json); Mark an output sensitive
 - **Slides:** slides 493–495 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-top-level-blocks/output`
 - **Demo:** Slides 494–495; terraform output -json piped to jq; a sensitive output hidden in the CLI but present in state (link to lesson 8.8).
@@ -392,6 +419,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.7 Variable validation and sensitive values  [owner original] **[shared]**
 - **Request:** CR-162 · **Duration:** ~8 min · **Depends on:** 5.6
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Write validation blocks with clear error messages; Validate with regex, contains and length; Mark inputs sensitive
 - **Slides:** slides 366–371 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-resource-validation`
 - **Demo:** The owner's validation examples (allowed environments, instance types) plus a regex naming rule; sensitive = true on a password variable.
@@ -405,6 +433,7 @@ Every variable type the owner teaches, with cloud-neutral demos, then applied on
 
 ### 5.8 Variables in practice on the cloud  [owner original]
 - **Request:** CR-163 · **Duration:** ~12 min · **Depends on:** 5.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Drive a real resource from variables and tfvars per environment; Use a map of objects to create differently sized machines; Keep secrets out of tfvars in Git
 - **Slides:** slides 179–225 (applied) · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-variables (EC2 examples)`
 - **Demo:** The owner's EC2 examples: string/list/object variables launch instances; dev.tfvars and prod.tfvars; a map of objects for three instance profiles.
@@ -422,6 +451,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.1 terraform console: test expressions safely  [owner original] **[shared]**
 - **Request:** CR-165 · **Duration:** ~10 min · **Depends on:** 5.8
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Open the console with variables loaded; Explore maps, lists and nested objects; Test an expression before putting it in code
 - **Slides:** slides 232–262 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-console`
 - **Demo:** The owner's var.context examples (slides 235–262): EKS-style map of any, map of objects, try, lookup, element, length, format.
@@ -435,6 +465,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.2 count, length and element  [owner original] **[shared]**
 - **Request:** CR-166 · **Duration:** ~10 min · **Depends on:** 6.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Create N copies with count and count.index; Use length() to size count; Use element() to wrap around a list
 - **Slides:** slides 298–317 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-count-argument-and-lenght-function, terraform-element-function`
 - **Demo:** The owner's examples (subnets across AZs with element) on local_file names; the risk of count when an item is removed from the middle (preview of for_each).
@@ -448,6 +479,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.3 split and join  [owner original] **[shared]**
 - **Request:** CR-167 · **Duration:** ~6 min · **Depends on:** 6.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Turn a string into a list with split; Turn a list into a string with join; Combine them with other functions
 - **Slides:** slides 318–330 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-slipt-function, terraform-join-function`
 - **Demo:** The owner's examples: CIDR lists from a comma string, a join for names and security group descriptions.
@@ -461,6 +493,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.4 lookup and try: safe access to maps and objects  [owner original] **[shared]**
 - **Request:** CR-168 · **Duration:** ~8 min · **Depends on:** 6.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Read a map key with a default; Use try() to fall back when an attribute is missing; Choose between them and optional()
 - **Slides:** slides 331–358 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-lookup-function, terraform-try-function`
 - **Demo:** The owner's console examples (slides 245–253) and folders; when to prefer optional() (lesson 5.5).
@@ -474,6 +507,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.5 contains and conditional expressions  [owner original] **[shared]**
 - **Request:** CR-169 · **Duration:** ~10 min · **Depends on:** 6.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Test membership with contains(); Write condition ? a : b; Use conditions to switch settings per environment
 - **Slides:** slides 359–365, 379–389 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-contains-function, terraform-contitions`
 - **Demo:** The owner's examples (Route 53 only in prod, RDS backup retention, blue/green node sizes) shown with neutral values, then nested conditions and why to keep them readable.
@@ -487,6 +521,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.6 yamldecode: keep configuration in YAML  [owner original] **[shared]**
 - **Request:** CR-170 · **Duration:** ~7 min · **Depends on:** 6.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Load YAML with yamldecode(file(...)); Use path.module; Validate what you load
 - **Slides:** slides 372–378 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-yamldecode-function`
 - **Demo:** The owner's variable.yaml examples; a YAML list of users turned into resources with for_each.
@@ -500,6 +535,7 @@ The owner's terraform console method: try every function before using it.
 
 ### 6.7 Splat expressions  [owner original] **[shared]**
 - **Request:** CR-171 · **Duration:** ~6 min · **Depends on:** 6.6
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Collect one attribute from many resources with [*]; Use it in outputs; Compare with a for expression
 - **Slides:** slides 271–276 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-splat-expression`
 - **Demo:** The owner's splat examples on several random_pet resources; the same with [for x in ... : x.id].
@@ -516,6 +552,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.1 Loops: count, for_each and dynamic blocks  [owner original, updated]
 - **Request:** CR-172 · **Duration:** ~14 min · **Depends on:** 6.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Create many resources with count and with for_each; Explain why for_each is safer for named items; Generate nested blocks with dynamic
 - **Slides:** slides 402–414 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-loops (for-each`, `aws-terraform/for-loop-with-count`, `aws-terraform/others-examples)`
 - **Demo:** The owner's examples: IAM users with count and with for_each, Secrets Manager secrets from a list, a set and a map, instances from a map of objects (slides 407–414); then a dynamic ingress block in a security group.
@@ -531,6 +568,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.2 depends_on: hidden dependencies  [owner original] **[shared]**
 - **Request:** CR-174 · **Duration:** ~6 min · **Depends on:** 7.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Explain implicit vs explicit dependencies; Use depends_on only when there is no reference; Spot overuse
 - **Slides:** slides 277–281 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-depend-on`
 - **Demo:** The owner's depends_on examples; a case with no reference (a policy that must exist before use) shown with terraform_data.
@@ -544,6 +582,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.3 Lifecycle rules: create_before_destroy, prevent_destroy, ignore_changes  [owner original]
 - **Request:** CR-175 · **Duration:** ~10 min · **Depends on:** 7.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Replace without downtime using create_before_destroy; Protect critical resources with prevent_destroy; Ignore changes made outside Terraform
 - **Slides:** slides 282–292 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-lifcycle`
 - **Demo:** The owner's lifecycle examples: instance replaced create-before-destroy, prevent_destroy on an S3 bucket, ignore_changes on tags/password; replace_triggered_by.
@@ -558,6 +597,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.4 Preconditions, postconditions and check blocks  [new, proposed]
 - **Request:** CR-177 · **Duration:** ~10 min · **Depends on:** 7.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Add a precondition that stops a bad plan; Add a postcondition that guarantees a result; Use a check block for health warnings
 - **Slides:** extends slides 366–371 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The lesson code: free-tier precondition on the instance type, IMDSv2 postcondition, a check block on a website URL.
@@ -572,6 +612,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.5 Provider aliases: several regions and subscriptions  [owner original]
 - **Request:** CR-179 · **Duration:** ~8 min · **Depends on:** 7.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Configure a second provider with alias; Pass a provider to a resource and a module; Explain the AWS v6 per-resource region option
 - **Slides:** slides 390–394 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-alias`
 - **Demo:** The owner's alias example (us-east-1 and us-west-2 buckets); then provider v6's `region` argument on a resource as a simpler alternative for single-account multi-region.
@@ -586,6 +627,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.6 Bootstrap servers: user data and cloud-init  [owner original]
 - **Request:** CR-181 · **Duration:** ~8 min · **Depends on:** 7.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Pass a script at first boot; Use templatefile() for variables; Check the boot log
 - **Slides:** slides 293–297 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-user-data`
 - **Demo:** The owner's user-data example installing nginx on Amazon Linux 2023; templatefile; /var/log/cloud-init-output.log; user_data_replace_on_change.
@@ -600,6 +642,7 @@ Loops, ordering, lifecycle rules and conditions, plus bootstrapping servers.
 
 ### 7.7 Provisioners and terraform_data: the last resort  [owner original, updated]
 - **Request:** CR-183 · **Duration:** ~10 min · **Depends on:** 7.6
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Run local-exec and remote-exec; Use terraform_data instead of null_resource; Explain why provisioners are a last resort
 - **Slides:** slides 395–401, 504–508 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-provisioner`
 - **Demo:** The owner's remote-exec and null_resource examples, rewritten: the SSH key generated with tls_private_key (never committed), terraform_data, and the SSM Session Manager alternative.
@@ -618,6 +661,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.1 The state file: current vs desired state  [owner original] **[shared]**
 - **Request:** CR-185 · **Duration:** ~8 min · **Depends on:** 7.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Explain what state records and why; Compare desired, current and recorded state; Name the risks of local state
 - **Slides:** slides 157–162, 430–431 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-local-state`
 - **Demo:** Slides 159–162 and 431; open terraform.tfstate of a neutral project; why it must not be edited by hand or committed.
@@ -632,6 +676,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.2 Remote state with locking  [owner original, updated]
 - **Request:** CR-186 · **Duration:** ~14 min · **Depends on:** 8.1, 3.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Create a secure state bucket or storage account; Configure the backend with partial configuration; Show locking and versioning
 - **Slides:** slides 429–440, 467–471 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-remote-state`, `aws-terraform/modules/s3-backend`
 - **Demo:** Lesson code: bucket with versioning, encryption and public access block; backend "s3" with use_lockfile = true; two applies at once to show the lock.
@@ -647,6 +692,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.3 Change and delete resources safely  [owner original, updated] **[shared]**
 - **Request:** CR-188 · **Duration:** ~10 min · **Depends on:** 8.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Remove a resource by deleting its code; Replace one with -replace; Explain why editing or deleting the state file is dangerous
 - **Slides:** slides 415–422 · **Owner's repo:** `aws-terraform/terraform-concepts/deleting-resources-in-terraform`
 - **Demo:** The owner's options (slides 417–422) on a neutral project, ranked from safest to riskiest: remove the code, destroy -target (exceptional), apply -replace, removed block (8.5), state rm, editing state (never).
@@ -661,6 +707,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.4 Import existing resources  [owner original, updated]
 - **Request:** CR-189 · **Duration:** ~12 min · **Depends on:** 8.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Import with an import block and review the plan; Generate configuration with -generate-config-out; Compare with the terraform import command
 - **Slides:** slides 423–428 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-import`
 - **Demo:** Lesson code: an IAM user created by hand, then import block, plan (1 to import), apply, generated config.
@@ -675,6 +722,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.5 Refactor without destroying: moved and removed blocks  [new, proposed]
 - **Request:** CR-191 · **Duration:** ~10 min · **Depends on:** 8.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Rename or restructure resources with moved blocks; Stop managing a resource with removed; Read "has moved to" in a plan
 - **Slides:** extends slides 415–422 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Lesson code: two SSM parameters refactored into one for_each resource; a third forgotten with removed { lifecycle { destroy = false } }.
@@ -689,6 +737,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.6 State commands: list, show, mv, rm and pull  [owner original] **[shared]**
 - **Request:** CR-193 · **Duration:** ~8 min · **Depends on:** 8.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Inspect state with list and show; Move and remove items safely; Back up state before surgery
 - **Slides:** slides 535–542 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-commands`
 - **Demo:** The owner's commands section on a neutral project; why moved blocks (8.5) are preferred over state mv in a team.
@@ -702,6 +751,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.7 Read another stack's outputs: terraform_remote_state  [owner original]
 - **Request:** CR-194 · **Duration:** ~10 min · **Depends on:** 8.6
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Expose outputs from a network stack; Read them from an app stack; Choose between remote state and data sources
 - **Slides:** slides 526–534 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-remote-state-data-source`
 - **Demo:** The owner's examples: a VPC stack's outputs read by an EC2 stack through the S3 backend.
@@ -716,6 +766,7 @@ The state file, remote state with locking, imports, refactoring and secrets.
 
 ### 8.8 Keep secrets out of state: ephemeral values and write-only arguments  [new, proposed]
 - **Request:** CR-196 · **Duration:** ~10 min · **Depends on:** 8.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Generate a secret with an ephemeral resource; Send it with a write-only argument; Rotate it with a version number
 - **Slides:** extends slides 157–162 · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Lesson code: ephemeral random_password → aws_ssm_parameter value_wo; the same pattern for RDS password_wo and Secrets Manager secret_string_wo; compare the state file.
@@ -733,6 +784,7 @@ Dev, staging and prod: workspaces, folders, accounts and Terragrunt.
 
 ### 9.1 Workspaces  [owner original] **[shared]**
 - **Request:** CR-198 · **Duration:** ~8 min · **Depends on:** 8.8
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Create and switch workspaces; Use terraform.workspace in names; Explain when workspaces are not enough
 - **Slides:** slides 441–446 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-workspace`
 - **Demo:** The owner's dev.tfvars/prod.tfvars workspace example on a neutral project; why separate state per environment folder or account is safer for production (lesson 9.3).
@@ -746,6 +798,7 @@ Dev, staging and prod: workspaces, folders, accounts and Terragrunt.
 
 ### 9.2 Several environments and accounts  [owner original, updated]
 - **Request:** CR-199 · **Duration:** ~12 min · **Depends on:** 9.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Point Terraform at different accounts or subscriptions; Assume a role per environment; Prevent applying to the wrong one
 - **Slides:** slides 447–458 · **Owner's repo:** `aws-terraform/terraform-concepts/deploy-in-multiple-env`
 - **Demo:** The owner's AWS_PROFILE method (slides 448–458) with SSO profiles; then provider assume_role into a dev and a prod account, and allowed_account_ids as a safety net.
@@ -761,6 +814,7 @@ Dev, staging and prod: workspaces, folders, accounts and Terragrunt.
 
 ### 9.3 One folder per environment  [new, proposed] **[shared]**
 - **Request:** CR-201 · **Duration:** ~10 min · **Depends on:** 9.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Lay out modules/ and envs/dev, envs/prod; Give each environment its own backend key; Promote a change from dev to prod
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** A neutral layout used by the capstone: modules/, envs/dev, envs/prod with their own backend.hcl and tfvars; the same module version promoted.
@@ -774,6 +828,7 @@ Dev, staging and prod: workspaces, folders, accounts and Terragrunt.
 
 ### 9.4 Terragrunt: keep environments DRY  [owner original, updated]
 - **Request:** CR-202 · **Duration:** ~14 min · **Depends on:** 9.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Generate backends and providers with Terragrunt; Share inputs across environments; Order stacks with dependencies
 - **Slides:** slides 574–583, 56–57 · **Owner's repo:** `aws-terraform/terragrunt/live (development`, `aws-terraform/staging`, `aws-terraform/production)`
 - **Demo:** The owner's terragrunt/live layout (VPC, EC2, bastion, EKS control plane) with root.hcl, remote_state with use_lockfile, dependency blocks; terragrunt run --all plan.
@@ -792,6 +847,7 @@ Use, write, version and publish modules.
 
 ### 10.1 What modules are and how to call them  [owner original] **[shared]**
 - **Request:** CR-204 · **Duration:** ~10 min · **Depends on:** 9.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Explain root and child modules; Call a module with source and inputs; Read its outputs
 - **Slides:** slides 509–521, 483–492 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-module`
 - **Demo:** Slides 511–514 with a local neutral module (a naming module); source types (local, Git with ?ref=, registry).
@@ -806,6 +862,7 @@ Use, write, version and publish modules.
 
 ### 10.2 Use registry modules  [owner original, updated]
 - **Request:** CR-205 · **Duration:** ~12 min · **Depends on:** 10.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Find a trustworthy module in the registry; Pin its version; Read its inputs and outputs before use
 - **Slides:** slides 518–521 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-module (aws-vpc-01`, `aws-terraform/aws-vpc-02`, `aws-terraform/ec2)`
 - **Demo:** The owner's examples with terraform-aws-modules/vpc and ec2-instance, updated to current versions; reading the module's examples and changelog.
@@ -820,6 +877,7 @@ Use, write, version and publish modules.
 
 ### 10.3 Write your own network module  [owner original]
 - **Request:** CR-207 · **Duration:** ~15 min · **Depends on:** 10.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Design a module's inputs and outputs; Create subnets across zones with for_each; Document the module
 - **Slides:** slides 509–521, 544 · **Owner's repo:** `aws-terraform/modules/vpc-01`, `aws-terraform/vpc-02`, `aws-terraform/vpc-03`
 - **Demo:** The owner's VPC modules (vpc-01 → vpc-03): public and private subnets across AZs, route tables, optional NAT; README with inputs/outputs.
@@ -834,6 +892,7 @@ Use, write, version and publish modules.
 
 ### 10.4 Version, source and publish modules  [owner original] **[shared]**
 - **Request:** CR-209 · **Duration:** ~10 min · **Depends on:** 10.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Version a module with Git tags; Publish to the public registry from GitHub; Use a private registry
 - **Slides:** slides 522–525 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-module-publish`, devopstia/terraform-aws-vpc-module
 - **Demo:** The owner's publish steps (slides 524–525): repo name terraform-<provider>-<name>, semantic version tags, registry sign-in; HCP Terraform private registry as the team option.
@@ -847,6 +906,7 @@ Use, write, version and publish modules.
 
 ### 10.5 Compose modules: network, compute and data  [new, proposed]
 - **Request:** CR-210 · **Duration:** ~12 min · **Depends on:** 10.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Wire modules together through outputs; Keep each module small; Avoid passing whole objects around
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** `aws-terraform/modules/vpc-02`, `aws-terraform/ec2`, `aws-terraform/sg`, `aws-terraform/postgres-db`
 - **Demo:** The owner's VPC, security group and EC2 modules composed in one root module; outputs flow from network to compute.
@@ -864,6 +924,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.1 Project: a production-style network  [owner original]
 - **Request:** CR-212 · **Duration:** ~15 min · **Depends on:** 10.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Build the network module to the owner's requirement list; Tag and name it with the convention; Test it with terraform test
 - **Slides:** slide 544 · **Owner's repo:** `aws-terraform/modules/vpc-03`, `aws-terraform/resources/vpc-03`
 - **Demo:** Slide 544's requirements: 3 public and 3 private subnets in 3 AZs, IGW, optional NAT per AZ, outputs for the next projects.
@@ -878,6 +939,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.2 Project: virtual machines and a secure jump host  [owner original, updated]
 - **Request:** CR-214 · **Duration:** ~15 min · **Depends on:** 11.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Build a VM module with optional public IP and user data; Build a jump host that only your IP can reach; Prefer keyless access where the cloud offers it
 - **Slides:** slides 545–546 · **Owner's repo:** `aws-terraform/modules/ec2`, `aws-terraform/bastion-host`, `aws-terraform/ec2-simple`
 - **Demo:** The owner's EC2 and bastion modules (slides 545–546): instance profile, IMDSv2, SG from your IP only; then Session Manager as the keyless alternative.
@@ -893,6 +955,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.3 Project: firewall rules and a container registry with loops  [owner original]
 - **Request:** CR-216 · **Duration:** ~12 min · **Depends on:** 11.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Generate firewall rules from a map; Create several registries with for_each; Add lifecycle and scan settings
 - **Slides:** slides 551–552 · **Owner's repo:** `aws-terraform/modules/sg`, `aws-terraform/aws-ecr`
 - **Demo:** The owner's security group module (loops, slide 551) and ECR module (one repo per app, scan on push, lifecycle policy, slide 552).
@@ -907,6 +970,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.4 Project: a database with secrets done right  [owner original, updated]
 - **Request:** CR-218 · **Duration:** ~15 min · **Depends on:** 8.8, 11.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Create a managed database in private subnets; Generate its password with write-only arguments; Store connection details in a secret store
 - **Slides:** slides 553–558 · **Owner's repo:** `aws-terraform/modules/aws-secret-manager`, `aws-terraform/mysql-db`, `aws-terraform/postgres-db (aurora modules: slides only)`
 - **Demo:** The owner's Secrets Manager and Postgres modules (slides 553–556) on db.t4g.micro, password_wo from an ephemeral password, Secrets Manager secret_string_wo; Aurora variants (557–558) explained, not deployed.
@@ -922,6 +986,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.5 Project: a state backend module with replication  [owner original]
 - **Request:** CR-220 · **Duration:** ~12 min · **Depends on:** 11.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Package the state backend as a module; Add cross-region replication; Lock down who can read state
 - **Slides:** slides 549–550 · **Owner's repo:** `aws-terraform/modules/s3-backend`, `aws-terraform/s3-backend-with-replication`, `aws-terraform/base-code/s3-backend-with-backup`
 - **Demo:** The owner's s3-backend-with-replication module updated: use_lockfile, replication role, bucket policy that denies non-TLS and unknown principals.
@@ -936,6 +1001,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.6 Project: TLS certificates and DNS  [owner original]
 - **Request:** CR-222 · **Duration:** ~10 min · **Depends on:** 11.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Request a wildcard certificate; Validate it with DNS records created by Terraform; Wait for validation in the plan
 - **Slides:** slide 559 · **Owner's repo:** `aws-terraform/modules/acm`
 - **Demo:** The owner's ACM module: wildcard certificate, Route 53 validation records with for_each over domain_validation_options, aws_acm_certificate_validation.
@@ -950,6 +1016,7 @@ The owner's module projects, each a real requirement list turned into a tested m
 
 ### 11.7 Project: Jenkins on the cloud with an agent  [owner original]
 - **Request:** CR-224 · **Duration:** ~15 min · **Depends on:** 11.2 (13.4 optional)
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Launch a Jenkins controller and an agent from modules; Reach it safely; Tear it down completely
 - **Slides:** slides 547–548 · **Owner's repo:** `aws-terraform/modules/jenkins-master`, `aws-terraform/packer/005-jenkins-master`
 - **Demo:** The owner's jenkins-master module and agent requirements (slides 547–548), the Packer-built AMI from lesson 13.4, access from your IP only.
@@ -967,6 +1034,7 @@ Prove the code before anyone applies it: linting, tests and policy as code.
 
 ### 12.1 fmt, validate and TFLint before every commit  [new, proposed] **[shared]**
 - **Request:** CR-226 · **Duration:** ~10 min · **Depends on:** 11.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Run fmt, validate and TFLint locally; Add them to a pre-commit hook; Read and fix lint findings
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** A neutral project with mistakes (unused variable, deprecated syntax, wrong type); TFLint core rules, then where the AWS and Azure rulesets plug in; pre-commit-terraform hooks.
@@ -980,6 +1048,7 @@ Prove the code before anyone applies it: linting, tests and policy as code.
 
 ### 12.2 Test modules with terraform test  [new, proposed]
 - **Request:** CR-227 · **Duration:** ~14 min · **Depends on:** 10.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Write .tftest.hcl run blocks with asserts; Mock the provider so tests are free; Test validation with expect_failures
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Lesson code: an S3 module tested for naming, public access block and versioning, with mock_provider "aws".
@@ -994,6 +1063,7 @@ Prove the code before anyone applies it: linting, tests and policy as code.
 
 ### 12.3 Policy as code: Checkov, OPA and Sentinel  [new, proposed]
 - **Request:** CR-229 · **Duration:** ~12 min · **Depends on:** 12.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Scan code with Checkov and read the findings; Skip a check only with a written reason; Check a plan with OPA and know where Sentinel fits
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Lesson code: a weak S3 bucket (Checkov 2026-11-27: 5 passed, 11 failed), fixed step by step; conftest on terraform show -json; HCP Terraform policy sets as the team option.
@@ -1011,6 +1081,7 @@ Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer
 
 ### 13.1 GitHub Actions with OIDC: plan on pull request, apply on approval  [owner original, updated]
 - **Request:** CR-231 · **Duration:** ~18 min · **Depends on:** 8.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Trust GitHub's OIDC token in the cloud; Plan on pull requests and comment the plan; Apply only after merge and a reviewer's approval
 - **Slides:** slides 614–616 · **Owner's repo:** `aws-terraform/terraform-with-github-action`
 - **Demo:** Lesson code: OIDC provider, a read-only plan role and an apply role limited to the production environment; plan comment; approval gate.
@@ -1026,6 +1097,7 @@ Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer
 
 ### 13.2 HCP Terraform: remote runs, variable sets and dynamic credentials  [owner original, updated]
 - **Request:** CR-233 · **Duration:** ~15 min · **Depends on:** 13.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Create an organisation, project and workspace; Run plans from VCS; Use dynamic provider credentials instead of stored keys
 - **Slides:** slides 584–599 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-cloud (example-01…)`
 - **Demo:** The owner's Terraform Cloud examples renamed to HCP Terraform; AWS credentials replaced by dynamic provider credentials (OIDC role); variable sets; the VPC module run.
@@ -1041,6 +1113,7 @@ Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer
 
 ### 13.3 Terraform with Jenkins and Terragrunt pipelines  [owner original]
 - **Request:** CR-235 · **Duration:** ~14 min · **Depends on:** 11.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Write a Jenkinsfile with plan, approval and apply stages; Use the agent's role instead of keys; Run Terragrunt from Jenkins
 - **Slides:** slides 617–622 · **Owner's repo:** `aws-terraform/no pipeline code in the repo)`, `aws-terraform/terraform-concepts/terraform-with-jenkins`, `aws-terraform/terraform-with-jenkins-and-terragrunt (READMEs`
 - **Demo:** A Jenkinsfile on the lesson 11.7 Jenkins: instance profile credentials, plan, input step, apply; a Terragrunt variant.
@@ -1056,6 +1129,7 @@ Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer
 
 ### 13.4 Machine images with Packer  [owner original]
 - **Request:** CR-237 · **Duration:** ~14 min · **Depends on:** 13.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Write a Packer HCL template with variables; Build an image with provisioners; Use the image from Terraform
 - **Slides:** slides 600–609 · **Owner's repo:** `aws-terraform/packer/001…007`
 - **Demo:** The owner's Packer folders: inline and script provisioners, Jenkins and bastion images, variables; the AMI found by a data source in Terraform; deregister afterwards.
@@ -1070,6 +1144,7 @@ Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer
 
 ### 13.5 Upgrade Terraform and providers safely  [owner original, updated]
 - **Request:** CR-239 · **Duration:** ~12 min · **Depends on:** 13.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Read upgrade guides and changelogs; Upgrade one version step in a branch with a clean plan; Handle provider major versions
 - **Slides:** slides 610–613 · **Owner's repo:** `aws-terraform/terraform-concepts/terraform-upgrade`
 - **Demo:** The owner's upgrade method (state pull | grep terraform_version) from 1.0-era code to 1.17, then AWS provider 4 → 5 → 6 with the upgrade guides and a no-change plan as the goal.
@@ -1085,6 +1160,7 @@ Terraform in pipelines without stored cloud keys; HCP Terraform, Jenkins, Packer
 
 ### 13.6 OpenTofu: what changes and how to try it  [new, proposed] **[shared]**
 - **Request:** CR-241 · **Duration:** ~8 min · **Depends on:** 13.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Explain the licence history; Run a project with tofu; List the features that differ
 - **Slides:** slides 28–32 (extends) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** A neutral project with tofu init/plan; state encryption (an OpenTofu feature); where the two differ and how to stay compatible.
@@ -1101,6 +1177,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.1 AI drafts, Terraform verifies: the rules of AI-assisted IaC  [new, proposed: AI] **[shared]**
 - **Request:** CR-242 · **Duration:** ~8 min · **Depends on:** 13.6
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** State the rules (AI drafts; fmt, validate, tests, policy, plan and a person verify; never auto-apply); Name what never goes into a prompt; Explain why AI gets provider details wrong
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The verification ladder on one slide; a real AI answer with an outdated argument caught by validate; what not to paste (state, tfvars with secrets, keys).
@@ -1114,6 +1191,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.2 Prompt AI to write HCL: poor vs professional prompts  [new, proposed: AI]
 - **Request:** CR-243 · **Duration:** ~14 min · **Depends on:** 14.1, CR-077–CR-082 (prompt engineering)
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Write a professional prompt (role, context, task, constraints, output, checks); Compare results of a poor and a professional prompt live; Prove the result with fmt, validate, Checkov and plan
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** `aws-terraform/links CR-077–CR-082`
 - **Demo:** Both prompts run live in an AI coding agent for a private S3 log bucket; the poor one misses the public access block and pins nothing; the professional one passes after one fix.
@@ -1128,6 +1206,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.3 AI explains plans and errors (and when it is wrong)  [new, proposed: AI]
 - **Request:** CR-245 · **Duration:** ~12 min · **Depends on:** 14.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Ask AI to summarise a plan with risks; Troubleshoot an error with AI and confirm against the docs; Recognise a confident wrong answer
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** A plan that replaces an RDS instance because of a changed engine version explained by AI; an IAM error diagnosed; one case where the AI invents an argument and validate proves it wrong.
@@ -1142,6 +1221,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.4 AI writes tests and refactors modules with moved blocks  [new, proposed: AI]
 - **Request:** CR-247 · **Duration:** ~14 min · **Depends on:** 12.2, 8.5
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Have AI write terraform test cases and keep only those that catch a broken rule; Have AI refactor a module into for_each with moved blocks; Prove the refactor plans with no destroy
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** AI adds tests to the S3 module (one useless test removed after the break-it check); AI refactors the owner's count-based IAM users into for_each with moved blocks; plan shows only moves.
@@ -1156,6 +1236,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.5 The Terraform MCP server: an agent that reads current docs  [new, proposed: AI] **[shared]**
 - **Request:** CR-249 · **Duration:** ~12 min · **Depends on:** 14.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Connect an AI agent to the Terraform MCP server; Let it look up current provider and module docs; Keep its permissions read-only
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The registry toolset in Claude Code or VS Code (Docker image hashicorp/terraform-mcp-server:1.4.1), the same question asked with and without MCP; HCP Terraform tools with a read-only token; destructive tools left off.
@@ -1169,6 +1250,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.6 AI review of a pull request's plan in GitHub Actions  [new, proposed: AI]
 - **Request:** CR-250 · **Duration:** ~15 min · **Depends on:** 13.1, 14.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Add an AI review job that comments risks, cost and blast radius; Keep secrets out of what the AI sees; Keep the human approval as the gate
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The lesson 13.1 pipeline plus a review job: terraform show -json summarised, sent to a model with the review prompt, posted as a PR comment; a destroy of a bucket flagged HIGH RISK; a person still approves.
@@ -1183,6 +1265,7 @@ AI drafts, Terraform and a person verify: writing, explaining, testing and revie
 
 ### 14.7 An AI-generated module through the full gate  [new, proposed: AI]
 - **Request:** CR-252 · **Duration:** ~12 min · **Depends on:** 12.2, 12.3, 14.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Run AI output through fmt, TFLint, tests, Checkov and a reviewed plan; Fix what fails; Decide when to reject AI output
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** AI writes a CloudFront + S3 site module; the gate catches a public bucket and a missing test; fixed, then applied and destroyed.
@@ -1200,6 +1283,7 @@ Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails 
 
 ### 15.1 AI platform foundations as code: model access, identities and logging  [new, proposed: AI]
 - **Request:** CR-254 · **Duration:** ~12 min · **Depends on:** 14.7
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Provision the AI platform's identities and least-privilege access; Turn on invocation logging; Tag and budget AI resources
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** An IAM role that may invoke only chosen Bedrock models, model invocation logging to CloudWatch Logs and S3, a budget alert on Bedrock usage.
@@ -1214,6 +1298,7 @@ Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails 
 
 ### 15.2 A RAG stack as code  [new, proposed: AI]
 - **Request:** CR-256 · **Duration:** ~18 min · **Depends on:** 15.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Build documents storage, embeddings and a vector index as code; Connect a knowledge base to it; Ask a grounded question and see the cited source
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** Lesson code: S3 documents → Bedrock Knowledge Base (Titan Text Embeddings v2) → S3 Vectors index; ingestion job; retrieve-and-generate answer citing the runbook. Validated with provider 6.74.0.
@@ -1229,6 +1314,7 @@ Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails 
 
 ### 15.3 Guardrails as code  [new, proposed: AI]
 - **Request:** CR-258 · **Duration:** ~10 min · **Depends on:** 15.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Define content and PII filters as code; Deny topics with examples; Test the guardrail before an app uses it
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** aws_bedrock_guardrail with PII (block access keys, anonymise emails) and a denied topic (destructive commands); versioned with aws_bedrock_guardrail_version; tested in the console.
@@ -1243,6 +1329,7 @@ Build the AI platforms of the AI masterclasses as code: models, RAG, guardrails 
 
 ### 15.4 Agents as code  [new, proposed: AI]
 - **Request:** CR-260 · **Duration:** ~15 min · **Depends on:** 15.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Provision an agent runtime and its identity as code; Limit its tools and permissions; Estimate and cap its cost
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** aws_bedrockagentcore_agent_runtime (container in ECR) with an execution role allowed one tool, an endpoint, invocation from the CLI; cost estimated before recording.
@@ -1261,6 +1348,7 @@ The owner's EKS projects and their AKS mirror. The costliest module: record each
 
 ### 16.1 A managed Kubernetes control plane module  [owner original]
 - **Request:** CR-262 · **Duration:** ~15 min · **Depends on:** 11.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Create a cluster in the module 11 network; Configure logging and endpoint access; Connect kubectl
 - **Slides:** slides 560–561 · **Owner's repo:** `aws-terraform/modules/eks-control-plane`, `aws-terraform/base-code/eks-with-vpc`
 - **Demo:** The owner's eks-control-plane module (slide 561) on the 11.1 VPC, current EKS version, endpoint access, control plane logs; aws eks update-kubeconfig.
@@ -1275,6 +1363,7 @@ The owner's EKS projects and their AKS mirror. The costliest module: record each
 
 ### 16.2 Node groups: simple, blue-green and spot  [owner original]
 - **Request:** CR-264 · **Duration:** ~15 min · **Depends on:** 16.1
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Add node groups in private subnets; Do a blue-green node upgrade with the owner's green/blue variables; Use spot capacity safely
 - **Slides:** slides 562–563 · **Owner's repo:** `aws-terraform/modules/eks-node-group`, `aws-terraform/eks-blue-green-node-group`, `aws-terraform/base-code/eks-blue-green-node`
 - **Demo:** The owner's node group modules: simple group, blue-green switch with var.green / desired sizes (slides 384, 563), spot instances.
@@ -1289,6 +1378,7 @@ The owner's EKS projects and their AKS mirror. The costliest module: record each
 
 ### 16.3 Serverless and mixed capacity  [owner original]
 - **Request:** CR-266 · **Duration:** ~12 min · **Depends on:** 16.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Run pods without managing nodes; Mix serverless and node capacity; Know the limits
 - **Slides:** slides 564–565 · **Owner's repo:** `aws-terraform/modules/eks-fargate-only`, `aws-terraform/eks-and-fargate`, `aws-terraform/aws-fargate-profile`, `aws-terraform/base-code/eks-mix`
 - **Demo:** The owner's Fargate-only and EKS-plus-Fargate modules: kube-system on Fargate, a namespace profile, CoreDNS patch.
@@ -1303,6 +1393,7 @@ The owner's EKS projects and their AKS mirror. The costliest module: record each
 
 ### 16.4 Cluster access: identities and RBAC  [owner original, updated]
 - **Request:** CR-268 · **Duration:** ~12 min · **Depends on:** 16.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · **re-recorded on these versions**; the owner's code is shown from its updated lab copy
 - **Objectives:** Grant users and roles cluster access as code; Map them to Kubernetes RBAC; Remove access cleanly
 - **Slides:** slides 566, 572–573 · **Owner's repo:** `aws-terraform/modules/aws-auth-config`, `aws-terraform/rbac`
 - **Demo:** EKS access entries and access policies (aws_eks_access_entry) replace the owner's aws-auth ConfigMap module; RBAC roles for IAM users and IAM roles (slides 572–573).
@@ -1318,6 +1409,7 @@ The owner's EKS projects and their AKS mirror. The costliest module: record each
 
 ### 16.5 Cluster add-ons with Terraform and Helm  [owner original]
 - **Request:** CR-270 · **Duration:** ~18 min · **Depends on:** 16.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries · the owner's code is used from its re-pinned lab copy (`CONTENT_INVENTORY.md` › Fixes)
 - **Objectives:** Install add-ons with the Helm provider and IRSA/Pod Identity or workload identity; Create namespaces with loops; Clean up load balancers before destroying the cluster
 - **Slides:** slides 567–571 · **Owner's repo:** `aws-terraform/modules/eks-namespaces`, `aws-terraform/cluster-auto-scaler`, `aws-terraform/aws-load-balancer-controller`, `aws-terraform/aws-ebs-csi-driver`, `aws-terraform/external-dns`, `aws-terraform/metrics-server`, `aws-terraform/argo-cd-*`
 - **Demo:** The owner's add-on modules: namespaces, cluster autoscaler, AWS Load Balancer Controller, EBS CSI driver, External DNS, Argo CD; Pod Identity as the current alternative to IRSA.
@@ -1335,6 +1427,7 @@ Everything together: two environments, remote state, modules, tests, policy, AI 
 
 ### 17.1 Capstone design: environments, state, modules and pipeline  [new, proposed]
 - **Request:** CR-272 · **Duration:** ~10 min · **Depends on:** all core modules
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Read the capstone requirements; Draw the folder, state and pipeline design; Estimate the cost before building
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** dev and prod (two accounts or two prefixes), S3 state with use_lockfile per environment, modules network/app/data, GitHub Actions with OIDC; cost table.
@@ -1348,6 +1441,7 @@ Everything together: two environments, remote state, modules, tests, policy, AI 
 
 ### 17.2 Build the modules and environments  [new, proposed]
 - **Request:** CR-274 · **Duration:** ~20 min · **Depends on:** 10.5, 11.4, 8.2
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Assemble the owner's modules into the capstone; Deploy dev; Prove it with tests and a reviewed plan
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** `aws-terraform/modules/vpc-03`, `aws-terraform/sg`, `aws-terraform/ec2`, `aws-terraform/postgres-db`
 - **Demo:** Network (no NAT, or one for the demo), an ALB in front of a small ASG or ECS Fargate service, RDS PostgreSQL with write-only password; dev applied.
@@ -1362,6 +1456,7 @@ Everything together: two environments, remote state, modules, tests, policy, AI 
 
 ### 17.3 The pipeline: OIDC, tests, policy, AI review and approval  [new, proposed]
 - **Request:** CR-276 · **Duration:** ~18 min · **Depends on:** 13.1, 14.6, 12.2, 12.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Run fmt, TFLint, tests and Checkov in the pipeline; Add the AI review comment; Promote dev to prod through approvals
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** The 13.1 pipeline extended per environment: PR → checks → plan → AI review → merge → dev apply → prod approval → prod apply.
@@ -1376,6 +1471,7 @@ Everything together: two environments, remote state, modules, tests, policy, AI 
 
 ### 17.4 Operate it: drift, promotion and destroy  [new, proposed]
 - **Request:** CR-278 · **Duration:** ~12 min · **Depends on:** 17.3
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Detect drift with plan -refresh-only and a scheduled pipeline; Promote a module version to prod; Destroy everything and prove it is gone
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
 - **Demo:** A console change detected by the nightly drift job; a module tag promoted to prod; destroy prod then dev, state buckets last; a tag search shows nothing left.
@@ -1390,9 +1486,10 @@ Everything together: two environments, remote state, modules, tests, policy, AI 
 
 ### 17.5 Course wrap-up, final assessment and what to learn next  [new, proposed]
 - **Request:** CR-280 · **Duration:** ~6 min · **Depends on:** 17.4
+- **Versions:** Terraform 1.17.x (checked 1.17.2) · AWS provider ~> 6.0 (6.74.0) · azurerm ~> 5.0 (5.15.0) · Terragrunt 1.x (1.2.3) where used · S3 native locking (`use_lockfile`, no DynamoDB) / Azure blob lease · HCP Terraform naming · EKS access entries
 - **Objectives:** Review the skills gained; Take the final assessment; Choose the next course
 - **Slides:** none in the deck (new lesson) · **Owner's repo:** — (none in the owner's repo)
-- **Demo:** Recap of the AWS path; final assessment (20 questions); next: the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
+- **Demo:** Recap of the AWS path; final assessment (20 questions); next: AI-Powered Terragrunt on AWS (Terraform at scale), the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
 - **Code:** no lab (wrap-up; final assessment JSON)
 - **Cloud resources:** none or free resources only · **Cost per run:** $0 · **Cleanup:** nothing is created
 - **Materials:** PDF slides (new, course standard); lab ZIP = the code folder (README with requirements, cost, steps and cleanup; `.tfvars.example` only, never real values)

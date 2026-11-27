@@ -83,7 +83,7 @@ test('publish: quiz.json wins over the captions, assessments close their module,
   await writeFile(join(src, 'assessments', 'final-assessment.json'), JSON.stringify({ settings: { pool: 'course', sampleSize: 30 }, questions: [good(10), good(11)] }));
   const dir = join(root, 'course');
   await mkdir(dir);
-  await writeFile(join(root, 'publisher.config.json'), JSON.stringify({ productionAllowed: true }));
+  await writeFile(join(root, 'publisher.config.json'), JSON.stringify({ productionAllowed: true, quizBanks: true }));
   await writeFile(join(dir, 'plan.json'), JSON.stringify({
     environment: 'staging', apiUrl: 'https://x.test/api', provider: 'DEL', instructorName: 'DevOps Easy Learning', sourceDir: src, assessments: 'assessments',
     course: { title: 'Course', quizzes: 'from-captions' },

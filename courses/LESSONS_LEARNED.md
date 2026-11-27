@@ -4,6 +4,23 @@ What the Course Upload and Publishing Agent learned on each course (skill: `.cla
 Read before every upload; add to it after every upload. Newest first.
 
 
+
+## 2026-11-28 (later): updating an instructor's code to current versions; Terragrunt 1.x
+- **Loose pins break silently.** Folders with `>=` or no provider pins failed as soon as Helm provider 3, azurerm 5 and
+  registry module v6 shipped; `~>` pins plus a validate run per folder before recording catch this.
+- **Most fixes are mechanical** (required_version, provider pins, `vpc = true` → `domain = "vpc"`, Helm `set {}` →
+  `set = [...]`, azurerm `enable_*` → `*_enabled`): script them, then validate; keep a list per folder for the owner.
+- **Copy with a filter.** A folder copy brought a committed SSH key along; delete keys immediately, replace them with
+  variables, and scan every copy (`BEGIN … PRIVATE`, `password = "…"`, `*.pem`) before committing.
+- **Validate Terragrunt without credentials:** hide `~/.aws`/`~/.azure` (a scratch `HOME`), then
+  `terragrunt run --all --no-dependency-outputs -- init -backend=false` and `run --all --no-auto-init -- validate`;
+  `terragrunt stack generate` before validating a stack. `hcl validate` flags unit templates that use `values` outside a
+  stack: validate those through the stack.
+- **Kill leftover provider processes** after stopping parallel validations: they keep files in the plugin cache busy
+  ("text file busy") and make later runs fail for reasons that have nothing to do with the code.
+- **A course with two cloud tracks cannot certify one-cloud students** when certificates need every lesson: plan one
+  listing per cloud and share the cloud-neutral videos.
+
 ## 2026-11-28: planning a course from an instructor's deck and repo (Terraform)
 - **A deck can be all pictures.** The Terraform deck has a background picture on every slide, but its text boxes hold
   the titles, explanations and code: extract text with python-pptx (walk group shapes), hyperlinks per run, then

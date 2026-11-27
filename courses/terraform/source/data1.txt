@@ -1,7 +1,7 @@
 M 0 | Welcome and safe set-up | Both courses: what you will build, how the labs work, and an account that cannot surprise you with a bill.
-L 0.1 | Course introduction: what you will build and how to learn here | new | cloud | 5 | slides 1–8 (table of contents) | -
+L 0.1 | Course introduction: what you will build and how to learn here | new | cloud | 10 | slides 1–8 (table of contents) | -
 O: Describe the path from first resource to the enterprise capstone; Explain how lessons, labs, quizzes and the AI strand fit together; Plan a study rhythm that includes destroying every lab
-D: The finished capstone pipeline first (a pull request, the plan, the AI review comment, a person approving, apply), then the module map and how labs and cleanup work.
+D: Premium introduction (8–12 min): the finished capstone first (a pull request, the plan, the AI review comment, a person approving, apply), an animated roadmap of the 18 modules, real previews of the projects (first resource, the owner's module projects, the RAG stack, the capstone), how labs, quizzes and cleanup work, and a clear call to action.
 DA: Shown on AWS (S3 state, GitHub OIDC, Bedrock).
 DZ: Shown on Azure (Storage state, workload identity, Foundry).
 Q: What does every lab end with? / An apply to production / terraform destroy and a check that nothing is left / Leaving resources for the next lesson / =b

@@ -151,6 +151,10 @@ The first position of section 1 is reserved for the introduction without an empt
 `"role": "intro"` in its `lesson.json` / the manifest) is flagged `INTRODUCTION` in the watcher's inbox; put it first in
 section 1 with `"preview": true` (the dry run fails otherwise). With `promo: true` the publisher also sets it as the
 course page's promo video (`promoVideoAssetId`).
+**Quality bar (owner 2026-11-28, standard §4a):** before placing a new or replacement intro, watch it, score it in
+`courses/INTRO_VIDEOS.md` (minimum 90/100) and check it against the current curriculum. Below the bar, keep it out of the
+plan (the old intro stays live, or the position stays reserved) and send the specific fixes to the generation agent.
+A replacement uses the same plan entry (same lesson), so only the video, captions and slides change.
 
 ## Monitoring the course folders (del-watch-courses)
 `node tools/mcp-server/dist/watch.js [--env staging] [--settle 10] [--interval 15] [--once] [--dry-run] [--agent "<cmd>"]`

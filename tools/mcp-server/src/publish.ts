@@ -141,9 +141,45 @@ export const quizTitle = (lesson: { title: string; short?: string } | string) =>
   return `Quiz: ${(l.short?.trim() || l.title.split(':')[0]!.trim())}`.slice(0, 200);
 };
 
+/** A boolean switch from publisher.config.json (false when the file or the key is missing). */
+export async function readConfigFlag(path: string, key: string): Promise<boolean> {
+  try { return (JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>)[key] === true; } catch { return false; }
+}
+
 // ---------- quiz import (in-video questions read from the captions; never invented) ----------
 export interface QuizQuestion { q: string; options: string[]; correct: number; why: string; id?: string; explanations?: string[]; takeaway?: string; difficulty?: string; type?: string; topic?: string; timestamp?: number; code?: string; fixedOrder?: boolean }
 export interface ParsedQuiz { questions: QuizQuestion[]; skipped: string[]; /** From quiz.json: its settings and checksum (the quiz is replaced when the file changes). */ settings?: BankSettings; sha?: string; source?: 'file' | 'captions' }
+
+/**
+ * Read a lesson's quiz.json (GEN's bank, courses/quiz.schema.json) into the quiz format the platform accepts today
+ * ({q, options 3–5, correct, why}). The explanation keeps why it is right, the takeaway and, when they fit, why each
+ * other option is wrong. Questions the platform can't hold yet are skipped and reported, never changed.
+ */
+export async function quizFromFile(path: string): Promise<ParsedQuiz | null> {
+  let raw: string;
+  try { raw = await readFile(path, 'utf8'); } catch { return null; }
+  const out: ParsedQuiz = { questions: [], skipped: [] };
+  let data: { questions?: Array<{ id?: string; q?: string; code?: string; options?: string[]; correct?: number; why?: string; explanations?: string[]; takeaway?: string }> };
+  try { data = JSON.parse(raw); } catch { out.skipped.push('quiz.json is not valid JSON: not used'); return out; }
+  const seen = new Set<string>();
+  for (const [i, x] of (data.questions ?? []).entries()) {
+    const id = x.id ?? `#${i + 1}`;
+    const opts = x.options ?? [];
+    const q = [x.q?.trim(), x.code ? `\n${x.code.trim()}` : ''].join('').trim();
+    if (!q || q.length > 500) { out.skipped.push(`${id}: question missing or longer than 500 characters`); continue; }
+    if (opts.length < 3 || opts.length > 5 || opts.some((o) => !o?.trim() || o.length > 300)) { out.skipped.push(`${id}: needs 3–5 options of at most 300 characters`); continue; }
+    if (!Number.isInteger(x.correct) || x.correct! < 0 || x.correct! >= opts.length) { out.skipped.push(`${id}: correct answer index invalid`); continue; }
+    if (!x.why?.trim()) { out.skipped.push(`${id}: no explanation`); continue; }
+    if (seen.has(q.toLowerCase())) { out.skipped.push(`${id}: duplicate question`); continue; }
+    seen.add(q.toLowerCase());
+    let why = x.why.trim();
+    if (x.takeaway?.trim()) why += ` Takeaway: ${x.takeaway.trim()}`;
+    const wrong = (x.explanations ?? []).map((e, j) => (j === x.correct || !e?.trim() ? '' : ` ${String.fromCharCode(65 + j)}: ${e.trim()}`)).join('');
+    if (wrong && why.length + wrong.length + 18 <= 1000) why += ` Why not the others:${wrong}`;
+    out.questions.push({ q, options: opts.map((o) => o.trim()), correct: x.correct!, why: why.slice(0, 1000) });
+  }
+  return out;
+}
 
 /** Caption text as one string: cue numbers and timings removed, lines joined (questions span cues). */
 export function captionText(srtOrVtt: string): string {
@@ -372,7 +408,7 @@ interface Resource { id: string; title: string; sizeBytes?: number }
 interface Lecture { id: string; sectionId: string; title: string; type?: string; summary: string; articleMd?: string | null; isPreview: boolean; quiz?: { questions: QuizQuestion[] } | null; videoAssetId: string | null; video: { id: string; status: string; durationSec: number; hasCaptions: boolean } | null; resources: Resource[] }
 interface Section { id: string; title: string; lectures: Lecture[] }
 interface CourseDetail { id: string; slug?: string; title: string; status: string; coverTemplateId: string | null; promoVideo?: { id: string } | null; sections: Section[] }
-interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Assessment quiz lessons by key (module-<n>, final, scenario-<name>). */ assessments?: Record<string, string>; /** Checksums of quiz.json / assessment files, so a changed file replaces the quiz (same quiz lesson). */ quizFiles?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
+interface State { courseId?: string; sections: Record<string, string>; lessons: Record<string, string>; quizzes?: Record<string, string>; articles?: Record<string, string>; /** Assessment quiz lessons by key (module-<n>, final, scenario-<name>). */ assessments?: Record<string, string>; /** Checksums of quiz.json / assessment files, so a changed file replaces the quiz (same quiz lesson). */ quizFiles?: Record<string, string>; /** Caption file checksum per video asset, so corrected captions replace the old ones. */ captions?: Record<string, string>; /** Lesson file checksums (`<folder>#slides|labs`), so a changed slide deck or lab replaces the attached one. */ resources?: Record<string, string>; /** Session mode: files uploaded, by sha256 (the studio API has no server-side de-duplication). */ files?: Record<string, FileRecord> }
 
 export type AuthMode = 'agent' | 'session';
 
@@ -444,7 +480,7 @@ export async function lessonFolders(plan: Pick<CoursePlan, 'sourceDir' | 'sectio
 
 type Log = (msg: string) => void;
 
-export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean; /** Owner-approved removal from a published course: the deletions go into its draft revision and take effect only when an admin approves it (owner 2026-11-28). */ prunePublished?: boolean } = {}) {
+export async function publish(planPath: string, opts: { /** Send full quiz banks and assessments (the quiz-bank API is live). Default: publisher.config.json `quizBanks`. */ quizBanks?: boolean; dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string; /** Remove lessons not in the plan (draft courses only; see pruneTargets). */ prune?: boolean; /** Owner-approved removal from a published course: the deletions go into its draft revision and take effect only when an admin approves it (owner 2026-11-28). */ prunePublished?: boolean } = {}) {
   const log = opts.log ?? ((m: string) => console.log(m));
   const plan = forEnv(normalizePlan(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan), opts.env);
   const planDir = dirname(resolve(planPath));
@@ -482,9 +518,12 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   log(`Inventory: ${planned.size} lessons${articleCount ? ` + ${articleCount} article(s)` : ''} in ${plan.sections.length} sections; ${issues.length} issue(s).`);
   for (const [k, f] of inventory) log(`  ${k}: video ${f.video ? 'yes' : 'NO'}, captions ${f.captions ? 'yes' : 'no'}, slides ${f.slides ? 'yes' : 'no'}, lab ${f.lab ? 'yes' : 'no'}${f.skipped.length ? `; skipped ${f.skipped.map((x) => x.file.replace(k, '…')).join(', ')}` : ''}`);
   const quizzes = new Map<string, ParsedQuiz>();
-  // A lesson's quiz.json (owner 2026-11-28) wins over the questions read from the captions.
+  // A lesson's quiz.json (owner 2026-11-28) wins over the questions read from the captions. The full bank (explanations
+  // per option, takeaway, topic, timestamp, assessments) needs the quiz-bank API: switched on with "quizBanks": true in
+  // publisher.config.json (or DEL_QUIZ_BANKS=1) once that release is live; until then the legacy mapping below is used.
+  const banks = opts.quizBanks ?? (process.env.DEL_QUIZ_BANKS === '1' || (await readConfigFlag(opts.configPath ?? join(planDir, '..', 'publisher.config.json'), 'quizBanks')));
   for (const [k, f] of inventory) {
-    if (!f.quiz) continue;
+    if (!banks || !f.quiz) continue;
     const r = await readQuizFile(f.quiz, { durationSec: f.video ? probeSeconds(f.video) : null });
     r.errors.forEach((e) => issues.push(`${k}/quiz.json: ${e}`));
     r.warnings.forEach((w) => warnings.push(`${k}/quiz.json: ${w}`));
@@ -495,7 +534,8 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   // Assessments (module, final, scenario) from the plan's assessments folder.
   const assessDir = plan.assessments ? resolve(plan.sourceDir, plan.assessments) : null;
   const assessments: { a: Awaited<ReturnType<typeof assessmentFiles>>[number]; quiz: ParsedQuiz; section: number }[] = [];
-  if (assessDir) {
+  if (assessDir && !banks) warnings.push('assessments need the quiz-bank API ("quizBanks": true in publisher.config.json once it is live): not uploaded yet');
+  if (assessDir && banks) {
     if (!existsSync(assessDir)) warnings.push(`assessments folder not found: ${assessDir}`);
     for (const a of await assessmentFiles(assessDir)) {
       const r = await readQuizFile(a.path, { assessment: true });
@@ -513,7 +553,17 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   }
   if (plan.course.quizzes === 'from-captions') {
     for (const [k, f] of inventory) {
-      if (!f.captions || quizzes.has(k)) continue;
+      if (quizzes.has(k)) continue;
+      // Until the quiz-bank API is live (publisher.config.json "quizBanks": true), GEN's quiz.json is folded into
+      // today's format (why + takeaway + why the others are wrong) and still wins over the spoken questions.
+      const fromFile = !banks && f.video ? await quizFromFile(join(dirname(f.video), 'quiz.json')) : null;
+      if (fromFile) {
+        quizzes.set(k, fromFile);
+        fromFile.skipped.forEach((x) => quizSkips.push(`${k}: ${x}`));
+        log(`  ${k}: quiz ${fromFile.questions.length} question(s) from quiz.json (today's format)${fromFile.skipped.length ? `, ${fromFile.skipped.length} skipped` : ''}`);
+        continue;
+      }
+      if (!f.captions) continue;
       let qz = await quizFromCaptions(f.captions);
       // Options only on the slides: the manifest's quiz is used when every answer is the one the video says.
       const hinted = manifest.lessons.find((h) => h.folder === k)?.quiz;
@@ -626,9 +676,21 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
         if (v.duplicate) counts.reused++; else counts.uploaded++;
         if (lec.videoAssetId !== v.assetId) patch.videoAssetId = v.assetId;
         counts.videos++;
-        if (files.captions && !(lec.video?.id === v.assetId && lec.video?.hasCaptions)) {
-          try { await del.uploadCaptions(v.assetId!, files.captions); counts.captions++; } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
-        } else if (files.captions) counts.captions++;
+        // Captions: uploaded when missing, and again whenever the caption file changes (owner 2026-11-28: corrected
+        // captions re-delivered without a new video). A video with captions but no recorded checksum is refreshed once.
+        if (files.captions) {
+          const csha = await del.sha256(files.captions);
+          state.captions ??= {};
+          const has = lec.video?.id === v.assetId && lec.video?.hasCaptions;
+          if (has && state.captions[v.assetId!] === csha) counts.captions++;
+          else {
+            try {
+              await del.uploadCaptions(v.assetId!, files.captions); counts.captions++;
+              if (has) log(`  ~ captions refreshed: ${lp.title}`);
+              state.captions[v.assetId!] = csha; await saveState();
+            } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e; issues.push(`${lp.folder}: captions not uploaded: ${(e as Error).message}`); }
+          }
+        }
       } catch (e) { if (e instanceof ApiError && e.code === 'session_ended') throw e;
         counts.failed++;
         issues.push(`${lp.folder}: video upload failed: ${(e as Error).message}`);

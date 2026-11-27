@@ -169,8 +169,8 @@ QA: Which AWS feature lists resources by tag? / Resource Groups Tag Editor / Clo
 QZ: Which Azure feature queries resources by tag? / Azure Resource Graph / Key Vault / Bastion / =a
 L 17.5 | Course wrap-up, final assessment and what to learn next | new | cloud | 6 | - | -
 O: Review the skills gained; Take the final assessment; Choose the next course
-DA: Recap of the AWS path; final assessment (20 questions); next: the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
-DZ: Recap of the Azure path; final assessment; next: the AI for DevOps on Azure masterclass, n8n automation, and the AWS Terraform masterclass for multi-cloud.
+DA: Recap of the AWS path; final assessment (20 questions); next: AI-Powered Terragrunt on AWS (Terraform at scale), the AI for DevOps on AWS masterclass (its AI apps run on the infrastructure built here), n8n automation, and the Azure Terraform masterclass for multi-cloud.
+DZ: Recap of the Azure path; final assessment; next: AI-Powered Terragrunt on Azure (Terraform at scale), the AI for DevOps on Azure masterclass, n8n automation, and the AWS Terraform masterclass for multi-cloud.
 CA: $0
 CZ: $0
 Q: Which rule held through the whole course? / AI drafts, Terraform and a person verify / AI applies / Never destroy / =a

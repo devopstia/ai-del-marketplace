@@ -1,0 +1,10 @@
+# The owner's convention (assetid, environment, project) plus this environment's subscription and state storage.
+# One subscription for every environment is fine for the lab; one per environment is the production layout (lesson 4.2).
+environment: "stg"
+assetid: "2560"
+project: "del"
+location: "eastus"
+subscription_id: "00000000-0000-0000-0000-000000000000"
+state_resource_group: "rg-del-training-tfstate"
+state_storage_account: "deltfstatechangeme"
+cidr_prefix: "10.20"

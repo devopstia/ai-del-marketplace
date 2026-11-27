@@ -1,0 +1,41 @@
+# Apply after merge, one environment at a time, each behind a GitHub environment with a required reviewer.
+name: terragrunt-apply
+on:
+  push:
+    branches: [main]
+    paths: ["aws/**", "modules/**"]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TG_NON_INTERACTIVE: "true"
+  TG_NO_TIPS: "true"
+
+jobs:
+  apply:
+    strategy:
+      max-parallel: 1
+      matrix:
+        env: [development, staging, production]
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.17.2"
+          terraform_wrapper: false
+      - name: Install Terragrunt 1.2.3 (checksum verified)
+        run: |
+          curl -fsSLO https://github.com/gruntwork-io/terragrunt/releases/download/v1.2.3/terragrunt_linux_amd64
+          curl -fsSLO https://github.com/gruntwork-io/terragrunt/releases/download/v1.2.3/SHA256SUMS
+          grep " terragrunt_linux_amd64$" SHA256SUMS | sha256sum -c -
+          sudo install terragrunt_linux_amd64 /usr/local/bin/terragrunt
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          aws-region: us-east-1
+      - working-directory: aws/live/${{ matrix.env }}
+        run: terragrunt run --all -- apply -input=false
