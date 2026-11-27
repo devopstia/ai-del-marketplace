@@ -263,6 +263,12 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     action), 3–5 min for short courses, 5–8 comprehensive, 8–12 masterclasses, unique per course, accurate to the
     current curriculum. Never a static slide welcome. Scored before publishing (minimum 90/100, see §4a); replacing an
     intro keeps the lesson id; revisit it whenever a course gains a module or a major project.
+37. **Quizzes and assessments** (owner 2026-11-28; docs/COURSE_STANDARD.md §8a, status `courses/QUIZ_AUDIT.md`). No fixed
+    question count: the lesson's concepts and length decide (under 5 min 3–5 … over 60 min 25–30+). Mixed types
+    (concept, scenario, troubleshooting, code, command, security) and difficulty; every option explained (why right, why
+    each wrong one is wrong), a takeaway and the lesson timestamp. Module assessments 15–30, final 30–60, plus practical
+    scenario assessments. Only from the course's own content; GEN writes `quiz.json`, UPLOAD validates against the
+    captions and sends weak quizzes back. Expanding a quiz keeps past attempts and progress.
 
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).

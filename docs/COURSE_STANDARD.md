@@ -191,14 +191,44 @@ it can justify (what, why, where it fits).
   admin approves it in the Review queue.
 - After significant new content: review the description, objectives, curriculum, total duration and course page.
 
-## 8a. Assessments (owner 2026-11-27, standard for every course)
-- **Lesson quizzes** after lessons that teach something checkable (3–5 options, the correct one, an explanation);
-  imported from the spoken in-video questions or from the manifest, never invented by the upload agent.
-- **Module assessment** at the end of each module (8–10 questions over the module), and a **final assessment**
-  (about 20 questions) before the conclusion.
-- Questions come only from the course's own content. GEN writes them; UPLOAD checks every answer against the captions,
-  then uploads them as quiz lessons named "Quiz: …" / "Module <n> assessment" / "Final assessment".
-- Missing assessments are a content request (CR) like any other.
+## 8a. Assessments (owner 2026-11-27; expanded 2026-11-28, permanent, every course)
+Quizzes are a major educational advantage of DEL: they check real understanding, not memorised definitions.
+**No fixed number of questions** (the old "about four per video" pattern is retired).
+
+**Lesson quizzes: count from the content.** Guide by video length (the concepts decide; never pad to a number):
+
+| Video | Questions |
+|---|---:|
+| under 5 min | 3–5 |
+| 5–10 min | 5–8 |
+| 10–20 min | 8–12 |
+| 20–30 min | 10–15 |
+| 30–45 min | 15–20 |
+| 45–60 min | 20–25 |
+| over 60 min | 25–30+ |
+
+**Mix of question types** where the lesson covers them: concept, technical, real-world scenario, troubleshooting,
+architecture, code/configuration analysis, command, security/best practice, critical thinking. Three difficulty levels:
+foundation, applied, advanced.
+
+**Every question has**: a clear question (optionally a code/config snippet), 3–5 realistic options (wrong ones plausible
+and educational, never silly), the correct answer, why it is correct, why **each** wrong option is wrong, a takeaway or
+best practice, a practical example where useful, and the lesson timestamp where the point is taught.
+
+**Assessment levels**
+- Lesson quiz: after each lesson that teaches something checkable (spoken in-video questions may be a subset of it).
+- **Module assessment**: 15–30 questions over the whole module, at its end ("Module <n> assessment").
+- **Final assessment**: 30–60 questions (more for big masterclasses) over the course objectives ("Final assessment").
+- **Practical scenario assessments**: realistic problems to solve with the course's knowledge (a failed Terraform apply,
+  a crashing Kubernetes app, a weak prompt, a broken n8n workflow, a failing pipeline, a slow LLM app), placed where
+  the module ends.
+
+**Source and format**: questions come only from the course's own content (captions, scripts, labs), never from a title.
+GEN writes `quiz.json` in each lesson folder and `assessments/*.json` per course (schema `courses/quiz.schema.json`),
+delivered with the video, captions, PDF and lab. UPLOAD validates every question against the captions (answers right,
+explanations consistent, nothing outside the lesson, no duplicates, count in range, timestamps inside the video) and
+sends weak, repetitive, inaccurate or too-basic quizzes back to GEN with the specific fixes. Expanding a quiz keeps the
+quiz lesson and past attempts (questions have stable ids). Status per lesson: `courses/QUIZ_AUDIT.md`.
 
 ## 8b. A lesson is complete only with its materials (owner 2026-11-27, every course)
 Uploading the video is not the end of a lesson. Before a lesson counts as done, the upload agent compares it with its
