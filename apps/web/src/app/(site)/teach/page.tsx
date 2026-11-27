@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pageMeta } from "@/lib/seo";
-import { getRefundPolicy } from "@/lib/refund-policy-server";
-import { refundRule } from "@/lib/refund-policy-shared";
 import { ArrowRight, BadgeDollarSign, CheckCircle2, ShieldCheck, Upload } from "lucide-react";
 import { ApplyToTeach } from "@/components/ApplyToTeach";
-import { getTerms } from "@/lib/catalog";
-import { moneyExact } from "@/lib/format";
-import { EarningsCalculator } from "@/components/EarningsCalculator";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +15,7 @@ const steps = [
   ["Get paid", "Connect a Stripe account once. Your share of each sale is transferred to it automatically after the refund period."],
 ];
 
-export default async function TeachPage() {
-  const refundPolicy = await getRefundPolicy();
-  const terms = await getTerms();
-  const share = terms?.instructorSharePercent ?? 80;
-  const minCents = terms?.minCents ?? 499;
-  const maxCents = terms?.maxCents ?? 99999;
+export default function TeachPage() {
   return (
     <>
       <section className="border-b border-line">
@@ -76,28 +66,8 @@ export default async function TeachPage() {
             </li>
           ))}
         </ol>
-      </section>
-      <section id="payouts" className="container-x scroll-mt-20 pt-16" aria-labelledby="payouts-h">
-        <div className="panel grid gap-10 p-7 md:grid-cols-2 md:p-10">
-          <div>
-            <h2 id="payouts-h" className="font-display text-2xl font-extrabold">You keep {share}% of every sale</h2>
-            <p className="mt-3 text-ink-2">
-              Your share is {share}% of what the learner paid after Stripe’s processing fee. Sales tax is never part of the split.
-              The platform keeps the rest to run checkout, hosting, reviews and support.
-            </p>
-            <ul className="mt-5 space-y-3 text-ink-2">
-              <li><b className="text-ink">Your price:</b> free, or any price from {moneyExact(minCents)} to {moneyExact(maxCents)} in US dollars. You can change it later.</li>
-              <li><b className="text-ink">When you’re paid:</b> {refundPolicy ? `${refundPolicy.windowDays + 2} days after each sale, once the learner’s ${refundPolicy.windowDays}-day refund period has ended` : "Once the learner’s refund period has ended (plus 2 days)"}, your share is transferred to your own Stripe account. Stripe then pays it out to your bank.</li>
-              <li><b className="text-ink">Refunds:</b> learners can get a refund {refundRule(refundPolicy, true)}. A refunded sale pays you nothing and costs you nothing.</li>
-              <li><b className="text-ink">Chargebacks:</b> the platform handles disputes with the bank. If one is lost, that sale’s share is taken back.</li>
-            </ul>
-            <p className="mt-5 text-sm text-muted">Every sale shows its price, fee and your share in your studio.</p>
-          </div>
-          <div className="self-start">
-            <h3 className="mb-3 font-display font-bold text-ink">What you’d earn</h3>
-            <EarningsCalculator sharePercent={share} minCents={minCents} maxCents={maxCents} />
-          </div>
-        </div>
+        {/* Owner 2026-11-27: no public money details; the agreement covers share, pricing rules and payouts. */}
+        <p className="mt-8 text-ink-2" data-testid="teach-terms-line">Revenue share, pricing rules and payouts are set out in the instructor agreement you receive when your application is approved.</p>
       </section>
       <section className="container-x pb-6 pt-16" aria-labelledby="ready-h">
         <div className="flex flex-col gap-5 border-t-2 border-ink pt-8 md:flex-row md:items-end md:justify-between">

@@ -5,7 +5,7 @@ import { SocialLinks } from "./SocialLinks";
 
 const cols: [string, [string, string][]][] = [
   ["Learn", [["Browse courses", "/courses"], ["AI for DevOps", "/courses/topic/ai-for-devops"], ["MCP & Agents", "/courses/topic/mcp-agents"], ["Free courses", "/courses?price=free"], ["Full training program ↗", programLink(DEL_PROGRAM.aboutUrl, "footer")], ["DevOps Easy Learning ↗", programLink("https://www.devopseasylearning.com/", "footer")]]],
-  ["Teach", [["Become an instructor", "/teach"], ["Instructor studio", "/studio"], ["Payouts with Stripe", "/teach#payouts"]]],
+  ["Teach", [["Become an instructor", "/teach"], ["Instructor studio", "/studio"]]],
   ["Your account", [["Student Studio", "/student"], ["My courses", "/student/courses"], ["Purchase history", "/student/purchases"], ["Contact us", "/contact"], ["Verify a certificate", "/certificates/verify"], ["Platform videos", "/help"], ["Help and support", "/support"], ["Install the app", "/install"]]],
 ];
 
