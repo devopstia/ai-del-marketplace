@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { grantYear } from '../access/access';
 import { paidVideoSec } from '../access/consumption';
 import { AuditService } from '../common/audit.service';
@@ -8,6 +8,8 @@ import { PayoutsService } from './payouts.service';
 import { RefundPolicyService } from './refund-policy.service';
 import { PrismaService } from '../common/prisma.service';
 import { StripeService } from './stripe.service';
+import { assignReceiptNumber } from '../receipts/receipt-number';
+import { ReceiptsService } from '../receipts/receipts.service';
 
 export interface PaymentInfo {
   /** where the confirmation came from (audit) */
@@ -41,6 +43,8 @@ export class FulfilmentService {
     private readonly jobs: JobsService,
     private readonly payouts: PayoutsService,
     private readonly refundPolicy: RefundPolicyService,
+    /** Optional so unit tests can leave it out; Nest always injects it (receipts/receipts.service.ts). */
+    @Optional() private readonly receipts?: ReceiptsService,
   ) {}
 
   async fulfil(orderId: string, payment: PaymentInfo): Promise<FulfilResult> {
@@ -62,6 +66,8 @@ export class FulfilmentService {
       if (flipped.count === 0) {
         return { orderId, alreadyFulfilled: true, enrolledCourseIds: [] as string[], userId: null as string | null };
       }
+      // The customer-facing receipt number, once per order (docs/RECEIPTS.md).
+      await assignReceiptNumber(tx, orderId, paidAt);
       const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: { lines: true } });
       // Instructor shares wait for the refund window to close before they are transferred.
       await tx.orderLine.updateMany({ where: { orderId, transferStatus: 'pending' }, data: { transferDueAt: transferDueAt(paidAt, policy.windowDays) } });
@@ -96,15 +102,17 @@ export class FulfilmentService {
       // The receipt email is best effort: building it never blocks the order.
       try {
         const user = await this.prisma.user.findUnique({ where: { id: result.userId }, select: { email: true, name: true } });
-        const o = await this.prisma.order.findUnique({ where: { id: orderId }, select: { totalCents: true, lines: { select: { courseId: true, priceCents: true, course: { select: { title: true } } } } } });
+        const o = await this.prisma.order.findUnique({ where: { id: orderId }, select: { totalCents: true, receiptNumber: true, lines: { select: { courseId: true, priceCents: true, course: { select: { title: true } } } } } });
         const ens = await this.prisma.enrollment.findMany({ where: { userId: result.userId, courseId: { in: o?.lines.map((l) => l.courseId) ?? [] } }, select: { courseId: true, accessExpiresAt: true } });
         const lines = (o?.lines ?? []).map((l) => ({ title: l.course?.title ?? '', priceCents: l.priceCents, accessUntil: ens.find((e) => e.courseId === l.courseId)?.accessExpiresAt ?? null, renewal: result.renewedCourseIds?.includes(l.courseId) ?? false }));
-        if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', dedupeKey: `receipt:${orderId}`, data: { orderId, name: user.name, total: o?.totalCents ?? 0, lines, refund: { windowDays: policy.windowDays, maxWatchedPercent: policy.maxWatchedPercent } } });
+        if (user) await this.jobs.sendEmail({ to: user.email, template: 'order-receipt', dedupeKey: `receipt:${orderId}`, data: { orderId, receiptNumber: o?.receiptNumber ?? null, name: user.name, total: o?.totalCents ?? 0, lines, refund: { windowDays: policy.windowDays, maxWatchedPercent: policy.maxWatchedPercent } } });
       } catch (e) {
         this.logger?.warn?.(`receipt email skipped: ${(e as Error).message}`);
       }
     }
     if (!result.alreadyFulfilled) await this.settleFee(orderId, payment.via);
+    // The masked card (brand + last 4) for the receipt: best effort, also fetched later when a receipt is opened.
+    if (!result.alreadyFulfilled) await this.receipts?.capturePaymentMethod(orderId).catch((e) => this.logger.warn(`payment method for ${orderId}: ${(e as Error).message}`));
     const { userId: _u, ...out } = result;
     return out;
   }

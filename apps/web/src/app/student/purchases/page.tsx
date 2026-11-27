@@ -48,7 +48,7 @@ export default function OrdersPage() {
             <tbody className="divide-y divide-line">
               {orders.map((o) => (
                 <tr key={o.id}>
-                  <td className="px-4 py-3.5 font-bold">{o.lines.map((l) => l.title).join(", ") || "—"}</td>
+                  <td className="px-4 py-3.5 font-bold">{o.lines.map((l) => l.title).join(", ") || "—"}{o.receiptNumber ? <span className="block font-mono text-xs font-normal text-muted">{o.receiptNumber}</span> : null}</td>
                   <td className="px-4 py-3.5 text-ink-2">{date(o.paidAt ?? o.createdAt)}</td>
                   <td className="px-4 py-3.5 tabular-nums">{moneyExact(o.totalCents, o.currency)}</td>
                   <td className="px-4 py-3.5"><OrderStatus status={o.status} /></td>

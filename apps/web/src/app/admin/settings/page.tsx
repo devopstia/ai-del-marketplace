@@ -72,6 +72,50 @@ export default function AdminSettings() {
           </ul>
         </section>
       ) : null}
+      {canEdit ? <CompanyDetails /> : null}
     </>
+  );
+}
+
+type Company = { legalName: string; address: string; supportEmail: string; website: string; taxId: string };
+/** Company details printed on every receipt (docs/RECEIPTS.md). Empty fields are left off receipts, never invented. */
+function CompanyDetails() {
+  const toast = useToast();
+  const [c, setC] = useState<Company | null>(null);
+  const [defaults, setDefaults] = useState<Partial<Company>>({});
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    api("/admin/settings/company").then((r) => {
+      const o = obj(r);
+      setC({ legalName: String(o.legalName ?? ""), address: String(o.address ?? ""), supportEmail: String(o.supportEmail ?? ""), website: String(o.website ?? ""), taxId: String(o.taxId ?? "") });
+      setDefaults(obj(o.defaults) as Partial<Company>);
+    }).catch(() => setC(null));
+  }, []);
+  if (!c) return null;
+  const field = (k: keyof Company, label: string, hint: string, area = false) => (
+    <div className="mt-4">
+      <label className="label" htmlFor={`co-${k}`}>{label}</label>
+      {area
+        ? <textarea id={`co-${k}`} className="field min-h-24" value={c[k]} onChange={(e) => setC({ ...c, [k]: e.target.value })} placeholder={defaults[k] ?? ""} />
+        : <input id={`co-${k}`} className="field" value={c[k]} onChange={(e) => setC({ ...c, [k]: e.target.value })} placeholder={defaults[k] ?? ""} />}
+      <p className="hint">{hint}</p>
+    </div>
+  );
+  return (
+    <form className="mt-6 max-w-2xl rounded-panel border border-line bg-surface p-6 sm:p-8" data-testid="company-details" onSubmit={async (e) => {
+      e.preventDefault();
+      setBusy(true);
+      try { await api("/admin/settings/company", { method: "PUT", body: c }); toast("ok", "Company details saved. New and existing receipts show them."); }
+      catch (err) { toast("error", errMsg(err)); } finally { setBusy(false); }
+    }}>
+      <h2 className="font-display text-xl font-bold">Company details on receipts</h2>
+      <p className="mt-1 text-ink-2">Printed in the “From” block of every receipt and its PDF. Leave a field empty to use the default shown, or to leave it off (address and tax ID).</p>
+      {field("legalName", "Registered company name", `Default: ${defaults.legalName ?? "DevOps Easy Learning"}`)}
+      {field("address", "Business address", "One line per row. Shown only when filled in.", true)}
+      {field("supportEmail", "Support email", `Default: ${defaults.supportEmail ?? ""}`)}
+      {field("website", "Website", `Default: ${defaults.website ?? ""}`)}
+      {field("taxId", "Tax ID (optional)", "VAT or tax registration number, if you have one. Shown only when filled in.")}
+      <button className="btn btn-primary mt-6" disabled={busy}>{busy ? <Loader2 className="size-4 animate-spin" /> : null}Save company details</button>
+    </form>
   );
 }

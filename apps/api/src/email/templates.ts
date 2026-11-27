@@ -131,7 +131,8 @@ export const TEMPLATES: Record<string, (d: D) => Rendered> = {
     { p: 'Your courses are ready in your Student Studio. Each purchase includes 12 months of access; nothing renews automatically.' },
     { rows: [...(Array.isArray(d.lines) ? (d.lines as D[]).map((l) => [`${s(l.title)}${l.renewal ? ' (renewal)' : ''}`, `${usd(l.priceCents)} · until ${when(l.accessUntil)}`] as [string, string]) : []), ['Total', usd(d.total)]] },
     { cta: { href: `${web()}/student/courses`, label: 'Start learning' } },
-    { muted: `Receipt ${s(d.orderId).slice(0, 8)}: ${web()}/student/purchases/${s(d.orderId)}. ${refundTerms(d.refund)}` },
+    // The receipt number and a link to the receipt (sign-in required; receipts are never public): docs/RECEIPTS.md.
+    { muted: `Receipt ${s(d.receiptNumber, s(d.orderId).slice(0, 8))}: view or download it at ${web()}/student/purchases/${s(d.orderId)} (sign in to open it).${d.refund ? ` ${refundTerms(d.refund)}` : ''}` },
   ], 'Your courses are ready'),
   'access-expiring': (d) => mk(`Your access to ${s(d.course)} ends in ${Number(d.daysLeft)} day${Number(d.daysLeft) === 1 ? '' : 's'}`, [
     { h1: 'Your access ends soon' },

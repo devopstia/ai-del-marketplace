@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { api, errMsg } from "@/lib/api";
+import { API_URL } from "@/lib/config";
 import { useApi } from "@/lib/useApi";
 import { obj, paged, toOrder } from "@/lib/normalize";
 import { qs } from "@/lib/qs";
@@ -23,7 +24,7 @@ type DetailLine = {
   feeCents: number; payee: string; transferDueAt: string | null; disputeStatus: string | null;
 };
 type Detail = {
-  id: string; status: string; provider: string; currency: string; totalCents: number; refundedCents: number; paidAt: string | null;
+  id: string; receiptNumber: string | null; orderRef: string; stripePaymentIntentId: string | null; status: string; provider: string; currency: string; totalCents: number; refundedCents: number; paidAt: string | null;
   user: { name: string; email: string } | null; lines: DetailLine[];
   terms: { version: string; acceptedAt: string | null; ip: string | null } | null; history: { id: string; action: string; at: string; actor: string | null }[];
 };
@@ -31,7 +32,7 @@ const toDetail = (x: unknown): Detail => {
   const o = obj(x);
   const n = (v: unknown) => Number(v ?? 0) || 0;
   return {
-    id: String(o.id ?? ""), status: String(o.status ?? ""), provider: String(o.provider ?? ""), currency: String(o.currency ?? "usd"),
+    id: String(o.id ?? ""), receiptNumber: (o.receiptNumber as string) ?? null, orderRef: String(o.orderRef ?? ""), stripePaymentIntentId: (o.stripePaymentIntentId as string) ?? null, status: String(o.status ?? ""), provider: String(o.provider ?? ""), currency: String(o.currency ?? "usd"),
     totalCents: n(o.totalCents), refundedCents: n(o.refundedCents), paidAt: (o.paidAt as string) ?? null,
     user: o.user ? { name: String(obj(o.user).name ?? ""), email: String(obj(o.user).email ?? "") } : null,
     terms: obj(o.terms).version ? { version: String(obj(o.terms).version), acceptedAt: (obj(o.terms).acceptedAt as string) ?? null, ip: (obj(o.terms).ip as string) ?? null } : null,
@@ -59,6 +60,41 @@ const payoutText = (l: DetailLine) =>
   : l.transferStatus === "reversed" ? "Taken back"
   : l.transferStatus === "pending" ? (l.transferDueAt && new Date(l.transferDueAt) > new Date() ? `Held until ${date(l.transferDueAt)}` : "Due")
   : "No transfer";
+
+/** Receipt (docs/RECEIPTS.md): number and references, the PDF the customer gets, and resend the receipt email. */
+function ReceiptActions({ d }: { d: Detail }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState<"" | "pdf" | "send">("");
+  const has = ["paid", "partially_refunded", "refunded"].includes(d.status);
+  async function pdf() {
+    setBusy("pdf");
+    try {
+      const res = await fetch(`${API_URL}/admin/orders/${d.id}/receipt.pdf`, { credentials: "include" });
+      if (!res.ok) throw new Error("The receipt couldn’t be downloaded.");
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a"); a.href = url; a.download = `${d.receiptNumber ?? d.orderRef}.pdf`; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e) { toast("error", errMsg(e)); } finally { setBusy(""); }
+  }
+  async function resend() {
+    setBusy("send");
+    try { const r = obj(await api(`/admin/orders/${d.id}/receipt/resend`, { method: "POST" })); toast("ok", `Receipt email sent again to ${String(r.to ?? "the customer")}.`); }
+    catch (e) { toast("error", errMsg(e)); } finally { setBusy(""); }
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-tile border border-line bg-surface-2/50 px-4 py-3 text-sm" data-testid="admin-receipt">
+      <span><span className="text-muted">Receipt </span><span className="font-mono font-bold">{d.receiptNumber ?? "—"}</span></span>
+      <span><span className="text-muted">Order </span><span className="font-mono">{d.orderRef}</span></span>
+      {d.stripePaymentIntentId ? <span><span className="text-muted">Stripe </span><span className="font-mono">{d.stripePaymentIntentId}</span></span> : null}
+      {has ? (
+        <span className="ml-auto flex flex-wrap gap-2">
+          <button type="button" className="btn btn-outline btn-sm" disabled={!!busy} onClick={() => void pdf()}>{busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : null}Download receipt</button>
+          <button type="button" className="btn btn-outline btn-sm" disabled={!!busy} onClick={() => void resend()} data-testid="resend-receipt">{busy === "send" ? <Loader2 className="size-4 animate-spin" /> : null}Resend receipt email</button>
+        </span>
+      ) : <span className="ml-auto text-muted">No receipt: not paid</span>}
+    </div>
+  );
+}
 
 function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
   const toast = useToast();
@@ -88,6 +124,7 @@ function OrderDetail({ id, onChanged }: { id: string; onChanged: () => void }) {
         <span className="text-ink-2">{data.user ? `${data.user.name} · ${data.user.email}` : "—"}</span>
         <span className="text-muted">Paid {dateTime(data.paidAt)} · {data.provider === "test" ? "development test payment" : data.provider}</span>
       </div>
+      <ReceiptActions d={data} />
       <StackTable className="overflow-x-auto rounded-tile border border-line">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="border-b border-line bg-surface-2/60 text-muted"><tr><th className="px-3 py-2"><span className="sr-only">Select</span></th><th className="px-3 py-2">Course</th><th className="px-3 py-2 text-right">Price</th><th className="px-3 py-2 text-right">Stripe fee</th><th className="px-3 py-2 text-right">Platform</th><th className="px-3 py-2 text-right">Instructor</th><th className="px-3 py-2">Payout</th></tr></thead>
@@ -154,7 +191,7 @@ export default function AdminOrders() {
     <>
       <PageHead title="Orders" sub="Every checkout. Open an order to see the split per course and to refund some or all of it." />
       <div className="mb-4 flex flex-wrap gap-3">
-        <input type="search" aria-label="Search orders" className="field !w-80 max-w-full" placeholder="Order id, learner or course" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+        <input type="search" aria-label="Search orders" className="field !w-80 max-w-full" placeholder="Receipt no., ORD- ref, learner or course" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
         <select aria-label="Order status" className="field !w-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
           {STATUSES.map((s) => <option key={s} value={s}>{s ? s.replace("_", " ") : "All statuses"}</option>)}
         </select>
@@ -165,7 +202,7 @@ export default function AdminOrders() {
           <DataTable head={["Order", "Learner", "Courses", "Total", "Status", "Date", ""]} min={900} empty={!data.items.length ? <p className="px-4 py-10 text-center text-ink-2">No orders match.</p> : null}>
             {data.items.map((o) => (
               <tr key={o.id}>
-                <td className="px-4 py-3 text-xs text-muted">{o.id.slice(0, 8)}</td>
+                <td className="px-4 py-3 text-xs text-muted"><span className="block font-mono">{o.receiptNumber ?? o.orderRef ?? o.id.slice(0, 8)}</span>{o.receiptNumber && o.orderRef ? <span className="font-mono">{o.orderRef}</span> : null}</td>
                 <td className="px-4 py-3">{o.user ? <><span className="block font-bold">{o.user.name}</span><span className="text-xs text-muted">{o.user.email}</span></> : "—"}</td>
                 <td className="max-w-xs px-4 py-3">{o.lines.length ? o.lines.map((l) => l.title).join(", ") : `${o.lineCount ?? 0} ${o.lineCount === 1 ? "course" : "courses"}`}</td>
                 <td className="px-4 py-3 tabular-nums">{moneyExact(o.totalCents, o.currency)}</td>
@@ -178,7 +215,7 @@ export default function AdminOrders() {
           <Pager page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} noun="orders" />
         </>
       ) : !error ? <Skeleton className="h-80" /> : null}
-      <Modal open={!!open} onClose={() => setOpen(null)} title={`Order ${open?.slice(0, 8) ?? ""}`} wide>
+      <Modal open={!!open} onClose={() => setOpen(null)} title={`Order ${data?.items.find((x) => x.id === open)?.orderRef ?? open?.slice(0, 8) ?? ""}`} wide>
         {open ? <OrderDetail key={open} id={open} onChanged={reload} /> : null}
       </Modal>
     </>

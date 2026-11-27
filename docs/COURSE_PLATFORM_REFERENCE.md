@@ -68,6 +68,8 @@ GEN copies files as `*.part` and renames when complete; the watcher waits for th
 Resource titles the publisher uses: **"Slides (PDF)"** and **"Hands-on lab (ZIP)"**; download names
 `<lesson-title>-slides.pdf`, `<lesson-title>-lab.zip`.
 
+Receipts for course purchases: `docs/RECEIPTS.md` (private; `/student/purchases/<order id>`, PDF from `apps/api/src/receipts`).
+
 ## 6. Environments
 Staging https://staging.ai-devopseasylearning.com (no sign-in codes; seed admin from SSM), production
 https://ai-devopseasylearning.com (owner's sign-in with authenticator; no agent keys unless the owner says so). Code

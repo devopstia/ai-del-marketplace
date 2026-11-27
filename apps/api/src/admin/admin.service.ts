@@ -1,4 +1,5 @@
 import { Injectable, Optional } from '@nestjs/common';
+import { RECEIPT_NUMBER_RE, orderRef, orderRefToIdPrefix } from '../receipts/receipt-number';
 import { CoversService } from '../covers/covers.service';
 import type { Prisma } from '../generated/prisma/client';
 import type { CourseStatus, OrderStatus, Role, UserStatus } from '../generated/prisma/enums';
@@ -314,12 +315,17 @@ export class AdminService {
   async orders(q: { status?: OrderStatus; q?: string; page: number; pageSize: number }) {
     const term = q.q?.trim();
     const isUuid = !!term && /^[0-9a-f-]{36}$/i.test(term);
+    // Receipt numbers (DEL-RCP-2026-000123) and order references (ORD-XXXXXXXX) as the customer sees them (docs/RECEIPTS.md).
+    const receipt = term && RECEIPT_NUMBER_RE.test(term.toUpperCase()) ? term.toUpperCase() : null;
+    const refPrefix = term ? orderRefToIdPrefix(term) : null;
     const where: Prisma.OrderWhereInput = {
       status: q.status,
       ...(term
         ? {
             OR: [
               ...(isUuid ? [{ id: term }] : []),
+              ...(receipt ? [{ receiptNumber: receipt }] : [{ receiptNumber: { contains: term, mode: 'insensitive' as const } }]),
+              ...(refPrefix ? [{ id: { startsWith: refPrefix } }] : []),
               { user: { email: { contains: term, mode: 'insensitive' as const } } },
               { user: { name: { contains: term, mode: 'insensitive' as const } } },
               { lines: { some: { course: { title: { contains: term, mode: 'insensitive' as const } } } } },
@@ -342,6 +348,8 @@ export class AdminService {
     return paged(
       rows.map((o) => ({
         id: o.id,
+        receiptNumber: o.receiptNumber,
+        orderRef: orderRef(o.id),
         status: o.status,
         totalCents: o.totalCents,
         currency: o.currency,
@@ -399,6 +407,8 @@ export class AdminService {
       currency: o.currency,
       totalCents: o.totalCents,
       refundedCents,
+      receiptNumber: o.receiptNumber,
+      orderRef: orderRef(o.id),
       paidAt: o.paidAt,
       createdAt: o.createdAt,
       stripePaymentIntentId: o.stripePaymentIntentId,

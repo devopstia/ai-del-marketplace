@@ -13,12 +13,14 @@ import { PaymentsConfigController } from './payments-config.controller';
 import { PaymentsConfigService } from './payments-config.service';
 import { AuthModule } from '../auth/auth.module';
 import { WebhooksService } from './webhooks.service';
+import { ReceiptsController } from '../receipts/receipts.controller';
+import { ReceiptsService } from '../receipts/receipts.service';
 
 @Global()
 @Module({
   imports: [AuthModule],
-  controllers: [CommerceController, WebhooksController, PaymentsConfigController],
-  providers: [FinanceService, CommerceService, ConnectService, FulfilmentService, PayoutsService, PaymentsProcessor, PaymentsScheduler, RefundsService, RefundPolicyService, StripeService, WebhooksService, PaymentsConfigService],
-  exports: [FinanceService, CommerceService, FulfilmentService, PayoutsService, RefundsService, RefundPolicyService, StripeService],
+  controllers: [CommerceController, WebhooksController, PaymentsConfigController, ReceiptsController],
+  providers: [FinanceService, CommerceService, ConnectService, FulfilmentService, PayoutsService, PaymentsProcessor, PaymentsScheduler, RefundsService, RefundPolicyService, StripeService, WebhooksService, PaymentsConfigService, ReceiptsService],
+  exports: [FinanceService, CommerceService, FulfilmentService, PayoutsService, RefundsService, RefundPolicyService, StripeService, ReceiptsService],
 })
 export class CommerceModule {}
