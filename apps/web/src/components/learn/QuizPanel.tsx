@@ -11,8 +11,8 @@ import { list, obj } from "@/lib/normalize";
  * bookmarks for questions to review. Grading is by question id, so the shuffle never affects the score.
  */
 type Q = { id: string; q: string; options: string[]; code?: string; topic?: string; difficulty?: string; fixedOrder?: boolean };
-type Loaded = { kind: string; scenario: string | null; draw: string; questions: Q[]; bestScore: number | null; attempts: number; bookmarks: string[] };
-type Res = { id: string; chosen: number; correct: number; isCorrect: boolean; why?: string; explanations?: string[]; takeaway?: string; topic?: string; timestamp?: number; videoLectureId?: string };
+type Loaded = { kind: string; scenario: string | null; scenarioCode: string | null; draw: string; questions: Q[]; bestScore: number | null; attempts: number; bookmarks: string[] };
+type Res = { id: string; chosen: number; correct: number; isCorrect: boolean; why?: string; explanations?: string[]; takeaway?: string; topic?: string; timestamp?: number; videoLectureId?: string; related?: { videoLectureId: string; timestamp: number }[] };
 type Outcome = { score: number; passed: boolean; practice: boolean; bestScore: number | null; results: Map<string, Res>; topics: { topic: string; correct: number; total: number }[] };
 
 const shuffle = <T,>(a: T[]): T[] => {
@@ -43,6 +43,7 @@ function load(raw: unknown): Loaded {
   return {
     kind: typeof o.kind === "string" ? o.kind : "lesson",
     scenario: typeof o.scenario === "string" && o.scenario ? o.scenario : null,
+    scenarioCode: typeof o.scenarioCode === "string" && o.scenarioCode ? o.scenarioCode : null,
     draw: typeof o.draw === "string" ? o.draw : "",
     questions,
     bestScore: typeof o.bestScore === "number" ? o.bestScore : null,
@@ -115,6 +116,7 @@ export function QuizPanel({ lectureId, onPassed, onWatch }: { lectureId: string;
           topic: typeof o.topic === "string" ? o.topic : undefined,
           timestamp: typeof o.timestamp === "number" ? o.timestamp : undefined,
           videoLectureId: typeof o.videoLectureId === "string" ? o.videoLectureId : undefined,
+          related: Array.isArray(o.related) ? o.related.map((x) => obj(x)).filter((x) => typeof x.videoLectureId === "string" && typeof x.timestamp === "number").map((x) => ({ videoLectureId: String(x.videoLectureId), timestamp: Number(x.timestamp) })) : undefined,
         };
         return [res.id, res];
       }));
@@ -155,6 +157,7 @@ export function QuizPanel({ lectureId, onPassed, onWatch }: { lectureId: string;
         <div className="mb-6 rounded-tile border border-line bg-surface-2 p-4 text-ink-2" data-testid="quiz-scenario">
           <p className="mb-1 text-sm font-bold text-ink">Scenario</p>
           <p className="whitespace-pre-line">{data.scenario}</p>
+          {data.scenarioCode ? <pre className="mt-3 overflow-x-auto rounded-lg border border-line bg-surface p-3 text-sm text-ink"><code>{data.scenarioCode}</code></pre> : null}
         </div>
       ) : null}
 
@@ -242,6 +245,16 @@ export function QuizPanel({ lectureId, onPassed, onWatch }: { lectureId: string;
                       <button type="button" className="btn btn-ghost btn-sm -ml-2 text-violet" onClick={() => onWatch(res.videoLectureId!, res.timestamp!)} data-testid="quiz-watch">
                         <PlayCircle className="size-4" />Watch this part ({clock(res.timestamp)})
                       </button>
+                    ) : null}
+                    {res.related?.length && onWatch ? (
+                      <p className="flex flex-wrap items-center gap-x-1">
+                        <span>Also covered:</span>
+                        {res.related.map((r, ri) => (
+                          <button key={ri} type="button" className="btn btn-ghost btn-sm text-violet" onClick={() => onWatch(r.videoLectureId, r.timestamp)}>
+                            <PlayCircle className="size-4" />{clock(r.timestamp)}{res.related!.length > 1 ? ` (${ri + 1})` : ""}
+                          </button>
+                        ))}
+                      </p>
                     ) : null}
                   </div>
                 ) : null}

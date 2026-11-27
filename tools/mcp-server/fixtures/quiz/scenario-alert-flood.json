@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "kind": "scenario",
+  "course": "n8n-automation",
+  "id": "scenario-alert-flood",
+  "title": "Scenario: the night the alerts channel drowned",
+  "module": 3,
+  "scenario": "An operations team sends every alert to one Mattermost channel through n8n. Prometheus and Alertmanager feed the incident workflow from the incident management lesson (one message per fingerprint, posted through an incoming webhook). CloudWatch alarms reach n8n through EventBridge and an SQS queue that n8n reads every 20 seconds. At 02:10, outside business hours, the ledger database starts flapping. For forty minutes the payments API times out, checkout errors pile up, and the channel receives more than 300 posts. The on-call engineer can't find the real problem among them. That night the reports-batch service was also in a planned migration. The team now redesigns the path the way the intelligent alerting lesson does: store every alert, group, mute, score urgency, and post as a bot account in a new channel, payments-incidents. The evidence from that night and from the first test of the redesign is below.",
+  "code": "alerts channel, 02:10-02:50\n  120 posts  PaymentsApiTimeout  service=payments-api   (120 different fingerprints: one per pod and endpoint)\n   80 posts  CheckoutErrors ALARM  (from the SQS queue, about every 30 s)\n   60 posts  CacheCpuHigh  service=cache  (fires every night, nobody has acted on it in months)\n   45 posts  ReportsLag  service=reports-batch\n\nn8n Executions, AWS alarm workflow:  Delete the message  -> Forbidden (sqs:DeleteMessage)\nalertmanager.yml (copied from the lab):  group_by: [alertname, service]   repeat_interval: 30s\n\nRedesign, first test:  Group the flood -> Post the group  -> 403 Forbidden. You do not have the appropriate permissions.",
+  "lessons": [
+    "12-n12-n8n-incident-management-live",
+    "11-n11-n8n-aws-automation-live",
+    "21-n21-n8n-intelligent-alerting-live",
+    "03-n3-mattermost-webhook-live"
+  ],
+  "questions": [
+    {
+      "id": "sc-flood-q01",
+      "q": "The incident workflow already de-duplicates by fingerprint, yet PaymentsApiTimeout produced 120 posts. Why didn't de-duplication help, and what does the redesign add?",
+      "options": [
+        "De-duplication failed because two alerts arrived at the same instant; a database for incident state fixes it",
+        "Fingerprints only work for CloudWatch alarms, so Prometheus alerts need a Remove Duplicates node first",
+        "One problem fired 120 different fingerprints; group by service plus cause and edit one message per group",
+        "repeat_interval: 30s resends every alert, and Alertmanager gives each resend a new fingerprint"
+      ],
+      "correct": 2,
+      "why": "A fingerprint is the same every time the SAME alert fires, so it collapses repeats. Many different alerts about one problem carry many fingerprints. Grouping by a key, service plus cause, goes further: many fingerprints, one problem, one message.",
+      "explanations": [
+        "Simultaneous runs cause a rare double post of one incident, not 120 posts with 120 different fingerprints.",
+        "The fingerprint is Alertmanager's de-duplication key in the incident management lesson. The issue is that there were many of them.",
+        "Correct. Store every alert, group every 20 seconds over a 30-minute window by service and cause, post once, then edit the same message.",
+        "A resend of the same alert carries the same fingerprint; that is exactly what de-duplication relies on."
+      ],
+      "takeaway": "De-duplication collapses repeats of one alert; grouping collapses many alerts about one problem.",
+      "difficulty": "advanced",
+      "type": "architecture",
+      "topic": "Fingerprints vs grouping",
+      "lesson": "21-n21-n8n-intelligent-alerting-live",
+      "timestamp": 161,
+      "related": [
+        {
+          "lesson": "12-n12-n8n-incident-management-live",
+          "timestamp": 123
+        }
+      ]
+    },
+    {
+      "id": "sc-flood-q02",
+      "q": "The 80 CheckoutErrors posts came about every 30 seconds, and the AWS workflow's Delete the message node shows Forbidden. What is repeating them?",
+      "options": [
+        "SQS returns a read-but-undeleted message after the 30 s visibility timeout; add sqs:DeleteMessage",
+        "Alertmanager's repeat_interval: 30s, which resends CloudWatch alarms along with Prometheus alerts",
+        "CloudWatch re-evaluates the alarm every 30 seconds and sends a new ALARM each time",
+        "EventBridge retries the delivery to the queue until n8n answers 200 to the message"
+      ],
+      "correct": 0,
+      "why": "A message that was read but not deleted is only hidden for the visibility timeout, 30 seconds, and then returns. Without sqs:DeleteMessage, n8n posts the same alarm every time it comes back.",
+      "explanations": [
+        "Correct. Add the missing action to the policy for that one queue only (least privilege) and apply it with Terraform.",
+        "Alertmanager only resends Prometheus alerts. The CloudWatch path goes through EventBridge and SQS and never touches Alertmanager.",
+        "CloudWatch evaluates once a minute, and the rule forwards changes of state (ALARM, OK), not one message per evaluation.",
+        "n8n pulls from the queue; EventBridge delivers to SQS, not to n8n, so it has no n8n answer to wait for."
+      ],
+      "takeaway": "Same SQS alert every 30 seconds plus Forbidden at the delete step = missing sqs:DeleteMessage.",
+      "difficulty": "applied",
+      "type": "troubleshooting",
+      "topic": "SQS visibility timeout",
+      "lesson": "11-n11-n8n-aws-automation-live",
+      "timestamp": 767,
+      "related": [
+        {
+          "lesson": "12-n12-n8n-incident-management-live",
+          "timestamp": 800
+        }
+      ]
+    },
+    {
+      "id": "sc-flood-q03",
+      "q": "With the lesson's scoring rules, three groups exist at 02:30 (outside business hours). Which ones go to the AI for an urgency suggestion?",
+      "code": "payments-api   critical  customer-facing\ncheckout-web   warning   customer-facing\norders-queue   warning   internal",
+      "options": [
+        "All three, so the AI can compare them",
+        "payments-api only, because critical groups matter most",
+        "None: outside business hours the rules decide everything",
+        "checkout-web only, the one group scoring 3 or 4"
+      ],
+      "correct": 3,
+      "why": "Critical 3, warning 2, info 1; customer-facing +2; business hours +1 (not at 02:30). payments-api = 5, P1 by the rules. checkout-web = 4, the unclear middle. orders-queue = 2, P3 by the rules. Only scores of 3 or 4 go to the AI.",
+      "explanations": [
+        "Sending clear cases to the AI adds cost and unpredictability for nothing; rules decide them.",
+        "payments-api scores 5: P1, decided by the rules. Clear cases never need AI.",
+        "The time only removes the business-hours point. checkout-web still lands at 4, in the middle.",
+        "Correct. Score 4 is unclear, so n8n asks the model for a labelled suggestion; the other two are decided by the rules."
+      ],
+      "takeaway": "Rules first (fast, free, predictable); AI only for scores 3 to 4, and labelled as a suggestion.",
+      "difficulty": "applied",
+      "type": "critical thinking",
+      "topic": "Urgency scoring",
+      "lesson": "21-n21-n8n-intelligent-alerting-live",
+      "timestamp": 214
+    },
+    {
+      "id": "sc-flood-q04",
+      "q": "The team mutes CacheCpuHigh as known noise and adds a maintenance window for reports-batch. Someone sets the window to 'until further notice' so it never needs renewing. What is the risk, and what does the lesson recommend?",
+      "options": [
+        "None: muted alerts are deleted at once, so storage stays small and the channel stays quiet",
+        "Real reports-batch alerts get muted too; keep each window short, with an end time",
+        "The AI starts scoring muted alerts as P1, so every muted alert pages on-call at night",
+        "Muting stops Alertmanager from sending them, so Prometheus history is lost"
+      ],
+      "correct": 1,
+      "why": "A window that is too wide, or a noisy list that is too long, mutes real alerts. Windows have an end time, the noisy list stays short and readable, and muted alerts are still stored and counted in the daily report so the team sees what it is muting.",
+      "explanations": [
+        "Muted doesn't mean deleted: every alert is still stored and counted.",
+        "Correct. Short windows with an end time, a short noisy list, and the daily report as the check.",
+        "Muting only decides what is not posted. Urgency comes from severity, customer-facing and business hours, not from whether other alerts are muted.",
+        "Muting happens in n8n after the intake stores the alert. Alertmanager and Prometheus keep working as before."
+      ],
+      "takeaway": "Mute narrowly and temporarily, and keep counting what you mute.",
+      "difficulty": "applied",
+      "type": "real-world scenario",
+      "topic": "Muting and maintenance windows",
+      "lesson": "21-n21-n8n-intelligent-alerting-live",
+      "timestamp": 751,
+      "related": [
+        {
+          "lesson": "21-n21-n8n-intelligent-alerting-live",
+          "timestamp": 206
+        }
+      ]
+    },
+    {
+      "id": "sc-flood-q05",
+      "q": "In the first test, the old incident workflow still posts in its channel through its incoming webhook, but the redesign's Post the group gets 403 in the new payments-incidents channel. Why the difference?",
+      "options": [
+        "The bot's access token expired overnight, while incoming webhooks never expire",
+        "Incoming webhooks are disabled for the new channel in the System Console",
+        "A bot can only post in channels it belongs to; invite it with /invite @alert-bot",
+        "Mattermost blocks edits of messages from n8n unless untrusted internal connections allow it"
+      ],
+      "correct": 2,
+      "why": "An incoming webhook is a private URL that posts into one channel without a user or password. The redesign posts as a bot account (so it can edit its own messages), and a bot can only post in channels it belongs to: it was in the team, but not in the new channel.",
+      "explanations": [
+        "Nothing points to the token: the answer is Forbidden, you do not have the appropriate permissions, and the lesson traces it to the bot not being a member of the channel.",
+        "Disabled incoming webhooks give a different error and would affect the old path, which still works. The new path doesn't use an incoming webhook at all.",
+        "Correct. An incoming webhook posts into its one channel without any user; a bot posts as a user and must be a member. Invite it, and the next 20-second run posts the groups.",
+        "Allowed untrusted internal connections is for Mattermost calling n8n (buttons such as Acknowledge), not for n8n posting into Mattermost."
+      ],
+      "takeaway": "Incoming webhook: one fixed channel, no user. Bot account: can edit its posts, but must be a member of the channel.",
+      "difficulty": "advanced",
+      "type": "troubleshooting",
+      "topic": "Bot accounts vs incoming webhooks",
+      "lesson": "21-n21-n8n-intelligent-alerting-live",
+      "timestamp": 538,
+      "related": [
+        {
+          "lesson": "03-n3-mattermost-webhook-live",
+          "timestamp": 138
+        }
+      ]
+    },
+    {
+      "id": "sc-flood-q06",
+      "q": "After the redesign, the daily noisy report says payments-api fired hundreds of alerts because ledger-db keeps flapping. What is the fix at the source?",
+      "options": [
+        "Add a 'for' duration to the alert rule in Prometheus, or fix the flapping dependency",
+        "Add payments-api to the known-noisy list so its alerts are stored but never posted",
+        "Raise the grouping window from 30 minutes to 24 hours so all repeats share one message",
+        "Turn off send_resolved in alertmanager.yml so fewer messages reach n8n"
+      ],
+      "correct": 0,
+      "why": "The report's rule-based tip for a flapping alert is to add a 'for' duration to the alert, so short blips don't fire (the ShopDown rule waits 15 seconds for the same reason), or to fix the flapping dependency itself.",
+      "explanations": [
+        "Correct. Make the alert wait before firing, or remove the cause of the flapping.",
+        "payments-api is customer-facing and was a real P1 that night. The noisy list is for alerts that never matter, like the cache CPU alert; muting this one would hide a real problem.",
+        "A wider window only changes which alerts are grouped together; the alert still fires hundreds of times.",
+        "send_resolved tells n8n when a problem is over so the incident can close. Turning it off loses that, and the flood still fires."
+      ],
+      "takeaway": "Grouping hides the noise from people; the daily report tells you which rules to fix so the noise stops.",
+      "difficulty": "applied",
+      "type": "critical thinking",
+      "topic": "Tuning noisy alerts",
+      "lesson": "21-n21-n8n-intelligent-alerting-live",
+      "timestamp": 691,
+      "related": [
+        {
+          "lesson": "12-n12-n8n-incident-management-live",
+          "timestamp": 783
+        }
+      ]
+    },
+    {
+      "id": "sc-flood-q07",
+      "q": "In production, Alertmanager still uses the lab's repeat_interval: 30s. With the redesign in place, what happens to those resends, and what should the team change?",
+      "options": [
+        "Each resend creates a new group and a new post, so the redesign doesn't help until the interval is changed",
+        "They join the same group and edit its message; still set repeat_interval to hours in production",
+        "They are muted automatically by n8n because every resend shares the same fingerprint",
+        "They are dropped by the intake's token check, because resends carry no bearer token"
+      ],
+      "correct": 1,
+      "why": "The intake stores every alert, and the group key is service plus cause, so resends fall into the existing group: the message is edited, not reposted. The 30-second interval is a lab setting to see things quickly; in production it should be every few hours.",
+      "explanations": [
+        "Groups are keyed by service and cause, not by arrival, so a resend joins its existing group within the window.",
+        "Correct. Grouping absorbs the resends, and a production interval of hours removes most of them.",
+        "Muting comes from the known-noisy list and maintenance windows, not from fingerprints.",
+        "Alertmanager sends the bearer token with every resend, so the resends pass the check and are stored."
+      ],
+      "takeaway": "Lab timings are for watching it happen; production intervals are hours, and grouping still keeps one message per problem.",
+      "difficulty": "advanced",
+      "type": "architecture",
+      "topic": "Alertmanager repeats and grouping",
+      "lesson": "12-n12-n8n-incident-management-live",
+      "timestamp": 800,
+      "related": [
+        {
+          "lesson": "21-n21-n8n-intelligent-alerting-live",
+          "timestamp": 145
+        }
+      ]
+    }
+  ]
+}

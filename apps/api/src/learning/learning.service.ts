@@ -341,6 +341,7 @@ export class LearningService {
       lectureId,
       kind: settings.kind ?? 'lesson',
       scenario: settings.scenario ?? null,
+      scenarioCode: settings.scenarioCode ?? null,
       poolSize: pool.length,
       draw: signDraw(env().SESSION_SECRET, user.id, quiz.id, drawn.map((p) => p.id)),
       questions: drawn.map((p, i) => ({
@@ -393,6 +394,8 @@ export class LearningService {
       }
     }
     const videoOf = await this.videoLessons(pool);
+    // An assessment question names the lesson it comes from; a lesson quiz belongs to the video before it.
+    const watchOf = (p: PoolQuestion) => (p.q.lessonId ? (videoOf.get(p.q.lessonId) === p.q.lessonId ? p.q.lessonId : undefined) : videoOf.get(p.lectureId));
     const results = asked.map(({ p, chosen }, index) => ({
       index,
       id: p.id,
@@ -404,7 +407,8 @@ export class LearningService {
       ...(p.q.takeaway ? { takeaway: p.q.takeaway } : {}),
       ...(p.q.topic ? { topic: p.q.topic } : {}),
       ...(p.q.difficulty ? { difficulty: p.q.difficulty } : {}),
-      ...(p.q.timestamp !== undefined && videoOf.get(p.lectureId) ? { timestamp: p.q.timestamp, videoLectureId: videoOf.get(p.lectureId)! } : {}),
+      ...(p.q.timestamp !== undefined && watchOf(p) ? { timestamp: p.q.timestamp, videoLectureId: watchOf(p)! } : {}),
+      ...(p.q.related?.length ? { related: p.q.related.filter((r) => videoOf.get(r.lessonId) === r.lessonId).map((r) => ({ videoLectureId: r.lessonId, timestamp: r.timestamp })) } : {}),
     }));
     const right = results.filter((r) => r.isCorrect).length;
     const score = results.length ? Math.round((right / results.length) * 100) : 0;
@@ -475,13 +479,22 @@ export class LearningService {
     return out;
   }
 
-  /** For "Watch this part": the video lesson each quiz belongs to (the nearest video before it in its module). */
+  /**
+   * For "Watch this part": the video lesson each quiz belongs to (the nearest video before it in its module), and the
+   * named lessons of assessment questions (kept only when they are video lessons of the same course: id → itself).
+   */
   private async videoLessons(pool: PoolQuestion[]): Promise<Map<string, string>> {
-    const quizLectures = [...new Set(pool.filter((p) => p.q.timestamp !== undefined).map((p) => p.lectureId))];
-    if (!quizLectures.length) return new Map();
+    const quizLectures = [...new Set(pool.filter((p) => p.q.timestamp !== undefined && !p.q.lessonId).map((p) => p.lectureId))];
+    const named = [...new Set(pool.flatMap((p) => [p.q.lessonId, ...(p.q.related ?? []).map((r) => r.lessonId)]).filter((x): x is string => !!x))];
+    const out = new Map<string, string>();
+    if (named.length && pool[0]) {
+      const course = await this.prisma.lecture.findUnique({ where: { id: pool[0].lectureId }, select: { section: { select: { courseId: true } } } });
+      const ok = await this.prisma.lecture.findMany({ where: { id: { in: named }, type: 'video', section: { courseId: course?.section.courseId ?? '' } }, select: { id: true } });
+      for (const l of ok) out.set(l.id, l.id);
+    }
+    if (!quizLectures.length) return out;
     const rows = await this.prisma.lecture.findMany({ where: { id: { in: quizLectures } }, select: { id: true, sectionId: true, position: true } });
     const siblings = await this.prisma.lecture.findMany({ where: { sectionId: { in: [...new Set(rows.map((r) => r.sectionId))] }, type: 'video' }, select: { id: true, sectionId: true, position: true } });
-    const out = new Map<string, string>();
     for (const r of rows) {
       const before = siblings.filter((x) => x.sectionId === r.sectionId && x.position < r.position).sort((a, b) => b.position - a.position)[0];
       if (before) out.set(r.id, before.id);

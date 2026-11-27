@@ -121,9 +121,13 @@ releases: `scripts/deploy-aws.sh` (build → staging → verify → RDS snapshot
 - **Counts follow the lesson**, not a fixed four (standard §8a; owner's table by video length). Audit and status: `courses/QUIZ_AUDIT.md`.
 - **Lesson quiz**: GEN delivers `quiz.json` in the lesson folder (schema `courses/quiz.schema.json`): every option explained,
   takeaway, difficulty, type, topic, timestamp. It wins over the spoken questions in the captions (the caption parser stays the fallback).
-- **Assessments**: plan field `"assessments": "<folder>"` (relative to `sourceDir`) with `module-<n>-assessment.json` (closes module n),
-  `final-assessment.json` (closes the last module), `scenario-<name>.json` (closes module `section`, default the last). Settings:
-  `sampleSize` (questions per attempt) and `pool` (`module`/`course`: also draw from those lesson quizzes).
+- **Assessments**: plan field `course.assessmentsDir` (or top-level `assessments`; relative to `sourceDir`, e.g. `"assessments"`)
+  with GEN's `module-<n>-assessment.json` (closes module n), `final-assessment.json` (closes the last module, before its closing
+  article) and `scenario-<name>.json` (closes the module in its `module` field). Top level: `version, kind, course, title, module,
+  lessons, scenario, code`; each question also names its `lesson` folder (its `timestamp` points into that video) and optional
+  `related[{lesson, timestamp}]`. The publisher turns lesson folders into the lesson ids on the site (`lessonId`, `related[].lessonId`)
+  and `scenario`/`code` into the quiz settings (`scenario`, `scenarioCode`). Optional `settings`: `sampleSize` (questions per attempt)
+  and `pool` (`module`/`course`: also draw from those lesson quizzes).
 - **Publisher** (`tools/mcp-server/src/quizfile.ts`): blocks on a wrong answer index, a missing explanation per option, repeated
   questions/ids, a timestamp past the video's end or an answer given away by the question; warns when the count is outside the range
   for the video's length. A changed file replaces the quiz in place (checksum in `state.<env>.json` › `quizFiles`), same quiz lesson,

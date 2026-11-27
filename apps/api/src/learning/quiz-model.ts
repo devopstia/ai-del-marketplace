@@ -7,7 +7,7 @@ import { z } from 'zod';
  * `quizzes.settings`. Rows written before 2026-11-28 ({ q, options, correct, why }) stay valid: every new field is
  * optional, and a question without an `id` gets a stable one from its text.
  */
-export const QUESTION_TYPES = ['concept', 'technical', 'scenario', 'troubleshooting', 'architecture', 'code', 'command', 'security'] as const;
+export const QUESTION_TYPES = ['concept', 'technical', 'scenario', 'troubleshooting', 'architecture', 'code', 'command', 'security', 'critical-thinking'] as const;
 export const DIFFICULTIES = ['foundation', 'applied', 'advanced'] as const;
 export const QUIZ_KINDS = ['lesson', 'module', 'final', 'scenario'] as const;
 export const MAX_QUESTIONS = 60;
@@ -30,12 +30,17 @@ export interface QuizQuestion {
   code?: string;
   /** Keep the options in this order ("all of the above", "both A and B"). */
   fixedOrder?: boolean;
+  /** Assessments: the video lesson where this is taught (its `timestamp` points there), and other places it is covered. */
+  lessonId?: string;
+  related?: { lessonId: string; timestamp: number }[];
 }
 
 export interface QuizSettings {
   kind?: (typeof QUIZ_KINDS)[number];
   /** Scenario text shown above the questions (scenario assessments). */
   scenario?: string;
+  /** Logs, config or output shown with the scenario. */
+  scenarioCode?: string;
   /** Questions drawn per attempt (assessments with a larger bank). */
   sampleSize?: number;
   /** Also draw from the lesson quizzes of this module ("module") or the whole course ("course"). */
@@ -58,12 +63,15 @@ export const questionSchema = z
     timestamp: z.number().int().min(0).max(24 * 3600).optional(),
     code: z.string().max(4000).optional(),
     fixedOrder: z.boolean().optional(),
+    lessonId: z.string().uuid().optional(),
+    related: z.array(z.object({ lessonId: z.string().uuid(), timestamp: z.number().int().min(0).max(24 * 3600) }).strict()).max(5).optional(),
   })
   .strict();
 export const settingsSchema = z
   .object({
     kind: z.enum(QUIZ_KINDS).optional(),
     scenario: z.string().trim().max(8000).optional(),
+    scenarioCode: z.string().max(8000).optional(),
     sampleSize: z.number().int().min(1).max(MAX_QUESTIONS).optional(),
     pool: z.enum(['own', 'module', 'course']).optional(),
   })

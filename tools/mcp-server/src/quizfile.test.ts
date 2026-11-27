@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -151,4 +151,104 @@ test('publish: quiz.json wins over the captions, assessments close their module,
   calls = [];
   await assert.rejects(run(), /quiz\.json: question 1: "correct" must be the index/);
   assert.ok(!calls.some((c) => c.startsWith('PUT ')), 'nothing written');
+});
+
+// ---------- GEN's real files (n8n course, 2026-11-28) as fixtures ----------
+const FIX = join(process.cwd(), 'fixtures', 'quiz');
+const readFix = async (name: string) => JSON.parse(await readFile(join(FIX, name), 'utf8')) as Record<string, unknown>;
+
+test('GEN lesson quiz.json (n8n lesson 10): valid; GEN type names map to the platform\'s', async () => {
+  const r = checkQuizFile(await readFix('lesson-quiz.json'), { durationSec: 17 * 60 });
+  assert.deepEqual(r.errors, []);
+  assert.deepEqual(r.warnings, []);
+  assert.equal(r.file.questions.length, 12);
+  assert.ok(r.file.questions.every((q) => ['concept', 'technical', 'scenario', 'troubleshooting', 'architecture', 'code', 'command', 'security', 'critical-thinking'].includes(q.type!)));
+});
+
+test('GEN assessments: kind, module, scenario text and code become settings; lesson and related timestamps checked against the named lesson', async () => {
+  const known: Record<string, number> = {};
+  const raw = await readFix('scenario-alert-flood.json');
+  for (const q of raw.questions as { lesson: string; related?: { lesson: string }[] }[]) for (const l of [q.lesson, ...(q.related ?? []).map((r) => r.lesson)]) known[l] = 3600;
+  const r = checkQuizFile(raw, { assessment: true, lessonDuration: (l) => known[l] });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.file.kind, 'scenario');
+  assert.equal(r.file.section, 3);
+  assert.equal(r.file.settings!.kind, 'scenario');
+  assert.ok(r.file.settings!.scenario!.startsWith('An operations team'));
+  assert.ok(r.file.settings!.scenarioCode!.includes('PaymentsApiTimeout'));
+  // a lesson that isn't in the plan, and a timestamp past the end of the named lesson's video
+  const first = (raw.questions as { lesson: string }[])[0]!.lesson;
+  const bad = checkQuizFile(raw, { assessment: true, lessonDuration: (l) => (l === first ? 10 : undefined) });
+  assert.match(bad.errors.join('\n'), /is not in the course plan/);
+  assert.match(bad.errors.join('\n'), /after the end of the video \(10s\)/);
+  const m = checkQuizFile(await readFix('module-3-assessment.json'), { assessment: true });
+  assert.deepEqual(m.errors, []);
+  assert.equal(m.file.kind, 'module');
+  assert.equal(m.file.section, 3);
+  assert.equal(m.file.questions.length, 22);
+});
+
+test('publish: GEN-format assessments close their module before the closing article; lessons become lesson ids; old-format lesson quizzes are replaced in place', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'genassess-'));
+  const src = join(root, 'src');
+  for (const f of ['01-a', '02-b']) { await mkdir(join(src, f), { recursive: true }); await writeFile(join(src, f, `${f}.mp4`), 'video'); }
+  await writeFile(join(src, '01-a', 'quiz.json'), JSON.stringify({ version: 1, lesson: '01-a', questions: [good(1), good(2), good(3)] }));
+  await mkdir(join(src, 'assessments'));
+  const g = (i: number, extra: object) => ({ ...good(i), ...extra });
+  await writeFile(join(src, 'assessments', 'final-assessment.json'), JSON.stringify({ version: 1, kind: 'final-assessment', course: 'c', title: 'Final assessment: the course', lessons: ['01-a', '02-b'], questions: [g(20, { lesson: '01-a', timestamp: 30, related: [{ lesson: '02-b', timestamp: 12 }] }), g(21, { lesson: '02-b', timestamp: 40 })] }));
+  await writeFile(join(src, 'assessments', 'scenario-broken.json'), JSON.stringify({ version: 1, kind: 'scenario', course: 'c', id: 'scenario-broken', title: 'Scenario: it broke', module: 1, scenario: 'A workflow stopped.', code: 'ERROR 401', lessons: ['01-a'], questions: [g(30, { lesson: '01-a', timestamp: 5 })] }));
+  const dir = join(root, 'course');
+  await mkdir(dir);
+  await writeFile(join(root, 'publisher.config.json'), JSON.stringify({ productionAllowed: true, quizBanks: true }));
+  await writeFile(join(dir, 'plan.json'), JSON.stringify({
+    environment: 'staging', apiUrl: 'https://x.test/api', provider: 'DEL', instructorName: 'DevOps Easy Learning', sourceDir: src,
+    course: { title: 'Course', quizzes: 'from-captions', assessmentsDir: 'assessments' },
+    sections: [{ title: 'Module 1', lessons: [{ folder: '01-a', title: 'A', short: 'A' }, { folder: '02-b', title: 'B', short: 'B' }, { type: 'article', key: 'next', title: 'Continue your learning journey', articleMd: 'Next steps.' }] }],
+  }));
+  await writeFile(join(dir, 'state.staging.json'), JSON.stringify({ courseId: 'c1', sections: { 'Module 1': 's1' }, lessons: { '01-a': 'l1', '02-b': 'l2' }, quizzes: { '01-a': 'q1' }, articles: { next: 'art' } }));
+  type L = { id: string; sectionId: string; title: string; summary: string; isPreview: boolean; type: string; videoAssetId: string | null; video: unknown; resources: unknown[]; articleMd?: string; quiz?: { questions: unknown[] } | null };
+  const vid = (id: string, title: string): L => ({ id, sectionId: 's1', title, summary: '', isPreview: false, type: 'video', videoAssetId: 'v1', video: { id: 'v1', status: 'ready', durationSec: 900, hasCaptions: true }, resources: [] });
+  const lectures: L[] = [vid('l1', 'A'), vid('l2', 'B'),
+    // the lesson quiz as the old-format adapter left it (why folded, no ids)
+    { id: 'q1', sectionId: 's1', title: 'Quiz: A', summary: '', isPreview: false, type: 'quiz', videoAssetId: null, video: null, resources: [], quiz: { questions: [{ q: 'folded', options: ['a', 'b', 'c'], correct: 0, why: 'w Takeaway: t' }] } },
+    { id: 'art', sectionId: 's1', title: 'Continue your learning journey', summary: '', isPreview: false, type: 'article', articleMd: 'Next steps.', videoAssetId: null, video: null, resources: [] }];
+  const calls: string[] = [];
+  let n = 0;
+  const fetchImpl = (async (url: string | URL, init?: RequestInit) => {
+    const path = String(url).replace('https://x.test/api/agent', '');
+    const method = init?.method ?? 'GET';
+    calls.push(`${method} ${path}${init?.body ? ' ' + init.body : ''}`);
+    const json = (b: unknown) => new Response(JSON.stringify(b), { status: 200 });
+    if (path === '/whoami') return json({ instructor: { id: 'del', name: 'DevOps Easy Learning' } });
+    if (path === '/categories') return json({ items: [] });
+    if (path === '/courses' && method === 'GET') return json({ items: [{ id: 'c1', title: 'Course' }] });
+    if (path === '/courses/c1' && method === 'GET') return json({ id: 'c1', title: 'Course', status: 'draft', coverTemplateId: 't', sections: [{ id: 's1', title: 'Module 1', lectures }] });
+    if (path === '/uploads') return json({ duplicate: true, assetId: 'v1', status: 'ready' });
+    if (path === '/courses/c1/validation') return json({ ok: true });
+    if (path === '/courses/c1/sections/s1/lectures' && method === 'POST') {
+      const id = `as${++n}`;
+      lectures.push({ id, sectionId: 's1', title: (JSON.parse(String(init!.body)) as { title: string }).title, summary: '', isPreview: false, type: 'quiz', videoAssetId: null, video: null, resources: [], quiz: null });
+      return json({ id });
+    }
+    const put = /^\/courses\/c1\/lectures\/([^/]+)\/quiz$/.exec(path);
+    if (put && method === 'PUT') { lectures.find((l) => l.id === put[1])!.quiz = { questions: (JSON.parse(String(init!.body)) as { questions: unknown[] }).questions }; return json({}); }
+    return json({});
+  }) as typeof fetch;
+  await publish(join(dir, 'plan.json'), { token: 'del_agent_test', fetchImpl, waitMinutes: 0, log: () => undefined });
+
+  const lessonPut = calls.find((c) => c.startsWith('PUT /courses/c1/lectures/q1/quiz '));
+  assert.ok(lessonPut?.includes('"explanations"'), 'the old-format lesson quiz is replaced in place with the full bank');
+  assert.ok(!calls.some((c) => c.startsWith('POST /courses/c1/sections/s1/lectures ') && c.includes('Quiz: A')), 'same quiz lesson');
+  const titles = calls.filter((c) => c.startsWith('POST /courses/c1/sections/s1/lectures ')).map((c) => (JSON.parse(c.slice(c.indexOf(' {') + 1)) as { title: string }).title);
+  assert.deepEqual(titles, ['Scenario: it broke', 'Final assessment: the course']);
+  const finalPut = calls.find((c) => /^PUT \/courses\/c1\/lectures\/as2\/quiz /.test(c))!;
+  const body = JSON.parse(finalPut.slice(finalPut.indexOf(' {') + 1)) as { questions: Record<string, unknown>[]; settings: Record<string, unknown> };
+  assert.deepEqual(body.settings, { kind: 'final' });
+  assert.equal(body.questions[0]!.lessonId, 'l1');
+  assert.deepEqual(body.questions[0]!.related, [{ lessonId: 'l2', timestamp: 12 }]);
+  assert.ok(!('lesson' in body.questions[0]!), 'folders are not sent');
+  const scen = calls.find((c) => /^PUT \/courses\/c1\/lectures\/as1\/quiz /.test(c))!;
+  assert.ok(scen.includes('"scenario":"A workflow stopped."') && scen.includes('"scenarioCode":"ERROR 401"') && scen.includes('"kind":"scenario"'));
+  const order = calls.find((c) => c.startsWith('PUT /courses/c1/curriculum '))!;
+  assert.ok(order.includes('"lectureIds":["l1","q1","l2","as1","as2","art"]'), `assessments close the module, the closing article stays last: ${order}`);
 });

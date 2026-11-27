@@ -2,22 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ai-devopseasylearning.com/schemas/quiz.schema.json",
   "title": "DevOps Easy Learning quiz bank (owner 2026-11-28)",
-  "description": "A lesson's quiz (lesson folder / quiz.json) or an assessment (<assessments>/module-<n>-assessment.json, final-assessment.json, scenario-<name>.json). Questions only from the course's own content. Counts follow docs/COURSE_STANDARD.md §8a (by video length: <5 min 3–5, 5–10 5–8, 10–20 8–12, 20–30 10–15, 30–45 15–20, 45–60 20–25, >60 25–30+; module assessment 15–30, final 30–60). The publisher checks it (tools/mcp-server/src/quizfile.ts) and the API checks it again.",
+  "description": "A lesson's quiz (<lesson folder>/quiz.json) or an assessment (<course>/assessments/module-<n>-assessment.json, final-assessment.json, scenario-<name>.json), as GEN delivers them. Questions only from the course's own content. Counts follow docs/COURSE_STANDARD.md §8a (by video length: <5 min 3–5, 5–10 5–8, 10–20 8–12, 20–30 10–15, 30–45 15–20, 45–60 20–25, >60 25–30+; module assessment 15–30, final 30–60). The publisher checks every file (tools/mcp-server/src/quizfile.ts) and the API checks the questions again. Placement: a module assessment and its scenarios close their module; the final assessment closes the last module, before the closing article.",
   "type": "object",
   "required": ["questions"],
   "properties": {
     "version": { "const": 1 },
-    "lesson": { "type": "string", "description": "The lesson folder (informational)." },
+    "lesson": { "type": "string", "description": "Lesson files: the lesson folder (informational)." },
+    "kind": { "enum": ["module-assessment", "final-assessment", "scenario"], "description": "Assessments. The file name decides; a different kind here is reported." },
+    "course": { "type": "string", "description": "Assessments: the course plan folder under courses/ (informational)." },
+    "id": { "type": "string", "description": "Scenario files: their id (informational)." },
     "title": { "type": "string", "maxLength": 200, "description": "Assessments: the lesson title shown (default 'Module <n> assessment', 'Final assessment', 'Scenario: <name>')." },
-    "section": { "type": "integer", "minimum": 1, "description": "Scenario assessments: the module (1-based) it closes; default the last." },
+    "module": { "type": "integer", "minimum": 1, "description": "Module (1-based) a module assessment or scenario closes. For module files the n in the file name is used." },
+    "lessons": { "type": "array", "items": { "type": "string" }, "description": "Assessments: the lesson folders covered (informational)." },
+    "scenario": { "type": "string", "maxLength": 8000, "description": "Scenario files: the situation shown above the questions." },
+    "code": { "type": "string", "maxLength": 8000, "description": "Scenario files: logs, config or output shown with the scenario." },
     "settings": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Optional (assessments): draw a sample per attempt, from this file or also from the module's or course's lesson quizzes.",
       "properties": {
-        "kind": { "enum": ["lesson", "module", "final", "scenario"], "description": "Set by the publisher from the file name for assessments." },
-        "scenario": { "type": "string", "maxLength": 8000, "description": "The situation shown above the questions (scenario assessments)." },
-        "sampleSize": { "type": "integer", "minimum": 1, "maximum": 60, "description": "Questions drawn per attempt from the bank." },
-        "pool": { "enum": ["own", "module", "course"], "description": "Also draw from the lesson quizzes of this module or of the whole course." }
+        "sampleSize": { "type": "integer", "minimum": 1, "maximum": 60 },
+        "pool": { "enum": ["own", "module", "course"] }
       }
     },
     "questions": {
@@ -27,21 +32,28 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["q", "options", "correct", "why", "explanations"],
+        "required": ["id", "q", "options", "correct", "why", "explanations"],
         "properties": {
-          "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$", "description": "Stable id (keep it when editing the question, so results stay linked)." },
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$", "description": "Stable id, unique in the course (keep it when editing the question, so students' results stay linked)." },
           "q": { "type": "string", "minLength": 3, "maxLength": 1000 },
-          "options": { "type": "array", "minItems": 2, "maxItems": 6, "items": { "type": "string", "minLength": 1, "maxLength": 400 }, "description": "Realistic options; no 'obviously wrong' fillers." },
+          "code": { "type": "string", "maxLength": 4000, "description": "A snippet shown with the question (config, command output, code)." },
+          "options": { "type": "array", "minItems": 2, "maxItems": 6, "items": { "type": "string", "minLength": 1, "maxLength": 400 }, "description": "Realistic options (GEN uses 3–5); no obviously wrong fillers; never the same option twice." },
           "correct": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Index of the right option (0 = the first)." },
           "why": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "Why the right answer is right." },
           "explanations": { "type": "array", "minItems": 2, "maxItems": 6, "items": { "type": "string", "minLength": 1, "maxLength": 1000 }, "description": "One per option, same order: why it is right or wrong." },
           "takeaway": { "type": "string", "maxLength": 600, "description": "The lesson or best practice to remember." },
           "difficulty": { "enum": ["foundation", "applied", "advanced"] },
-          "type": { "enum": ["concept", "technical", "scenario", "troubleshooting", "architecture", "code", "command", "security", "code/config analysis", "real-world scenario"], "description": "The last two are accepted names for code and scenario." },
+          "type": { "enum": ["concept", "technical", "scenario", "troubleshooting", "architecture", "code", "command", "security", "critical-thinking", "code/config analysis", "real-world scenario", "critical thinking"], "description": "GEN's names 'code/config analysis', 'real-world scenario' and 'critical thinking' are stored as code, scenario and critical-thinking." },
           "topic": { "type": "string", "maxLength": 80, "description": "Used for the per-topic score summary." },
-          "timestamp": { "type": "integer", "minimum": 0, "description": "Seconds into the lesson video where this is taught ('Watch this part')." },
-          "code": { "type": "string", "maxLength": 4000, "description": "A snippet shown with the question (config, command output, code)." },
-          "fixedOrder": { "type": "boolean", "description": "Keep the options in this order (e.g. 'all of the above')." }
+          "timestamp": { "type": "integer", "minimum": 0, "description": "Seconds into the video where this is taught ('Watch this part'): the lesson's own video, or in assessments the video of `lesson`. Must be inside that video." },
+          "lesson": { "type": "string", "description": "Assessments: the lesson folder the question comes from (must be in the course plan)." },
+          "related": {
+            "type": "array",
+            "maxItems": 5,
+            "description": "Assessments: other places the topic is covered (shown as extra 'watch' links).",
+            "items": { "type": "object", "additionalProperties": false, "required": ["lesson", "timestamp"], "properties": { "lesson": { "type": "string" }, "timestamp": { "type": "integer", "minimum": 0 } } }
+          },
+          "fixedOrder": { "type": "boolean", "description": "Keep the options in this order (e.g. 'all of the above'); otherwise they are shuffled per attempt." }
         }
       }
     }

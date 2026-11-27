@@ -60,6 +60,8 @@ export interface CoursePlan {
      *  software-dev, cybersecurity, general), optional style (pro | marketplace | enterprise) and a shorter headline.
      *  Omitted values keep the platform defaults (topic design from the category, style from Super Admin). */
     share?: SharePlan;
+    /** Folder with the course's assessments, relative to `sourceDir` unless absolute (same as the top-level `assessments`). */
+    assessmentsDir?: string;
   };
   sections: SectionPlan[];
   /** Folder with the course's assessments (module-<n>-assessment.json, final-assessment.json, scenario-<name>.json),
@@ -368,9 +370,14 @@ export function arrangeCurriculum(plan: CoursePlan, state: Pick<State, 'sections
   const used = new Set<string>();
   const arranged = plan.sections.map((sp, si) => {
     const order = sp.order ?? sp.lessons.map((l) => ({ folder: l.folder }));
-    const ids = order.flatMap((it) => ('article' in it ? [state.articles?.[it.article]] : [state.lessons[it.folder], withQuiz.has(it.folder) ? state.quizzes?.[it.folder] : undefined])).filter((x): x is string => !!x);
-    // Assessments close their module (module, then scenarios, then the final assessment, in the order given).
-    ids.push(...assessments.filter((a) => a.section === si).map((a) => a.id).filter((id) => !ids.includes(id)));
+    const parts = order.map((it) => ({ article: 'article' in it, ids: ('article' in it ? [state.articles?.[it.article]] : [state.lessons[it.folder], withQuiz.has(it.folder) ? state.quizzes?.[it.folder] : undefined]).filter((x): x is string => !!x) }));
+    // Assessments close their module (module, then scenarios, then the final assessment, in the order given), before
+    // the articles that end it (the closing "continue your learning journey" article stays last).
+    let cut = parts.length;
+    while (cut > 0 && parts[cut - 1]!.article) cut--;
+    const ids = parts.slice(0, cut).flatMap((x) => x.ids);
+    const closing = parts.slice(cut).flatMap((x) => x.ids);
+    ids.push(...assessments.filter((a) => a.section === si).map((a) => a.id).filter((id) => !ids.includes(id) && !closing.includes(id)), ...closing);
     ids.forEach((i) => used.add(i));
     return { id: state.sections[sp.title]!, lectureIds: ids };
   });
@@ -532,13 +539,25 @@ export async function publish(planPath: string, opts: { /** Send full quiz banks
     log(`  ${k}: quiz ${r.file.questions.length} question(s) from quiz.json`);
   }
   // Assessments (module, final, scenario) from the plan's assessments folder.
-  const assessDir = plan.assessments ? resolve(plan.sourceDir, plan.assessments) : null;
+  const assessRel = plan.assessments ?? plan.course.assessmentsDir;
+  const assessDir = assessRel ? resolve(plan.sourceDir, assessRel) : null;
+  // Assessment questions name the lesson folder they come from ("21-n21-…"); catalogue plans use "<group>/<folder>".
+  const planFolders = plan.sections.flatMap((sp) => sp.lessons.map((l) => l.folder));
+  const planFolder = (lesson: string) => planFolders.find((f) => f === lesson || f.endsWith(`/${lesson}`));
+  const durations = new Map<string, number | null>();
+  const lessonDuration = (lesson: string): number | null | undefined => {
+    const f = planFolder(lesson);
+    if (!f) return undefined;
+    if (!durations.has(f)) { const v = inventory.get(f)?.video; durations.set(f, v ? probeSeconds(v) : null); }
+    return durations.get(f)!;
+  };
   const assessments: { a: Awaited<ReturnType<typeof assessmentFiles>>[number]; quiz: ParsedQuiz; section: number }[] = [];
   if (assessDir && !banks) warnings.push('assessments need the quiz-bank API ("quizBanks": true in publisher.config.json once it is live): not uploaded yet');
   if (assessDir && banks) {
     if (!existsSync(assessDir)) warnings.push(`assessments folder not found: ${assessDir}`);
     for (const a of await assessmentFiles(assessDir)) {
-      const r = await readQuizFile(a.path, { assessment: true });
+      const r = await readQuizFile(a.path, { assessment: true, lessonDuration });
+      if (r.file.kind && r.file.kind !== a.kind) warnings.push(`assessments/${basename(a.path)}: the file says kind ${r.file.kind}, its name says ${a.kind} (the name is used)`);
       r.errors.forEach((e) => issues.push(`assessments/${basename(a.path)}: ${e}`));
       r.warnings.forEach((w) => warnings.push(`assessments/${basename(a.path)}: ${w}`));
       const last = plan.sections.length - 1;
@@ -599,6 +618,20 @@ export async function publish(planPath: string, opts: { /** Send full quiz banks
   }
   async function run() {
 
+  /**
+   * A bank as the API takes it: a question's `lesson` / `related` lesson folders become the lesson ids on the site
+   * ("Watch this part" opens that video); a lesson not uploaded yet is left out and reported, never guessed.
+   */
+  const toApi = (questions: QuizQuestion[], where: string) => questions.map((q) => {
+    const { lesson, related, ...rest } = q as QuizQuestion & { lesson?: string; related?: { lesson: string; timestamp: number }[] };
+    const idOf = (folder: string) => { const f = planFolders.find((x) => x === folder || x.endsWith(`/${folder}`)); return f ? state.lessons[f] : undefined; };
+    const out: Record<string, unknown> = { ...rest };
+    if (lesson) { const id = idOf(lesson); if (id) out.lessonId = id; else { issues.push(`${where}: question ${q.id ?? q.q.slice(0, 40)}: lesson ${lesson} is not on the site yet ("Watch this part" left out)`); delete out.timestamp; } }
+    const rel = (related ?? []).map((r) => ({ lessonId: idOf(r.lesson), timestamp: r.timestamp })).filter((r): r is { lessonId: string; timestamp: number } => !!r.lessonId);
+    if (rel.length) out.related = rel;
+    return out;
+  });
+
   // 2. Right account?
   const me = await del.call<{ instructor: { id: string; name: string } }>('GET', '/whoami');
   if (me.instructor.name !== plan.instructorName) throw new Error(`${auth === 'session' ? 'The session works as' : 'The token works for'} "${me.instructor.name}", the plan says "${plan.instructorName}". Nothing was changed.`);
@@ -617,7 +650,7 @@ export async function publish(planPath: string, opts: { /** Send full quiz banks
   } else log(`Using existing course ${courseId}`);
   state.courseId = courseId;
   await saveState();
-  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, share: _share, ...fields } = plan.course;
+  const { cover: _cover, categorySlug: _slug, quizzes: _quizzes, share: _share, assessmentsDir: _assess, ...fields } = plan.course;
   issues.push(...warnings);
   await del.call('PATCH', `/courses/${courseId}`, { ...fields, ...(categoryId ? { categoryId } : {}) });
 
@@ -745,7 +778,7 @@ export async function publish(planPath: string, opts: { /** Send full quiz banks
             state.quizFiles ??= {};
             const fresh = state.quizFiles[lp.folder] === qz.sha && (ql.quiz?.questions?.length ?? 0) === qz.questions.length;
             if (!fresh) {
-              await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: qz.questions, ...(qz.settings ? { settings: qz.settings } : {}) });
+              await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: toApi(qz.questions, lp.folder), ...(qz.settings ? { settings: qz.settings } : {}) });
               if (ql.quiz?.questions?.length) log(`  ~ quiz replaced (quiz.json changed): ${title}`);
               state.quizFiles[lp.folder] = qz.sha!;
               await saveState();
@@ -807,7 +840,7 @@ export async function publish(planPath: string, opts: { /** Send full quiz banks
       state.assessments[x.a.key] = ql.id;
       const k = `assessment:${x.a.key}`;
       if (state.quizFiles[k] !== x.quiz.sha || (ql.quiz?.questions?.length ?? 0) !== x.quiz.questions.length) {
-        await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: x.quiz.questions, settings: x.quiz.settings });
+        await del.call('PUT', `/courses/${courseId}/lectures/${ql.id}/quiz`, { questions: toApi(x.quiz.questions, x.a.title), settings: x.quiz.settings });
         if (ql.quiz?.questions?.length) log(`  ~ ${x.a.title} replaced (file changed)`);
         state.quizFiles[k] = x.quiz.sha!;
       }

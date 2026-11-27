@@ -231,6 +231,27 @@ describe('e2e: quiz banks and assessments', () => {
     await o.send('post', `/api/lectures/${k.q1.id}/quiz`).send({ answers: [1, 1, 1, 1] }).expect(403);
   });
 
+  it('assessment questions point at the lesson they come from (and related lessons); scenario text and code are shown; other courses\' lessons are ignored', async () => {
+    if (!available) return;
+    const t = await as('quiz-teacher6@e2e.example', ['student', 'instructor']);
+    const s = await as('quiz-student6@e2e.example', ['student']);
+    const k = await course(t.user.id, 'draft');
+    const other = await course(t.user.id, 'draft');
+    await enrol(s.user.id, k.c.id);
+    const qs = bank(2).map((q, i) => ({ ...q, type: 'critical-thinking' as const, lessonId: i === 0 ? k.video.id : other.video.id, related: [{ lessonId: k.video.id, timestamp: 12 }, { lessonId: other.video.id, timestamp: 5 }] }));
+    await t.send('put', `/api/instructor/courses/${k.c.id}/lectures/${k.fin.id}/quiz`).send({ questions: qs, settings: { kind: 'scenario', scenario: 'Checkout fails after a deploy.', scenarioCode: 'HTTP 502 from payments-api' } }).expect(200);
+    await publishNow(k.c.id);
+    const g = (await s.agent.get(`/api/lectures/${k.fin.id}/quiz`).expect(200)).body;
+    expect(g).toMatchObject({ kind: 'scenario', scenario: 'Checkout fails after a deploy.', scenarioCode: 'HTTP 502 from payments-api' });
+    expect(JSON.stringify(g)).not.toContain(other.video.id);
+    const r = (await s.send('post', `/api/lectures/${k.fin.id}/quiz`).send({ responses: g.questions.map((q: { id: string }) => ({ id: q.id, choice: 1 })), draw: g.draw }).expect(200)).body;
+    const byId = new Map(r.results.map((x: { id: string }) => [x.id, x]));
+    // its own course's lesson: "Watch this part" there; another course's lesson: no link
+    expect(byId.get('t1')).toMatchObject({ timestamp: 30, videoLectureId: k.video.id, related: [{ videoLectureId: k.video.id, timestamp: 12 }] });
+    expect(byId.get('t2')).not.toHaveProperty('videoLectureId');
+    expect(JSON.stringify(r)).not.toContain(other.video.id);
+  });
+
   it('staff validation: answer index, one explanation per option, duplicates, 60-question cap', async () => {
     if (!available) return;
     const t = await as('quiz-teacher5@e2e.example', ['student', 'instructor']);
