@@ -14,7 +14,7 @@ One row per course, kept current by the Course Upload Agent after every sync (ow
 | Content | 4 modules, 15 video lessons (3 h 53 min), 12 quizzes (48 questions), 15 slide PDFs, 12 labs, captions on all | same |
 | Previews | 01 and 06 | same |
 | Last sync | 2026-11-27 02:06 UTC | 2026-11-27 02:53 UTC |
-| Waiting | lesson 01 lab (CR-002); presentation rewrite (owner 2026-11-27) on branch `feat/designed-by-description` | the same, then "Designed by Tia", the description fix and the new copy go out as a draft revision → owner approves |
-| Live payments | — | Stripe live mode on; checkout failed on Stripe "Managed Payments" (owner turns it off in the Stripe Dashboard) |
+| Waiting | lesson 01 lab (CR-002); new course copy (merged to main 2026-11-27) | "Designed by Tia" and the description fix are live (release 2b84e9593d77); the new copy, Quiz names and lab 01 need a production sync (owner sign-in) → draft revision → owner approves |
+| Live payments | — | **Live purchase test passed 2026-11-27**: $4.99 order paid, enrolment created (source purchase), DEL keeps 100% (Stripe fee $0.44, net $4.55, instructor share $0). Checkout now turns off Stripe Managed Payments per session (release 2b84e9593d77). Receipt email unconfirmed: SES still in sandbox (IMPROVEMENTS #1) |
 
 Gaps and new content: CR-001 … CR-013 in `CONTENT_REQUESTS.md`.

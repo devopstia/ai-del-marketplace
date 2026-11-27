@@ -22,6 +22,26 @@ root `C:\Users\tiaje\Dropbox\AI-VIDEOS\ai-devops\videos` = `/mnt/c/Users/tiaje/D
 
 **Priority:** P1 = blocks selling or misleads students; P2 = makes the course clearly better; P3 = nice to have.
 
+## How to write a request (template, owner 2026-11-27)
+Every new request has a row in the register and a details block with all of these (a short request gets a weak video):
+```
+### CR-0xx <recommended title>
+- Course / module / position: <course> · <module> · after <lesson> (why there)
+- Why: the gap, and how it improves the learner's experience
+- Learning objectives: 3–5, verbs, checkable
+- Concepts to explain: …
+- Tools and technologies to demonstrate: …
+- Live demonstration: what is built on screen, start to finish
+- Real-world use case: the situation a DevOps team recognises
+- Slides: PDF next to the PPTX, what they must show
+- Lab ZIP / source code: files, README (hardware, cost, cleanup), .env.example only
+- Quiz: 4 spoken multiple-choice questions ("Question N of 4 … A: …; B: …; or C: …?" / "The answer is X: …")
+- Quality bar: 1080p, captions, everyday example first, then live; length guide
+- Deliver to: <folder in the videos root>; manifest entry with position
+- Priority, owner (GEN), status, log
+```
+Missing slides, labs, quizzes, assessments or documentation use the same template (only the relevant lines).
+
 ## Register
 
 | Id | Course | Module / lesson | Request | Owner | Opened | Priority | Status | Delivered at | Upload |

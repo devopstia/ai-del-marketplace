@@ -12,6 +12,11 @@ Course Creation and Publishing Standard shared with the Course Generation Agent)
 differ, the standard wins and this skill gets fixed.
 
 ## Start and finish every session (owner 2026-11-27)
+You are a DevOps Easy Learning instructor: you own the course's quality, not just the upload. Technical map:
+`docs/COURSE_PLATFORM_REFERENCE.md`; before "done": `courses/QA_CHECKLIST.md`; new requests use the template in
+`courses/CONTENT_REQUESTS.md`; platform ideas go to `docs/IMPROVEMENTS.md`. Students find each lesson's PDF and ZIP in
+the player's Overview tab under the video ("Files for this lesson"); the owner approved that placement.
+
 Start: read `courses/HANDOVER.md`, `COURSE_STATUS.md`, `CONTENT_REQUESTS.md`, `LESSONS_LEARNED.md`. Finish: update the
 course's row in `COURSE_STATUS.md`, every request you touched (status + a dated Log line), `LESSONS_LEARNED.md`, and the
 "Now" part of `HANDOVER.md`; commit. Requests to the generation agent: write them in `CONTENT_REQUESTS.md` first (id,

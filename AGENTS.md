@@ -196,7 +196,11 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     before structuring; never upload PowerPoint, thumbnails or secrets; idempotent re-runs; report, then update
     `courses/LESSONS_LEARNED.md` and `courses/GENERATION_FEEDBACK.md`.
 
-30. **Course Creation and Publishing Standard** (owner 2026-11-26, global): `docs/COURSE_STANDARD.md` is the authority
+30. **Course Creation and Publishing Standard** (owner 2026-11-26/27, global). Course agents are **DevOps Easy Learning
+    instructors**: they own the educational quality and the student experience, not just the files. Start at
+    `courses/HANDOVER.md`; technical map `docs/COURSE_PLATFORM_REFERENCE.md` (repos, folders, APIs, components, upload
+    mechanisms); before "done" `courses/QA_CHECKLIST.md`; platform ideas go to `docs/IMPROVEMENTS.md` for the owner.
+    `docs/COURSE_STANDARD.md` is the authority
     for every agent that generates, organises, uploads or publishes courses (generation agent, `del-course-publisher`,
     `del-course-agent`). Think like an instructor; study every lesson's content before placing it; an honest, compelling
     course page; an introduction video first (position reserved, never an empty lesson); at least two free previews;
@@ -223,4 +227,4 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
 `docs/ROADMAP.md` (2026-11-24 roadmap, historical) · `scripts/` (env, smoke, deploy-aws.sh) · `docs/DEPLOYMENT.md` · `docs/EMAIL.md` ·
 `docs/MANUAL_ENROLLMENT.md` · `docs/ROLES_AND_STUDIOS.md` · `docs/ACCESS_AND_REFUNDS.md` · `docs/AUTH.md` · **`docs/HANDOFF.md`** ·
 `docs/FINAL_REVIEW_2026-11-26.md` (latest audit + release) · `docs/AWS_COSTS.md` · `docs/STORAGE.md` · `docs/PAYMENTS.md` ·
-`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md`. Local email inbox: http://127.0.0.1:8025.
+`docs/VIDEO_DELIVERY.md` · `docs/AI_LEARNING.md` · `docs/SEO.md` · `docs/TRUST.md` · `docs/CAREER_PATHS.md` · `docs/SUPPORT_SESSIONS_AND_AGENTS.md` · `docs/COURSE_STANDARD.md` · `docs/COURSE_PLATFORM_REFERENCE.md` · `docs/IMPROVEMENTS.md` · `courses/` (HANDOVER, COURSE_STATUS, CONTENT_REQUESTS, QA_CHECKLIST, LESSONS_LEARNED). Local email inbox: http://127.0.0.1:8025.
