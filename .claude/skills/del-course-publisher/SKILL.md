@@ -125,6 +125,15 @@ Learners see clean download names (`<lesson-title>-slides.pdf`, `<lesson-title>-
 11. **Learn**: add what you learned to `courses/LESSONS_LEARNED.md` and content problems for the video-generation agent to
     `courses/CONTENT_REQUESTS.md` (the request register; `GENERATION_FEEDBACK.md` is history); improve this skill when a step was wrong or missing.
 
+## Text lessons and removing lessons (2026-11-27)
+- **Text lesson** in a plan: `{"type": "article", "key": "next-steps", "title": "…", "summary": "…", "articleMd": "…"}`
+  anywhere in a section's `lessons`; kept by `state.articles[key]` and updated in place. Link to another planned course
+  with `{{course:<plan-slug>}}`: the publisher writes that course's real public URL (from its state file and the API), and
+  skips the article (reported) while the linked course doesn't exist yet. Free gateway courses end with one (standard §3c).
+- **Removing lessons**: `--prune` (session mode) deletes lessons the plan no longer has, their quiz lessons and empty
+  unplanned sections, **only on draft courses**. On a published course it refuses: students' progress would be lost; that
+  change needs a reviewed revision and the owner's explicit OK. Media is never deleted.
+
 ## Adding lessons to an existing course (insert, don't append)
 Insert each new lesson folder at its **correct position** in `plan.json` (the section and place a learner should watch it,
 not the end) and re-run step 6, first on staging, then production. Existing lessons, videos and files are matched
@@ -182,6 +191,23 @@ Follow this exactly; it is what worked.
    https://ai-devopseasylearning.com at 390/768/1440/1920, light and dark.
 9. **Clean up:** `scripts/del-signin.sh --logout /<scratchpad>/prod.jar` (signs out, deletes the jar). Never keep a
    production session or credentials in the repo, memory or reports.
+
+## Catalogue courses: lessons from several folders, shared videos (owner 2026-11-27)
+- The catalogue (`courses/COURSE_CATALOG.md`) builds courses from many source groups. Such a plan sets `sourceDir` to the
+  videos root and names lessons `<group>/<lesson>` (e.g. `02-ai-foundations/04-tm4-talking-to-a-model`); the intro slot uses
+  `"intro": {"folderPattern": "(^|/)00-", ...}`. Optional `watchGroups: ["24-ai-devops-aws"]` makes the watcher put new
+  folders of those groups in the course's inbox (and the publisher report them as unplanned); other groups are picked
+  lesson by lesson on purpose and are not reported.
+- **Shared media map** `courses/media.<env>.json` (sha256 → assetId or storageKey, kind, processing status, courses): every run
+  consults it before uploading, in agent and session mode, so a video used by the intro, AWS and Azure courses is uploaded
+  once and attached to each course's own lesson. Commit it with the state files. Processing status is updated while a run
+  waits for videos.
+- Each course keeps its own lessons, titles, summaries, quizzes, progress, access and certificate. Playback is authorised per
+  lesson/course, so a shared video never unlocks a paid course; purging a course keeps media other courses still use
+  (`sharedAssetIds` / `sharedResourceKeys` in `apps/api/src/admin/course-lifecycle.ts`).
+- Order for a new catalogue course: categories exist in the environment (production had only `automation-n8n` on
+  2026-11-27) → staging sync → owner preview → production sync → submit → owner approves. Paid enrolment only after the
+  owner approves the price.
 
 ## Plan format
 ```json

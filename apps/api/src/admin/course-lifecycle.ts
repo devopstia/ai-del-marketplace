@@ -40,6 +40,27 @@ export const activeAccessWhere = (courseId: string, now = new Date()): Prisma.En
   courseId, revokedAt: null, accessExpiresAt: { gt: now },
 });
 
+/** Video assets among `ids` that another course (lesson or promo video) or a help video still uses. */
+export async function sharedAssetIds(prisma: PrismaService, courseId: string, ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const [lectures, promos, help] = await Promise.all([
+    prisma.lecture.findMany({ where: { videoAssetId: { in: ids }, section: { courseId: { not: courseId } } }, select: { videoAssetId: true } }),
+    prisma.course.findMany({ where: { id: { not: courseId }, promoVideoAssetId: { in: ids } }, select: { promoVideoAssetId: true } }),
+    prisma.helpVideo.findMany({ where: { videoAssetId: { in: ids } }, select: { videoAssetId: true } }),
+  ]);
+  return new Set([...lectures.map((l) => l.videoAssetId), ...promos.map((p) => p.promoVideoAssetId), ...help.map((h) => h.videoAssetId)].filter((x): x is string => !!x));
+}
+
+/** Storage keys among `keys` that another course's lesson files or course package still use. */
+export async function sharedResourceKeys(prisma: PrismaService, courseId: string, keys: string[]): Promise<Set<string>> {
+  if (!keys.length) return new Set();
+  const [res, pkg] = await Promise.all([
+    prisma.resource.findMany({ where: { storageKey: { in: keys }, lecture: { section: { courseId: { not: courseId } } } }, select: { storageKey: true } }),
+    prisma.courseResource.findMany({ where: { storageKey: { in: keys }, courseId: { not: courseId } }, select: { storageKey: true } }),
+  ]);
+  return new Set([...res.map((r) => r.storageKey), ...pkg.map((p) => p.storageKey)]);
+}
+
 /** Where the scheduled purge looks: deletion date passed, not purged yet. */
 export const dueForPurgeWhere = (now = new Date()): Prisma.CourseWhereInput => ({ deleteRequestedAt: { not: null }, deleteAfter: { lte: now }, purgedAt: null });
 
@@ -54,10 +75,16 @@ export async function purgeDueCourses(prisma: PrismaService, storage: StorageSer
   for (const c of due) {
     if (await prisma.enrollment.count({ where: activeAccessWhere(c.id, now) })) { waiting++; continue; }
     const lectures = await prisma.lecture.findMany({ where: { section: { courseId: c.id } }, select: { videoAssetId: true, resources: { select: { storageKey: true } } } });
-    const assetIds = [...new Set([...lectures.map((l) => l.videoAssetId), c.promoVideoAssetId].filter((x): x is string => !!x))];
+    const ownAssetIds = [...new Set([...lectures.map((l) => l.videoAssetId), c.promoVideoAssetId].filter((x): x is string => !!x))];
+    // Shared media (owner 2026-11-27): the same video or file may serve several courses of one account. Anything still
+    // used by another course (lesson, promo video, lesson file or course package) or by a help video is kept.
+    const sharedAssets = await sharedAssetIds(prisma, c.id, ownAssetIds);
+    const assetIds = ownAssetIds.filter((id) => !sharedAssets.has(id));
     const assets = await prisma.videoAsset.findMany({ where: { id: { in: assetIds } }, select: { id: true, storageKey: true, captionsKey: true, hlsKey: true, hlsPrefix: true } });
     const pkg = await prisma.courseResource.findMany({ where: { courseId: c.id }, select: { storageKey: true } });
-    const keys = [...assets.flatMap((a) => [a.storageKey, a.captionsKey, a.hlsKey]), ...lectures.flatMap((l) => l.resources.map((r) => r.storageKey)), ...pkg.map((p) => p.storageKey)].filter((k): k is string => !!k);
+    const fileKeys = [...new Set([...lectures.flatMap((l) => l.resources.map((r) => r.storageKey)), ...pkg.map((p) => p.storageKey)])];
+    const sharedKeys = await sharedResourceKeys(prisma, c.id, fileKeys);
+    const keys = [...assets.flatMap((a) => [a.storageKey, a.captionsKey, a.hlsKey]), ...fileKeys.filter((k) => !sharedKeys.has(k))].filter((k): k is string => !!k);
     let storageErrors = 0;
     for (const k of keys) { try { await storage.delete(k); } catch { storageErrors++; } }
     for (const a of assets) if (a.hlsPrefix) { try { await storage.deletePrefix(`hls/${a.hlsPrefix}/`); } catch { storageErrors++; } }
@@ -70,7 +97,7 @@ export async function purgeDueCourses(prisma: PrismaService, storage: StorageSer
       prisma.videoAsset.deleteMany({ where: { id: { in: assetIds } } }),
       prisma.course.update({ where: { id: c.id }, data: { purgedAt: now, promoVideoAssetId: null, featuredAt: null } }),
     ]);
-    await audit.log({ actorId: null, action: 'course.purged', targetType: 'course', targetId: c.id, meta: { title: c.title, videos: assets.length, files: keys.length, storageErrors } });
+    await audit.log({ actorId: null, action: 'course.purged', targetType: 'course', targetId: c.id, meta: { title: c.title, videos: assets.length, files: keys.length, storageErrors, keptShared: sharedAssets.size + sharedKeys.size } });
     purged++;
   }
   return { purged, waiting };

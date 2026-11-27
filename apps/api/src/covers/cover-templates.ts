@@ -5,7 +5,10 @@
  * add new ones made from the same layouts, palettes and motifs.
  */
 
-export const LAYOUTS = ['statement', 'split', 'band', 'frame', 'spotlight', 'column'] as const;
+export const LAYOUTS = ['statement', 'split', 'band', 'frame', 'spotlight', 'column',
+  // The DEL course-catalog family (owner 2026-11-27, "Mix A + C · Night blueprint"): deep ink, course-colour glow,
+  // blueprint grid fading in toward an original technology symbol, title left. See docs/COURSE_PLATFORM_REFERENCE.md.
+  'night-blueprint'] as const;
 export type Layout = (typeof LAYOUTS)[number];
 
 export const MOTIFS = [
@@ -16,6 +19,8 @@ export const MOTIFS = [
   'server', 'database', 'network', 'gitbranch', 'api', 'container',
   // Generic: abstract designs that suit any course
   'waves', 'blueprint', 'stripes', 'shapes', 'arcs', 'dotgrid', 'blocks', 'minimal',
+  // Technology symbols for the night-blueprint family: ORIGINAL drawings, never third-party logos (owner 2026-11-27).
+  'cloud-chip', 'cloud-nodes', 'neural-net', 'editor', 'flow-ai',
 ] as const;
 export type Motif = (typeof MOTIFS)[number];
 
@@ -46,6 +51,12 @@ export const PALETTES = {
   teal: { bg: ['#05282a', '#0b4a4b'], ink: '#effffd', a: '#5eead4', b: '#f2b53c', tone: 'dark' },
   white: { bg: ['#ffffff', '#eef0f6'], ink: '#141833', a: '#141833', b: '#4f3fb0', tone: 'light' },
   rose: { bg: ['#fff4f6', '#fbe3e9'], ink: '#2a0c16', a: '#ad2c45', b: '#4f3fb0', tone: 'light' },
+  // Technology accents for the night-blueprint family: one accent per technology on the same deep ink ground.
+  'aws-orange': { bg: ['#0b1030', '#171b48'], ink: '#ffffff', a: '#ff9900', b: '#ffb84d', tone: 'dark' },
+  'azure-blue': { bg: ['#0b1030', '#171b48'], ink: '#ffffff', a: '#2f8ff0', b: '#6fb6ff', tone: 'dark' },
+  'ai-violet': { bg: ['#0b1030', '#171b48'], ink: '#ffffff', a: '#8b7bff', b: '#3db1ec', tone: 'dark' },
+  'code-blue': { bg: ['#0b1030', '#171b48'], ink: '#ffffff', a: '#1f9cf0', b: '#5cc0ff', tone: 'dark' },
+  'n8n-coral': { bg: ['#0b1030', '#171b48'], ink: '#ffffff', a: '#ff6d5a', b: '#ff9f8f', tone: 'dark' },
 } as const satisfies Record<string, Palette>;
 export type PaletteKey = keyof typeof PALETTES;
 
@@ -57,9 +68,29 @@ export interface TemplateDef {
   motif: Motif;
   /** Topics it suits; the picker suggests these first and existing courses are matched by them. */
   topics: string[];
+  /** Seed order (lower = suggested first for its topics); default: its position in the list × 10. */
+  sort?: number;
 }
 
+/**
+ * Category slugs the night-blueprint templates are suggested for. Adjust here when the catalog's categories are created
+ * (courses/COURSE_CATALOG.md); a course in one of these categories gets the matching cover automatically.
+ */
+export const BLUEPRINT_TOPICS = {
+  aws: ['ai-cloud-aws', 'aws'],
+  azure: ['ai-cloud-azure', 'azure'],
+  ai: ['ai-fundamentals', 'ai-foundations'],
+  vscode: ['developer-tools', 'vscode'],
+  n8n: ['automation-n8n'],
+} as const;
+
 export const BUILT_IN_TEMPLATES: TemplateDef[] = [
+  // ---- The DEL catalog family (night blueprint); sorted first so they are suggested before older templates ----
+  { key: 'blueprint-aws', name: 'Night blueprint · AWS', layout: 'night-blueprint', palette: 'aws-orange', motif: 'cloud-chip', topics: [...BLUEPRINT_TOPICS.aws], sort: 1 },
+  { key: 'blueprint-azure', name: 'Night blueprint · Azure', layout: 'night-blueprint', palette: 'azure-blue', motif: 'cloud-nodes', topics: [...BLUEPRINT_TOPICS.azure], sort: 2 },
+  { key: 'blueprint-ai', name: 'Night blueprint · AI', layout: 'night-blueprint', palette: 'ai-violet', motif: 'neural-net', topics: [...BLUEPRINT_TOPICS.ai], sort: 3 },
+  { key: 'blueprint-vscode', name: 'Night blueprint · VS Code', layout: 'night-blueprint', palette: 'code-blue', motif: 'editor', topics: [...BLUEPRINT_TOPICS.vscode], sort: 4 },
+  { key: 'blueprint-n8n', name: 'Night blueprint · n8n', layout: 'night-blueprint', palette: 'n8n-coral', motif: 'flow-ai', topics: [...BLUEPRINT_TOPICS.n8n], sort: 5 },
   { key: 'loop-midnight', name: 'Loop', layout: 'statement', palette: 'midnight', motif: 'loop', topics: ['devops', 'ai-for-devops', 'general'] },
   { key: 'pipeline-ocean', name: 'Pipeline', layout: 'band', palette: 'ocean', motif: 'pipeline', topics: ['cicd-gitops', 'devops'] },
   { key: 'neural-aurora', name: 'Neural', layout: 'split', palette: 'aurora', motif: 'neural', topics: ['ai-foundations', 'ai-for-devops', 'mcp-agents'] },
@@ -127,5 +158,6 @@ const GROUPS: Record<Motif, TemplateGroup> = {
   neural: 'ai', chip: 'ai', chat: 'ai', embedding: 'ai', attention: 'ai', agent: 'ai', circuit: 'ai', matrix: 'ai',
   server: 'it', database: 'it', network: 'it', api: 'it', container: 'it', terminal: 'it', hexgrid: 'it', cloud: 'it', shield: 'it',
   loop: 'devops', pipeline: 'devops', gitbranch: 'devops', graph: 'devops', orbit: 'devops',
+  'cloud-chip': 'ai', 'cloud-nodes': 'ai', 'neural-net': 'ai', editor: 'it', 'flow-ai': 'devops',
 };
 export const groupOf = (m: Motif): TemplateGroup => GROUPS[m];

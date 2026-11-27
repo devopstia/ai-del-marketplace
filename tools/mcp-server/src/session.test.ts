@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { ApiError, parseCookieJar, SESSION_ENDED, SessionClient, sessionValidation, studioRoute, type FileRecord } from './client.js';
-import { stateFileStore } from './publish.js';
+import { layeredStore, stateFileStore, uploadShared, type MediaMap } from './publish.js';
 
 const JAR = [
   '# Netscape HTTP Cookie File',
@@ -152,4 +153,38 @@ test('session mode: report validation from the course itself', () => {
   assert.equal(v.ok, false);
   assert.deepEqual(v.errors, ['quiz "Quiz" has no questions']);
   assert.deepEqual(v.warnings, ['"Busy": video still processing']);
+});
+
+// ---------- shared media map (owner 2026-11-27: one upload, several courses) ----------
+
+test('shared media: a checksum already in the map is reused in another course without uploading', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'media-'));
+  const vid = join(dir, 'lesson.mp4'); await writeFile(vid, 'same-video-bytes');
+  const zip = join(dir, 'lab.zip'); await writeFile(zip, 'lab-bytes');
+  let uploads = 0;
+  const fake = {
+    sha256: async (p: string) => createHash('sha256').update(await readFile(p)).digest('hex'),
+    upload: async (p: string) => { uploads++; return p.endsWith('.mp4') ? { file: p, kind: 'video' as const, duplicate: false, resumed: false, assetId: 'asset-1', status: 'processing', partsUploaded: 1 } : { file: p, kind: 'resource' as const, duplicate: false, resumed: false, storageKey: 'instructors/u/courses/c1/resources/k/lab.zip', partsUploaded: 1 }; },
+  };
+  const media: MediaMap = { files: {} }; let saves = 0; const save = async () => { saves++; };
+  const a = await uploadShared(fake, media, save, 'course-a', vid, { courseId: 'c1' });
+  const b = await uploadShared(fake, media, save, 'course-b', vid, { courseId: 'c2' });
+  const z1 = await uploadShared(fake, media, save, 'course-a', zip, { courseId: 'c1' });
+  const z2 = await uploadShared(fake, media, save, 'course-b', zip, { courseId: 'c2' });
+  assert.equal(uploads, 2);
+  assert.equal(a.duplicate, false); assert.equal(b.duplicate, true); assert.equal(b.assetId, 'asset-1');
+  assert.equal(z2.storageKey, z1.storageKey); assert.equal(z2.duplicate, true);
+  const rec = Object.values(media.files).find((r) => r.assetId === 'asset-1')!;
+  assert.deepEqual(rec.courses, ['course-a', 'course-b']);
+  assert.ok(saves >= 3);
+});
+
+test('shared media: the session store reads the media map, so a video another course uploaded is not sent again', async () => {
+  const media: MediaMap = { files: { abc: { kind: 'video', assetId: 'asset-9', name: 'x.mp4', at: 'now' } } };
+  const state: { files?: Record<string, never> } = {};
+  const store = layeredStore(stateFileStore(state, async () => {}), media, async () => {}, 'course-b');
+  assert.equal(store.get('abc')?.assetId, 'asset-9');
+  assert.equal(store.knowsAsset('asset-9'), true);
+  await store.set('def', { kind: 'resource', storageKey: 'k', name: 'lab.zip', at: 'now' });
+  assert.deepEqual(media.files.def?.courses, ['course-b']);
 });

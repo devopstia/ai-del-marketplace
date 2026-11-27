@@ -54,7 +54,14 @@ GEN copies files as `*.part` and renames when complete; the watcher waits for th
   enrolments, progress and quiz results survive.
 - **Storage keys** `instructors/<id>/courses/<courseId>/resources/<uuid>/<clean-name>` (`common/storage-keys.ts`);
   downloads are short-lived signed links for owners, admins and active enrolments only.
-- **Covers** `apps/api/src/covers/` (templates per topic; rule 17). **Previews** `lectures.isPreview` →
+- **Covers** `apps/api/src/covers/` (templates per topic; rule 17). Catalog family (owner 2026-11-27): layout
+  `night-blueprint`, templates `blueprint-aws|azure|ai|vscode|n8n`, original symbols only (no third-party logos without
+  the owner's confirmed permission), one accent per technology. Category → template: `BLUEPRINT_TOPICS` in
+  `cover-templates.ts` (aws: `ai-cloud-aws`, azure: `ai-cloud-azure`, ai: `ai-fundamentals`/`ai-foundations`, vscode:
+  `developer-tools`, n8n: `automation-n8n`; adjust when the categories are created). New technology: add a palette in
+  `PALETTES` (same ink ground, accent `a` and light `b`), a motif case in `cover-render.ts` drawn in ±100 units scaled by
+  `u / 266`, a `blueprint-<tech>` template with `sort` < 10, then `npx jest src/covers` (set `COVER_SAMPLES_DIR` to save
+  PNGs) and look at them. A course that already has a template keeps it; switch it in the studio's cover picker. **Previews** `lectures.isPreview` →
   `catalogue.service.ts previewPlayback`. **Quizzes** `quizzes` per quiz lecture (3–5 options, `correct`, `why`).
 
 ## 5. What students see (apps/web, Next.js)

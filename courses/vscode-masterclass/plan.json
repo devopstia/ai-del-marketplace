@@ -1,0 +1,101 @@
+{
+  "environment": "staging",
+  "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+  "provider": "DevOps Easy Learning",
+  "instructorName": "DevOps Easy Learning",
+  "sourceDir": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos",
+  "course": {
+    "title": "Visual Studio Code Masterclass for DevOps and AI",
+    "subtitle": "Set up VS Code as a DevOps engineer's workbench, learn its words and interface, and give AI coding agents the instructions and limits they need.",
+    "description": "Kubernetes YAML, Terraform, Dockerfiles, Bash, Git and remote servers: most DevOps engineers touch all of them in one editor. This free course makes that editor work for you, and shows how to work with AI coding agents safely.\n\n## What you'll learn\n- **Why VS Code fits DevOps work,** and how it understands YAML, Terraform and Dockerfiles through extensions and language servers.\n- **Its vocabulary:** workspaces, the Command Palette, extensions, profiles, snippets, tasks and Dev Containers.\n- **The whole interface,** area by area, on a real DevOps repository, and how to get a lost layout back.\n- **AI coding agents with guardrails:** CLAUDE.md instruction files, the .claude folders, permissions and deny rules that really block an agent.\n\n## Why this course\n- **Free, practical and on a real repository** you download and open yourself.\n- **Hands-on labs** for the setup and AI lessons, running Claude Code in Docker.\n- **Quizzes** after each lesson.\n\n## Who it's for\nDevOps, cloud and software engineers who want a productive, shareable editor setup and safe habits with AI coding assistants.",
+    "level": "beginner",
+    "language": "en",
+    "categorySlug": "developer-tools",
+    "cover": "blueprint-vscode",
+    "taughtBy": "Tia",
+    "quizzes": "from-captions",
+    "objectives": [
+      "Explain why VS Code suits DevOps work and how extensions and language servers understand your files",
+      "Use workspaces, the Command Palette, profiles, snippets, tasks and Dev Containers",
+      "Find your way around every area of the VS Code interface and recover a lost layout",
+      "Write CLAUDE.md files that give an AI coding agent your build commands, conventions and pitfalls",
+      "Configure the .claude folders with permissions and deny rules, and verify what really applies"
+    ],
+    "requirements": [
+      "A computer that can run VS Code (Windows, macOS or Linux)",
+      "Docker for the AI agent labs",
+      "No prior VS Code experience needed"
+    ],
+    "priceCents": 0
+  },
+  "sections": [
+    {
+      "title": "Start here",
+      "lessons": [
+        {
+          "folder": "22-vscode/01-vsc-01-why-vscode",
+          "title": "Why VS Code is the DevOps engineer's editor",
+          "short": "Why VS Code",
+          "summary": "YAML, Terraform, Dockerfiles, Bash, Git and remote servers in one window: what VS Code is, how it understands your files, and a first look on a real DevOps repository.",
+          "preview": true
+        },
+        {
+          "folder": "22-vscode/02-vsc-02-vscode-words",
+          "title": "VS Code vocabulary: workspaces, extensions and Dev Containers",
+          "short": "VS Code words",
+          "summary": "Workspace, Command Palette, extension, language server, profile, snippet, task and Dev Container, one at a time: an everyday example, an animation, then the real screen."
+        }
+      ]
+    },
+    {
+      "title": "Install and set up",
+      "lessons": [
+        {
+          "folder": "22-vscode/03-vsc-03-interface-tour",
+          "title": "A complete tour of the VS Code interface",
+          "short": "Interface tour",
+          "summary": "Every area of the window, what it's called, why it's there and when a DevOps engineer uses it, on a real DevOps repository, plus the shortcuts that get you back when a layout is lost."
+        }
+      ]
+    },
+    {
+      "title": "Cloud and AI",
+      "lessons": [
+        {
+          "folder": "21-claude-code/01-cc1-claude-md-in-depth",
+          "title": "CLAUDE.md in depth: instructions for AI coding agents",
+          "short": "CLAUDE.md",
+          "summary": "Where CLAUDE.md files live, the order they load, imports and rules, what /init writes, and what to keep in or out, so Claude Code knows your build, conventions and pitfalls."
+        },
+        {
+          "folder": "21-claude-code/02-cc1-claude-md-live",
+          "title": "Write CLAUDE.md for a real repository",
+          "short": "CLAUDE.md lab",
+          "summary": "On a sample repository with Claude Code running in Docker: /init writes a first CLAUDE.md, you trim it, add rules and an import, then check exactly what Claude loads.",
+          "preview": true
+        },
+        {
+          "folder": "21-claude-code/03-cc2-claude-folder-live",
+          "title": "The .claude folders: settings, permissions and deny rules",
+          "short": "The .claude folder",
+          "summary": "The global and project .claude folders of Claude Code: what goes where, which wins, what goes into git, and proof that a deny rule really blocks Claude."
+        }
+      ]
+    }
+  ],
+  "environments": {
+    "staging": {
+      "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+      "priceCents": 0
+    },
+    "production": {
+      "apiUrl": "https://ai-devopseasylearning.com/api",
+      "priceCents": 0
+    }
+  },
+  "intro": {
+    "folderPattern": "(^|/)00-",
+    "section": 0,
+    "promo": true
+  }
+}

@@ -1,0 +1,336 @@
+{
+  "sections": {
+    "What AI is, and what it changes for DevOps": "9a786d9a-4eea-40ef-a752-f10dd2671baa",
+    "The essential vocabulary": "13f27de8-7f41-4f62-81e3-b5fdd91ff08f",
+    "AI agents and MCP": "312f5c80-7f9e-4138-8ade-d1263814dea7",
+    "AI in cloud computing and DevOps": "a295895f-7b66-4651-bf54-48042c13afc5"
+  },
+  "lessons": {
+    "01-before-ai/01-computers-before-ai": "dee56d6e-a9fd-4065-ac1b-f7187316a422",
+    "01-before-ai/03-short-history-of-ai": "c3006faf-240c-4c03-be4e-965a8a4cb8e4",
+    "01-before-ai/04-what-is-machine-learning": "61e0353e-8343-419f-8506-7d4530b05120",
+    "02-ai-foundations/01-tm1-big-words": "4af906fa-3fa7-415b-bab2-53552769d463",
+    "01-before-ai/02-devops-before-ai": "d044aa5d-caea-48e3-90d7-92be7f9ec7b4",
+    "04-by-hand-vs-ai/01-devops-with-ai": "e3a9c541-ac5c-4db6-8179-bee14840cb9b",
+    "02-ai-foundations/02-tm2-practice-architecture-application": "42c160c3-2749-407f-82a4-042d6c9612ad",
+    "02-ai-foundations/03-tm3-model-words": "c6884d61-a661-444f-98bd-3cb13aad622a",
+    "02-ai-foundations/04-tm4-talking-to-a-model": "50622d94-c3a9-443b-9aee-1700fc32a113",
+    "02-ai-foundations/05-tm5-answer-quality": "7bdfab67-424b-4f85-892a-9b1a0cdc4911",
+    "02-ai-foundations/06-tm6-rag-words-preparing": "7d03f09a-ebc5-41a5-a39b-ab692ae947d9",
+    "02-ai-foundations/07-tm7-embeddings-vectors": "fef7dba0-749b-468b-932d-30ed0a4483dc",
+    "02-ai-foundations/08-tm8-rag-search-answer": "068eb273-0737-437e-8fd9-8746b5184074",
+    "02-ai-foundations/09-tm9-where-data-lives": "be765176-31a9-44de-ab70-3b28a8e86cc5",
+    "02-ai-foundations/11-tm11-running-models": "2d0cc788-e8e3-45cc-b216-7527df87aa80",
+    "02-ai-foundations/10-tm10-agent-words": "ec77f838-e6ba-4bc9-8502-e496b2a59669",
+    "05-agents-rag-ideas/19-agent-vs-chatbot": "3a648475-87a4-4858-b29d-087e7d6590c8",
+    "05-agents-rag-ideas/20-s1-skill-based-agents": "d3082271-96ae-4cb6-8ed6-7291d5243ac0",
+    "20-mcp/01-m1-what-is-mcp": "09200391-e215-456e-87c6-705cd5774e70",
+    "17-cloud-ai/03-choosing-ai-service": "f5f920ab-b371-403f-96ec-79021fa659e7",
+    "08-ai-production/21-r8-managed-or-self-hosted": "f31cd683-126d-4e83-acd2-0c1687dab192",
+    "19-ai-cicd/01-ci1-ai-in-cicd": "b5f96786-035e-454a-82af-93d2cd5ddd80",
+    "02-ai-foundations/12-tm12-operating-securing": "28377d0d-eb66-4038-a6fa-7134c7da524a"
+  },
+  "quizzes": {
+    "05-agents-rag-ideas/19-agent-vs-chatbot": "a4f1ba0b-5904-439b-9ed9-969e86ce8ab0",
+    "20-mcp/01-m1-what-is-mcp": "df0f73f8-94b4-4c44-8c09-96cbe75ba4c5",
+    "17-cloud-ai/03-choosing-ai-service": "0df2c8ce-0336-493f-9905-2b0a738fdd0e",
+    "19-ai-cicd/01-ci1-ai-in-cicd": "058b6670-6d77-4daf-960f-537980ff2780"
+  },
+  "files": {
+    "3ab7c2c9865971322f3d71ab0cda5c4634d21af29192057e0816026975e9ee5d": {
+      "kind": "video",
+      "assetId": "36d700e4-9105-42f9-bd46-33f0dae0ba8f",
+      "name": "how-computers-solved-problems-before-ai.mp4",
+      "at": "2026-11-27T06:40:05.299Z"
+    },
+    "8cd84586d25b9beac7b59240b3d551306f61bf8f1137a8950d0eaf9956007b36": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/f2d2d529-0e56-48cd-b4a7-273898c340a6/how-computers-solved-problems-before-ai-slides.pdf",
+      "name": "how-computers-solved-problems-before-ai-slides.pdf",
+      "at": "2026-11-27T06:40:06.715Z"
+    },
+    "c97468c1536d4a6e78545dd6e489a3c9495047d5e93e881dc2e27e53db7e339f": {
+      "kind": "video",
+      "assetId": "25da84a0-4478-4412-91c0-d3cd88a3b3cf",
+      "name": "a-short-history-of-ai-from-rules-to-agents.mp4",
+      "at": "2026-11-27T06:40:32.957Z"
+    },
+    "f0398bf8d62e41a132da9d21e141f75a830c57f8dc811ddc31d8374b93a349b3": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/a58144d6-aa16-4639-82f8-7e28aaf3f531/a-short-history-of-ai-from-rules-to-agents-slides.pdf",
+      "name": "a-short-history-of-ai-from-rules-to-agents-slides.pdf",
+      "at": "2026-11-27T06:40:33.964Z"
+    },
+    "00c4fc64969ed02d51ff297bd79c6083edf7c228a9b0abc741dee01c37d88143": {
+      "kind": "video",
+      "assetId": "f5595395-97dc-4d9f-804c-b00b3c1814f5",
+      "name": "what-machine-learning-is-a-spam-filter-step-by-step.mp4",
+      "at": "2026-11-27T06:40:44.966Z"
+    },
+    "ad0f83d3b466eae5ed9a7ec7d9d6844471a08bb4b302fe948df458befc4a91bb": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/664f1f40-038f-49d5-8b08-0306d36f6b0c/what-machine-learning-is-a-spam-filter-step-by-step-slides.pdf",
+      "name": "what-machine-learning-is-a-spam-filter-step-by-step-slides.pdf",
+      "at": "2026-11-27T06:40:45.915Z"
+    },
+    "97e1d01fb12b68d3fdcfd9ae0ff3def04c44fed9fe1e4ea90597730c8b11a176": {
+      "kind": "video",
+      "assetId": "81debf00-70b0-4c3a-85ff-9751d6651681",
+      "name": "ai-machine-learning-deep-learning-and-generative-ai.mp4",
+      "at": "2026-11-27T06:40:56.883Z"
+    },
+    "ff3a118bf985684dd9d7acae38b3ba9b7f294052e9dd710d1313d48957b4f32b": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/7c562aad-a511-49db-839d-51467f58b822/ai-machine-learning-deep-learning-and-generative-ai-slides.pdf",
+      "name": "ai-machine-learning-deep-learning-and-generative-ai-slides.pdf",
+      "at": "2026-11-27T06:40:57.671Z"
+    },
+    "c91ce9dae9816d8544d027689fcdba540cdc6ea5697f596be92994233b1bf496": {
+      "kind": "video",
+      "assetId": "c60a49e4-0e3b-4ac2-a077-7f977fdff860",
+      "name": "fix-a-3-am-outage-the-classic-way.mp4",
+      "at": "2026-11-27T06:41:16.973Z"
+    },
+    "6ae51ba70ddffcc72dc7bdd5835af763619c6198c1d82f9bba47d3f661786078": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/3d0a7134-1d08-4f6c-9216-74e935560811/fix-a-3-am-outage-the-classic-way-slides.pdf",
+      "name": "fix-a-3-am-outage-the-classic-way-slides.pdf",
+      "at": "2026-11-27T06:41:18.179Z"
+    },
+    "d21e23ce71a4aa5c54142f4c264a84d999c1801e9970b5421893e84d748c263e": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/a56b2589-3431-46e7-a1a2-9f9e28baf2f4/fix-a-3-am-outage-the-classic-way-lab.zip",
+      "name": "fix-a-3-am-outage-the-classic-way-lab.zip",
+      "at": "2026-11-27T06:41:18.444Z"
+    },
+    "482da7db5a2ef75465c1107d9f8442dd062f040d04c1700ff8585155fe571e05": {
+      "kind": "video",
+      "assetId": "0e142a45-fbcc-4314-af21-3e740d0ff84a",
+      "name": "the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock.mp4",
+      "at": "2026-11-27T06:42:16.544Z"
+    },
+    "85a096562d3f3acb97a0b3d79aea2c4d7901c58e56a9bea9254fedb6f0ca3d34": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/6d338b3d-0d01-435a-97a8-9f4ba2cfc7a3/the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-slides.pdf",
+      "name": "the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-slides.pdf",
+      "at": "2026-11-27T06:42:19.085Z"
+    },
+    "48000586ebe3bf1ce32d9a56fe19a1f9023784db4375b0f18b32ba8626d81fc0": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/b8b4e70b-2306-4d0c-a335-7e7d056af91b/the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-lab.zip",
+      "name": "the-same-outage-fixed-with-an-ai-helper-on-amazon-bedrock-lab.zip",
+      "at": "2026-11-27T06:42:19.367Z"
+    },
+    "39003c576d05c55d2ba840b75b2200d4e6398f178da66a6bc7a4ffd0463e9de1": {
+      "kind": "video",
+      "assetId": "01092023-f0c7-4673-b0d9-3c1cbb7bb48a",
+      "name": "devops-mlops-llmops-rag-and-agentic-ai-sorted.mp4",
+      "at": "2026-11-27T06:42:49.099Z"
+    },
+    "ba9bd9c164cf76ec6bb9a52ac85dcc98add54d28a5dafb9d15eaca95202e19fb": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/d9150ee1-f5dc-4bb8-a58c-47dfc0f6c5f5/devops-mlops-llmops-rag-and-agentic-ai-sorted-slides.pdf",
+      "name": "devops-mlops-llmops-rag-and-agentic-ai-sorted-slides.pdf",
+      "at": "2026-11-27T06:42:51.054Z"
+    },
+    "ffdaf9cd2a0aefb59aa94e91865fa8a274ab1521cfc752201565921486d8fe86": {
+      "kind": "video",
+      "assetId": "a66a915d-6938-49c1-bafa-ce5156323e4f",
+      "name": "models-parameters-training-inference-and-model-cards.mp4",
+      "at": "2026-11-27T06:43:19.639Z"
+    },
+    "0b8759870863ffcd062d9faceafbab2affcf1382f3f1be639ba95a5ef3c27520": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/4f6f5e61-0140-4d65-86f8-ffde43dfee4d/models-parameters-training-inference-and-model-cards-slides.pdf",
+      "name": "models-parameters-training-inference-and-model-cards-slides.pdf",
+      "at": "2026-11-27T06:43:21.145Z"
+    },
+    "c00d39d1271d8c1fd4cd11343411ebb3a641c95f4380c13cf23204e3b1844604": {
+      "kind": "video",
+      "assetId": "8e78cb0d-be51-466d-8fbe-0d399d0f9e97",
+      "name": "prompts-tokens-context-windows-and-temperature.mp4",
+      "at": "2026-11-27T06:43:42.253Z"
+    },
+    "d0f292fa1aa29c4b0ee9f5b0b4a847a739c3c25cb6bf2f7e0a075b5daf121853": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/67905749-6396-4dc0-a2c0-735553bdef56/prompts-tokens-context-windows-and-temperature-slides.pdf",
+      "name": "prompts-tokens-context-windows-and-temperature-slides.pdf",
+      "at": "2026-11-27T06:43:43.429Z"
+    },
+    "f02a2341cf282519535d498c57ef25db59a813d9190092e29bd59d251f982576": {
+      "kind": "video",
+      "assetId": "ae6a8932-2d22-414c-9a02-302345195b01",
+      "name": "hallucinations-grounding-and-judging-ai-answers.mp4",
+      "at": "2026-11-27T06:43:56.186Z"
+    },
+    "dc174e86fd53665693fdbd6af4ac9b297be3ca855aa50f001a57ceddae77624e": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/55e9c0a8-2342-4f0d-a871-e6ad93c9b17f/hallucinations-grounding-and-judging-ai-answers-slides.pdf",
+      "name": "hallucinations-grounding-and-judging-ai-answers-slides.pdf",
+      "at": "2026-11-27T06:43:57.402Z"
+    },
+    "c398f47c5db0028390b50992899d503b421b39d683bc63ac5dd1f12399f2bd0a": {
+      "kind": "video",
+      "assetId": "099da352-dcc7-4c6f-acbb-045beec0db33",
+      "name": "preparing-knowledge-for-rag-parsing-chunks-and-indexing.mp4",
+      "at": "2026-11-27T06:44:09.550Z"
+    },
+    "00cdcbd30ca68a9395fc3e22b1296fc901aff5e43c00d5639c4cb14b008f0fc4": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/7282c476-f46e-4a83-8285-60a497534a06/preparing-knowledge-for-rag-parsing-chunks-and-indexing-slides.pdf",
+      "name": "preparing-knowledge-for-rag-parsing-chunks-and-indexing-slides.pdf",
+      "at": "2026-11-27T06:44:10.498Z"
+    },
+    "19a4494f73bbb7f3637f13d4e78739f349757db24247a86dd0f93313e8157cc7": {
+      "kind": "video",
+      "assetId": "fd6ea384-6da6-42ae-827f-58b2837e1c04",
+      "name": "embeddings-and-vectors-matching-meaning-not-words.mp4",
+      "at": "2026-11-27T06:44:21.045Z"
+    },
+    "03d5204823a145071b66cfc47a370bb73792b1d18234d42c804885ef204dc35e": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/936ce953-290a-4f8c-83c5-eefa99da6477/embeddings-and-vectors-matching-meaning-not-words-slides.pdf",
+      "name": "embeddings-and-vectors-matching-meaning-not-words-slides.pdf",
+      "at": "2026-11-27T06:44:22.030Z"
+    },
+    "5f971a924c8a90ec1e1cc964f3fe150f9c1f3ebfe51a534b27751e575ee460dc": {
+      "kind": "video",
+      "assetId": "a1cece0d-3b69-4e18-b755-d8bc44ecdb36",
+      "name": "rag-search-keyword-vector-hybrid-and-reranking.mp4",
+      "at": "2026-11-27T06:44:37.113Z"
+    },
+    "c0060c665d6ff40d1ed610d0edf87332006336001a3f22cd2c84e75a4e88623d": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/d497b8af-4446-4c9b-aa56-58f56d083565/rag-search-keyword-vector-hybrid-and-reranking-slides.pdf",
+      "name": "rag-search-keyword-vector-hybrid-and-reranking-slides.pdf",
+      "at": "2026-11-27T06:44:38.155Z"
+    },
+    "85dc5915e8247c17ef5c9c58da0ba786e79fb40e5c995e2409689e0d53977741": {
+      "kind": "video",
+      "assetId": "aa5fcd0b-9f57-4efe-a3d4-8172adfd66f8",
+      "name": "where-rag-data-lives-object-storage-and-vector-databases.mp4",
+      "at": "2026-11-27T06:44:47.227Z"
+    },
+    "c4e3d573143dee99b70a5e2767e01eb26a50d316412aabb23ae173e04ab8e2b3": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/074ba1b6-6685-4a8f-a704-3565294c5c86/where-rag-data-lives-object-storage-and-vector-databases-slides.pdf",
+      "name": "where-rag-data-lives-object-storage-and-vector-databases-slides.pdf",
+      "at": "2026-11-27T06:44:48.111Z"
+    },
+    "7c1f0a00a2be36f34d0d2ccc8bdfb6b1aea66f208ed1727a2a87eb2d575e17c4": {
+      "kind": "video",
+      "assetId": "7348e81a-bc27-4354-9985-feacf0adf1f9",
+      "name": "running-models-gpus-vram-quantisation-and-licences.mp4",
+      "at": "2026-11-27T06:44:57.967Z"
+    },
+    "5f2e343c9dfa03ec4d7e3f613c2c152a9c293afdf5cd56d1a729b2b9a3486743": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/1663d93c-5714-4503-8583-6e36cf582e26/running-models-gpus-vram-quantisation-and-licences-slides.pdf",
+      "name": "running-models-gpus-vram-quantisation-and-licences-slides.pdf",
+      "at": "2026-11-27T06:44:59.030Z"
+    },
+    "4d4f9dab231e27397375f9dd3540fb39262c5a1c7f1589e61fa2d766cc4542c8": {
+      "kind": "video",
+      "assetId": "37d92889-5ef4-4500-b120-f7db262fcd3d",
+      "name": "ai-agents-tools-the-agent-loop-memory-and-guardrails.mp4",
+      "at": "2026-11-27T06:45:11.554Z"
+    },
+    "8d59395c83d17bc058992db030e6d7fcfc62071ffb1f2aae4cd965970af7f2cc": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/a10e6adc-f1e9-488c-982e-0f031a295135/ai-agents-tools-the-agent-loop-memory-and-guardrails-slides.pdf",
+      "name": "ai-agents-tools-the-agent-loop-memory-and-guardrails-slides.pdf",
+      "at": "2026-11-27T06:45:12.492Z"
+    },
+    "740fcd8ea8ed17cb5e95c18d6d7d3994aef9a78a61f2fb73e8179fbb1d5d4e95": {
+      "kind": "video",
+      "assetId": "cc7bb0a6-7cf1-4f46-bb2a-b0540aa25c3a",
+      "name": "ai-chatbot-versus-ai-agent-side-by-side.mp4",
+      "at": "2026-11-27T06:46:06.216Z"
+    },
+    "72ab4e70f4d2b15290a1bbc53915a55ac8673f139dc6374a34487edb4aa16c27": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/7c8a940d-66b8-4a78-b6d8-a6950b97ac41/ai-chatbot-versus-ai-agent-side-by-side-slides.pdf",
+      "name": "ai-chatbot-versus-ai-agent-side-by-side-slides.pdf",
+      "at": "2026-11-27T06:46:08.234Z"
+    },
+    "def0dad5315f77c3188561ac59eced56d91af0a297c728b4bbb505dbe6324484": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/19902442-3ab9-4b93-b354-f6fce45f954d/ai-chatbot-versus-ai-agent-side-by-side-lab.zip",
+      "name": "ai-chatbot-versus-ai-agent-side-by-side-lab.zip",
+      "at": "2026-11-27T06:46:08.482Z"
+    },
+    "13c3dbda452f880091b7eceaca33d686bfef2a9f53c923836b60b8daa42b5607": {
+      "kind": "video",
+      "assetId": "a6cc2b7b-a49b-43ac-b42c-61320af0455c",
+      "name": "skill-based-agents-one-job-clear-limits.mp4",
+      "at": "2026-11-27T06:46:20.928Z"
+    },
+    "b4d99cf367a08b452e3b17c5d7e6997cceb5410eccf88c52b23d0c05e7c7602b": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/c8cb9129-71ae-4b63-96af-a582a1d78bca/skill-based-agents-one-job-clear-limits-slides.pdf",
+      "name": "skill-based-agents-one-job-clear-limits-slides.pdf",
+      "at": "2026-11-27T06:46:21.765Z"
+    },
+    "4807fd9ca3d52e9a2ab861d6d855db3762ca986fb3591ad2282b64062b950250": {
+      "kind": "video",
+      "assetId": "78d31b73-eee0-414d-8be3-5bce24c7738b",
+      "name": "what-mcp-is-and-why-every-platform-adopted-it.mp4",
+      "at": "2026-11-27T06:46:39.384Z"
+    },
+    "9aa8d3dec4d5fc9194f1be7de23d3aa0140c701b78625f23008662caebd73c6a": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/5c7a6bbf-ebe9-4bd4-b5a3-e649cf8edcb5/what-mcp-is-and-why-every-platform-adopted-it-slides.pdf",
+      "name": "what-mcp-is-and-why-every-platform-adopted-it-slides.pdf",
+      "at": "2026-11-27T06:46:40.592Z"
+    },
+    "2cf31ba3c4218f969f6a46de3f8437c5433290edac14f2dbff0c6d8139932ea8": {
+      "kind": "video",
+      "assetId": "a81d0abd-4e95-4745-a588-23c043f83d84",
+      "name": "choosing-the-right-ai-service-on-aws-or-azure.mp4",
+      "at": "2026-11-27T06:46:53.153Z"
+    },
+    "0f9c47dc31969bf8eaec479bba5f994a86c088b21cfffbf124f8f31bf07d7f2b": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/7e27c531-de4b-4e77-aa35-6beffd2fab68/choosing-the-right-ai-service-on-aws-or-azure-slides.pdf",
+      "name": "choosing-the-right-ai-service-on-aws-or-azure-slides.pdf",
+      "at": "2026-11-27T06:46:54.334Z"
+    },
+    "0bce3cd22cf820bbc83f34de60541b94a1e3d63a28b3cbe7e86d76393d00d91e": {
+      "kind": "video",
+      "assetId": "082edfed-907f-4b38-911b-13e317c43c56",
+      "name": "managed-ai-or-self-hosted-bedrock-foundry-or-ollama.mp4",
+      "at": "2026-11-27T06:47:13.450Z"
+    },
+    "e38d41a6ea21418d2b7a914ac0013be6ce15c1ff65abcb3c3cde45511e670f31": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/08a01978-4160-4979-8f6e-aeebeadc0ca8/managed-ai-or-self-hosted-bedrock-foundry-or-ollama-slides.pdf",
+      "name": "managed-ai-or-self-hosted-bedrock-foundry-or-ollama-slides.pdf",
+      "at": "2026-11-27T06:47:15.804Z"
+    },
+    "2f7cf604765fbfd4b17d58001bf1fee20b6aaa2631f308f7dbebc6797dc7856d": {
+      "kind": "video",
+      "assetId": "d40f6a17-3a18-4354-b537-a36136b7cf7c",
+      "name": "where-ai-fits-in-a-cicd-pipeline.mp4",
+      "at": "2026-11-27T06:48:13.854Z"
+    },
+    "2f6bd3b54e9fbb8c95c6346cb78e7b0c2a6f5a9b0ceb4f7cf6ffc6359d4f1e4d": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/a74e6d10-14db-486b-a0da-fa965bea4234/where-ai-fits-in-a-cicd-pipeline-slides.pdf",
+      "name": "where-ai-fits-in-a-cicd-pipeline-slides.pdf",
+      "at": "2026-11-27T06:48:16.769Z"
+    },
+    "5803743814000ec999f6694f3cfda2f8646be3832a5d996c5a818974f07c8f17": {
+      "kind": "video",
+      "assetId": "b743ec1c-1315-40a7-9014-1f62e5e05044",
+      "name": "operating-and-securing-ai-in-production.mp4",
+      "at": "2026-11-27T06:48:49.453Z"
+    },
+    "4f2de30a6b640a739ed1336f69d6fa0610d85e530adc49bbbae4f30d0f3e4993": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/e9cdf994-15c0-44ff-aeda-445d012b9bad/resources/888bf267-f1d2-4214-b5af-803b4934f625/operating-and-securing-ai-in-production-slides.pdf",
+      "name": "operating-and-securing-ai-in-production-slides.pdf",
+      "at": "2026-11-27T06:48:50.614Z"
+    }
+  },
+  "courseId": "e9cdf994-15c0-44ff-aeda-445d012b9bad"
+}

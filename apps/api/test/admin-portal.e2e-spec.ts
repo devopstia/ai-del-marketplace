@@ -306,4 +306,33 @@ describe('e2e: super admin portal', () => {
     const actions = (await prisma.auditLog.findMany({ where: { targetId: a.id }, select: { action: true } })).map((x) => x.action);
     expect(actions).toEqual(expect.arrayContaining(['course.admin_edited', 'course.archived', 'course.restored', 'course.deletion_requested', 'course.deletion_cancelled', 'course.purged']));
   });
+
+  it('purge keeps videos and files that another course of the same account still uses (shared media)', async () => {
+    if (!available) return;
+    const teacher = await userAgent('shared-media-teacher@e2e.example', ['student', 'instructor']);
+    await prisma.instructorProfile.create({ data: { userId: teacher.user.id, status: 'approved' } });
+    const a = await course(teacher.user.id, 'shared-media-a', 0);
+    const b = await course(teacher.user.id, 'shared-media-b', 9999);
+    const shared = await prisma.videoAsset.create({ data: { ownerId: teacher.user.id, status: 'ready', storageKey: `videos/${teacher.user.id}/shared.mp4`, durationSec: 60 } });
+    const onlyA = await prisma.videoAsset.create({ data: { ownerId: teacher.user.id, status: 'ready', storageKey: `videos/${teacher.user.id}/only-a.mp4`, durationSec: 60 } });
+    const la = await prisma.lecture.findFirstOrThrow({ where: { section: { courseId: a.id } } });
+    const lb = await prisma.lecture.findFirstOrThrow({ where: { section: { courseId: b.id } } });
+    await prisma.lecture.update({ where: { id: la.id }, data: { videoAssetId: shared.id } });
+    await prisma.lecture.update({ where: { id: lb.id }, data: { videoAssetId: shared.id } });
+    const sa = await prisma.section.findFirstOrThrow({ where: { courseId: a.id } });
+    await prisma.lecture.create({ data: { sectionId: sa.id, title: 'only in A', position: 1, type: 'video', durationSec: 60, videoAssetId: onlyA.id } });
+    const key = `instructors/${teacher.user.id}/courses/${a.id}/resources/x/shared-lab.zip`;
+    await prisma.resource.create({ data: { lectureId: la.id, title: 'Hands-on lab (ZIP)', storageKey: key, sizeBytes: 10, mime: 'application/zip' } });
+    await prisma.resource.create({ data: { lectureId: lb.id, title: 'Hands-on lab (ZIP)', storageKey: key, sizeBytes: 10, mime: 'application/zip' } });
+    await prisma.course.update({ where: { id: a.id }, data: { deleteRequestedAt: new Date(), deleteAfter: new Date(Date.now() - 1000) } });
+
+    expect(await purgeDueCourses(prisma, app.get(StorageService), app.get(AuditService))).toMatchObject({ purged: 1 });
+    // Course B still plays the shared video and offers the shared lab; the video only A used is gone.
+    expect(await prisma.videoAsset.count({ where: { id: shared.id } })).toBe(1);
+    expect(await prisma.videoAsset.count({ where: { id: onlyA.id } })).toBe(0);
+    expect((await prisma.lecture.findUniqueOrThrow({ where: { id: lb.id } })).videoAssetId).toBe(shared.id);
+    expect(await prisma.resource.count({ where: { lectureId: lb.id, storageKey: key } })).toBe(1);
+    const log = await prisma.auditLog.findFirstOrThrow({ where: { targetId: a.id, action: 'course.purged' } });
+    expect((log.meta as { keptShared?: number }).keptShared).toBe(2);
+  });
 });

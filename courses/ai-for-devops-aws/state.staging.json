@@ -1,0 +1,327 @@
+{
+  "sections": {
+    "AI foundations for DevOps": "ae0572bd-1e79-4360-abc6-1ae455a9a7d6",
+    "The AWS AI services": "d2056485-4f41-486f-bfa5-3e0e58457100",
+    "Getting started with Amazon Bedrock": "61df367f-957f-4fde-ba9f-4425d1189dd4",
+    "AI applications on AWS": "ffd8909f-288c-4717-b7f0-4e113fee2580",
+    "Retrieval-Augmented Generation on AWS": "94ef3c1b-8728-46c5-80be-799b4ea0e823",
+    "AI agents for DevOps": "fd90c1da-7e0d-406f-8d5a-d7fd53edee5c",
+    "AI-powered DevOps automation": "fe276d2a-5d2d-4aa4-84b4-4bca410fd9b4",
+    "Model Context Protocol (MCP)": "cdb67563-b913-4ddf-beb3-95f294e6ee3b",
+    "Security, reliability and cost": "0423c1ff-a208-43b6-a596-3eed52acfed5",
+    "The vocabulary of AI models": "9ecb8e5c-0c55-463f-aa7e-3eac4aa5eeda",
+    "AI applications on AWS: a real outage": "e2746d2f-263b-41c0-9fc5-c6beec92dc6a",
+    "Retrieval-Augmented Generation (RAG)": "0d05ae72-1a81-4af3-8413-cb27953c0226",
+    "AI in CI/CD and operations": "af3335ff-1c57-4136-a81d-6f9a60dcf895",
+    "Automate it with n8n": "e1e01c1b-3500-423d-ba03-b7e5ba83706a"
+  },
+  "lessons": {
+    "02-ai-foundations/01-tm1-big-words": "a3abee56-1da5-4a05-a0ef-3952c51356d5",
+    "02-ai-foundations/04-tm4-talking-to-a-model": "97daf7c8-5e26-4b1d-a53c-abfdbbc9d8bc",
+    "02-ai-foundations/05-tm5-answer-quality": "c556d53f-3c5b-4a00-b411-b8bc5bb396bd",
+    "02-ai-foundations/10-tm10-agent-words": "3c4a1bdb-54f0-44d7-903c-91aa18e04260",
+    "17-cloud-ai/01-aws-ai-services-map": "6b990d6e-9ab2-400c-984e-6c28b93efdaf",
+    "17-cloud-ai/03-choosing-ai-service": "d960687a-3aad-4bd0-8fe2-456c0e11eb5c",
+    "17-cloud-ai/04-amazon-bedrock-explained": "368b0d6b-5bbe-4cc3-b11a-c4be5b935ca6",
+    "16-cloud-labs/02-s3-help-site-live": "c8d97181-8de0-4fc5-9e22-0748404acc10",
+    "16-cloud-labs/04-bedrock-chatbot-live": "bd1142f2-fe9d-4a3d-8bca-6ef2d06da5b9",
+    "04-by-hand-vs-ai/01-devops-with-ai": "10863b06-53e4-4df9-989a-db07e2648bb7",
+    "02-ai-foundations/06-tm6-rag-words-preparing": "6dbcaf78-41bc-49c1-b90c-3fe67958f096",
+    "02-ai-foundations/07-tm7-embeddings-vectors": "af6cfb1a-8348-43c0-a009-199be83559ae",
+    "02-ai-foundations/08-tm8-rag-search-answer": "39fa554c-cc07-48c1-a9d9-9f3c76e702d2",
+    "02-ai-foundations/09-tm9-where-data-lives": "b8ed96d9-4a16-4d8f-b1a6-114d31006449",
+    "07-building-rag/20-r7-one-architecture-three-implementations": "936f3028-5918-4823-b6d5-4002e4737ceb",
+    "16-cloud-labs/06-rag-stack-live": "b0d84810-1821-4f26-8f78-95711958fff3",
+    "16-cloud-labs/08-aws-rag-live": "aa9b2a99-0414-41b8-8b76-186852d27a69",
+    "05-agents-rag-ideas/19-agent-vs-chatbot": "7db9bcfc-5f25-4b45-a06c-fcd05d778525",
+    "05-agents-rag-ideas/20-s1-skill-based-agents": "4643f751-fdb2-40dc-9381-ef2c88284736",
+    "16-cloud-labs/10-s2-docker-skill-agents-live": "84465f6d-9ea2-4af4-bcdc-c47af49040e0",
+    "16-cloud-labs/09-k8s-doctor-live": "fc777146-56a6-4b40-bfb7-12093411da06",
+    "05-agents-rag-ideas/21-r10-kagent-explained": "0ebcee21-09bd-4f7d-9621-69b880be2a61",
+    "19-ai-cicd/01-ci1-ai-in-cicd": "28c0c3c2-4d63-480c-b03f-06e80d9d6df5",
+    "18-automation-n8n/17-n17-n8n-ai-assisted-live": "855a3fac-913f-443a-a214-e7e82d8ef3a2",
+    "20-mcp/01-m1-what-is-mcp": "6aca3de4-04e2-400d-88d0-637575f6c166",
+    "20-mcp/02-m2-inside-mcp": "de07fb56-ff4e-4d3e-a80a-b58eff6e52ad",
+    "20-mcp/03-m3-first-mcp-server-live": "b09eb294-92b0-4e98-8266-4bbbd3a283a1",
+    "02-ai-foundations/12-tm12-operating-securing": "3e1109a1-70bf-4507-ad8b-ab8be8740183",
+    "08-ai-production/19-r1-llmops-day-to-day": "3737b4d8-8f25-40b6-b594-91f400dd7c60",
+    "08-ai-production/20-r6-who-builds-who-runs": "f00f9770-ae52-4a4a-92f7-42a558ddf496",
+    "08-ai-production/21-r8-managed-or-self-hosted": "e46baa9a-ca62-4c2b-8438-15fb117c7169",
+    "01-before-ai/01-computers-before-ai": "57d7adae-e089-4ef2-8f2a-be412d808e92",
+    "01-before-ai/03-short-history-of-ai": "00eacc87-2034-43e2-a169-0b85f5f30f36",
+    "01-before-ai/04-what-is-machine-learning": "c3b0c173-d7a5-4c5d-9aed-d1de46e7f06c",
+    "02-ai-foundations/02-tm2-practice-architecture-application": "0bebdb6d-6a1b-479c-bff2-e9925e225c5d",
+    "02-ai-foundations/03-tm3-model-words": "63f134a8-399a-4352-b3b8-88373ef5f55e",
+    "02-ai-foundations/11-tm11-running-models": "97346046-f7c7-4490-aeed-e17ef616b532",
+    "01-before-ai/02-devops-before-ai": "3f1fda09-d4fc-4093-8341-cccf40aaa881",
+    "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "5213519c-3d27-4446-92c8-ae43671d3580",
+    "18-automation-n8n/09-n7-n8n-github-pr-live": "85c64616-d369-4dac-9910-e7175687cde6",
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "9d648483-e5d5-4fb8-b4de-14039edbf2e1"
+  },
+  "quizzes": {
+    "17-cloud-ai/01-aws-ai-services-map": "370cc21f-a143-48a9-a9f9-0df96bb25255",
+    "17-cloud-ai/03-choosing-ai-service": "f988ac09-ab02-4e6e-a84e-756d79266a08",
+    "16-cloud-labs/04-bedrock-chatbot-live": "0d87e406-e3e7-4f9f-a949-eb0b6ed28807",
+    "16-cloud-labs/08-aws-rag-live": "0b483b48-aa1b-4430-b311-9ba556a69f8c",
+    "05-agents-rag-ideas/19-agent-vs-chatbot": "0dc1896a-f762-4228-b155-1fc42530e67b",
+    "16-cloud-labs/09-k8s-doctor-live": "35e5c1a2-244d-4304-aa3a-e7c5a2e987cf",
+    "19-ai-cicd/01-ci1-ai-in-cicd": "0f531fbf-bc3f-4e56-b94f-f3cc9e50b87d",
+    "18-automation-n8n/17-n17-n8n-ai-assisted-live": "a3d5fbad-60c4-4a3a-8b2e-90909f1b9e9c",
+    "20-mcp/01-m1-what-is-mcp": "ce12840f-264a-4c88-9e94-ec9bc3f6924d",
+    "20-mcp/02-m2-inside-mcp": "7c1d6950-e8d8-4960-914f-50c2d826b6cc",
+    "20-mcp/03-m3-first-mcp-server-live": "720659b2-0d00-43d4-aa3a-39a4bb34d8a6",
+    "18-automation-n8n/06-n6-n8n-deploy-notifications-live": "744c8170-c631-4de2-808b-4126bbdaf9de",
+    "18-automation-n8n/09-n7-n8n-github-pr-live": "cd1db443-a588-4b8a-bd6d-f2220e28e0fc",
+    "18-automation-n8n/12-n12-n8n-incident-management-live": "ee8994ea-d116-4670-9312-85085a7adb13"
+  },
+  "files": {
+    "93b5668cfc2fcb517143d14aad42b900527403f3b1b39ff8ef2181574fb0fb92": {
+      "kind": "video",
+      "assetId": "5bd5ad8f-c8ef-4df9-805b-80bc12614bee",
+      "name": "the-aws-ai-services-map.mp4",
+      "at": "2026-11-27T06:27:37.597Z"
+    },
+    "32a484a0c63793bbb4742431e2f6c0905ddda96bb6db4be028947dd6459cece2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/80f610b5-09e6-4ac9-80aa-2344fc6a53b6/the-aws-ai-services-map-slides.pdf",
+      "name": "the-aws-ai-services-map-slides.pdf",
+      "at": "2026-11-27T06:27:38.962Z"
+    },
+    "fdc7804478e1ed6ab2fde66e33c34cbd8f5d85073e150f3c2ff27eb334f8dabe": {
+      "kind": "video",
+      "assetId": "7a51a0c6-d062-4e41-bd8c-5bad77200b94",
+      "name": "amazon-bedrock-explained.mp4",
+      "at": "2026-11-27T06:27:57.370Z"
+    },
+    "6fba676ae5eab915078115193dae54130141dc91b4c1b25d2e003a5aeda6f96f": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/9fb40746-d847-4bd7-8aa8-473ef789726e/amazon-bedrock-explained-slides.pdf",
+      "name": "amazon-bedrock-explained-slides.pdf",
+      "at": "2026-11-27T06:27:58.588Z"
+    },
+    "da4ebfdd6b9f1905edfa2b7f968f1a36f3af10cec90ab65cb1ea806003bb0c51": {
+      "kind": "video",
+      "assetId": "0fc007c2-5b75-4c10-a24a-16fcb7e02b30",
+      "name": "publish-an-ai-assistants-help-site-on-amazon-s3.mp4",
+      "at": "2026-11-27T06:28:14.445Z"
+    },
+    "8b67d241825706273b945d5b649b51c4699c5f952a6f853dd1d1116e2f669435": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/dffeb160-baa3-47c7-82a5-a3e47a00fa2d/publish-an-ai-assistants-help-site-on-amazon-s3-slides.pdf",
+      "name": "publish-an-ai-assistants-help-site-on-amazon-s3-slides.pdf",
+      "at": "2026-11-27T06:28:15.736Z"
+    },
+    "aa57d9c522c75f93593ad6988caae57244932df6feae49fdc81a2f8668e57d63": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/b1a12e63-01fb-40e5-b67b-bfda86912834/publish-an-ai-assistants-help-site-on-amazon-s3-lab.zip",
+      "name": "publish-an-ai-assistants-help-site-on-amazon-s3-lab.zip",
+      "at": "2026-11-27T06:28:15.998Z"
+    },
+    "d804b50113c2faea6797f72ec995077fc1d6dc19c8a168cd764b63f636376464": {
+      "kind": "video",
+      "assetId": "7c603ff0-48b5-4376-93a6-63da261ae8b3",
+      "name": "build-an-ai-chatbot-on-amazon-bedrock-the-devops-way.mp4",
+      "at": "2026-11-27T06:28:39.978Z"
+    },
+    "18493ecd25a73915a5f4e9e9400679543b2167a5a647e92e183dd450175c1466": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/765de78a-9b95-4a8d-a9d8-483bf1dfb943/build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-slides.pdf",
+      "name": "build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-slides.pdf",
+      "at": "2026-11-27T06:28:41.267Z"
+    },
+    "871bac1694932b57dcd1a88918ada2d0d79429313926ce34d7af6f8c3c2e12e6": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/67fe66b6-a43e-4267-9042-93c5c927bfc9/build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-lab.zip",
+      "name": "build-an-ai-chatbot-on-amazon-bedrock-the-devops-way-lab.zip",
+      "at": "2026-11-27T06:28:41.535Z"
+    },
+    "99cb778d22e858d5badcde698e3e671a4dc76359951fa891d4008d7d2ece3bd0": {
+      "kind": "video",
+      "assetId": "3040c473-cd61-4c4e-bd9b-bf351ae5661f",
+      "name": "one-rag-architecture-three-implementations.mp4",
+      "at": "2026-11-27T06:28:57.023Z"
+    },
+    "2ae8f4b4d8b19a88601d8595bf59a6a374616992b3ebf0db2e43756f258714e2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/e2186559-f5c8-4199-a41b-2bb43c959d5d/one-rag-architecture-three-implementations-slides.pdf",
+      "name": "one-rag-architecture-three-implementations-slides.pdf",
+      "at": "2026-11-27T06:28:57.814Z"
+    },
+    "fb88551eaaed70221dce326fadaaf9eac67038a8799a71f26badb7f83e93155e": {
+      "kind": "video",
+      "assetId": "886d9037-f6ec-47b7-a1d4-3f9d6e479cc8",
+      "name": "run-a-production-style-rag-chatbot-with-docker-compose.mp4",
+      "at": "2026-11-27T06:31:42.933Z"
+    },
+    "47e9a3567789e44f7bd52fa1cc425253ef53bc0f528ee576c58a84565dc1992d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/9f0ae049-f996-47e4-b4f8-a40eac88f543/run-a-production-style-rag-chatbot-with-docker-compose-slides.pdf",
+      "name": "run-a-production-style-rag-chatbot-with-docker-compose-slides.pdf",
+      "at": "2026-11-27T06:31:44.149Z"
+    },
+    "c232cfb36ee901418b9437b92d2d6a922b6875cc44994216b19bd2c2e0717833": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/d00be518-35a4-4cd1-973a-5bdcb0b70eb4/run-a-production-style-rag-chatbot-with-docker-compose-lab.zip",
+      "name": "run-a-production-style-rag-chatbot-with-docker-compose-lab.zip",
+      "at": "2026-11-27T06:31:44.615Z"
+    },
+    "b6a27007f8667fd32783d30183da5cfe3e74b36ed98ca135b2ca817e35e891e0": {
+      "kind": "video",
+      "assetId": "6e4c2e46-e41b-4778-8525-04ec411326f2",
+      "name": "build-a-rag-system-on-aws-with-bedrock-knowledge-bases.mp4",
+      "at": "2026-11-27T06:31:58.343Z"
+    },
+    "98dd564750a33d83b824ad49e75993b394f22a85e936d1144464d957ffcfd0e2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/c30dff62-8d3d-4e6f-9cac-b89080a94772/build-a-rag-system-on-aws-with-bedrock-knowledge-bases-slides.pdf",
+      "name": "build-a-rag-system-on-aws-with-bedrock-knowledge-bases-slides.pdf",
+      "at": "2026-11-27T06:31:59.595Z"
+    },
+    "893f735ddd951a5a6a78395633b2ee3d9cb340019d6daefb16d8de87cd632733": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/38a22a12-aaeb-47d1-8b02-544336225899/build-a-rag-system-on-aws-with-bedrock-knowledge-bases-lab.zip",
+      "name": "build-a-rag-system-on-aws-with-bedrock-knowledge-bases-lab.zip",
+      "at": "2026-11-27T06:31:59.875Z"
+    },
+    "65eb51b6f3c114927c6f4c68e389bcf11e33f0ef4d28d7124d47eaf039d13349": {
+      "kind": "video",
+      "assetId": "2d6176c9-3e63-4331-859c-d5da1e921261",
+      "name": "three-skill-agents-fix-502s-crash-loops-and-full-disks.mp4",
+      "at": "2026-11-27T06:32:13.013Z"
+    },
+    "7d79925a9443fca6ce751ec58601752e9da4f9a1aeae1ad9053e4137fce81043": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/b9c5037a-2e37-4c84-bbc0-04263ba68c67/three-skill-agents-fix-502s-crash-loops-and-full-disks-slides.pdf",
+      "name": "three-skill-agents-fix-502s-crash-loops-and-full-disks-slides.pdf",
+      "at": "2026-11-27T06:32:14.203Z"
+    },
+    "7e41075ad120d9df0aad40f46bcaea31e25e658d9d38be9c02e64dd455bf1c8e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/6b152585-1831-408b-a086-b21610fc96ec/three-skill-agents-fix-502s-crash-loops-and-full-disks-lab.zip",
+      "name": "three-skill-agents-fix-502s-crash-loops-and-full-disks-lab.zip",
+      "at": "2026-11-27T06:32:14.490Z"
+    },
+    "8a4c7d7b05445c742d256981c602382f74a8ad6968bb3a2892c87a65b2ca3b22": {
+      "kind": "video",
+      "assetId": "69d0d2ea-b97a-404a-948f-b75caa6269a5",
+      "name": "an-ai-agent-that-fixes-kubernetes-workloads.mp4",
+      "at": "2026-11-27T06:32:31.816Z"
+    },
+    "4d89198e72f22c16b5fa599048181a6315fd62a5f64b96b309d7d53bfc01a2c6": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/d9d02b09-84ab-4904-a5a7-ba0ca9f2e4ee/an-ai-agent-that-fixes-kubernetes-workloads-slides.pdf",
+      "name": "an-ai-agent-that-fixes-kubernetes-workloads-slides.pdf",
+      "at": "2026-11-27T06:32:33.605Z"
+    },
+    "1feba0c631d2dca2fd573a0594a2f82acfe966ac7cee556ec8a285f2a17360da": {
+      "kind": "video",
+      "assetId": "47f85e6f-c2a5-4f36-b949-ca88a3e35655",
+      "name": "ai-agents-inside-kubernetes-with-kagent.mp4",
+      "at": "2026-11-27T06:32:44.442Z"
+    },
+    "9dea588fc69ca436689058719162eee1b9621e1f132e1fcc99d072694eae9437": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/b031c956-4398-41cc-af05-acb41ecfcae7/ai-agents-inside-kubernetes-with-kagent-slides.pdf",
+      "name": "ai-agents-inside-kubernetes-with-kagent-slides.pdf",
+      "at": "2026-11-27T06:32:45.456Z"
+    },
+    "c0fd399ce3fd3206e23409cccb70edac173b932b85b15bffb587c79e326f36ce": {
+      "kind": "video",
+      "assetId": "85c67a5b-8c67-40fe-9005-1be53e6bcfd3",
+      "name": "ai-summaries-in-automation-workflows-safely-n8n.mp4",
+      "at": "2026-11-27T06:33:22.184Z"
+    },
+    "f93087173c03973251bf2897e501dc27de9e428f5bcd1dd405d5536582a7c5cc": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/9906a501-c241-4e92-a1d0-edcfcdae43c2/ai-summaries-in-automation-workflows-safely-n8n-slides.pdf",
+      "name": "ai-summaries-in-automation-workflows-safely-n8n-slides.pdf",
+      "at": "2026-11-27T06:33:23.598Z"
+    },
+    "5a66b130b58263b67d993d2f3cd4498576725a8edfcb01057eb2ff53069da917": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/f40114a5-81ea-469d-9cd3-93b9803538a3/ai-summaries-in-automation-workflows-safely-n8n-lab.zip",
+      "name": "ai-summaries-in-automation-workflows-safely-n8n-lab.zip",
+      "at": "2026-11-27T06:33:23.873Z"
+    },
+    "827c4881429684ac43ca05f200a7d819520e6a0e5d019a14f91cce13794274bd": {
+      "kind": "video",
+      "assetId": "9f82ac2d-9ba2-417c-bec4-33032d165eac",
+      "name": "inside-mcp-tools-resources-prompts-and-transports.mp4",
+      "at": "2026-11-27T06:33:42.318Z"
+    },
+    "681ec2822354a05234b45569547b3941c8ab310e0008046fb5423c8e688e0bea": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/010a0379-923e-40f1-9245-40e9f9e5fd1b/inside-mcp-tools-resources-prompts-and-transports-slides.pdf",
+      "name": "inside-mcp-tools-resources-prompts-and-transports-slides.pdf",
+      "at": "2026-11-27T06:33:43.702Z"
+    },
+    "0ed995a31f4d0461dedce27dd992b90075f7fb49bf1dd7d3c446b4307ed4ef20": {
+      "kind": "video",
+      "assetId": "b9d88972-f06c-4fe8-9bb9-e83711850f91",
+      "name": "build-your-first-mcp-server-and-connect-real-agents.mp4",
+      "at": "2026-11-27T06:34:27.493Z"
+    },
+    "17589d2bba1a12439e16c6227ecac98896d5120fe589a3f18d3ebc8c45cb580b": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/97e231cc-4a44-4066-bf6f-a7d0f77754a6/build-your-first-mcp-server-and-connect-real-agents-slides.pdf",
+      "name": "build-your-first-mcp-server-and-connect-real-agents-slides.pdf",
+      "at": "2026-11-27T06:34:29.819Z"
+    },
+    "0214f9a6a215648919db05d6204af38f5e5b6afb51cd0e0640ddea541e542fd2": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/c80aff1d-ad25-4d7d-af09-9390b72603ed/build-your-first-mcp-server-and-connect-real-agents-lab.zip",
+      "name": "build-your-first-mcp-server-and-connect-real-agents-lab.zip",
+      "at": "2026-11-27T06:34:30.228Z"
+    },
+    "2ee328294732e264620a736571c4c10433eb4d445e68a3f5416b326fb23a21a9": {
+      "kind": "video",
+      "assetId": "fadfe094-cac3-47f7-8f0d-f0b54e6bdb84",
+      "name": "llmops-day-to-day-what-you-manage-once-an-ai-app-is-live.mp4",
+      "at": "2026-11-27T06:34:39.363Z"
+    },
+    "ffedeb00f42f880a2bda737618023c1f489f47e67ac9ef133be313174fcebb66": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/495bc089-60c4-414c-8b67-f4e5597c4b39/llmops-day-to-day-what-you-manage-once-an-ai-app-is-live-slides.pdf",
+      "name": "llmops-day-to-day-what-you-manage-once-an-ai-app-is-live-slides.pdf",
+      "at": "2026-11-27T06:34:40.290Z"
+    },
+    "bbcfb3687adea99fcb52d59f206afa4c85d412483dc048c6a81a8e0811963c78": {
+      "kind": "video",
+      "assetId": "0004dbdd-0625-4c2a-a900-931d55d5cbad",
+      "name": "who-builds-a-rag-system-and-who-runs-it.mp4",
+      "at": "2026-11-27T06:34:49.595Z"
+    },
+    "0ee32539219e6814f8124ba2cae784b8ce43e2377377fde3cec9375c8c214c7e": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/639b441c-f4b8-41b5-a7fb-8c3109b46006/who-builds-a-rag-system-and-who-runs-it-slides.pdf",
+      "name": "who-builds-a-rag-system-and-who-runs-it-slides.pdf",
+      "at": "2026-11-27T06:34:50.443Z"
+    },
+    "0141c8c90c7cca27a5d5b49b369531c5f68ffe75478c1648c00bc2662c5bd0b5": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/c35f066b-545d-4cec-9eff-34fcfb61cb52/deployment-notifications-from-ci-with-n8n-slides.pdf",
+      "name": "deployment-notifications-from-ci-with-n8n-slides.pdf",
+      "at": "2026-11-27T11:53:11.884Z"
+    },
+    "a9c3c7a1fcaf2f7b55a45fe1b0e6b1bda1cb1cbb0ebe4c79d36f21776c74cc1d": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/cb806b45-1295-4778-b4ed-cb82170a6861/deployment-notifications-from-ci-with-n8n-lab.zip",
+      "name": "deployment-notifications-from-ci-with-n8n-lab.zip",
+      "at": "2026-11-27T11:53:12.202Z"
+    },
+    "2569f238798f0f3ff705ddd714b051afb19be43e678fd71bec30f5267ce48f44": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/f8de9eba-502c-4b2d-a56d-4e3ef6099b29/incident-management-with-n8n-severity-escalation-resolution-slides.pdf",
+      "name": "incident-management-with-n8n-severity-escalation-resolution-slides.pdf",
+      "at": "2026-11-27T11:53:17.528Z"
+    },
+    "dfcb00ca81de79264f924d7570f00f10d706c9167f1ed2577c6b66fbbecd45e7": {
+      "kind": "resource",
+      "storageKey": "instructors/26289d3e-8940-470c-b51c-9643e42d2dae/courses/f26f445e-5f71-48ff-b68d-92d8b6db5a71/resources/fc07adcf-940d-404b-918a-c2da5c6fff10/incident-management-with-n8n-severity-escalation-resolution-lab.zip",
+      "name": "incident-management-with-n8n-severity-escalation-resolution-lab.zip",
+      "at": "2026-11-27T11:53:17.931Z"
+    }
+  },
+  "courseId": "f26f445e-5f71-48ff-b68d-92d8b6db5a71",
+  "articles": {}
+}
