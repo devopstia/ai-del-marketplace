@@ -33,13 +33,6 @@
       "title": "Start here",
       "lessons": [
         {
-          "folder": "22-vscode/00-vsc-00-course-intro",
-          "title": "Welcome to the VS Code Masterclass",
-          "summary": "What you will learn: the interface, Git, and AI agents whose work you review, with the devops-toolbox repo, and how the four parts of the course are released step by step.",
-          "preview": true,
-          "short": "Course introduction"
-        },
-        {
           "folder": "22-vscode/01-vsc-01-why-vscode",
           "title": "Why VS Code is the DevOps engineer's editor",
           "short": "Why VS Code",

@@ -34,13 +34,6 @@
       "title": "What AI is, and what it changes for DevOps",
       "lessons": [
         {
-          "folder": "23-intro-ai-devops/00-intro-ai-for-devops",
-          "title": "Welcome: what AI changes for DevOps",
-          "summary": "The same outage fixed in 83 minutes by hand and 16 with an AI helper, the four modules ahead, and how this free course works.",
-          "preview": true,
-          "short": "Course introduction"
-        },
-        {
           "folder": "01-before-ai/01-computers-before-ai",
           "title": "How computers solved problems before AI",
           "summary": "See how rule-based programs work, why most of the software you run still works that way, and where hand-written rules break down: everyday language, images and cases nobody planned for.",
