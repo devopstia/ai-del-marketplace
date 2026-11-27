@@ -287,6 +287,13 @@
           "title": "Build an AI ops agent in n8n with tools, memory and guardrails",
           "short": "AI ops agent",
           "summary": "Ask \"why is payments slow?\" and let an n8n AI Agent check health, metrics, logs and the runbook with read-only tools. Risky actions become requests: a separate approval workflow restarts only after a human clicks."
+        },
+        {
+          "type": "article",
+          "key": "go-further-n8n",
+          "title": "Go further with n8n: the complete automation course",
+          "summary": "You have seen what n8n does for AI and DevOps. Here is what the dedicated n8n course adds, if you want to go deeper.",
+          "articleMd": "You have just used n8n to send deployment notifications from CI, follow pull requests in your team chat, summarise failures with AI and run an AI ops agent that asks before it acts. That is enough to start automating your own team's work.\n\nIf you want to go deeper, **AI-Powered DevOps Automation with n8n** is our complete course on the tool. It is optional: nothing in this masterclass depends on it.\n\n## What the complete n8n course adds\n- **Your own automation stack:** n8n and Mattermost with Docker Compose, locally or on an AWS VM built with Terraform.\n- **Alerts people trust:** Kubernetes crash loops, stuck rollouts and unschedulable pods, one clear message per problem, plus a daily health report.\n- **Incident management:** repeated alerts become one incident with a severity, escalation when nobody acknowledges, and a resolved message.\n- **Failing safely:** retries, fallback paths, error workflows and node-by-node debugging.\n- **Scheduled reports** your team reads every morning.\n- **n8n in production:** Postgres, queue mode with workers, the encryption key, backups, upgrades and rollback.\n- **Advanced patterns:** signed webhooks, idempotency, rate limits, pagination and loop guards.\n\nEvery hands-on lesson comes with its lab and a short quiz.\n\n[See the complete n8n course]({{course:n8n-automation}})"
         }
       ]
     },
@@ -339,6 +346,13 @@
           "title": "Managed AI or self-hosted: Bedrock, Foundry or Ollama",
           "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide.",
           "short": "Managed or self-hosted"
+        },
+        {
+          "type": "article",
+          "key": "continue-journey",
+          "title": "Continue your learning journey",
+          "summary": "Where to go from here: the AWS masterclass for multi-cloud AI, the complete n8n course for automation, and the free VS Code masterclass.",
+          "articleMd": "You can now build, secure and run AI systems on Azure: models, RAG, agents that fix real problems, MCP servers and AI in your pipelines. Here are three optional next steps, depending on where you want to grow.\n\n## Multi-cloud AI: AI for DevOps on AWS\nMany teams run on more than one cloud. The AWS masterclass builds the same kinds of systems with Amazon Bedrock, Knowledge Bases and AWS's identity and guardrail tools. The AI foundations are the same, so you can go straight to the hands-on modules.\n\n[See the AWS masterclass]({{course:ai-for-devops-aws}})\n\n## Automation: AI-Powered DevOps Automation with n8n\nThe complete n8n course goes far beyond the module you took here: Kubernetes alerts, incident management with escalation, scheduled reports and n8n in production.\n\n[See the n8n course]({{course:n8n-automation}})\n\n## Productivity: Visual Studio Code Masterclass for DevOps and AI (free)\nWork faster in the editor you use every day: remote development on cloud VMs, Docker, Kubernetes and Terraform tooling, and AI coding assistants.\n\n[See the VS Code masterclass]({{course:vscode-masterclass}})"
         }
       ]
     }

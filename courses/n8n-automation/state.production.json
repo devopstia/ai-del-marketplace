@@ -353,5 +353,7 @@
     }
   },
   "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c",
-  "articles": {}
+  "articles": {
+    "continue-journey": "db3b86ff-26da-4c8f-ac1b-cc20a34dcd48"
+  }
 }

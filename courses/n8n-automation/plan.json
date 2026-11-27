@@ -177,6 +177,13 @@
           "title": "Build an AI ops agent in n8n with tools, memory and guardrails",
           "short": "AI ops agent",
           "summary": "Ask \"why is payments slow?\" and let an n8n AI Agent check health, metrics, logs and the runbook with read-only tools. Risky actions become requests: a separate approval workflow restarts only after a human clicks."
+        },
+        {
+          "type": "article",
+          "key": "continue-journey",
+          "title": "Continue your learning journey: AI for DevOps on AWS and Azure",
+          "summary": "You can automate your team's work with n8n. The AI for DevOps masterclasses show you how to build the AI systems behind it, on AWS or Azure.",
+          "articleMd": "You can now run n8n in production and use it to watch your systems, manage incidents, report every morning and add AI that drafts while people decide.\n\nIf you want to build the AI side yourself, models, RAG, agents and MCP servers on a real cloud, the two **AI for DevOps masterclasses** are the next step. Each starts with the AI foundations and goes hands-on from there.\n\n## AI for DevOps on AWS: From Fundamentals to Production\nAmazon Bedrock chatbots and Knowledge Bases, AI agents that fix 502s, crash loops and Kubernetes workloads with your approval, your first MCP server, and AI in production on AWS.\n\n[See the AWS masterclass]({{course:ai-for-devops-aws}})\n\n## AI for DevOps on Azure: From Fundamentals to Production\nMicrosoft Foundry models and chat apps, RAG with Azure AI Search and Terraform, the same troubleshooting agents and MCP skills, and AI in production on Azure.\n\n[See the Azure masterclass]({{course:ai-for-devops-azure}})"
         }
       ]
     }

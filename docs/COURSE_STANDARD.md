@@ -79,6 +79,12 @@ previews and curriculum read well. Fix and look again before reporting.
 - Free courses are complete and genuinely useful on their own, never only an advert for paid ones. Paid courses carry
   substantial exclusive, cloud-specific labs and projects; shared foundation lessons don't count towards that.
 
+### 3d. A connected learning path (owner 2026-11-28)
+Courses recommend each other at natural end points (end of a course or of a module taken from another course), with
+a short "continue your learning journey" lesson: what the next course adds, 2–3 real projects from it, and a direct
+link (`{{course:<plan-slug>}}`). Optional and calm; never inside a demonstration, never for a course the student owns;
+every paid course stands on its own. The map of who recommends what: `courses/COURSE_CATALOG.md` › Learning path.
+
 No generic filler, no exaggeration, nothing the videos don't teach. If the owner wants a topic the content doesn't
 cover (e.g. more AI), say so, describe only what exists, and send the gap to the generation agent (§7).
 

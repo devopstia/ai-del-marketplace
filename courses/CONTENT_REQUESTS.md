@@ -99,6 +99,12 @@ Each lesson arrives on its own after QA (lab included); ignore a folder until GE
 | CR-047 | All four new courses | end of each module | Module assessments | GEN | 2026-11-27 | P2 | accepted | — | — |
 | CR-048 | AI for DevOps on AWS | Module 7 'AI agents for DevOps', after CR-025 | Multi-agent collaboration with human approval on AWS | GEN | 2026-11-27 | P1 | requested | — | — |
 | CR-049 | AI for DevOps on Azure | Module 7 'AI agents for DevOps', after CR-035 | Multi-agent collaboration with human approval on Azure | GEN | 2026-11-27 | P1 | requested | — | — |
+| CR-050 | n8n module in both masterclasses (end) | — | Short video: "Take your n8n automation skills to the next level" (recommends the complete n8n course) | GEN | 2026-11-28 | P2 | requested | `99-next-<course>/` in the course's source folder group | — |
+| CR-051 | Introduction to AI for DevOps (last lesson) | — | Short video: "Your next step in AI-powered DevOps" (recommends the AWS and Azure masterclasses and the n8n course) | GEN | 2026-11-28 | P1 | requested | `99-next-<course>/` in the course's source folder group | — |
+| CR-052 | AWS masterclass (last module) | — | Short video: "Building your multi-cloud AI and DevOps skills" (AWS → Azure masterclass, n8n, VS Code) | GEN | 2026-11-28 | P2 | requested | `99-next-<course>/` in the course's source folder group | — |
+| CR-053 | Azure masterclass (last module) | — | Short video: "Building your multi-cloud AI and DevOps skills" (Azure → AWS masterclass, n8n, VS Code) | GEN | 2026-11-28 | P2 | requested | `99-next-<course>/` in the course's source folder group | — |
+| CR-054 | n8n course (last lesson) | — | Short video: "From automation to AI systems: continue with AWS or Azure" (recommends both masterclasses) | GEN | 2026-11-28 | P2 | requested | `99-next-<course>/` in the course's source folder group | — |
+| CR-055 | VS Code masterclass (last lesson) | — | Short video: "Continue your AI learning journey" (free AI intro, then the masterclasses) | GEN | 2026-11-28 | P3 | requested | `99-next-<course>/` in the course's source folder group | — |
 
 ## Details
 
@@ -624,3 +630,14 @@ at recording time.
 - Deliver to: `videos/17-cloud-ai/<NN>-azure-multi-agent-live/`; manifest entry with position
 - Priority P1 · depends on: CR-035 · owner GEN · status requested
 - **Log:** 2026-11-27 UPLOAD: requested.
+
+### CR-050 … CR-055 Course recommendation videos (owner 2026-11-28, "Strategic Course Integration")
+- **Why:** courses form a connected learning path; at natural end points (end of a course, end of the n8n module in the
+  masterclasses) a short video introduces the related course. A text lesson with links is already live in each place
+  (key `go-further-n8n` / `next-steps` / `continue-journey`); the video goes **above** it in the same position.
+- **Deliverables per video:** 60–120 s, captions, a 1-slide PDF (no lab, no quiz); role `conclusion`; title as in the
+  register. Content: what the recommended course is, its educational value, 2–3 concrete projects from it (only what
+  that course really contains; see `courses/COURSE_CATALOG.md`), the technologies and skills, DEL branding and the
+  course's cover style, and a calm invitation ("you'll find it on DevOps Easy Learning"). No prices, no discounts, no
+  pressure, no claims about lessons not yet published. Never interrupt a technical demo: these are separate lessons.
+- **Placement:** after the course's last lesson (CR-051–055) or the n8n module's last lesson (CR-050).

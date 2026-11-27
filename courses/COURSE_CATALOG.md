@@ -294,3 +294,30 @@ CR-042–CR-046 onto the approved lessons (2026-11-27, below; GEN's numbering).
 - **12 · Your setup and real workflows**
    - *planned (CR-046): 12.1 Snippets, profiles and Settings Sync, 12.2 Capstone: fix a broken release in one editor, final assessment JSON*
    - *planned: CR-047 module assessments*
+
+
+## Learning path and cross-course recommendations (owner 2026-11-28)
+The courses form one path: **free courses** open the door, **masterclasses** are complete hands-on programmes, and
+**specialised courses** go deep on one technology. Every course ends with a "continue your learning journey" lesson
+(text now, a short video later: CR-050–055); the public course page and the student dashboard will show related
+courses once the platform feature ships (`feat/related-courses`).
+
+| Course | Recommends, in order | Where (live as text lessons) |
+|---|---|---|
+| Introduction to AI for DevOps (free) | AWS masterclass, Azure masterclass, n8n course | last lesson `next-steps` |
+| AI for DevOps on AWS | complete n8n course (after the n8n module); Azure masterclass (multi-cloud), n8n course, VS Code (free) | `go-further-n8n` (end of "Automate it with n8n"), `continue-journey` (last lesson) |
+| AI for DevOps on Azure | same, with the AWS masterclass | same |
+| AI-Powered DevOps Automation with n8n | AWS masterclass, Azure masterclass | `continue-journey` (last lesson) |
+| VS Code Masterclass (free) | free AI intro, then the AWS and Azure masterclasses | `continue-journey` (last lesson) |
+
+**Shared vs exclusive.** Shared into both masterclasses from n8n: 06 deployment notifications (CI/CD), 09 GitHub pull
+requests, 12 incident management, 17 AI summaries, 19 AI ops agent; planned: AI PR review (CR-006). Exclusive to the n8n
+course: the stack set-up and tour (01–05, 18), errors and retries (07), Kubernetes alerts (10), AWS automation (11,
+planned), scheduled reports (13), advanced patterns (15), n8n in production (16). AI foundations are shared by the free
+intro and both masterclasses; cloud labs are exclusive to their masterclass.
+
+**Rules.** Recommendations are optional, relevant and calm: at the end of a course or module, never inside a technical
+demonstration, never a course the student already owns (then "continue learning"). Every paid course delivers its own
+advertised outcomes; nothing essential is left out to sell another course. Links use `{{course:<plan-slug>}}` so they
+always resolve to the live course page. For every new course, decide what it recommends and what recommends it, and
+update this table.

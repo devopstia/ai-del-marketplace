@@ -156,5 +156,8 @@
     }
   },
   "courseId": "b9cb84d1-52e8-4188-a797-9488d0154b67",
-  "articles": {}
+  "articles": {
+    "go-further-n8n": "e532f240-ca1f-439c-ab0d-cd0580ba3cf2",
+    "continue-journey": "3df96c4b-8a90-480e-b2ca-4b07b829af8f"
+  }
 }
