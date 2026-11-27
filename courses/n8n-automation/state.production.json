@@ -2,7 +2,8 @@
   "sections": {
     "Getting started: n8n and Mattermost": "792c8169-27ac-46ff-9a8f-183df37a5974",
     "Core concepts and your first real automations": "482753d2-eaeb-4917-9b6b-663b6a071243",
-    "DevOps automations in practice": "af876583-3106-4ba7-b8d7-9fb177ba7620"
+    "DevOps automations in practice": "af876583-3106-4ba7-b8d7-9fb177ba7620",
+    "Advanced patterns and production": "e265270d-19d1-463e-b259-04abe97907a3"
   },
   "lessons": {
     "01-n1-n8n-mattermost-explained": "9ee48af5-2e7f-498f-b9f5-700a8e3a4278",
@@ -13,14 +14,27 @@
     "05-nt1-n8n-words": "c804ea13-5063-4132-8cb4-3d049dbddf6e",
     "06-n6-n8n-deploy-notifications-live": "afeda706-dcf4-4bd3-a41a-4b16d900270f",
     "07-n5-n8n-errors-retries-debugging-live": "614fdc73-24a5-4b2e-8019-f83fe4735f63",
-    "08-nt2-automation-chatops-words": "abf70e48-f337-4b78-9217-08d69058b1f9"
+    "08-nt2-automation-chatops-words": "abf70e48-f337-4b78-9217-08d69058b1f9",
+    "10-n10-n8n-kubernetes-alerts-live": "e79143c6-0460-4d33-9b06-69cb08b3e2de",
+    "12-n12-n8n-incident-management-live": "c7812ae2-2ac2-4624-987f-62858c9d598b",
+    "13-n13-n8n-scheduled-reports-live": "291a698c-5490-43fb-913b-ac460abce6ff",
+    "15-n15-n8n-advanced-design-live": "a925180e-1802-4368-b917-f11e571689ac",
+    "16-n16-n8n-production-live": "b2c1c8b0-7645-4b6d-b6dd-162f6b6a5150",
+    "17-n17-n8n-ai-assisted-live": "e66062c6-01b6-4cec-af96-7c0c23fcd70e"
   },
   "quizzes": {
     "04-n4-n8n-tour-first-workflow-live": "2de1a028-b05f-44b6-9db1-97d6401d823e",
     "18-n18-n8n-cloud-vm-live": "b170c997-d822-4656-9caf-1f83cab5d084",
     "05-nt1-n8n-words": "2404f55f-4e7e-4b8e-a1b8-5b7867e31225",
     "06-n6-n8n-deploy-notifications-live": "a0ca8d38-309f-44bc-ab92-8bd796d493dd",
-    "07-n5-n8n-errors-retries-debugging-live": "899172d6-c7b5-438f-979e-738c37e9138f"
+    "07-n5-n8n-errors-retries-debugging-live": "899172d6-c7b5-438f-979e-738c37e9138f",
+    "08-nt2-automation-chatops-words": "07181d78-f106-4191-8071-e9a8140b7335",
+    "10-n10-n8n-kubernetes-alerts-live": "007d61a3-643c-41d2-86f6-c6e459c786e7",
+    "12-n12-n8n-incident-management-live": "2cf4c3c2-0141-4aab-ae1f-3e69aa9d9491",
+    "13-n13-n8n-scheduled-reports-live": "f1d14b8e-6a8f-47e4-ab66-6e195cef23a2",
+    "15-n15-n8n-advanced-design-live": "499e2660-d8b0-4b46-b41d-4dd8919990df",
+    "16-n16-n8n-production-live": "a8f875cc-646d-49ae-9247-5f1a5fb6cce4",
+    "17-n17-n8n-ai-assisted-live": "58bda9e1-51af-4fba-b4c4-f956a2a55807"
   },
   "files": {
     "02bb67db5e467a0546b68cb9d7a0445074c5a0b0b62fb8ecae27b729476474ce": {
@@ -154,6 +168,126 @@
       "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/efecdcdd-361f-4357-91b5-21c98b746f8d/errors-retries-and-debugging-lab.zip",
       "name": "errors-retries-and-debugging-lab.zip",
       "at": "2026-11-27T02:44:22.673Z"
+    },
+    "53bdfac073da8a26232b52aba504b06105712af3ad7a16ebe39d944f8fe2f14e": {
+      "kind": "video",
+      "assetId": "6269a8bf-1f67-4435-b4d6-a0270b30eb6a",
+      "name": "automation-and-chatops-vocabulary.mp4",
+      "at": "2026-11-27T02:48:00.406Z"
+    },
+    "82b4017083a09181d4f0ae42f48c0f53d3e6f29d2bdfe2a1dd1cfa00c81ed73c": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/def0eaa0-d60d-40ec-8aaa-73cb1eaaec1f/automation-and-chatops-vocabulary-slides.pdf",
+      "name": "automation-and-chatops-vocabulary-slides.pdf",
+      "at": "2026-11-27T02:48:01.780Z"
+    },
+    "94ec68f588ad09f9688c6a169ed9787c1faf93c3bff4816c8a82b7becb0a7f9e": {
+      "kind": "video",
+      "assetId": "61ce5ae5-b2ea-484d-b91c-5c3cbb3f199d",
+      "name": "kubernetes-alerts-in-mattermost.mp4",
+      "at": "2026-11-27T02:49:08.506Z"
+    },
+    "e389e905832f0cdd8edbcf1440f3bd6b5fb5225ff074c2103790248fb98a3eff": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/633ab7c1-909c-4d2e-a628-da2a347fa2d1/kubernetes-alerts-in-mattermost-slides.pdf",
+      "name": "kubernetes-alerts-in-mattermost-slides.pdf",
+      "at": "2026-11-27T02:49:12.477Z"
+    },
+    "0775ea1520725eee46e85cf3a17bb4048041331e22f5d8a6b92d211a4dd67692": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/5ef7338c-cf7c-45cc-b230-80f8f8c755a5/kubernetes-alerts-in-mattermost-lab.zip",
+      "name": "kubernetes-alerts-in-mattermost-lab.zip",
+      "at": "2026-11-27T02:49:12.756Z"
+    },
+    "65eb2604044663f1d6d3c91ae5ce5d969b9a345a87e05ecdfa9910e7a15fb6fb": {
+      "kind": "video",
+      "assetId": "3e69a4a6-574d-4034-acff-569784e3a8ae",
+      "name": "incident-management-severity-escalation-and-resolution.mp4",
+      "at": "2026-11-27T02:49:49.587Z"
+    },
+    "2569f238798f0f3ff705ddd714b051afb19be43e678fd71bec30f5267ce48f44": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/71fdde46-7fac-44f4-bd13-6f8ab9a34f65/incident-management-severity-escalation-and-resolution-slides.pdf",
+      "name": "incident-management-severity-escalation-and-resolution-slides.pdf",
+      "at": "2026-11-27T02:49:50.957Z"
+    },
+    "dfcb00ca81de79264f924d7570f00f10d706c9167f1ed2577c6b66fbbecd45e7": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/2f84e6f8-110e-490d-8c53-e3302dc60fcf/incident-management-severity-escalation-and-resolution-lab.zip",
+      "name": "incident-management-severity-escalation-and-resolution-lab.zip",
+      "at": "2026-11-27T02:49:51.243Z"
+    },
+    "8ffefb8a2a81829f64ac7ef2b8e78e69042c48c59657712b590b146fe9085e65": {
+      "kind": "video",
+      "assetId": "dbf7ecab-eab3-4d4e-881c-6e2582d55fb3",
+      "name": "scheduled-reports-for-your-team.mp4",
+      "at": "2026-11-27T02:50:26.939Z"
+    },
+    "c9fc62573a31bf0342a38f8b500e04eff8a277252880c732eb17b18369c1bd38": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/01094297-b0d6-43c4-ae47-143d48e80901/scheduled-reports-for-your-team-slides.pdf",
+      "name": "scheduled-reports-for-your-team-slides.pdf",
+      "at": "2026-11-27T02:50:28.743Z"
+    },
+    "1befe11b2f03861b55c73ffd9a9d063c043ecbfd22ffa96598c016716fc17ddb": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/6d31b94b-d96f-401c-a521-43baa6a78526/scheduled-reports-for-your-team-lab.zip",
+      "name": "scheduled-reports-for-your-team-lab.zip",
+      "at": "2026-11-27T02:50:29.045Z"
+    },
+    "5ceaccdd500cb160f0b1ec7953144d98a5b6ba802fad0de34b0ec6c33cad60d7": {
+      "kind": "video",
+      "assetId": "d88bd4e1-b819-4bf1-be93-2ddd1501f222",
+      "name": "advanced-workflow-design.mp4",
+      "at": "2026-11-27T02:51:14.204Z"
+    },
+    "d20d8f4d4de051be460fb8679f2e546be8113abd6a4fa9155a67adce8e9749ce": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/0d653624-882f-420f-8c05-0ee0d701a1f6/advanced-workflow-design-slides.pdf",
+      "name": "advanced-workflow-design-slides.pdf",
+      "at": "2026-11-27T02:51:16.044Z"
+    },
+    "4d5c82aad62074f14fa7c759f533464a0610610e1e2eb0418641d5c4730c8c19": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/17dfd42a-3176-4252-9af5-c0669dfe1bcb/advanced-workflow-design-lab.zip",
+      "name": "advanced-workflow-design-lab.zip",
+      "at": "2026-11-27T02:51:16.326Z"
+    },
+    "874822d67639beff7de0829ce0b00459616df82d367b4ead4603c6aa93bcf3ad": {
+      "kind": "video",
+      "assetId": "63b60692-26c0-439c-8aec-6fec653723b0",
+      "name": "running-n8n-in-production.mp4",
+      "at": "2026-11-27T02:52:10.741Z"
+    },
+    "2dd8568ad1dc21ec53e6e5a85fe8502210912e9b8db46cb5ce75f8cc7bde0dbf": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/72550e43-c489-46b4-8a08-97f98d663ebe/running-n8n-in-production-slides.pdf",
+      "name": "running-n8n-in-production-slides.pdf",
+      "at": "2026-11-27T02:52:12.233Z"
+    },
+    "a6261d7ccd9d2ae13595322119271389bf723e0911af22007ca7469790752ea6": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/f0c193cd-1eb1-4564-8c2c-7d566a95b495/running-n8n-in-production-lab.zip",
+      "name": "running-n8n-in-production-lab.zip",
+      "at": "2026-11-27T02:52:12.717Z"
+    },
+    "c0fd399ce3fd3206e23409cccb70edac173b932b85b15bffb587c79e326f36ce": {
+      "kind": "video",
+      "assetId": "d2b35383-c9cd-4c2c-b095-539002d1655f",
+      "name": "ai-assisted-workflows-safely.mp4",
+      "at": "2026-11-27T02:53:12.948Z"
+    },
+    "f93087173c03973251bf2897e501dc27de9e428f5bcd1dd405d5536582a7c5cc": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/80b501f9-c384-45d0-ad53-11df8ee6c352/ai-assisted-workflows-safely-slides.pdf",
+      "name": "ai-assisted-workflows-safely-slides.pdf",
+      "at": "2026-11-27T02:53:15.245Z"
+    },
+    "5a66b130b58263b67d993d2f3cd4498576725a8edfcb01057eb2ff53069da917": {
+      "kind": "resource",
+      "storageKey": "instructors/0f48eeb4-08ef-4449-8f4d-0d4e8b4107fa/courses/bd30f93e-293d-42b4-89b8-121f1826531c/resources/791c5fec-b8fb-4851-8c71-80acfffa6f98/ai-assisted-workflows-safely-lab.zip",
+      "name": "ai-assisted-workflows-safely-lab.zip",
+      "at": "2026-11-27T02:53:15.518Z"
     }
   },
   "courseId": "bd30f93e-293d-42b4-89b8-121f1826531c"
