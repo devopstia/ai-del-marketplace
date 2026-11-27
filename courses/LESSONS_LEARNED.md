@@ -3,6 +3,24 @@
 What the Course Upload and Publishing Agent learned on each course (skill: `.claude/skills/del-course-publisher`).
 Read before every upload; add to it after every upload. Newest first.
 
+## 2026-11-26 (later): production profile, quizzes, monitoring
+- **One plan, two environments:** `environments.staging/production` hold the API and the price (staging $15, production
+  $1 for the owner's live purchase test); `--env production` refuses unless `publisher.config.json` says
+  `productionAllowed: true`. Each environment has its own state file, so ids never mix.
+- **Check the title against the content.** The owner asked for "AI-Powered…"; only lesson 17 is AI. The description
+  says exactly what lesson 17 does, and the missing AI lessons went to GENERATION_FEEDBACK. Never advertise a topic
+  that no video covers (Slack, PR reviews and AI agents weren't).
+- **Quizzes come from the captions**, joined across cues. Some videos say the options in words and then in symbols
+  (the cron question in 13): use the last set. "Pause and think" questions have their options only on slide images:
+  skip and report them, never invent options. 48 of 60 questions were imported.
+- **New folders appear without warning** (18 arrived mid-session). `del-watch-courses` finds them and writes an inbox
+  for review; the folder number isn't always the right position: read the captions first.
+- **Changes to PowerPoint or thumbnails never trigger an upload**; the watcher hashes files only when size or mtime moved.
+- **Never recreate a lesson to move it**: `PUT curriculum` with the existing ids keeps progress, completions and quiz
+  results. The arrange helper keeps unknown lessons at the end and reports them.
+- Lab ZIPs for cloud lessons: check for `.tfstate`, `.terraform/`, `keys/` and `*.pem` too (lesson 18 was clean:
+  `.gitignore` covers them).
+
 ## 2026-11-26: DevOps Automation with n8n (first course)
 - **Read captions, not file names.** Each lesson's opening and closing lines say what it teaches and what it promises
   ("download the lab"): that's how missing labs were found. Lab READMEs give the real course name ("Course: DevOps

@@ -17,3 +17,8 @@ apps/web/playwright-report/
 *.tfstate.*
 *.tfplan
 .claude/worktrees/
+
+# Course watcher (del-watch-courses): per-machine bookkeeping
+courses/*/seen.*.json
+courses/*/inbox.json
+courses/.watch.*.lock

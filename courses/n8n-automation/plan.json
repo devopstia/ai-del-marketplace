@@ -5,34 +5,36 @@
   "instructorName": "DevOps Easy Learning",
   "sourceDir": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos/18-automation-n8n",
   "course": {
-    "title": "DevOps Automation with n8n",
-    "subtitle": "Self-host n8n and Mattermost, then build the automations DevOps teams rely on: deployment notifications, Kubernetes alerts, incidents, scheduled reports and AI summaries.",
-    "description": "Your systems produce events all day: a website goes down, a deployment finishes, a report is due. In this course you automate the work around those events with **n8n**, and deliver the result where your team already talks: **Mattermost**.\n\nYou start from zero. You deploy n8n and Mattermost yourself with Docker Compose, create a channel and its incoming webhook, and build your first workflows by hand. Then you build the automations DevOps teams actually use: green and red deployment notifications from your CI pipeline, workflows that fail safely with retries and error workflows, Kubernetes alerts without duplicate floods, incident management with escalation, and scheduled reports that answer the same morning questions for you.\n\nThe last part is about running it for real: advanced workflow patterns (sub-workflows, signed webhooks, idempotency, rate limits, pagination, loop guards), n8n in production (Postgres, queue mode with workers, the encryption key, backups, upgrades and rollback), and adding AI summaries safely, where the AI drafts and a human decides.\n\n**How each lesson works.** Every idea starts with an everyday example, then you see it running live. Each hands-on lesson comes with its slides (PDF) and a lab (ZIP) with the Compose files, scripts and workflows used in the video, so you can rebuild everything on your own computer or a cloud VM. Two vocabulary lessons explain the words you'll meet, one at a time.",
+    "title": "AI-Powered DevOps Automation with n8n",
+    "subtitle": "Self-host n8n and Mattermost, automate deployments, Kubernetes alerts, incidents and reports, then add AI summaries safely: redacted logs, labelled drafts and a human who decides.",
+    "description": "Your systems produce events all day: a deployment fails at 3 a.m., a pod keeps crashing, a report is due. In this course you automate the work around those events with **n8n**, deliver the result where your team already talks (**Mattermost**), and add **AI** where it genuinely helps: a model that reads the log and drafts a summary, while a person stays in charge.\n\n## What you'll build\n- A self-hosted **n8n + Mattermost** stack with Docker Compose, on your computer or on an **AWS EC2 VM created with Terraform** and reached through an SSH tunnel.\n- **Deployment notifications** from a CI pipeline (with a GitHub Actions example): green or red in the team channel, protected by a secret token.\n- Workflows that **fail safely**: retries, a fallback path, an error workflow that alerts the team, and node-by-node debugging.\n- **Kubernetes alerts** for crash loops, stuck rollouts and unschedulable pods, one message per problem, plus a daily namespace health report.\n- **Incident management**: repeated alerts become one incident with a severity, escalation when nobody acknowledges, and a resolved message.\n- **Scheduled reports** that collect deployments, failures and service status every morning.\n- **AI-assisted workflows** with OpenAI: a summary of a failed deployment (what failed, the likely cause, what to check), an error explainer, an incident summary and an AI-written morning report. Secrets, IP addresses and e-mails are redacted before anything is sent, logs are treated as untrusted text (prompt injection), every answer is labelled as a draft with its token cost, and a human reviews it. The AI never changes anything.\n\n## Who this course is for\nDevOps engineers, SREs and developers who are comfortable with a terminal and Docker and want to automate the notifications, alerts and reports around their systems, and to use AI in those workflows responsibly.\n\n## Tools and technologies\nn8n, Mattermost, Docker Compose, PostgreSQL, Redis (queue mode), Kubernetes (minikube and kubectl), Alertmanager-style alerts, GitHub Actions (example pipeline), webhooks and HMAC signatures, cron schedules, OpenAI (n8n's AI node; Amazon Bedrock and Azure AI Foundry are explained as alternatives), Terraform and AWS EC2.\n\n## How the course is organised\nFour sections, from your first workflow to production:\n1. **Getting started**: what n8n and Mattermost do, deploy both, channels and incoming webhooks, your first workflows, and the same lab on a cloud VM.\n2. **Core concepts and your first real automations**: n8n vocabulary, deployment notifications, errors, retries and debugging.\n3. **DevOps automations in practice**: automation and ChatOps vocabulary, Kubernetes alerts, incident management and scheduled reports.\n4. **Advanced patterns and production**: sub-workflows, signed webhooks, idempotency, rate limits, pagination and loop guards; n8n in production (Postgres, queue mode with workers, the encryption key, backups, upgrades and rollback); and AI-assisted workflows, safely.\n\nEvery idea starts with an everyday example, then you see it running live. Each hands-on lesson comes with its slides (PDF) and a lab (ZIP) with the Compose files, scripts and workflows from the video, and most lessons end with a short quiz with the answers explained.\n\n## Prerequisites\n- Comfortable with a terminal and basic Docker commands.\n- Docker with the Compose plugin, or a cloud VM where you can install it (the lab needs about 4 GB of free memory).\n- For the Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster.\n- For the AI lesson: your own OpenAI API key, with a monthly budget limit set.\n- For the cloud VM lesson (optional): an AWS account with a budget alarm, the AWS CLI and Terraform 1.5 or newer. A one-hour lab costs a few cents; you delete everything with terraform destroy.",
     "level": "intermediate",
     "language": "en",
     "categorySlug": "automation-n8n",
     "cover": "suggested",
     "objectives": [
-      "Deploy n8n and Mattermost with Docker Compose and keep their data when containers are rebuilt",
+      "Deploy n8n and Mattermost with Docker Compose, locally or on an AWS EC2 VM created with Terraform, and keep their data",
       "Create Mattermost channels and incoming webhooks, and keep webhook URLs and secrets out of your workflows",
       "Build n8n workflows with triggers, nodes, expressions and executions, and publish them to run on their own",
       "Send green and red deployment notifications from a CI pipeline through a token-protected webhook",
       "Make workflows fail safely with retries, fallback paths, error workflows and step-by-step debugging",
       "Watch a Kubernetes namespace and post one clear alert per problem, without duplicate floods",
       "Turn alerts into incidents with severity, escalation, acknowledgement and resolution",
-      "Schedule reports that collect deployments, failures and service status and post a summary every morning",
+      "Schedule reports that collect deployments, failures and service status every morning",
       "Apply sub-workflows, signed webhooks, idempotency, rate limits, pagination and loop guards",
       "Run n8n in production with Postgres, queue mode, the encryption key, backups, upgrades and rollback",
-      "Add AI summaries to workflows safely: sensitive data removed first, and a human always decides"
+      "Add AI summaries of failed deployments, errors and incidents with OpenAI: redacted input, labelled drafts, human review",
+      "Defend AI workflows against secret leaks and prompt injection, and keep an eye on token costs"
     ],
     "requirements": [
       "Comfortable with a terminal and basic Docker commands",
-      "Docker with the Compose plugin on your computer, or a cloud VM where you can install it",
+      "Docker with the Compose plugin on your computer (about 4 GB of free memory), or a cloud VM where you can install it",
       "For the Kubernetes lesson: minikube and kubectl (the lab explains both), or your own EKS or AKS cluster",
-      "For the AI lesson: your own OpenAI API key with a monthly budget limit set"
+      "For the AI lesson: your own OpenAI API key with a monthly budget limit set",
+      "Optional, for the cloud VM lesson: an AWS account with a budget alarm, the AWS CLI and Terraform 1.5 or newer"
     ],
-    "priceCents": 1500,
-    "taughtBy": "Tia"
+    "taughtBy": "Tia",
+    "quizzes": "from-captions"
   },
   "sections": [
     {
@@ -41,8 +43,8 @@
         {
           "folder": "01-n1-n8n-mattermost-explained",
           "title": "What n8n and Mattermost do for a DevOps team",
-          "preview": true,
-          "summary": "Triggers, workflows, channels and incoming webhooks explained with one everyday example, and why DevOps teams self-host n8n and Mattermost together."
+          "summary": "Triggers, workflows, channels and incoming webhooks explained with one everyday example, and why DevOps teams self-host n8n and Mattermost together.",
+          "preview": true
         },
         {
           "folder": "02-n2-deploy-n8n-mattermost-live",
@@ -58,6 +60,11 @@
           "folder": "04-n4-n8n-tour-first-workflow-live",
           "title": "Tour n8n and build your first workflows",
           "summary": "Every n8n menu and settings page, then two workflows that post real messages to Mattermost: run them by hand, publish them, fix a real error and read every run in Executions."
+        },
+        {
+          "folder": "18-n18-n8n-cloud-vm-live",
+          "title": "Run the automation lab on a cloud VM with Terraform",
+          "summary": "Create an AWS EC2 VM with Terraform, start the same n8n and Mattermost lab on it and reach it through an SSH tunnel. Only SSH from your IP is open; then terraform destroy and check that nothing is left."
         }
       ]
     },
@@ -67,13 +74,13 @@
         {
           "folder": "05-nt1-n8n-words",
           "title": "n8n vocabulary: workflows, triggers, nodes, items and executions",
-          "preview": true,
           "summary": "Workflow, trigger, node, item, expression, execution and publish, one word at a time: an everyday example, an animation, then the real n8n screen."
         },
         {
           "folder": "06-n6-n8n-deploy-notifications-live",
           "title": "Deployment notifications from your CI pipeline",
-          "summary": "A CI pipeline calls an n8n webhook after each deployment and the team sees a green or red message in Mattermost, protected by a token so forged calls get a 401."
+          "summary": "A CI pipeline calls an n8n webhook after each deployment and the team sees a green or red message in Mattermost, protected by a token so forged calls get a 401.",
+          "preview": true
         },
         {
           "folder": "07-n5-n8n-errors-retries-debugging-live",
@@ -127,5 +134,20 @@
         }
       ]
     }
-  ]
+  ],
+  "environments": {
+    "staging": {
+      "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+      "priceCents": 1500
+    },
+    "production": {
+      "apiUrl": "https://ai-devopseasylearning.com/api",
+      "priceCents": 100
+    }
+  },
+  "intro": {
+    "folderPattern": "^00-",
+    "section": 0,
+    "promo": true
+  }
 }
