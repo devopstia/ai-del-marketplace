@@ -14,7 +14,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve } from 'node:path';
-import { ApiError, DelClient, SessionClient, type FileRecord, type FileStore, type PublisherClient } from './client.js';
+import { ApiError, DelClient, isVideo, SessionClient, type FileRecord, type FileStore, type PublisherClient, type UploadResult } from './client.js';
 
 // ---------- plan ----------
 export type LessonRole = 'intro' | 'lesson' | 'vocabulary' | 'project' | 'conclusion';
@@ -24,6 +24,8 @@ export type Env = 'staging' | 'production';
 /** Per-environment settings; the chosen one overrides `apiUrl` and `course.priceCents`. */
 export interface EnvProfile { apiUrl: string; priceCents?: number }
 export interface CoursePlan {
+  /** Catalogue courses: extra source groups to watch for new lessons (folders `<group>/<lesson>` under sourceDir). */
+  watchGroups?: string[];
   /** Default environment when `--env` isn't given. */
   environment: Env;
   apiUrl: string;
@@ -284,9 +286,65 @@ export function stateFileStore(state: { files?: Record<string, FileRecord> }, sa
   };
 }
 
+/**
+ * Shared media map (owner 2026-11-27): one file per environment, `courses/media.<env>.json`, keyed by sha256. Every plan
+ * consults it first, so a video or file that serves several courses of the account is uploaded once and attached to each
+ * course's own lesson (each course keeps its own lessons, quizzes, progress and access).
+ */
+export interface MediaRecord extends FileRecord { status?: string; courses?: string[] }
+export interface MediaMap { files: Record<string, MediaRecord> }
+export async function loadMediaMap(path: string): Promise<{ map: MediaMap; save: () => Promise<void> }> {
+  const map: MediaMap = existsSync(path) ? JSON.parse(await readFile(path, 'utf8')) : { files: {} };
+  map.files ??= {};
+  return { map, save: () => writeFile(path, JSON.stringify(map, null, 2) + '\n') };
+}
+
+/** Session-mode store that also reads and writes the shared media map. */
+export function layeredStore(course: FileStore, media: MediaMap, saveMedia: () => Promise<void>, courseSlug: string): FileStore {
+  return {
+    get: (sha) => course.get(sha) ?? media.files[sha],
+    set: async (sha, r) => { await course.set(sha, r); media.files[sha] = { ...media.files[sha], ...r, courses: [...new Set([...(media.files[sha]?.courses ?? []), courseSlug])] }; await saveMedia(); },
+    knowsAsset: (id) => course.knowsAsset(id) || Object.values(media.files).some((f) => f.assetId === id),
+  };
+}
+
+/**
+ * Upload through the shared media map: a checksum already in the map is reused (no upload); a new one is uploaded and
+ * recorded. Works for both clients (agent and session).
+ */
+export async function uploadShared(del: Pick<PublisherClient, 'upload' | 'sha256'>, media: MediaMap, saveMedia: () => Promise<void>, courseSlug: string, path: string, opts: { courseId?: string; name?: string; existingAssetId?: string | null }): Promise<UploadResult> {
+  const sha = await del.sha256(path);
+  const known = media.files[sha];
+  const kind = isVideo(path) ? 'video' : 'resource';
+  if (known && known.kind === kind && (known.assetId || known.storageKey)) {
+    if (!known.courses?.includes(courseSlug)) { known.courses = [...(known.courses ?? []), courseSlug]; await saveMedia(); }
+    return { file: path, kind, duplicate: true, resumed: false, assetId: known.assetId, storageKey: known.storageKey, partsUploaded: 0 };
+  }
+  const r = await del.upload(path, opts);
+  media.files[sha] = { ...(media.files[sha] ?? {}), kind, assetId: r.assetId, storageKey: r.storageKey, name: opts.name ?? basename(path), at: new Date().toISOString(), ...(r.status ? { status: r.status } : {}), courses: [...new Set([...(media.files[sha]?.courses ?? []), courseSlug])] };
+  await saveMedia();
+  return r;
+}
+
+/**
+ * Lesson folders a plan can draw from, relative to `sourceDir`. One-folder courses (n8n) use the folder's own lesson
+ * folders; catalogue courses (owner 2026-11-27) set `sourceDir` to the videos root and name lessons `<group>/<lesson>`,
+ * so only the groups the plan uses (plus `watchGroups`) are listed, never the whole root.
+ */
+export async function lessonFolders(plan: Pick<CoursePlan, 'sourceDir' | 'sections'> & { watchGroups?: string[] }): Promise<string[]> {
+  const planned = plan.sections.flatMap((s) => s.lessons.map((l) => l.folder));
+  const nested = planned.some((f) => f.includes('/')) || !!plan.watchGroups?.length;
+  const dirs = async (d: string) => existsSync(d) ? (await readdir(d, { withFileTypes: true })).filter((e) => e.isDirectory()).map((e) => e.name).sort() : [];
+  if (!nested) return dirs(plan.sourceDir);
+  const groups = [...new Set([...planned.filter((f) => f.includes('/')).map((f) => f.split('/')[0]!), ...(plan.watchGroups ?? [])])].sort();
+  const out: string[] = [];
+  for (const g of groups) for (const d of await dirs(join(plan.sourceDir, g))) out.push(`${g}/${d}`);
+  return out;
+}
+
 type Log = (msg: string) => void;
 
-export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number } = {}) {
+export async function publish(planPath: string, opts: { dryRun?: boolean; waitMinutes?: number; token?: string; log?: Log; fetchImpl?: typeof fetch; env?: Env; configPath?: string; /** 'session' = the owner's signed-in super admin session as DEL Studio (DEL_SESSION_JAR), no agent token. */ auth?: AuthMode; jarPath?: string; heartbeatMs?: number; /** Shared media map (default courses/media.<env>.json). */ mediaPath?: string } = {}) {
   const log = opts.log ?? ((m: string) => console.log(m));
   const plan = forEnv(JSON.parse(await readFile(planPath, 'utf8')) as CoursePlan, opts.env);
   const planDir = dirname(resolve(planPath));
@@ -295,6 +353,8 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   const state: State = existsSync(statePath) ? JSON.parse(await readFile(statePath, 'utf8')) : { sections: {}, lessons: {} };
   state.quizzes ??= {};
   const saveState = () => writeFile(statePath, JSON.stringify(state, null, 2) + '\n');
+  const courseSlug = basename(planDir);
+  const media = await loadMediaMap(opts.mediaPath ?? join(planDir, '..', `media.${plan.environment}.json`));
   const report: string[] = [];
   const issues: string[] = [];
   const counts = { lessons: 0, videos: 0, videoSec: 0, slides: 0, labs: 0, captions: 0, quizzes: 0, quizQuestions: 0, uploaded: 0, reused: 0, failed: 0 };
@@ -313,7 +373,9 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   const { manifest, problems: mprob } = await readManifest(plan.sourceDir);
   warnings.push(...mprob.map((p) => `manifest unreadable: ${p}`), ...manifestNotes(plan, manifest));
   const planned = new Set(plan.sections.flatMap((s) => s.lessons.map((l) => l.folder)));
-  const unplanned = (await readdir(plan.sourceDir, { withFileTypes: true })).filter((e) => e.isDirectory() && !planned.has(e.name)).map((e) => e.name);
+  // Catalogue plans pick lessons from shared groups on purpose: only their `watchGroups` are reported as unplanned.
+  const nestedPlan = [...planned].some((f) => f.includes('/'));
+  const unplanned = (nestedPlan ? (plan.watchGroups?.length ? await lessonFolders({ sourceDir: plan.sourceDir, sections: [], watchGroups: plan.watchGroups }) : []) : await lessonFolders(plan)).filter((f) => !planned.has(f));
   unplanned.forEach((d) => issues.push(`folder not in the plan (not uploaded): ${d}`));
   log(`Inventory: ${planned.size} lessons in ${plan.sections.length} sections; ${issues.length} issue(s).`);
   for (const [k, f] of inventory) log(`  ${k}: video ${f.video ? 'yes' : 'NO'}, captions ${f.captions ? 'yes' : 'no'}, slides ${f.slides ? 'yes' : 'no'}, lab ${f.lab ? 'yes' : 'no'}${f.skipped.length ? `; skipped ${f.skipped.map((x) => x.file.replace(k, '…')).join(', ')}` : ''}`);
@@ -344,7 +406,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   if (auth === 'session') {
     const jarPath = opts.jarPath ?? process.env.DEL_SESSION_JAR ?? '';
     if (!jarPath || !existsSync(jarPath)) throw new Error('Session mode needs DEL_SESSION_JAR (the cookie jar from `! scripts/del-signin.sh`).');
-    del = new SessionClient(plan.apiUrl, await readFile(jarPath, 'utf8'), [plan.sourceDir], stateFileStore(state, saveState), opts.fetchImpl, 1000, opts.heartbeatMs);
+    del = new SessionClient(plan.apiUrl, await readFile(jarPath, 'utf8'), [plan.sourceDir], layeredStore(stateFileStore(state, saveState), media.map, media.save, courseSlug), opts.fetchImpl, 1000, opts.heartbeatMs);
   } else {
     const token = opts.token ?? process.env.DEL_AGENT_TOKEN ?? '';
     del = new DelClient(plan.apiUrl, token, [plan.sourceDir], opts.fetchImpl);
@@ -412,7 +474,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
 
       // Video (checksum de-duplication makes a re-run cheap).
       try {
-        const v = await del.upload(files.video!, { courseId, name: `${slug(lp.title)}${extname(files.video!)}`, existingAssetId: lec.videoAssetId });
+        const v = await uploadShared(del, media.map, media.save, courseSlug, files.video!, { courseId, name: `${slug(lp.title)}${extname(files.video!)}`, existingAssetId: lec.videoAssetId });
         if (v.duplicate) counts.reused++; else counts.uploaded++;
         if (lec.videoAssetId !== v.assetId) patch.videoAssetId = v.assetId;
         counts.videos++;
@@ -430,7 +492,7 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
         if (!path) continue;
         if (lec.resources.some((r) => r.title === title)) { counts[kind]++; continue; }
         try {
-          const r = await del.upload(path, { courseId, name: `${slug(lp.title)}-${suffix}${extname(path)}` });
+          const r = await uploadShared(del, media.map, media.save, courseSlug, path, { courseId, name: `${slug(lp.title)}-${suffix}${extname(path)}` });
           if (r.duplicate) counts.reused++; else counts.uploaded++;
           await del.call('POST', `/courses/${courseId}/lectures/${lec.id}/resources`, { title, storageKey: r.storageKey });
           counts[kind]++;
@@ -484,12 +546,13 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
   }
 
   // 6. Cover from the platform templates (never a video frame).
-  if (plan.course.cover && (!c.coverTemplateId || (plan.course.cover !== 'suggested' && plan.course.cover !== c.coverTemplateId))) {
-    const t = await del.call<{ templates: { id: string; name?: string; suggested?: boolean }[] }>('GET', `/courses/${courseId}/covers`);
+  // `cover` is "suggested", a template id, or a template key such as "blueprint-aws" (the catalog family, 2026-11-27).
+  if (plan.course.cover && (!c.coverTemplateId || plan.course.cover !== 'suggested')) {
+    const t = await del.call<{ templates: { id: string; key?: string; name?: string; suggested?: boolean }[] }>('GET', `/courses/${courseId}/covers`);
     const items = t.templates ?? [];
-    const pick = plan.course.cover === 'suggested' ? (items.find((x) => x.suggested) ?? items[0]) : items.find((x) => x.id === plan.course.cover);
-    if (pick) { await del.call('PUT', `/courses/${courseId}/cover`, { templateId: pick.id }); log(`Cover template ${pick.name ?? pick.id}`); }
-    else issues.push('no cover template found');
+    const pick = plan.course.cover === 'suggested' ? (items.find((x) => x.suggested) ?? items[0]) : items.find((x) => x.id === plan.course.cover || x.key === plan.course.cover);
+    if (!pick) issues.push(`no cover template found: ${plan.course.cover}`);
+    else if (pick.id !== c.coverTemplateId) { await del.call('PUT', `/courses/${courseId}/cover`, { templateId: pick.id }); log(`Cover template ${pick.name ?? pick.id}`); }
   }
 
   // 7. Wait for video processing, then validate.
@@ -498,6 +561,10 @@ export async function publish(planPath: string, opts: { dryRun?: boolean; waitMi
     c = await detail();
     const vids = c.sections.flatMap((s) => s.lectures).map((l) => l.video).filter((v): v is NonNullable<Lecture['video']> => !!v);
     const pending = vids.filter((v) => v.status !== 'ready' && v.status !== 'failed');
+    // Keep the shared media map's processing status current, so other plans know a shared video is ready.
+    let mediaChanged = false;
+    for (const v of vids) for (const rec of Object.values(media.map.files)) if (rec.assetId === v.id && rec.status !== v.status) { rec.status = v.status; mediaChanged = true; }
+    if (mediaChanged) await media.save();
     if (!pending.length || Date.now() > deadline) {
       counts.videoSec = vids.filter((v) => v.status === 'ready').reduce((n, v) => n + (v.durationSec || 0), 0);
       vids.filter((v) => v.status === 'failed').forEach((v) => issues.push(`video ${v.id} failed processing`));

@@ -1,0 +1,279 @@
+{
+  "environment": "staging",
+  "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+  "provider": "DevOps Easy Learning",
+  "instructorName": "DevOps Easy Learning",
+  "sourceDir": "/mnt/c/Users/tiaje/Dropbox/AI-VIDEOS/ai-devops/videos",
+  "course": {
+    "title": "AI for DevOps on Azure: From Fundamentals to Production",
+    "subtitle": "Deploy models in Microsoft Foundry, build RAG with Azure AI Search and run troubleshooting agents, with Terraform, Docker, Entra ID and a clean exit every time.",
+    "description": "On Azure, an AI feature is a model deployment, a search index, an identity, a quota and a bill. This course teaches you to build all of it and run it like the rest of your platform.\n\n## What you'll build\n- **Your first Foundry model:** resources, a deployment and a call from code, with keys kept out of the code.\n- **A full-stack AI chat app:** React, Express and nginx in Docker Compose against a Microsoft Foundry model, then the same with Terraform.\n- **A RAG system on Azure:** Blob Storage, Azure AI Search and a Foundry model, created with Terraform, answering with sources and refusing what the documents don't cover.\n- **A self-hosted RAG stack** with per-user permissions and observability, to compare with the managed version.\n- **Troubleshooting agents** that ask for approval before every fix: Docker skill agents and a Kubernetes doctor that runs on AKS.\n- **Your own MCP server** in Python, connected to real AI agents.\n\n## Why this course\n- **Every lab runs for real** in your own Azure subscription with a budget alert first, and you delete exactly what you created.\n- **Built for operations:** Entra ID over keys, content filters on, quotas and model retirements planned for.\n- **Concepts first, in plain words,** then the Azure portal and code.\n- **Labs and quizzes** for every hands-on lesson.\n\n## Who it's for\nDevOps, cloud and platform engineers who know Azure basics and Docker, and want to build, secure and operate AI applications on Azure.",
+    "level": "intermediate",
+    "language": "en",
+    "categorySlug": "cloud-ai",
+    "cover": "blueprint-azure",
+    "taughtBy": "Tia",
+    "quizzes": "from-captions",
+    "objectives": [
+      "Explain models, tokens, context windows, hallucinations and agents well enough to design AI features",
+      "Navigate the Azure AI ecosystem and choose between Microsoft Foundry, Azure AI Search and task services",
+      "Deploy a model in Microsoft Foundry and call it from an application without exposing keys",
+      "Deploy a containerised AI chat app with Docker Compose and Terraform",
+      "Build a RAG system with Blob Storage, Azure AI Search and a Foundry model that cites its sources",
+      "Build troubleshooting agents that propose fixes, wait for approval, verify and report, on AKS or locally",
+      "Write an MCP server and connect AI agents to it safely",
+      "Operate AI in production: versions, evaluation, freshness, prompt injection, cost and least privilege"
+    ],
+    "requirements": [
+      "An Azure subscription where you can create resource groups, with a budget alert",
+      "Docker with the Compose plugin",
+      "Basic Terraform and command-line experience",
+      "Python or JavaScript reading skills for the labs (no ML background needed)"
+    ],
+    "priceCents": 9999
+  },
+  "sections": [
+    {
+      "title": "AI foundations for DevOps",
+      "lessons": [
+        {
+          "folder": "02-ai-foundations/01-tm1-big-words",
+          "title": "AI, machine learning, deep learning and generative AI",
+          "short": "The big words",
+          "summary": "The big words, one at a time: artificial intelligence, machine learning, deep learning, neural networks, generative and predictive AI, and where you meet each one as a DevOps engineer."
+        },
+        {
+          "folder": "02-ai-foundations/04-tm4-talking-to-a-model",
+          "title": "Prompts, tokens, context windows and temperature",
+          "short": "Talking to a model",
+          "summary": "The words every model call uses: prompt, system prompt, tokens, context window, temperature, max tokens, streaming and structured output, and how each changes the answer and the bill."
+        },
+        {
+          "folder": "02-ai-foundations/05-tm5-answer-quality",
+          "title": "Hallucinations, grounding and judging AI answers",
+          "short": "Answer quality",
+          "summary": "Fluent is not correct. Learn hallucination, grounding, citations, groundedness, evaluation and the golden set, and how to measure whether an AI answer can be trusted."
+        },
+        {
+          "folder": "02-ai-foundations/10-tm10-agent-words",
+          "title": "AI agents: tools, the agent loop, memory and guardrails",
+          "short": "Agent words",
+          "summary": "A chatbot answers, an agent acts. Tools, function calling, MCP, the agent loop, memory, multiple agents, the human in the loop and guardrails, with the DevOps limits that keep agents safe."
+        }
+      ]
+    },
+    {
+      "title": "The Azure AI services",
+      "lessons": [
+        {
+          "folder": "17-cloud-ai/02-azure-ai-services-map",
+          "title": "The Azure AI services map",
+          "short": "Azure AI map",
+          "summary": "The whole Azure AI ecosystem, including the recent renames: what each service does, how they work together, a DevOps example of each and where to find them in the portal."
+        },
+        {
+          "folder": "17-cloud-ai/03-choosing-ai-service",
+          "title": "Choosing the right AI service on AWS or Azure",
+          "short": "Choosing a service",
+          "summary": "A few questions that pick the right service for a job, real DevOps scenarios, and the traps that cost money: task service, model platform or your own model."
+        },
+        {
+          "folder": "17-cloud-ai/11-azure-ai-foundry-explained",
+          "title": "Microsoft Foundry explained",
+          "short": "Foundry explained",
+          "summary": "Microsoft's platform for models and agents: resources, projects and deployments, Entra ID authentication, quotas, costs, content filters and model retirements. The video calls it Azure AI Foundry; Microsoft has since renamed it Microsoft Foundry.",
+          "preview": true
+        }
+      ]
+    },
+    {
+      "title": "Getting started with Microsoft Foundry",
+      "lessons": [
+        {
+          "folder": "16-cloud-labs/03-azure-foundry-model-live",
+          "title": "Deploy your first model in Microsoft Foundry",
+          "short": "First Foundry model",
+          "summary": "Give an AI ops assistant its brain on Azure: create the resources in the portal, deploy and test a model, call it from code, keep keys out of the code, then delete the resource group. Microsoft has since renamed it Microsoft Foundry."
+        }
+      ]
+    },
+    {
+      "title": "AI applications on Azure",
+      "lessons": [
+        {
+          "folder": "16-cloud-labs/05-foundry-chat-live",
+          "title": "Deploy a full-stack AI chat app on Microsoft Foundry",
+          "short": "Foundry chat app",
+          "summary": "A React front end, an Express back end and nginx in Docker Compose, talking to a model you deploy in Microsoft Foundry: the key stays on the server, tested in the browser, built again with Terraform.",
+          "preview": true
+        }
+      ]
+    },
+    {
+      "title": "Retrieval-Augmented Generation on Azure",
+      "lessons": [
+        {
+          "folder": "02-ai-foundations/06-tm6-rag-words-preparing",
+          "title": "Preparing knowledge for RAG: parsing, chunks and indexing",
+          "short": "Preparing knowledge",
+          "summary": "Follow one question through the first phase of RAG: the corpus, parsing, metadata, chunks and overlap, ingestion and indexing, and the first thing to check when an answer is missing."
+        },
+        {
+          "folder": "02-ai-foundations/07-tm7-embeddings-vectors",
+          "title": "Embeddings and vectors: matching meaning, not words",
+          "short": "Embeddings",
+          "summary": "How embeddings place similar meanings close together, what vectors, dimensions and similarity are, and why chunks and questions must use the same embedding model."
+        },
+        {
+          "folder": "02-ai-foundations/08-tm8-rag-search-answer",
+          "title": "RAG search: keyword, vector, hybrid and reranking",
+          "short": "RAG search",
+          "summary": "What happens when a question arrives: keyword, vector and hybrid search, top K, rerankers, query rewriting, and the difference between RAG and fine-tuning."
+        },
+        {
+          "folder": "02-ai-foundations/09-tm9-where-data-lives",
+          "title": "Where RAG data lives: object storage and vector databases",
+          "short": "Where data lives",
+          "summary": "Object storage, vector databases, index records and metadata filters: where a RAG system keeps its data, how permissions are enforced, and how to choose a store your team can run."
+        },
+        {
+          "folder": "07-building-rag/20-r7-one-architecture-three-implementations",
+          "title": "One RAG architecture, three implementations",
+          "short": "One RAG architecture",
+          "summary": "Self-hosted with Docker, on Azure and on AWS: three RAG systems that do the same six jobs with different names on the boxes, so every platform feels familiar."
+        },
+        {
+          "folder": "16-cloud-labs/06-rag-stack-live",
+          "title": "Run a production-style RAG chatbot with Docker Compose",
+          "short": "Self-hosted RAG stack",
+          "summary": "Twenty-one containers answering from a company's own documents with sources, per-user document permissions and full observability in Grafana, on your computer or a VM."
+        },
+        {
+          "folder": "16-cloud-labs/07-azure-rag-live",
+          "title": "Build a RAG system on Azure with Terraform",
+          "short": "Azure RAG",
+          "summary": "Blob Storage, Azure AI Search and a Microsoft Foundry model, created with Terraform: answers from a school's documents with sources, refusals for what they don't cover, then destroy."
+        }
+      ]
+    },
+    {
+      "title": "AI agents for DevOps",
+      "lessons": [
+        {
+          "folder": "05-agents-rag-ideas/19-agent-vs-chatbot",
+          "title": "AI chatbot versus AI agent, side by side",
+          "short": "Chatbot vs agent",
+          "summary": "Same model, same question: a chatbot that answers and an agent that acts. See how each works, what each can do, when to use which, and the guardrails an agent needs. Lab included."
+        },
+        {
+          "folder": "05-agents-rag-ideas/20-s1-skill-based-agents",
+          "title": "Skill-based agents: one job, clear limits",
+          "short": "Skill-based agents",
+          "summary": "Why DevOps agents should have one skill each: investigate, propose a fix, wait for your approval, verify and report, and fail safely when they can't."
+        },
+        {
+          "folder": "16-cloud-labs/10-s2-docker-skill-agents-live",
+          "title": "Three skill agents fix 502s, crash loops and full disks",
+          "short": "Docker skill agents",
+          "summary": "Three single-skill agents investigate, propose a fix, wait for your yes, apply it, verify and report: a 502 Bad Gateway, a container crash loop and a full disk."
+        },
+        {
+          "folder": "16-cloud-labs/09-k8s-doctor-live",
+          "title": "An AI agent that fixes Kubernetes workloads",
+          "short": "Kubernetes doctor",
+          "summary": "An agent scans a namespace, finds broken workloads, fixes them one at a time with your approval, verifies and writes a report. Works on minikube, EKS or AKS."
+        },
+        {
+          "folder": "05-agents-rag-ideas/21-r10-kagent-explained",
+          "title": "AI agents inside Kubernetes with kagent",
+          "short": "kagent",
+          "summary": "kagent runs AI agents as Kubernetes resources: Agent, ModelConfig and MCP tools, deployed with kubectl and Helm, limited by RBAC and approvals."
+        }
+      ]
+    },
+    {
+      "title": "AI-powered DevOps automation",
+      "lessons": [
+        {
+          "folder": "19-ai-cicd/01-ci1-ai-in-cicd",
+          "title": "Where AI fits in a CI/CD pipeline",
+          "short": "AI in CI/CD",
+          "summary": "Map a real pipeline: where an AI helper speeds up builds, tests, reviews and fixes, where a human must still say yes, and how fixes arrive as pull requests, GitOps included."
+        },
+        {
+          "folder": "18-automation-n8n/17-n17-n8n-ai-assisted-live",
+          "title": "AI summaries in automation workflows, safely (n8n)",
+          "short": "AI summaries",
+          "summary": "Add AI to real automations with n8n: summaries of failed deployments and incidents with secrets removed first, logs treated as untrusted text, drafts labelled, and a human who decides."
+        }
+      ]
+    },
+    {
+      "title": "Model Context Protocol (MCP)",
+      "lessons": [
+        {
+          "folder": "20-mcp/01-m1-what-is-mcp",
+          "title": "What MCP is and why every platform adopted it",
+          "short": "What is MCP",
+          "summary": "The Model Context Protocol: the problem it solves, its three roles, why GitHub, AWS, Microsoft, Atlassian and Slack adopted it, and how an agent acts as a scoped delegate."
+        },
+        {
+          "folder": "20-mcp/02-m2-inside-mcp",
+          "title": "Inside MCP: tools, resources, prompts and transports",
+          "short": "Inside MCP",
+          "summary": "What an MCP server offers and how agents discover it: tools, resources and prompts, stdio and Streamable HTTP, and how a remote server checks who you are with OAuth."
+        },
+        {
+          "folder": "20-mcp/03-m3-first-mcp-server-live",
+          "title": "Build your first MCP server and connect real agents",
+          "short": "First MCP server",
+          "summary": "Write an MCP server in Python with one tool, one resource and one prompt, run it with Docker Compose, test it in the MCP Inspector, and connect Claude Code and Codex to it."
+        }
+      ]
+    },
+    {
+      "title": "Security, reliability and cost",
+      "lessons": [
+        {
+          "folder": "02-ai-foundations/12-tm12-operating-securing",
+          "title": "Operating and securing AI in production",
+          "short": "Operating and securing",
+          "summary": "Versions, freshness, the four LLMOps pipelines, observability, drift, prompt injection, data leakage and least privilege: the operations side of running AI."
+        },
+        {
+          "folder": "08-ai-production/19-r1-llmops-day-to-day",
+          "title": "LLMOps day to day: what you manage once an AI app is live",
+          "short": "LLMOps",
+          "summary": "What changes from classic ML, and what you manage every day: prompts as production configuration, model versions, evaluation, knowledge freshness, cost, latency and feedback."
+        },
+        {
+          "folder": "08-ai-production/20-r6-who-builds-who-runs",
+          "title": "Who builds a RAG system, and who runs it",
+          "short": "Who builds, who runs",
+          "summary": "The developer side, the operations side and the shared middle of a RAG system, and the four LLMOps pipelines: ingest, deploy, evaluate and observe."
+        },
+        {
+          "folder": "08-ai-production/21-r8-managed-or-self-hosted",
+          "title": "Managed AI or self-hosted: Bedrock, Foundry or Ollama",
+          "short": "Managed or self-hosted",
+          "summary": "Amazon Bedrock and Microsoft Foundry versus Ollama on your own VM or cluster: who manages what, the real trade-offs, and four questions that decide."
+        }
+      ]
+    }
+  ],
+  "environments": {
+    "staging": {
+      "apiUrl": "https://staging.ai-devopseasylearning.com/api",
+      "priceCents": 9999
+    },
+    "production": {
+      "apiUrl": "https://ai-devopseasylearning.com/api",
+      "priceCents": 9999
+    }
+  },
+  "intro": {
+    "folderPattern": "(^|/)00-",
+    "section": 0,
+    "promo": true
+  }
+}

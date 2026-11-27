@@ -11,7 +11,7 @@
     "level": "intermediate",
     "language": "en",
     "categorySlug": "automation-n8n",
-    "cover": "suggested",
+    "cover": "blueprint-n8n",
     "objectives": [
       "Deploy n8n and Mattermost with Docker Compose, locally or on an AWS EC2 VM built with Terraform, and keep their data safe",
       "Build, test and publish n8n workflows with triggers, nodes, expressions and the Executions log",

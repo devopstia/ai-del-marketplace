@@ -183,6 +183,23 @@ Follow this exactly; it is what worked.
 9. **Clean up:** `scripts/del-signin.sh --logout /<scratchpad>/prod.jar` (signs out, deletes the jar). Never keep a
    production session or credentials in the repo, memory or reports.
 
+## Catalogue courses: lessons from several folders, shared videos (owner 2026-11-27)
+- The catalogue (`courses/COURSE_CATALOG.md`) builds courses from many source groups. Such a plan sets `sourceDir` to the
+  videos root and names lessons `<group>/<lesson>` (e.g. `02-ai-foundations/04-tm4-talking-to-a-model`); the intro slot uses
+  `"intro": {"folderPattern": "(^|/)00-", ...}`. Optional `watchGroups: ["24-ai-devops-aws"]` makes the watcher put new
+  folders of those groups in the course's inbox (and the publisher report them as unplanned); other groups are picked
+  lesson by lesson on purpose and are not reported.
+- **Shared media map** `courses/media.<env>.json` (sha256 → assetId or storageKey, kind, processing status, courses): every run
+  consults it before uploading, in agent and session mode, so a video used by the intro, AWS and Azure courses is uploaded
+  once and attached to each course's own lesson. Commit it with the state files. Processing status is updated while a run
+  waits for videos.
+- Each course keeps its own lessons, titles, summaries, quizzes, progress, access and certificate. Playback is authorised per
+  lesson/course, so a shared video never unlocks a paid course; purging a course keeps media other courses still use
+  (`sharedAssetIds` / `sharedResourceKeys` in `apps/api/src/admin/course-lifecycle.ts`).
+- Order for a new catalogue course: categories exist in the environment (production had only `automation-n8n` on
+  2026-11-27) → staging sync → owner preview → production sync → submit → owner approves. Paid enrolment only after the
+  owner approves the price.
+
 ## Plan format
 ```json
 { "environment": "staging", "apiUrl": "…/api", "provider": "DevOps Easy Learning", "instructorName": "DevOps Easy Learning",

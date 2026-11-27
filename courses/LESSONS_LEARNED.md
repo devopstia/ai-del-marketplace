@@ -35,6 +35,23 @@ Read before every upload; add to it after every upload. Newest first.
 - Lab ZIPs for cloud lessons: check for `.tfstate`, `.terraform/`, `keys/` and `*.pem` too (lesson 18 was clean:
   `.gitignore` covers them).
 
+## 2026-11-27: AI for DevOps catalogue (four new courses)
+- **Inventory first, from the files:** 48 lessons in 12 source groups (6.3 h); captions read start and end, every lab
+  unzipped and scanned (no secrets). Output: `courses/INVENTORY.md`. Two videos promise a lab that doesn't exist
+  (19-ai-cicd/01, 20-mcp/02); 02-ai-foundations' quizzes are "pause and think" (no options): 76 of 156 in-video questions
+  are importable.
+- **Catalogue plans span several groups:** `sourceDir` = the videos root, lessons `<group>/<lesson>`; unplanned folders are
+  only reported for `watchGroups` (otherwise every selected-from group floods the report).
+- **Shared media:** `courses/media.<env>.json` makes a video used by three courses upload once. Playback is authorised per
+  lesson/course, so sharing never opens a paid course; the course purge now keeps media other courses still use.
+- **Exclusive content check:** after sharing, the paid AWS and Azure courses had only ~45–50 minutes of cloud-exclusive
+  video. Count exclusive minutes before proposing a price; the gap became CR-021–CR-041.
+- **Names change fast:** Bedrock Agents became "Agents Classic" (closed to new customers), Amazon Q Developer moved to
+  Kiro, Azure AI Foundry became Microsoft Foundry. Check names with a search on the day you write the curriculum.
+- **Check GEN's own course docs before requesting:** the owner had already approved a 32-lesson VS Code curriculum in GEN's
+  repo; requests must map onto it, not duplicate it.
+- Staging uploads from Dropbox under WSL are slow (minutes per lesson): run them in the background, one course at a time.
+
 ## 2026-11-27 (later): price change and sessions
 - A browser sign-in by the owner ends the CLI upload session ("replaced": one session per account). `/auth/me` still
   answers 200 with `user: null`, so check `user`, not the status code. Ask the owner to stay signed out while a

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { toVtt } from './client.js';
-import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, forEnv, manifestNotes, parseQuiz, readManifest, slug, validatePlan } from './publish.js';
+import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, forEnv, lessonFolders, manifestNotes, parseQuiz, readManifest, slug, validatePlan } from './publish.js';
 
 test('upload rules: one video, PDF not PowerPoint, lab ZIP, captions; secrets and thumbnails skipped', async () => {
   const d = await mkdtemp(join(tmpdir(), 'lesson-'));
@@ -213,4 +213,14 @@ test('re-run renames a section and a quiz lesson by their state ids (never recre
   assert.ok(calls.some((c) => c.startsWith('PATCH /courses/c1/lectures/q1 ') && c.includes('"title":"Quiz: First workflows"')), 'quiz renamed in place');
   assert.ok(!calls.some((c) => c.startsWith('POST /courses/c1/sections')), 'nothing recreated');
   assert.ok(!calls.some((c) => c.startsWith('PUT /courses/c1/lectures/q1/quiz')), 'unchanged questions are not resent');
+});
+
+test('catalogue plans list lesson folders only from the groups they use (owner 2026-11-27)', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'cat-'));
+  for (const d of ['02-ai-foundations/01-a', '02-ai-foundations/02-b', '17-cloud-ai/01-c', '99-other/01-x', 'previous-versions/old']) await mkdir(join(root, d), { recursive: true });
+  const plan = { sourceDir: root, sections: [{ title: 'S', lessons: [{ folder: '02-ai-foundations/01-a', title: 'A' }] }] };
+  assert.deepEqual(await lessonFolders(plan), ['02-ai-foundations/01-a', '02-ai-foundations/02-b']);
+  assert.deepEqual(await lessonFolders({ ...plan, watchGroups: ['17-cloud-ai'] }), ['02-ai-foundations/01-a', '02-ai-foundations/02-b', '17-cloud-ai/01-c']);
+  // One-folder courses keep listing the folder's own lessons.
+  assert.deepEqual(await lessonFolders({ sourceDir: join(root, '02-ai-foundations'), sections: [{ title: 'S', lessons: [{ folder: '01-a', title: 'A' }] }] }), ['01-a', '02-b']);
 });

@@ -177,6 +177,7 @@ export interface PublisherClient {
   call<T = unknown>(method: string, path: string, body?: unknown): Promise<T>;
   upload(path: string, opts?: { courseId?: string; name?: string; existingAssetId?: string | null }): Promise<UploadResult>;
   uploadCaptions(assetId: string, path: string): Promise<{ assetId: string; bytes: number }>;
+  sha256(path: string): Promise<string>;
   close?(): void;
 }
 
