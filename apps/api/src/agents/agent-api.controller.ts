@@ -11,6 +11,8 @@ import { MediaService } from '../media/media.service';
 import type { AgentScope } from '../assist/assist-context';
 import { AgentCoursesService } from './agent-courses.service';
 import { AgentUploadsService } from './agent-uploads.service';
+import { relatedSchema } from '../catalogue/related-courses.controller';
+import { RelatedCoursesService } from '../catalogue/related-courses.service';
 
 /**
  * Agent context with a scope check: only requests authenticated by an agent token (AssistResolver) reach these routes,
@@ -49,6 +51,7 @@ export class AgentApiController {
     private readonly media: MediaService,
     private readonly covers: CoversService,
     private readonly prisma: PrismaService,
+    private readonly related: RelatedCoursesService,
   ) {}
 
   @Get('whoami')
@@ -73,6 +76,10 @@ export class AgentApiController {
   @Patch('courses/:id/lectures/:lid') updateLecture(@Param('id') id: string, @Param('lid') lid: string, @ZBody(lectureUpdate) b: z.infer<typeof lectureUpdate>, @Agent('courses:write') a: AgentActor) { return this.instructor.updateLecture(a, id, lid, b); }
   @Put('courses/:id/curriculum') arrange(@Param('id') id: string, @ZBody(arrangeSchema) b: z.infer<typeof arrangeSchema>, @Agent('courses:write') a: AgentActor) { return this.instructor.arrange(a, id, b.sections); }
   @Put('courses/:id/lectures/:lid/quiz') quiz(@Param('id') id: string, @Param('lid') lid: string, @ZBody(quizSchema) b: z.infer<typeof quizSchema>, @Agent('courses:write') a: AgentActor) { return this.instructor.setQuiz(a, id, lid, b.questions); }
+
+  /** Related courses ("Continue your learning journey"): not course content, so no revision review; audited. */
+  @Get('courses/:id/related') relatedList(@Param('id') id: string, @Agent('courses:read') a: AgentActor) { return this.related.list(a.user.id, id); }
+  @Put('courses/:id/related') relatedSet(@Param('id') id: string, @ZBody(relatedSchema) b: z.infer<typeof relatedSchema>, @Agent('courses:write') a: AgentActor) { return this.related.set(a, id, b.items); }
 
   @Get('courses/:id/covers') coverPicker(@Param('id') id: string, @Agent('courses:read') a: AgentActor) { return this.covers.pickerFor(a.user.id, id); }
   @Put('courses/:id/cover') setCover(@Param('id') id: string, @ZBody(coverSchema) b: z.infer<typeof coverSchema>, @Agent('courses:write') a: AgentActor) { return this.covers.setTemplate(a, id, b.templateId); }

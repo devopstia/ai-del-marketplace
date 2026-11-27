@@ -18,6 +18,7 @@ import { NotesPanel } from "./NotesPanel";
 import { VideoSearchPanel } from "./VideoSearchPanel";
 import { AskPanel } from "./AskPanel";
 import { StudyNotesPanel } from "./StudyNotesPanel";
+import { NextCourses } from "./NextCourses";
 import { ReviewPanel, toReviewInfo, type ReviewInfo } from "./ReviewPanel";
 import { RatingInline } from "@/components/Stars";
 import { useToast } from "../Toast";
@@ -430,6 +431,8 @@ export function LearnPlayer({ slug, lectureId: initialLecture }: { slug: string;
                   {lecture?.hasResources ? <p className="mt-4 text-sm text-ink-2">This lesson has lab files: open <button type="button" className="link" onClick={() => setTab("resources")}>Lab files</button> to download them.</p> : null}
                   <p className="mt-6 hidden text-sm text-muted sm:block">Keyboard: Space or K to play and pause, J and L to skip 10 seconds, F for full screen, C for captions.</p>
                   {pct >= 100 ? <Link href="/student/progress" className="btn btn-primary mt-6">Get your certificate</Link> : null}
+                  {/* The course's final lesson: related courses, if the course has any (owner 2026-11-28). */}
+                  {!next && lecture ? <NextCourses slug={slug} /> : null}
                 </div>
               ) : null}
               {activeTab === "content" ? <div className="-mx-4 border-t border-line lg:hidden">{outline}</div> : null}

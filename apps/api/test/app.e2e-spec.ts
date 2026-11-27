@@ -483,6 +483,106 @@ describe('e2e: buy and learn', () => {
     expect((await prisma.course.findUniqueOrThrow({ where: { id: draft.id } })).taughtBy).toBeNull();
   });
 
+  it('related courses: owner sets them without review (audited), only published shown, owned never offered, student panel (owner 2026-11-28)', async () => {
+    if (!available) return;
+    const teacher = await userAgent('rel-teacher@e2e.example', ['student', 'instructor'], {});
+    const other = await userAgent('rel-other@e2e.example', ['student', 'instructor'], {});
+    const learner = await userAgent('rel-learner@e2e.example', ['student']);
+    const a = await publishedCourse(teacher.user.id, 'rel-a', 1500);
+    const b = await publishedCourse(other.user.id, 'rel-b', 2900);
+    const c = await publishedCourse(teacher.user.id, 'rel-c', 0);
+    const hidden = await prisma.course.create({ data: { title: 'Other draft', slug: 'rel-hidden', instructorId: other.user.id } });
+    const ownDraft = await prisma.course.create({ data: { title: 'Own draft', slug: 'rel-own-draft', instructorId: teacher.user.id } });
+
+    // Only the owner sets them; another instructor's draft can't be picked; own drafts can.
+    await other.send('put', `/api/instructor/courses/${a.course.id}/related`, { items: [] }).expect(404);
+    const bad = await teacher.send('put', `/api/instructor/courses/${a.course.id}/related`, { items: [{ courseId: hidden.id }] }).expect(400);
+    expect(bad.body.error.code).toBe('invalid_related');
+    await teacher.send('put', `/api/instructor/courses/${a.course.id}/related`, { items: [{ courseId: a.course.id }] }).expect(400);
+    const set = await teacher.send('put', `/api/instructor/courses/${a.course.id}/related`, { items: [{ courseId: c.course.id, reason: 'Free start' }, { courseId: b.course.id, reason: 'Go deeper' }, { courseId: ownDraft.id }] }).expect(200);
+    expect(set.body.items.map((i: { slug: string }) => i.slug)).toEqual(['rel-c', 'rel-b', 'rel-own-draft']);
+    // A published course changes directly (no revision), and the change is audited.
+    expect(await prisma.courseRevision.count({ where: { courseId: a.course.id } })).toBe(0);
+    expect(await prisma.auditLog.count({ where: { action: 'course.related_set', targetId: a.course.id } })).toBe(1);
+    const cand = await teacher.agent.get(`/api/instructor/courses/${a.course.id}/related/candidates`).expect(200);
+    expect(cand.body.items.map((i: { slug: string }) => i.slug)).toEqual(expect.arrayContaining(['rel-b', 'rel-c', 'rel-own-draft']));
+    expect(cand.body.items.map((i: { slug: string }) => i.slug)).not.toContain('rel-hidden');
+
+    // Public page: published targets only, in order; anonymous viewers never "own".
+    const anon = await request(app.getHttpServer()).get('/api/courses/rel-a').expect(200);
+    expect(anon.body.related.map((r: { slug: string }) => r.slug)).toEqual(['rel-c', 'rel-b']);
+    expect(anon.body.related[1]).toMatchObject({ reason: 'Go deeper', priceCents: 2900, owned: false });
+    expect(anon.body.related[0].coverUrl === null || typeof anon.body.related[0].coverUrl === 'string').toBe(true);
+
+    // A learner who owns A and B: B is "owned" on A's page; the dashboard panel recommends C only (owned ones left out).
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: a.course.id, source: 'admin' } });
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: b.course.id, source: 'admin' } });
+    const seen = await learner.agent.get('/api/courses/rel-a').expect(200);
+    expect(seen.body.related.find((r: { slug: string }) => r.slug === 'rel-b').owned).toBe(true);
+    const mine = await learner.agent.get('/api/me/related-courses').expect(200);
+    expect(mine.body.items.map((r: { slug: string }) => r.slug)).toEqual(['rel-c']);
+    await request(app.getHttpServer()).get('/api/me/related-courses').expect(401);
+
+    // Unpublishing a target hides it everywhere; clearing the list removes them.
+    await prisma.course.update({ where: { id: c.course.id }, data: { status: 'draft' } });
+    expect((await request(app.getHttpServer()).get('/api/courses/rel-a').expect(200)).body.related.map((r: { slug: string }) => r.slug)).toEqual(['rel-b']);
+    expect((await learner.agent.get('/api/me/related-courses').expect(200)).body.items).toEqual([]);
+    await teacher.send('put', `/api/instructor/courses/${a.course.id}/related`, { items: [] }).expect(200);
+    expect((await request(app.getHttpServer()).get('/api/courses/rel-a').expect(200)).body.related).toEqual([]);
+  });
+
+  it('student dashboard: continue learning, expiring access, certificates, quizzes, activity, purchases; only the student\'s own data (owner 2026-11-28)', async () => {
+    if (!available) return;
+    const del = await userAgent('sd-del@e2e.example', ['student', 'instructor'], { isPlatform: true });
+    const fresh = await userAgent('sd-new@e2e.example', ['student']);
+    const learner = await userAgent('sd-learner@e2e.example', ['student']);
+    const other = await userAgent('sd-other@e2e.example', ['student']);
+    await request(app.getHttpServer()).get('/api/me/dashboard').expect(401);
+
+    // A brand-new student: empty sections and the free courses to start with.
+    const free = await publishedCourse(del.user.id, 'sd-free-course', 0);
+    const empty = (await fresh.agent.get('/api/me/dashboard').expect(200)).body;
+    expect(empty.continueLearning).toBeNull();
+    expect(empty.learning.items).toEqual([]);
+    expect(empty.quizzes.averageScore).toBeNull();
+    expect(empty.activity.days).toHaveLength(30);
+    expect(empty.activity.streak).toBe(0);
+    expect(empty.purchases).toEqual([]);
+    expect(empty.freeCourses.map((c: { slug: string }) => c.slug)).toContain('sd-free-course');
+
+    // An active learner: two lessons, one done; a quiz attempt; access ending in 10 days.
+    const c = await publishedCourse(del.user.id, 'sd-course', 0);
+    const l2 = await prisma.lecture.create({ data: { sectionId: c.section.id, title: 'L2', position: 1, type: 'video', videoAssetId: c.lecture.videoAssetId, durationSec: 40 } });
+    const ql = await prisma.lecture.create({ data: { sectionId: c.section.id, title: 'Quiz: basics', position: 2, type: 'quiz' } });
+    const quiz = await prisma.quiz.create({ data: { lectureId: ql.id, questions: [{ q: 'Two plus two?', options: ['3', '4', '5'], correct: 1, why: 'Arithmetic.' }] } });
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: c.course.id, source: 'free', accessExpiresAt: new Date(Date.now() + 10 * 86_400_000) } });
+    await prisma.enrollment.create({ data: { userId: learner.user.id, courseId: free.course.id, source: 'free' } });
+    await learner.send('put', `/api/lectures/${c.lecture.id}/progress`, { positionSec: 20, completed: true }).expect(200);
+    await learner.send('put', `/api/lectures/${l2.id}/progress`, { positionSec: 12 }).expect(200);
+    await prisma.quizAttempt.create({ data: { userId: learner.user.id, quizId: quiz.id, score: 100, answers: [1] } });
+    await prisma.playbackSession.create({ data: { ref: 'sd-ref-1', userId: learner.user.id, assetId: c.lecture.videoAssetId!, lectureId: l2.id, expiresAt: new Date(Date.now() + 3_600_000) } });
+    // The free course finished: a certificate.
+    await learner.send('put', `/api/lectures/${free.lecture.id}/progress`, { positionSec: 20, completed: true }).expect(200);
+    // Someone else's activity must never show up.
+    await prisma.enrollment.create({ data: { userId: other.user.id, courseId: c.course.id, source: 'free' } });
+    await prisma.quizAttempt.create({ data: { userId: other.user.id, quizId: quiz.id, score: 0, answers: [0] } });
+
+    const d = (await learner.agent.get('/api/me/dashboard').expect(200)).body;
+    expect(d.continueLearning).toMatchObject({ slug: 'sd-course', lectureId: l2.id, lectureTitle: 'L2', moduleTitle: 'S1', positionSec: 12, lessonsLeft: 2, remainingSec: 40 });
+    const item = d.learning.items.find((i: { course: { slug: string } }) => i.course.slug === 'sd-course');
+    expect(item.access.daysLeft).toBeLessThanOrEqual(10);
+    expect(d.certificates).toEqual([expect.objectContaining({ course: expect.objectContaining({ slug: 'sd-free-course' }), status: 'valid' })]);
+    expect(d.quizzes).toMatchObject({ averageScore: 100, quizzesTaken: 1, attempts: 1 });
+    expect(d.quizzes.recent[0]).toMatchObject({ lectureId: ql.id, score: 100, course: { slug: 'sd-course' } });
+    expect(d.activity.days[29]).toMatchObject({ lessons: 1, quizzes: 1 });
+    expect(d.activity.streak).toBe(1);
+    expect(d.freeCourses).toEqual([]);
+    expect(JSON.stringify(d)).not.toContain('sd-other');
+    const o = (await other.agent.get('/api/me/dashboard').expect(200)).body;
+    expect(o.quizzes.averageScore).toBe(0);
+    expect(o.certificates).toEqual([]);
+  });
+
   it('certificates: issued automatically on completion, public check (valid / revoked / invalid), downloads, super admin revoke (owner 2026-11-27)', async () => {
     if (!available) return;
     const del = await userAgent('c-del@e2e.example', ['student', 'instructor'], { isPlatform: true });

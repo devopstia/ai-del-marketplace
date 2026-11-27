@@ -88,6 +88,29 @@ Student Studio › Learning progress lists them; Super Admin › Certificates re
 (every lesson completable) and check the certificate once per new course.
 Receipts for course purchases: `docs/RECEIPTS.md` (private; `/student/purchases/<order id>`, PDF from `apps/api/src/receipts`).
 
+## 5b. Recommendations ("Continue your learning journey", owner 2026-11-28)
+Each course has an ordered list of **related courses** (table `course_related`: course, related course, position, a
+"why this course next" reason ≤ 200 characters; at most 6). They are not course content: the owner sets them directly
+(no revision review) and every change is audited (`course.related_set`).
+- **Where they appear** (component `apps/web/src/components/RelatedCourses.tsx`, one block per screen, never inside a
+  video, never a pop-up, nothing when the list is empty):
+  - **course page:** "Continue your learning journey", at the bottom, up to 3 cards (cover, title, reason, price or
+    "Free", "View course");
+  - **player:** "Where to go next" in the Overview tab of the course's **final lesson** only
+    (`components/learn/NextCourses.tsx`);
+  - **Student Studio dashboard:** related courses of the courses the student owns, minus owned ones, at most 3 (in
+    place of the DEL program note when there are any).
+  - A course the viewer already owns shows "Continue learning" (to the player), never a price. Only **published**
+    related courses are shown; anonymous viewers never see "owned".
+- **How to set them:** DEL Studio / instructor studio › course › Details › "Related courses" (pick from published
+  courses, or your own); API `GET|PUT /api/instructor/courses/:id/related` (`{items:[{courseId, reason?}]}`, the full
+  ordered list), candidates `GET /api/instructor/courses/:id/related/candidates`; agent API
+  `GET|PUT /api/agent/courses/:id/related`; public `GET /api/courses/:slug` returns `related`; the student panel uses
+  `GET /api/me/related-courses`.
+- **From a course plan:** `"related": [{ "course": "<plan folder>", "reason": "…" }]` at the plan's top level. The
+  publisher resolves each through `courses/<plan folder>/state.<env>.json`; a course not uploaded yet in that
+  environment is skipped and reported, and set on the next run.
+
 ## 6. Environments
 Staging https://staging.ai-devopseasylearning.com (no sign-in codes; seed admin from SSM), production
 https://ai-devopseasylearning.com (owner's sign-in with authenticator; no agent keys unless the owner says so). Code

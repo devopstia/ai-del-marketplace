@@ -239,6 +239,12 @@ S3/MinIO · Stripe · Mux. Local: `./scripts/make-env.sh && docker compose up -d
     order-line snapshots, DEL-owned courses report DEL net revenue (never "$0 earnings"), loading/zero/no data/error
     look different, no big empty boxes. Don't build one-off dashboard figures or charts.
 
+34. **Related courses** (owner 2026-11-28; docs/COURSE_PLATFORM_REFERENCE.md §5b). Every new course gets its related
+    courses set (plan field `related` or Details › Related courses), each with a one-line honest reason. Recommendations
+    are optional, relevant and unobtrusive: one block per screen, never inside a video or a pop-up, only published
+    courses, and never offer a course the learner already owns (they see "Continue learning"). A paid course never
+    holds back lessons it advertises to push another purchase.
+
 ## Known pitfalls
 - Use `127.0.0.1`, not `localhost` (cookies are shared by host between web :3000 and api :4000).
 - After sign-in/registration use a full navigation (`window.location.assign`), not `router.push`: production Next.js may serve a

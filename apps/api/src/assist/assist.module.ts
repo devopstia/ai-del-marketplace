@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { CatalogueModule } from '../catalogue/catalogue.module';
 import { CoversModule } from '../covers/covers.module';
 import { InstructorModule } from '../instructor/instructor.module';
 import { AgentApiController } from '../agents/agent-api.controller';
@@ -12,7 +13,7 @@ import { SupportSessionService } from './support-session.service';
 
 /** Support sessions + AI agent access (docs/SUPPORT_SESSIONS_AND_AGENTS.md). */
 @Module({
-  imports: [AuthModule, InstructorModule, CoversModule],
+  imports: [AuthModule, InstructorModule, CoversModule, CatalogueModule],
   controllers: [SupportSessionController, AgentsAdminController, AgentApiController],
   providers: [SupportSessionService, AgentTokensService, AgentUploadsService, AgentCoursesService],
 })

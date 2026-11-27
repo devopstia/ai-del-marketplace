@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { toVtt } from './client.js';
-import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, fillCourseLinks, forEnv, lessonFolders, manifestNotes, normalizePlan, parseQuiz, pruneTargets, readManifest, slug, validatePlan, type CoursePlan } from './publish.js';
+import { publish, arrangeCurriculum, assertEnvAllowed, captionText, discover, fillCourseLinks, forEnv, lessonFolders, manifestNotes, normalizePlan, parseQuiz, pruneTargets, readManifest, resolveRelated, slug, validatePlan, type CoursePlan } from './publish.js';
 
 test('upload rules: one video, PDF not PowerPoint, lab ZIP, captions; secrets and thumbnails skipped', async () => {
   const d = await mkdtemp(join(tmpdir(), 'lesson-'));
@@ -268,4 +268,10 @@ test('prune: on a draft, lessons not in the plan go with their quiz lessons, plu
 
 test('prune refuses a published course (students\' progress would be lost)', () => {
   assert.throws(() => pruneTargets('published', gatewayPlan(), { sections: {}, lessons: {}, quizzes: {}, articles: {} }, new Set(), []), /refused.*published.*progress/);
+});
+
+test('related courses: plan slugs resolve through state ids, in order; unknown ones are reported, not guessed', () => {
+  const r = resolveRelated([{ course: 'ai-for-devops-aws', reason: 'Go deeper on AWS' }, { course: 'not-uploaded' }, { course: 'n8n-automation' }], { 'ai-for-devops-aws': 'id-aws', 'n8n-automation': 'id-n8n' });
+  assert.deepEqual(r.items, [{ courseId: 'id-aws', reason: 'Go deeper on AWS' }, { courseId: 'id-n8n' }]);
+  assert.deepEqual(r.missing, ['not-uploaded']);
 });
