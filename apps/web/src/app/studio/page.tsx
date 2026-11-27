@@ -1,7 +1,6 @@
 "use client";
-import { Suspense, useCallback } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { toDashboard, type Dashboard, type DashCourse } from "@/lib/dashboard";
@@ -13,7 +12,8 @@ import { useAuth } from "@/components/AuthProvider";
 import { CourseCover } from "@/components/CourseCover";
 import { KpiStrip, type Kpi } from "@/components/dashboard/KpiStrip";
 import { Panel } from "@/components/dashboard/Panel";
-import { RangePicker, rangeLabel, RANGES, type RangeKey, type RangeValue } from "@/components/dashboard/RangePicker";
+import { RangePicker, rangeLabel } from "@/components/dashboard/RangePicker";
+import { useRangeParam } from "@/components/dashboard/useRangeParam";
 import { TimeChart } from "@/components/dashboard/TimeChart";
 import { BarList } from "@/components/dashboard/BarList";
 import { DataTable, type Column } from "@/components/dashboard/DataTable";
@@ -27,21 +27,9 @@ const OWNERSHIP: Record<Dashboard["ownership"], string> = {
   revenue_share: "Revenue share · you earn your share of each sale",
 };
 
-function useRange(): [RangeValue, (v: RangeValue) => void] {
-  const sp = useSearchParams(), router = useRouter(), path = usePathname();
-  const raw = sp.get("range") as RangeKey | null;
-  const value: RangeValue = raw && RANGES.some((r) => r[0] === raw) ? { range: raw, from: sp.get("from") ?? undefined, to: sp.get("to") ?? undefined } : { range: "30d" };
-  const set = useCallback((v: RangeValue) => {
-    const q = new URLSearchParams({ range: v.range, ...(v.range === "custom" && v.from && v.to ? { from: v.from, to: v.to } : {}) });
-    router.replace(`${path}?${q}`, { scroll: false });
-  }, [router, path]);
-  return [value, set];
-}
-
 function DashboardInner() {
   const { me } = useAuth();
-  const [range, setRange] = useRange();
-  const qs = new URLSearchParams({ range: range.range, ...(range.range === "custom" && range.from && range.to ? { from: range.from, to: range.to } : {}) });
+  const [range, setRange, qs] = useRangeParam();
   const d = useApi(`/instructor/dashboard?${qs}`, toDashboard);
   const data = d.data;
   const del = data ? data.ownership !== "revenue_share" : false;

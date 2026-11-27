@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Review screenshots (AGENTS.md rules 5 and 16): full-page PNGs of pages in light and dark at the given widths.
 // Usage: node scripts/qa-shots.mjs --out DIR [--as student|instructor|admin] [--act-as del] [--widths 390,1440,1920] path [path…]
-// Signs in like scripts/qa-dark.mjs (seed accounts, real authenticator step). QA_BASE picks the site (default :3000).
+// Signs in like scripts/qa-dark.mjs (seed accounts, real authenticator step). QA_BASE picks the site (default :3000);
+// QA_EMAIL signs in as another account that shares the seed password and authenticator (e.g. a limited test admin).
 import { freshCode, seedSecret } from "./totp.mjs";
 import { chromium } from "playwright";
 import { mkdirSync, readFileSync } from "node:fs";
@@ -30,7 +31,7 @@ for (const theme of ["light", "dark"]) {
     if (role) {
       if (trust) await ctx.addCookies([trust]);
       await page.goto(`${base}/login`);
-      await page.getByLabel("Email").fill(users[role]);
+      await page.getByLabel("Email").fill(process.env.QA_EMAIL ?? users[role]);
       await page.getByLabel("Password", { exact: true }).fill(password);
       await page.getByTestId("auth-submit").click();
       await page.waitForURL((u) => !u.pathname.startsWith("/login") || u.pathname === "/login/verify");

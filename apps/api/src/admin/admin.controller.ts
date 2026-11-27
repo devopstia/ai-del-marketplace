@@ -8,7 +8,10 @@ import { RefundPolicyService } from '../commerce/refund-policy.service';
 import { PeopleService } from './people.service';
 import { CourseAdminService } from './course-admin.service';
 import { SystemService } from './system.service';
+import { AdminDashboardService } from './admin-dashboard.service';
+import { RANGE_KEYS, type RangeKey } from '../instructor/dashboard';
 
+const dashboardQuery = z.object({ range: z.enum(RANGE_KEYS as [RangeKey, ...RangeKey[]]).optional(), from: z.coerce.date().optional(), to: z.coerce.date().optional() });
 const paging = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 const noteSchema = z.object({ note: z.string().trim().max(4000).optional() });
 const coursesQuery = z.object({ status: z.enum(['draft', 'in_review', 'changes_requested', 'published', 'unpublished', 'rejected']).optional(), view: z.enum(['active', 'archived', 'deleting', 'purged', 'all']).optional(), featured: z.coerce.boolean().optional(), q: z.string().max(100).optional(), ...paging });
@@ -73,9 +76,12 @@ export class AdminController {
     private readonly courseAdmin: CourseAdminService,
     private readonly system: SystemService,
     private readonly refundPolicy: RefundPolicyService,
+    private readonly dashboard: AdminDashboardService,
   ) {}
 
   @Get('stats') stats() { return this.svc.stats(); }
+  /** Admin / Super Admin overview (Option A phase 3; docs/DASHBOARD_DESIGN.md): each block only for admins with its permission. */
+  @Get('dashboard') overview(@ZQuery(dashboardQuery) q: z.infer<typeof dashboardQuery>, @ActorCtx() a: Actor) { return this.dashboard.overview(a.user, q); }
   @Perm('courses.review') @Get('review-queue') queue() { return this.svc.reviewQueue(); }
   @Perm('courses.review') @Get('courses') courses(@ZQuery(coursesQuery) q: z.infer<typeof coursesQuery>) { return this.svc.courses(q); }
   @Perm('courses.review') @Get('courses/:id') course(@Param('id') id: string) { return this.svc.course(id); }

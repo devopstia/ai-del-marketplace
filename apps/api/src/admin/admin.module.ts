@@ -8,6 +8,7 @@ import { AdminService } from './admin.service';
 import { CourseAdminService } from './course-admin.service';
 import { UserAdminService } from './user-admin.service';
 import { SystemService } from './system.service';
+import { AdminDashboardService } from './admin-dashboard.service';
 
-@Module({ imports: [InstructorModule, AuthModule], controllers: [AdminController, PeopleController], providers: [AdminService, PeopleService, UserAdminService, CourseAdminService, SystemService] })
+@Module({ imports: [InstructorModule, AuthModule], controllers: [AdminController, PeopleController], providers: [AdminService, PeopleService, UserAdminService, CourseAdminService, SystemService, AdminDashboardService] })
 export class AdminModule {}

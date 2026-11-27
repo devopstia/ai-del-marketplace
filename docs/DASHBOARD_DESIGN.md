@@ -27,6 +27,7 @@ Admin) follow after the owner reviews phase 1 (AGENTS.md rule 12: front end in s
 | `DataTable` (`Column`) | Sortable (click/Enter on a header), searchable, `aria-sort`; scrolls sideways inside itself on phones |
 | `ActivityFeed` | Newest events: dot by kind (purchase, enrolment, review, certificate, refund, course), one line + detail + time |
 | `Panel` | Title row with an optional link or actions; the only container a dashboard uses |
+| `useRangeParam` | The range in the URL as `[value, set, queryString]`; every dashboard page uses it with `RangePicker` (phase 3 moved it out of `/studio`) |
 | `EmptyNote`, `ErrorNote`, `PanelSkeleton` | The four states must look different: **loading** (shimmer the size of the content), **zero** (the figure 0 / $0.00 is shown as a value), **no data** (one dashed line with a reason and, if useful, one action; never a big empty box), **error** (rose line with "Try again") |
 
 ## Data rules
@@ -58,9 +59,32 @@ Admin) follow after the owner reviews phase 1 (AGENTS.md rule 12: front end in s
 - Not computed yet (left out of the UI): watch time per period, revenue in other currencies (USD only today), per-day
   active learners.
 
+- `GET /api/admin/dashboard?range=…` (same ranges; `apps/api/src/admin/admin-dashboard.service.ts`, helpers + tests
+  `admin-dashboard.ts`/`.spec.ts`, e2e "admin dashboard: …"). **Each block only for admins with its permission**
+  (super admins see all; `blocks` says which were returned, the others are `null`):
+  - `finance` (`finance.view`): `current`/`previous` marketplace money (gross, Stripe fees, refunds, instructor
+    earnings = shares of independent instructors' lines not refunded, **DEL net revenue** = gross − fees − refunds −
+    instructor earnings, split into `delCoursesNetCents` (DEL-owned and DEL-agreement lines) and `commissionCents`
+    (DEL's part of independent sales), sales, failed payments), a daily `series` (gross and DEL net), `payouts`
+    (pending and paid instructor shares to date), `byCourse` and `byInstructor` (top 8 by gross; instructor `kind`
+    del / official / independent), `webhooks` (Stripe events received in the range and the last one).
+  - `platform` (`users.view`): users, new users, active students (lesson progress in range), approved instructors by
+    kind, enrolments (range + active total), completions (= certificates issued, range + total).
+  - `catalogue` (`courses.review`): published, drafts, waiting for approval (new courses + revisions in review).
+  - `attention`: each queue only for admins who can act on it, with its page: courses waiting for approval
+    (`courses.review`), instructor applications (`instructors.review`), refund requests needing a decision, open
+    disputes, failed payments (`finance.view`), support requests waiting for staff (`support.manage`), reported reviews
+    (`reviews.moderate`).
+  - `health` (super admins, the same checks as System health): database, Redis, storage, email, queues (failed /
+    waiting jobs), failed videos.
+  - `audit` (`audit.view`): the latest 8 audit entries (actor name, action, status).
+- Not computed (left out): failed or unprocessed Stripe webhooks (only processed events are stored; the panel shows
+  events received and warns when there were sales but no events), per-currency totals (USD only), payout dates (the
+  paid-out figure is "to date").
+
 ## Pages
 | Page | Status |
 |---|---|
 | `/studio` Instructor / DEL Studio | Phase 1, Option A (KPI strip; revenue chart + catalogue figures beside revenue by course and activity; course table; students + reviews) |
-| `/student` Student | Phase 2, pending the owner's review of phase 1 |
-| `/admin` Admin and Super Admin | Phase 3, pending |
+| `/admin` Admin and Super Admin | Phase 3, Option A: KPI strip (gross, DEL net, instructor earnings, fees, refunds, new users); marketplace chart with DEL-courses net, commission and payouts beside **Needs attention** and revenue by course; revenue by instructor beside payments (failed payments, Stripe events); platform figures; service health beside recent admin activity. Every figure links to its management page; blocks the admin can't see are left out |
+| `/student` Student | Phase 2, pending |
